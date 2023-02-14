@@ -24,7 +24,7 @@ Currently, pretty much everything is to-do. I'll keep this page updated with the
 
 ### Style
 
-- [ ] Decide default color scheme
+- [x] Decide default color scheme
 - [ ] Decide Font
 - [ ] Build basic reusable component set
 

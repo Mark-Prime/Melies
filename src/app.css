@@ -13,8 +13,33 @@ Accent: #E94560
   line-height: 24px;
   font-weight: 400;
 
-  color: #0f0f0f;
-  background-color: #f6f6f6;
+  --bg: #fdfbff;
+  --bg-text: #1a1c1e;
+
+  --outline: #74777f;
+
+  --pri: #245fa6;
+  --pri-text: #ffffff;
+  --pri-con: #d5e3ff;
+  --pri-con-text: #001b3c;
+
+  --sec: #6b4ea2;
+  --sec-text: #ffffff;
+  --sec-con: #ebddff;
+  --sec-con-text: #260059;
+
+  --tert: #974066;
+  --tert-text: #ffffff;
+  --tert-con: #ffd9e4;
+  --tert-con-text: #3e0021;
+
+  --err: #ba1a1a;
+  --err-text: #ffffff;
+  --err-con: #ffdad6;
+  --err-con-text: #410002;
+
+  color: var(--bg-text);
+  background-color: var(--bg);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -33,17 +58,6 @@ Accent: #E94560
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
-}
-
 .row {
   display: flex;
   justify-content: center;
@@ -51,12 +65,12 @@ Accent: #E94560
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: var(--pri);
   text-decoration: inherit;
 }
 
 a:hover {
-  color: #535bf2;
+  color: var(--pri-text);
 }
 
 h1 {
@@ -71,10 +85,15 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
+  color: var(--pri-con-text);
+  background-color: var(--pri-con);
   transition: border-color 0.25s;
   box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+}
+
+input::placeholder {
+  color: var(--pri);
+  opacity: .7;
 }
 
 button {
@@ -82,7 +101,7 @@ button {
 }
 
 button:hover {
-  border-color: #396cd8;
+  border-color: var(--pri-con-text);
 }
 
 input,
@@ -96,17 +115,29 @@ button {
 
 @media (prefers-color-scheme: dark) {
   :root {
-    color: #f6f6f6;
-    background-color: #16213E;
-  }
+    --bg: #1a1c1e;
+    --bg-text: #e3e2e6;
 
-  a:hover {
-    color: #24c8db;
-  }
+    --outline: #8e9199;
 
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0F346098;
+    --pri: #a7c8ff;
+    --pri-text: #003061;
+    --pri-con: #004689;
+    --pri-con-text: #d5e3ff;
+
+    --sec: #d3bbff;
+    --sec-text: #3c1d70;
+    --sec-con: #533688;
+    --sec-con-text: #ebddff;
+
+    --tert: #ffb0cd;
+    --tert-text: #5d1137;
+    --tert-con: #7a294e;
+    --tert-con-text: #ffd9e4;
+
+    --err: #ffb4ab;
+    --err-text: #690005;
+    --err-con: #93000a;
+    --err-con-text: #ffdad6;
   }
 }
