@@ -1,3 +1,12 @@
+/* https://colorhunt.co/palette/16213e0f3460533483e94560 
+
+BG: #16213E
+Primary: #0F3460
+Secondary: #533483
+Accent: #E94560
+
+*/
+
 :root {
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
   font-size: 16px;
@@ -12,6 +21,7 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 .container {
@@ -87,7 +97,7 @@ button {
 @media (prefers-color-scheme: dark) {
   :root {
     color: #f6f6f6;
-    background-color: #2f2f2f;
+    background-color: #16213E;
   }
 
   a:hover {
@@ -97,6 +107,6 @@ button {
   input,
   button {
     color: #ffffff;
-    background-color: #0f0f0f98;
+    background-color: #0F346098;
   }
 }
