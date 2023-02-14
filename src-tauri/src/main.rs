@@ -1,4 +1,9 @@
-#![cfg_attr(
+use std::fs;
+// use std::fs::File;
+// use std::io::prelude::*;
+use json;
+
+#[cfg_attr(
     all(not(debug_assertions), target_os = "windows"),
     windows_subsystem = "windows"
 )]
@@ -6,7 +11,13 @@
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
 fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
+    let mut file = fs::read("settings.json").unwrap();
+    let mut contents = String::from_utf8_lossy(&file);
+    let mut settings = json::parse(&contents).unwrap();
+
+    // println!("{}", settings["message"]);
+
+    format!("Hello, {}! {}", name, settings["message"])
 }
 
 fn main() {

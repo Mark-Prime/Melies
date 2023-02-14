@@ -17,6 +17,7 @@ Currently, pretty much everything is to-do. I'll keep this page updated with the
 ### Functionality
 
 - [x] Set up project
+- [x] Open settings.json
 - [ ] Find tf folder
 - [ ] Open events_.txt file
 - [ ] Read lines in file
