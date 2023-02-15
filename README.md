@@ -18,10 +18,13 @@ Currently, pretty much everything is to-do. I'll keep this page updated with the
 
 - [x] Set up project
 - [x] Open settings.json
-- [ ] Find tf folder
-- [ ] Open events_.txt file
-- [ ] Read lines in file
-- [ ] Parse events from each line
+- [x] Find tf folder
+- [x] Open events_.txt file
+- [x] Read lines in file
+- [x] Parse events from each line
+- [ ] create event struct
+- [ ] create clip struct
+- [ ] create vdm struct
 
 ### Style
 
@@ -38,6 +41,7 @@ Currently, pretty much everything is to-do. I'll keep this page updated with the
 
 - [ ] Open custom mod files
 - [ ] Decide on syntax (can keep old syntax from v2)
+- [ ] create vdm struct
 
 ### Events editor
 

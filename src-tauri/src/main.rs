@@ -1,7 +1,6 @@
 use std::fs;
-// use std::fs::File;
-// use std::io::prelude::*;
 use json;
+use regex::Regex;
 
 #[cfg_attr(
     all(not(debug_assertions), target_os = "windows"),
@@ -10,14 +9,34 @@ use json;
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
-fn greet(name: &str) -> String {
-    let mut file = fs::read("settings.json").unwrap();
-    let mut contents = String::from_utf8_lossy(&file);
-    let mut settings = json::parse(&contents).unwrap();
+fn greet() -> String {
+    let file = fs::read_to_string("settings.json").unwrap();
+    let settings = json::parse(&file).unwrap();
 
-    // println!("{}", settings["message"]);
+    
+    let re = Regex::new("\\[(.*)\\] (.*) \\(\"(.*)\" at (\\d*)\\)").unwrap();
 
-    format!("Hello, {}! {}", name, settings["message"])
+    let file_text = match fs::read_to_string(format!("{}\\demos\\_events.txt", settings["tf_folder"])) {
+        Ok(text) => {
+            text
+        },
+        Err(err) => {
+            return err.to_string();
+        }
+    };
+    
+    let mut event_count = 0;
+
+    let events = re.captures_iter(&file_text);
+
+    for event in events {
+        event_count = event_count +  1;
+        println!("{}", &event[0]);
+    }
+
+    format!("_events.txt contains {} events", event_count)
+
+    // format!("{}\\demos\\_events.txt", settings["tf_folder"])
 }
 
 fn main() {
