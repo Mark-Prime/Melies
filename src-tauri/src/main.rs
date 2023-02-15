@@ -13,11 +13,11 @@ fn find_dir(settings: JsonValue) -> Result<String, String> {
         let dir = entry.unwrap();
         let dir_str = dir.path().to_string_lossy().to_string();
 
-        if dir_str.contains("_events.txt") {
+        if dir_str.ends_with("\\_events.txt") {
             return Ok(dir_str);
         }
 
-        if dir_str.contains("KillStreaks.txt") {
+        if dir_str.ends_with("\\KillStreaks.txt") {
             return Ok(dir_str);
         }
     }
@@ -26,11 +26,11 @@ fn find_dir(settings: JsonValue) -> Result<String, String> {
         let dir = entry.unwrap();
         let dir_str = dir.path().to_string_lossy().to_string();
 
-        if dir_str.contains("_events.txt") {
+        if dir_str.ends_with("\\_events.txt") {
             return Ok(dir_str);
         }
 
-        if dir_str.contains("KillStreaks.txt") {
+        if dir_str.ends_with("\\KillStreaks.txt") {
             return Ok(dir_str);
         }
     }
