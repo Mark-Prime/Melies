@@ -22,9 +22,10 @@ Currently, pretty much everything is to-do. I'll keep this page updated with the
 - [x] Open events_.txt file
 - [x] Read lines in file
 - [x] Parse events from each line
-- [ ] create event struct
-- [ ] create clip struct
-- [ ] create vdm struct
+- [x] Check multiple file locations/names
+- [ ] Create event struct
+- [ ] Create clip struct
+- [ ] Create vdm struct
 
 ### Style
 
