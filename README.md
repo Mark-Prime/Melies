@@ -23,7 +23,7 @@ Currently, pretty much everything is to-do. I'll keep this page updated with the
 - [x] Read lines in file
 - [x] Parse events from each line
 - [x] Check multiple file locations/names
-- [ ] Create event struct
+- [x] Create event struct
 - [ ] Create clip struct
 - [ ] Create vdm struct
 

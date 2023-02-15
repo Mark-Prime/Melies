@@ -3,6 +3,8 @@ use json::{self, JsonValue};
 use regex::Regex;
 use tauri::command;
 
+mod event;
+
 #[cfg_attr(
     all(not(debug_assertions), target_os = "windows"),
     windows_subsystem = "windows"
@@ -71,7 +73,7 @@ fn ryukbot() -> String {
 
     for event in events {
         event_count = event_count +  1;
-        println!("{}", &event[0]);
+        println!("{:?}", event::Event::new(event));
     }
 
     format!("_events.txt contains {} events", event_count)
