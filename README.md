@@ -24,6 +24,7 @@ Currently, pretty much everything is to-do. I'll keep this page updated with the
 - [x] Parse events from each line
 - [x] Check multiple file locations/names
 - [x] Create event struct
+- [x] Read ds and prec event file types
 - [ ] Create clip struct
 - [ ] Create vdm struct
 
@@ -42,7 +43,7 @@ Currently, pretty much everything is to-do. I'll keep this page updated with the
 
 - [ ] Open custom mod files
 - [ ] Decide on syntax (can keep old syntax from v2)
-- [ ] create vdm struct
+- [ ] create mod struct
 
 ### Events editor
 

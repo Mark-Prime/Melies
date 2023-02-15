@@ -73,7 +73,7 @@ fn ryukbot() -> String {
 
     for event in events {
         event_count = event_count +  1;
-        println!("{:?}", event::Event::new(event));
+        println!("{:?}", event::Event::new(event).unwrap());
     }
 
     format!("_events.txt contains {} events", event_count)

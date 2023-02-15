@@ -38,11 +38,18 @@ impl Event {
         let mut event_name: Vec<&str> = split.split_whitespace().collect();
         let value: EventStyle;
 
-        match event_name[0] {
-            "Killstreak" => {
+        let name = event_name[0].to_lowercase();
+
+        match name.as_str() {
+            "kill" => {
+                let streak = event_name[1].to_string();
+                let streak_split: Vec<&str> = streak.split(":").collect();
+                value = EventStyle::Killstreak(streak_split[1].to_string().parse::<i64>().unwrap());
+            },
+            "killstreak" => {
                 value = EventStyle::Killstreak(event_name[1].to_string().parse::<i64>().unwrap());
             },
-            "Bookmark" => {
+            "bookmark" => {
                 event_name.remove(0);
                 value = EventStyle::Bookmark(event_name.join(" "));
             },
