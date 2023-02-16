@@ -89,9 +89,16 @@ fn load_settings() -> Result<String, String> {
     return Ok(settings.dump());
 }
 
+#[command]
+fn save_settings(new_settings: String) -> Result<String, String> {
+    let settings = json::parse(&new_settings).unwrap();
+    fs::write("settings.json", settings.pretty(4)).unwrap();
+    return Ok(settings.dump());
+}
+
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![ryukbot, load_settings])
+        .invoke_handler(tauri::generate_handler![ryukbot, load_settings, save_settings])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

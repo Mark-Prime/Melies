@@ -11,6 +11,11 @@
     output_settings = settings.output
     recording_settings = settings.recording
   }
+
+  async function saveSettings(){
+    let answer = await invoke("save_settings", {newSettings: JSON.stringify(settings)});
+    console.log(answer);
+  }
   
   loadSettings();
 </script>
@@ -181,8 +186,12 @@
   </div>
 </div>
 
-
-<a href="/">Home</a>
+<div class="setting">
+  <a href="/">Home</a>
+  <button on:click={saveSettings} class="Save">
+    Save
+  </button>
+</div>
 
 <style>
   .setting {

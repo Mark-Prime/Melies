@@ -1,6 +1,6 @@
 {
     "tf_folder": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Team Fortress 2\\tf",
-    "clear_events": 1,
+    "clear_events": true,
     "safe_mode": 1,
     "output": {
         "method": "h264",
