@@ -25,7 +25,8 @@ Currently, pretty much everything is to-do. I'll keep this page updated with the
 - [x] Check multiple file locations/names
 - [x] Create event struct
 - [x] Read ds and prec event file types
-- [ ] Create clip struct
+- [x] Create clip struct
+- [ ] Combine close events into a single clip
 - [ ] Create vdm struct
 
 ### Style

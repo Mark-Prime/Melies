@@ -3,7 +3,10 @@ use json::{self, JsonValue};
 use regex::Regex;
 use tauri::command;
 
+use crate::clip::Clip;
+
 mod event;
+mod clip;
 
 #[cfg_attr(
     all(not(debug_assertions), target_os = "windows"),
@@ -71,9 +74,21 @@ fn ryukbot() -> String {
 
     let events = re.captures_iter(&file_text);
 
-    for event in events {
+    let mut clips: Vec<Clip> = vec![];
+
+    for event_capture in events {
         event_count = event_count +  1;
-        println!("{}", event::Event::new(event).unwrap());
+
+        let event = event::Event::new(event_capture).unwrap();
+
+        println!("{}", &event);
+
+        if clips.len() == 0 {
+            clips.push(Clip::new(event));
+            continue;
+        }
+
+        clips[clips.len()-1].can_include(event);
     }
 
     format!("_events.txt contains {} events", event_count)

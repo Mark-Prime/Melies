@@ -3,7 +3,6 @@ use std::fmt::{self, Display, Formatter};
 
 #[derive(Debug)]
 pub enum EventError {
-    InvalidInput,
     InvalidTick
 }
 
@@ -11,19 +10,18 @@ impl Display for EventError {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         use EventError::*;
         match self {
-            InvalidInput => write!(f, "This event input is invalid."),
-            InvalidTick => write!(f, "The tick is not a number."),
+            InvalidTick => write!(f, "The tick is not a number.")
         }
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum EventStyle {
     Bookmark(String),
     Killstreak(i64)
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Event {
     event: String,
     pub demo_name: String,
