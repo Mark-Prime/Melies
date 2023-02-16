@@ -8,6 +8,4 @@
   <Greet />
 </div>
 
-<style>
-  
-</style>
+<a href="/settings">Settings</a>

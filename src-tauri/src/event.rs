@@ -1,9 +1,20 @@
 use regex::Captures;
+use std::fmt::{self, Display, Formatter};
 
 #[derive(Debug)]
 pub enum EventError {
     InvalidInput,
     InvalidTick
+}
+
+impl Display for EventError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        use EventError::*;
+        match self {
+            InvalidInput => write!(f, "This event input is invalid."),
+            InvalidTick => write!(f, "The tick is not a number."),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -64,5 +75,11 @@ impl Event {
             tick,
             value
         })
+    }
+}
+
+impl Display for Event {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.event)
     }
 }

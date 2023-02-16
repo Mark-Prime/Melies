@@ -1,11 +1,7 @@
-/* https://colorhunt.co/palette/16213e0f3460533483e94560 
-
-BG: #16213E
-Primary: #0F3460
-Secondary: #533483
-Accent: #E94560
-
-*/
+/* https://colorhunt.co/palette/16213e0f3460533483e94560  */
+* {
+  box-sizing: border-box;
+}
 
 :root {
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
@@ -51,7 +47,7 @@ Accent: #E94560
 
 .container {
   margin: 0;
-  padding-top: 10vh;
+  padding-top: 3rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -67,6 +63,7 @@ a {
   font-weight: 500;
   color: var(--pri);
   text-decoration: inherit;
+  margin: auto;
 }
 
 a:hover {
@@ -81,7 +78,7 @@ input,
 button {
   border-radius: 8px;
   border: 1px solid transparent;
-  padding: 0.6em 1.2em;
+  padding: 0.5rem .7rem;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
@@ -113,6 +110,70 @@ button {
   margin-right: 5px;
 }
 
+/* The switch - the box around the slider */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 35px;
+  height: 21px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--pri-con);
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
+  background-color: var(--pri-con-text);
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: var(--pri-con-text);
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px var(--pri-con-text);
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(15px);
+  -ms-transform: translateX(15px);
+  transform: translateX(15px);
+  background-color: var(--pri-con);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #1a1c1e;
@@ -139,5 +200,25 @@ button {
     --err-text: #690005;
     --err-con: #93000a;
     --err-con-text: #ffdad6;
+  }
+
+  .slider {
+    background-color: var(--pri-con-text);
+  }
+  
+  .slider:before {
+    background-color: var(--pri-con);
+  }
+  
+  input:checked + .slider {
+    background-color: var(--pri-con);
+  }
+  
+  input:focus + .slider {
+    box-shadow: 0 0 1px var(--pri-con);
+  }
+  
+  input:checked + .slider:before {
+    background-color: var(--pri-con-text);
   }
 }

@@ -73,7 +73,7 @@ fn ryukbot() -> String {
 
     for event in events {
         event_count = event_count +  1;
-        println!("{:?}", event::Event::new(event).unwrap());
+        println!("{}", event::Event::new(event).unwrap());
     }
 
     format!("_events.txt contains {} events", event_count)
@@ -81,9 +81,17 @@ fn ryukbot() -> String {
     // format!("{}\\demos\\_events.txt", settings["tf_folder"])
 }
 
+#[command]
+fn load_settings() -> Result<String, String> {
+    let file = fs::read_to_string("settings.json").unwrap();
+    let settings = json::parse(&file).unwrap();
+
+    return Ok(settings.dump());
+}
+
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![ryukbot])
+        .invoke_handler(tauri::generate_handler![ryukbot, load_settings])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

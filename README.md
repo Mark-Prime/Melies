@@ -31,13 +31,15 @@ Currently, pretty much everything is to-do. I'll keep this page updated with the
 ### Style
 
 - [x] Decide default color scheme
+- [ ] Create logo/icon
 - [ ] Decide Font
 - [ ] Build basic reusable component set
 
 ### Customization
 
-- [ ] Themes/Color choices
+- [x] Open and display settings file
 - [ ] Easily editable settings (within the app)
+- [ ] Themes/Color choices
 
 ### Mods
 
