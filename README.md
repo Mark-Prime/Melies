@@ -19,7 +19,7 @@ Currently, pretty much everything is to-do. I'll keep this page updated with the
 - [x] Set up project
 - [x] Open settings.json
 - [x] Find tf folder
-- [x] Open events_.txt file
+- [x] Open _events.txt file
 - [x] Read lines in file
 - [x] Parse events from each line
 - [x] Check multiple file locations/names
@@ -27,7 +27,8 @@ Currently, pretty much everything is to-do. I'll keep this page updated with the
 - [x] Read ds and prec event file types
 - [x] Create clip struct
 - [ ] Combine close events into a single clip
-- [ ] Create vdm struct
+- [ ] Name clips appropriately
+- [ ] Make VDM crate (whole different thing I'm doing)
 
 ### Style
 
@@ -46,11 +47,11 @@ Currently, pretty much everything is to-do. I'll keep this page updated with the
 
 - [ ] Open custom mod files
 - [ ] Decide on syntax (can keep old syntax from v2)
-- [ ] create mod struct
+- [ ] Create mod struct
 
 ### Events editor
 
-- [ ] Open events file
+- [x] Open events file
 - [ ] Add new events to the end
 - [ ] View current events
 - [ ] Edit already existing events
@@ -64,6 +65,10 @@ Currently, pretty much everything is to-do. I'll keep this page updated with the
 ### Logs.tf integration
 
 - [ ] Open log using logs.tf API
+- [ ] Parse data from the JSON and display it
+- [ ] Allow event selection for recording
+- [ ] POV selection
+- [ ] Turn selected events into 
 
 ## License
 
