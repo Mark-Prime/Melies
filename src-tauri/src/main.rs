@@ -1,19 +1,120 @@
+use std::fmt::format;
+use std::fs::File;
+use std::io::Write;
 use std::{fs};
 use json::{self, JsonValue};
 use regex::Regex;
 use tauri::command;
+use vdm::VDM;
+use vdm::action::ActionType;
 
 use crate::clip::Clip;
 
 mod event;
 mod clip;
 
+macro_rules! ifelse {
+    ($c:expr, $v:expr, $v1:expr) => {
+        if $c {$v} else {$v1}
+    };
+}
+
+macro_rules! extend {
+    ($v:expr, $v1:expr, $c:expr) => {
+        $v = format!("{}{}", $v, format!($v1, $c))
+    };
+}
+
 #[cfg_attr(
     all(not(debug_assertions), target_os = "windows"),
     windows_subsystem = "windows"
 )]
 
-fn find_dir(settings: JsonValue) -> Result<String, String> {
+fn write_cfg(settings: &JsonValue) {
+    let mut cfg = String::new();
+
+    // println!("cl_drawhud {}", settings["output"]["HUD"]);
+
+    extend!(cfg, "echo \"Execing Melies Config\";\r\ncl_drawhud {};\r\n", settings["output"]["HUD"]);
+    extend!(cfg, "voice_enable {};\r\n", settings["output"]["voice_chat"]);
+    extend!(cfg, "hud_saytext_time {};\r\n", settings["output"]["text_chat"]);
+    extend!(cfg, "crosshair {};\r\n", settings["output"]["crosshair"]);
+    extend!(cfg, "{};\r\n", settings["recording"]["commands"]);
+
+    if settings["output"]["lock"].as_i64().unwrap() == 1 {
+        extend!(cfg, "\r\necho \"Preventing settings from changing\";\r\nalias cl_drawhud \"{}\";\r\n", "");
+        extend!(cfg, "alias voice_enable \"{}\";\r\n", "");
+        extend!(cfg, "alias hud_saytext_time \"{}\";\r\n", "");
+        extend!(cfg, "alias crosshair \"{}\";\r\n", "");
+    }
+
+    let mut file = File::create(format!("{}\\cfg\\melies.cfg", settings["tf_folder"])).unwrap();
+
+    file.write_all(cfg.as_bytes()).unwrap();
+}
+
+fn start_vdm(vdm: &mut VDM, clip: &Clip, settings: &JsonValue) {
+    if clip.start_tick > settings["recording"]["start_delay"].as_i64().unwrap() {
+        let mut skip_props = vdm.create_action(ActionType::SkipAhead).props_mut();
+
+        skip_props.start_tick = Some(settings["recording"]["start_delay"].as_i64().unwrap());
+        skip_props.skip_to_tick = Some(clip.start_tick - 100);
+    }
+
+    record_clip(vdm, clip, settings);
+}
+
+fn add_clip_to_vdm(vdm: &mut VDM, clip: &Clip, settings: &JsonValue) {
+    let last_tick = vdm.last().props().start_tick.unwrap();
+    
+    if clip.start_tick > last_tick + 300 {
+        let mut skip_props = vdm.create_action(ActionType::SkipAhead).props_mut();
+
+        skip_props.start_tick = Some(last_tick + 100);
+        skip_props.skip_to_tick = Some(clip.start_tick - 100);
+    }
+
+    record_clip(vdm, clip, settings);
+}
+
+fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &JsonValue) {
+    {
+        let mut exec_commands = vdm.create_action(ActionType::PlayCommands).props_mut();
+
+        exec_commands.start_tick = Some(clip.start_tick - 50);
+        exec_commands.name = "Exec Melies Commands".to_string();
+        exec_commands.commands = "exec melies;".to_string();
+    }
+
+    {
+        let mut start_record = vdm.create_action(ActionType::PlayCommands).props_mut();
+
+        let commands = format!(
+            "{}host_framerate {}; startmovie {} {}; clear;",
+            ifelse!(settings["output"]["snd_fix"] == 1, "snd_restart; ", ""),
+            settings["output"]["framerate"],
+            "TEST_NAME",
+            settings["output"]["method"]
+        );
+
+        start_record.start_tick = Some(clip.start_tick);
+        start_record.name = "Start Recording".to_string();
+        start_record.commands = commands;
+    }
+
+    {
+        let mut end_record = vdm.create_action(ActionType::PlayCommands).props_mut();
+
+        end_record.start_tick = Some(clip.end_tick);
+        end_record.name = "Stop Recording".to_string();
+        end_record.commands = format!(
+            "{}; host_framerate 0; endmovie;",
+            settings["recording"]["end_commands"],
+        );
+    }
+}
+
+fn find_dir(settings: &JsonValue) -> Result<String, String> {
     for entry in fs::read_dir(format!("{}\\demos", settings["tf_folder"])).unwrap() {
         let dir = entry.unwrap();
         let dir_str = dir.path().to_string_lossy().to_string();
@@ -50,7 +151,7 @@ fn ryukbot() -> String {
 
     let dir;
 
-    match find_dir(settings) {
+    match find_dir(&settings) {
         Ok(directory) => {
             dir = directory;
         },
@@ -67,6 +168,8 @@ fn ryukbot() -> String {
             return err.to_string();
         }
     };
+
+    write_cfg(&settings);
     
     let mut event_count = 0;
 
@@ -81,19 +184,49 @@ fn ryukbot() -> String {
 
         let event = event::Event::new(event_capture).unwrap();
 
-        println!("{}", &event);
+        // println!("{}", &event);
 
         if clips.len() == 0 {
-            clips.push(Clip::new(event));
+            clips.push(Clip::new(event, &settings));
             continue;
         }
 
-        clips[clips.len()-1].can_include(event);
+        if clips.last().unwrap().can_include(&event, &settings) {
+            clips.last_mut().unwrap().include(event, &settings);
+            // println!("THESE CAN COMBINE!");
+            continue;
+        }
+
+        clips.push(Clip::new(event, &settings));
     }
 
-    format!("_events.txt contains {} events", event_count)
+    let mut current_demo: String = "".to_string();
+    let mut vdm: VDM = VDM::new();
+    let mut vdms = vec![];
 
-    // format!("{}\\demos\\_events.txt", settings["tf_folder"])
+    for clip in &clips {
+        if current_demo == clip.demo_name {
+            add_clip_to_vdm(&mut vdm, clip, &settings);
+            continue;
+        }
+
+        if vdm.len() > 0 {
+            vdms.push(vdm);
+        }
+
+        current_demo = clip.demo_name.clone();
+        vdm = VDM::new();
+        vdm.name = clip.demo_name.clone();
+        start_vdm(&mut vdm, clip, &settings);
+    }
+
+    vdms.push(vdm);
+
+    for (_i, vdm) in vdms.iter().enumerate() {
+        vdm.export(&format!("{}\\demos\\{}.vdm", settings["tf_folder"], vdm.name));
+    }
+
+    format!("_events.txt contains {} clips from {} events", clips.len(), event_count)
 }
 
 #[command]
@@ -101,14 +234,14 @@ fn load_settings() -> Result<String, String> {
     let file = fs::read_to_string("settings.json").unwrap();
     let settings = json::parse(&file).unwrap();
 
-    return Ok(settings.dump());
+    Ok(settings.dump())
 }
 
 #[command]
 fn save_settings(new_settings: String) -> Result<String, String> {
     let settings = json::parse(&new_settings).unwrap();
     fs::write("settings.json", settings.pretty(4)).unwrap();
-    return Ok(settings.dump());
+    Ok(settings.dump()) 
 }
 
 fn main() {

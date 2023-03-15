@@ -26,9 +26,9 @@ Currently, pretty much everything is to-do. I'll keep this page updated with the
 - [x] Create event struct
 - [x] Read ds and prec event file types
 - [x] Create clip struct
-- [ ] Combine close events into a single clip
+- [x] Combine close events into a single clip
 - [ ] Name clips appropriately
-- [ ] Make VDM crate (whole different thing I'm doing)
+- [x] Make VDM crate (whole different thing I'm doing)
 
 ### Style
 
