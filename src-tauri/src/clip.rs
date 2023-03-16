@@ -9,7 +9,7 @@ pub struct Clip {
     pub demo_name: String,
     pub has_killstreak: bool,
     pub has_bookmark: bool,
-    ks_value: i64,
+    pub ks_value: i64,
     pub start_tick: i64,
     pub end_tick: i64
 }

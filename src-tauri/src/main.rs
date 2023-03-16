@@ -1,4 +1,3 @@
-use std::fmt::format;
 use std::fs::File;
 use std::io::Write;
 use std::{fs};
@@ -53,6 +52,28 @@ fn write_cfg(settings: &JsonValue) {
     file.write_all(cfg.as_bytes()).unwrap();
 }
 
+fn end_vdm(vdm: &mut VDM, settings: &JsonValue, next_demoname: String) -> VDM {
+    println!("{}", vdm.name);
+    let last_tick = vdm.last().props().start_tick.unwrap();
+
+    {
+        let mut exec_commands = vdm.create_action(ActionType::PlayCommands).props_mut();
+
+        exec_commands.start_tick = Some(last_tick + 100);
+
+        if settings["recording"]["record_continuous"] == 1 && next_demoname != "" {
+            exec_commands.name = format!("Start the next demo ({}.dem)", next_demoname);
+            exec_commands.commands = format!("playdemo {};", next_demoname);
+            return vdm.to_owned();
+        }
+
+        exec_commands.name = "Exit TF2".to_string();
+        exec_commands.commands = "quit;".to_string();
+    }
+
+    vdm.to_owned()
+}
+
 fn start_vdm(vdm: &mut VDM, clip: &Clip, settings: &JsonValue) {
     if clip.start_tick > settings["recording"]["start_delay"].as_i64().unwrap() {
         let mut skip_props = vdm.create_action(ActionType::SkipAhead).props_mut();
@@ -78,6 +99,18 @@ fn add_clip_to_vdm(vdm: &mut VDM, clip: &Clip, settings: &JsonValue) {
 }
 
 fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &JsonValue) {
+    let vdm_name = vdm.name.clone();
+
+    let mut suffix = "bm".to_string();
+
+    if clip.has_killstreak {
+        suffix = format!("ks{}", clip.ks_value);
+
+        if clip.has_bookmark {
+            suffix = format!("bm{}+", clip.ks_value);
+        }
+    }
+    
     {
         let mut exec_commands = vdm.create_action(ActionType::PlayCommands).props_mut();
 
@@ -93,7 +126,7 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &JsonValue) {
             "{}host_framerate {}; startmovie {} {}; clear;",
             ifelse!(settings["output"]["snd_fix"] == 1, "snd_restart; ", ""),
             settings["output"]["framerate"],
-            "TEST_NAME",
+            format!("{}_{}-{}_{}", vdm_name, clip.start_tick, clip.end_tick, suffix),
             settings["output"]["method"]
         );
 
@@ -222,7 +255,8 @@ fn ryukbot() -> String {
 
     vdms.push(vdm);
 
-    for (_i, vdm) in vdms.iter().enumerate() {
+    for (i, vdm) in vdms.iter().enumerate() {
+        let vdm = end_vdm(&mut vdm.clone(), &settings, ifelse!(vdms.len() > i + 1, String::from(&vdms[i + 1].name), String::new()));
         vdm.export(&format!("{}\\demos\\{}.vdm", settings["tf_folder"], vdm.name));
     }
 
