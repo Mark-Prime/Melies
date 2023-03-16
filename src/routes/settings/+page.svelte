@@ -111,11 +111,11 @@
 
 <div class="setting">
   <div class="settings__input-group">
-    <label for="tf_folder" class="settings__label">Recording Method</label>
+    <label for="tf_folder" class="settings__label">Commands</label>
     <input bind:value={recording_settings.commands} id="tf_folder" class="settings__input"/>
   </div>
   <div class="settings__input-group">
-    <label for="tf_folder" class="settings__label">Framerate</label>
+    <label for="tf_folder" class="settings__label">End Commands</label>
     <input bind:value={recording_settings.end_commands} id="tf_folder" class="settings__input"/>
   </div>
 </div>
