@@ -7,7 +7,8 @@
       "default",
       {
         "ignore": [
-          "text-size-adjust"
+          "text-size-adjust",
+          "font-synthesis"
         ]
       }
     ],

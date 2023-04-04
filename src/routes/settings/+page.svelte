@@ -15,6 +15,7 @@
   async function saveSettings(){
     let answer = await invoke("save_settings", {newSettings: JSON.stringify(settings)});
     console.log(answer);
+    window.location = "/"
   }
   
   loadSettings();
@@ -23,13 +24,10 @@
 <h1>Settings</h1>
 
 <div class="setting">
-  <div class="settings__input-group">
+  <div class="settings__input-group  settings__span">
     <label for="tf_folder" class="settings__label">\tf Folder</label>
     <input bind:value={settings.tf_folder} id="tf_folder" class="settings__input"/>
   </div>
-</div>
-
-<div class="setting">
   <div class="settings__switch">
     <label class="switch">
       <input type="checkbox" bind:checked={settings.safe_mode}>
@@ -51,57 +49,51 @@
 <div class="setting">
   <div class="settings__input-group">
     <label for="tf_folder" class="settings__label">Recording Method</label>
-    <input bind:value={output_settings.method} id="tf_folder" class="settings__input"/>
+    <input bind:value={output_settings.method} id="tf_folder" class="settings__input input--sec"/>
   </div>
   <div class="settings__input-group">
     <label for="tf_folder" class="settings__label">Framerate</label>
-    <input bind:value={output_settings.framerate} id="tf_folder" class="settings__input" type="number"/>
+    <input bind:value={output_settings.framerate} id="tf_folder" class="settings__input input--sec" type="number"/>
   </div>
-</div>
-<div class="setting">
   <div class="settings__switch">
     <label class="switch">
       <input type="checkbox" bind:checked={output_settings.crosshair}>
-      <span class="slider round"></span>
+      <span class="slider round slider--sec"></span>
     </label>
     Display Crosshair
   </div>
   <div class="settings__switch">
     <label class="switch">
       <input type="checkbox" bind:checked={output_settings.hud}>
-      <span class="slider round"></span>
+      <span class="slider round slider--sec"></span>
     </label>
     Display HUD
   </div>
-</div>
-<div class="setting">
   <div class="settings__switch">
     <label class="switch">
       <input type="checkbox" bind:checked={output_settings.text_chat}>
-      <span class="slider round"></span>
+      <span class="slider round slider--sec"></span>
     </label>
     Enable Text Chat
   </div>
   <div class="settings__switch">
     <label class="switch">
       <input type="checkbox" bind:checked={output_settings.snd_fix}>
-      <span class="slider round"></span>
+      <span class="slider round slider--sec"></span>
     </label>
     Attempt to fix sound issues.
   </div>
-</div>
-<div class="setting">
   <div class="settings__switch">
     <label class="switch">
       <input type="checkbox" bind:checked={output_settings.voice_chat}>
-      <span class="slider round"></span>
+      <span class="slider round slider--sec"></span>
     </label>
     Enable Voice Chat
   </div>
   <div class="settings__switch">
     <label class="switch">
       <input type="checkbox" bind:checked={output_settings.lock}>
-      <span class="slider round"></span>
+      <span class="slider round slider--sec"></span>
     </label>
     Prevent in-game settings from changing.
   </div>
@@ -112,94 +104,113 @@
 <div class="setting">
   <div class="settings__input-group">
     <label for="tf_folder" class="settings__label">Commands</label>
-    <input bind:value={recording_settings.commands} id="tf_folder" class="settings__input"/>
+    <input bind:value={recording_settings.commands} id="tf_folder" class="settings__input input--tert"/>
   </div>
   <div class="settings__input-group">
     <label for="tf_folder" class="settings__label">End Commands</label>
-    <input bind:value={recording_settings.end_commands} id="tf_folder" class="settings__input"/>
+    <input bind:value={recording_settings.end_commands} id="tf_folder" class="settings__input input--tert"/>
   </div>
-</div>
-<div class="setting">
   <div class="settings__input-group">
     <label for="tf_folder" class="settings__label">Delay before initial skip</label>
-    <input bind:value={recording_settings.start_delay} id="tf_folder" class="settings__input" type="number"/>
+    <input bind:value={recording_settings.start_delay} id="tf_folder" class="settings__input input--tert" type="number"/>
   </div>
   <div class="settings__input-group">
     <label for="tf_folder" class="settings__label">Minimum ticks between clips</label>
-    <input bind:value={recording_settings.minimum_ticks_between_clips} id="tf_folder" class="settings__input" type="number"/>
+    <input bind:value={recording_settings.minimum_ticks_between_clips} id="tf_folder" class="settings__input input--tert" type="number"/>
   </div>
-</div>
-<div class="setting">
   <div class="settings__input-group">
     <label for="tf_folder" class="settings__label">Ticks before bookmarks</label>
-    <input bind:value={recording_settings.before_bookmark} id="tf_folder" class="settings__input" type="number"/>
+    <input bind:value={recording_settings.before_bookmark} id="tf_folder" class="settings__input input--tert" type="number"/>
   </div>
   <div class="settings__input-group">
     <label for="tf_folder" class="settings__label">Ticks after bookmarks</label>
-    <input bind:value={recording_settings.after_bookmark} id="tf_folder" class="settings__input" type="number"/>
+    <input bind:value={recording_settings.after_bookmark} id="tf_folder" class="settings__input input--tert" type="number"/>
   </div>
-</div>
-<div class="setting">
   <div class="settings__input-group">
     <label for="tf_folder" class="settings__label">Ticks before killstreak per kill in streak</label>
-    <input bind:value={recording_settings.before_killstreak_per_kill} id="tf_folder" class="settings__input" type="number"/>
+    <input bind:value={recording_settings.before_killstreak_per_kill} id="tf_folder" class="settings__input input--tert" type="number"/>
   </div>
   <div class="settings__input-group">
     <label for="tf_folder" class="settings__label">Ticks after killstreak</label>
-    <input bind:value={recording_settings.after_killstreak} id="tf_folder" class="settings__input" type="number"/>
+    <input bind:value={recording_settings.after_killstreak} id="tf_folder" class="settings__input input--tert" type="number"/>
   </div>
-</div>
-<div class="setting">
   <div class="settings__input-group">
     <label for="tf_folder" class="settings__label">Interval for rewind double taps</label>
-    <input bind:value={recording_settings.interval_for_rewind_double_taps} id="tf_folder" class="settings__input" type="number"/>
+    <input bind:value={recording_settings.interval_for_rewind_double_taps} id="tf_folder" class="settings__input input--tert" type="number"/>
   </div>
   <div class="settings__input-group">
     <label for="tf_folder" class="settings__label">Rewind amount upon double tap</label>
-    <input bind:value={recording_settings.rewind_amount} id="tf_folder" class="settings__input" type="number"/>
+    <input bind:value={recording_settings.rewind_amount} id="tf_folder" class="settings__input input--tert" type="number"/>
   </div>
-</div>
-<div class="setting">
   <div class="settings__input-group">
     <label for="tf_folder" class="settings__label">Delay before initial skip</label>
-    <input bind:value={recording_settings.start_delay} id="tf_folder" class="settings__input" type="number"/>
+    <input bind:value={recording_settings.start_delay} id="tf_folder" class="settings__input input--tert" type="number"/>
   </div>
   <div class="settings__input-group">
     <label for="tf_folder" class="settings__label">Minimum ticks between clips</label>
-    <input bind:value={recording_settings.minimum_ticks_between_clips} id="tf_folder" class="settings__input" type="number"/>
+    <input bind:value={recording_settings.minimum_ticks_between_clips} id="tf_folder" class="settings__input input--tert" type="number"/>
   </div>
-</div>
-<div class="setting">
+  <div class="settings__input-group">
+    <label for="FOV" class="settings__label">FOV</label>
+    <input bind:value={recording_settings.Fov} id="FOV" class="settings__input input--tert" type="number"/>
+  </div>
+  <div class="settings__input-group">
+    <label for="viewodel_fov" class="settings__label">Viewmodel FOV</label>
+    <input bind:value={recording_settings.viewmodel_fov} id="viewodel_fov" class="settings__input input--tert" type="number"/>
+  </div>
   <div class="settings__switch">
     <label class="switch">
       <input type="checkbox" bind:checked={recording_settings.record_continuous}>
-      <span class="slider round"></span>
+      <span class="slider round slider--tert"></span>
     </label>
-    Auto-record next demo when complete
+    Automatically record next demo when current demo completes
   </div>
   <div class="settings__switch">
     <label class="switch">
       <input type="checkbox" bind:checked={recording_settings.auto_close}>
-      <span class="slider round"></span>
+      <span class="slider round slider--tert"></span>
     </label>
     Prevent idle hours
+  </div>
+  <div class="settings__switch">
+    <label class="switch">
+      <input type="checkbox" bind:checked={recording_settings.auto_suffix}>
+      <span class="slider round slider--tert"></span>
+    </label>
+    Automatically label videos
   </div>
 </div>
 
 <div class="setting">
-  <a href="/">Home</a>
+  <a href="/" class="cancel-btn">Cancel</a>
   <button on:click={saveSettings} class="Save">
     Save
   </button>
 </div>
 
 <style>
+  .cancel-btn {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    padding: 0.5rem .7rem;
+    font-size: 1em;
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--err-con-text);
+    background-color: var(--err-con);
+    transition: border-color 0.25s;
+    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+    outline: none;
+  }
+
   .setting {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     justify-content: space-between;
     gap: 1rem;
     margin: auto;
-    margin-bottom: 1rem;
+    margin-bottom: 2rem;
     width: 100%;
     max-width: 1000px;
     padding: 0rem 2rem;
@@ -221,6 +232,11 @@
     align-items: center;
     gap: 1rem;
     width: 100%;
+  }
+
+  .settings__span {
+    grid-column-start: 1;
+    grid-column-end: span 2;
   }
 </style>
   

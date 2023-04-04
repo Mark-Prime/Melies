@@ -1,7 +1,13 @@
+#![cfg_attr(
+    all(not(debug_assertions), target_os = "windows"),
+    windows_subsystem = "windows"
+)]
+
 use std::fs::File;
 use std::io::Write;
-use std::{fs};
-use json::{self, JsonValue};
+use std::{fs, env};
+use std::path::Path;
+use serde_json::{self, Value, json};
 use regex::Regex;
 use tauri::command;
 use vdm::VDM;
@@ -29,30 +35,35 @@ macro_rules! extend {
     windows_subsystem = "windows"
 )]
 
-fn write_cfg(settings: &JsonValue) {
+fn write_cfg(settings: &Value) {
     let mut cfg = String::new();
 
     // println!("cl_drawhud {}", settings["output"]["HUD"]);
 
     extend!(cfg, "echo \"Execing Melies Config\";\r\ncl_drawhud {};\r\n", settings["output"]["HUD"]);
+    extend!(cfg, "sv_cheats {};\r\n", "1");
     extend!(cfg, "voice_enable {};\r\n", settings["output"]["voice_chat"]);
     extend!(cfg, "hud_saytext_time {};\r\n", settings["output"]["text_chat"]);
     extend!(cfg, "crosshair {};\r\n", settings["output"]["crosshair"]);
-    extend!(cfg, "{};\r\n", settings["recording"]["commands"]);
+    extend!(cfg, "viewmodel_fov {};\r\n", settings["recording"]["viewmodel_fov"]);
+    extend!(cfg, "fov_desired {};\r\n", settings["recording"]["Fov"]);
+    extend!(cfg, "{};\r\n", settings["recording"]["commands"].as_str().unwrap());
 
     if settings["output"]["lock"].as_i64().unwrap() == 1 {
         extend!(cfg, "\r\necho \"Preventing settings from changing\";\r\nalias cl_drawhud \"{}\";\r\n", "");
         extend!(cfg, "alias voice_enable \"{}\";\r\n", "");
         extend!(cfg, "alias hud_saytext_time \"{}\";\r\n", "");
         extend!(cfg, "alias crosshair \"{}\";\r\n", "");
+        extend!(cfg, "alias viewmodel_fov \"{}\";\r\n", "");
+        extend!(cfg, "alias fov_desired \"{}\";\r\n", "");
     }
 
-    let mut file = File::create(format!("{}\\cfg\\melies.cfg", settings["tf_folder"])).unwrap();
+    let mut file = File::create(format!("{}\\cfg\\melies.cfg", settings["tf_folder"].as_str().unwrap())).unwrap();
 
     file.write_all(cfg.as_bytes()).unwrap();
 }
 
-fn end_vdm(vdm: &mut VDM, settings: &JsonValue, next_demoname: String) -> VDM {
+fn end_vdm(vdm: &mut VDM, settings: &Value, next_demoname: String) -> VDM {
     println!("{}", vdm.name);
     let last_tick = vdm.last().props().start_tick.unwrap();
 
@@ -74,8 +85,8 @@ fn end_vdm(vdm: &mut VDM, settings: &JsonValue, next_demoname: String) -> VDM {
     vdm.to_owned()
 }
 
-fn start_vdm(vdm: &mut VDM, clip: &Clip, settings: &JsonValue) {
-    if clip.start_tick > settings["recording"]["start_delay"].as_i64().unwrap() {
+fn start_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
+    if clip.start_tick > settings["recording"]["start_delay"].as_i64().unwrap() + 100 {
         let mut skip_props = vdm.create_action(ActionType::SkipAhead).props_mut();
 
         skip_props.start_tick = Some(settings["recording"]["start_delay"].as_i64().unwrap());
@@ -85,7 +96,7 @@ fn start_vdm(vdm: &mut VDM, clip: &Clip, settings: &JsonValue) {
     record_clip(vdm, clip, settings);
 }
 
-fn add_clip_to_vdm(vdm: &mut VDM, clip: &Clip, settings: &JsonValue) {
+fn add_clip_to_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
     let last_tick = vdm.last().props().start_tick.unwrap();
     
     if clip.start_tick > last_tick + 300 {
@@ -98,7 +109,7 @@ fn add_clip_to_vdm(vdm: &mut VDM, clip: &Clip, settings: &JsonValue) {
     record_clip(vdm, clip, settings);
 }
 
-fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &JsonValue) {
+fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
     let vdm_name = vdm.name.clone();
 
     let mut suffix = "bm".to_string();
@@ -122,11 +133,17 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &JsonValue) {
     {
         let mut start_record = vdm.create_action(ActionType::PlayCommands).props_mut();
 
+        let mut clip_name = format!("{}_{}-{}_{}", vdm_name, clip.start_tick, clip.end_tick, suffix);
+
+        if clip.bm_value != "".to_string() && settings["recording"]["auto_suffix"] == 1 && clip.bm_value != "General".to_string() {
+            clip_name = format!("{}_{}", clip_name, clip.bm_value.replace(" ", "-"));
+        }
+
         let commands = format!(
             "{}host_framerate {}; startmovie {} {}; clear;",
             ifelse!(settings["output"]["snd_fix"] == 1, "snd_restart; ", ""),
             settings["output"]["framerate"],
-            format!("{}_{}-{}_{}", vdm_name, clip.start_tick, clip.end_tick, suffix),
+            clip_name,
             settings["output"]["method"]
         );
 
@@ -147,8 +164,8 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &JsonValue) {
     }
 }
 
-fn find_dir(settings: &JsonValue) -> Result<String, String> {
-    for entry in fs::read_dir(format!("{}\\demos", settings["tf_folder"])).unwrap() {
+fn find_dir(settings: &Value) -> Result<String, String> {
+    for entry in fs::read_dir(format!("{}\\demos", settings["tf_folder"].as_str().unwrap())).unwrap() {
         let dir = entry.unwrap();
         let dir_str = dir.path().to_string_lossy().to_string();
 
@@ -161,7 +178,7 @@ fn find_dir(settings: &JsonValue) -> Result<String, String> {
         }
     }
 
-    for entry in fs::read_dir(format!("{}", settings["tf_folder"])).unwrap() {
+    for entry in fs::read_dir(format!("{}", settings["tf_folder"].as_str().unwrap())).unwrap() {
         let dir = entry.unwrap();
         let dir_str = dir.path().to_string_lossy().to_string();
 
@@ -173,14 +190,17 @@ fn find_dir(settings: &JsonValue) -> Result<String, String> {
             return Ok(dir_str);
         }
     }
-    Err(format!("File Not Found: Please ensure the setting tf_folder is correct: ({})", settings["tf_folder"]))
+
+    Err(format!("File Not Found: Please ensure the setting tf_folder is correct: ({})", settings["tf_folder"].as_str().unwrap()))
 }
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[command]
 fn ryukbot() -> String {
-    let file = fs::read_to_string("settings.json").unwrap();
-    let settings = json::parse(&file).unwrap();
+    let settings_path = env::var("USERPROFILE").unwrap() + "\\Documents\\Melies\\settings.json";
+
+    let file = fs::read_to_string(settings_path).unwrap();
+    let settings = serde_json::from_str(&file).unwrap();
 
     let dir;
 
@@ -217,8 +237,6 @@ fn ryukbot() -> String {
 
         let event = event::Event::new(event_capture).unwrap();
 
-        // println!("{}", &event);
-
         if clips.len() == 0 {
             clips.push(Clip::new(event, &settings));
             continue;
@@ -226,7 +244,6 @@ fn ryukbot() -> String {
 
         if clips.last().unwrap().can_include(&event, &settings) {
             clips.last_mut().unwrap().include(event, &settings);
-            // println!("THESE CAN COMBINE!");
             continue;
         }
 
@@ -257,25 +274,82 @@ fn ryukbot() -> String {
 
     for (i, vdm) in vdms.iter().enumerate() {
         let vdm = end_vdm(&mut vdm.clone(), &settings, ifelse!(vdms.len() > i + 1, String::from(&vdms[i + 1].name), String::new()));
-        vdm.export(&format!("{}\\demos\\{}.vdm", settings["tf_folder"], vdm.name));
+        vdm.export(&format!("{}\\demos\\{}.vdm", settings["tf_folder"].as_str().unwrap(), vdm.name));
     }
 
     format!("_events.txt contains {} clips from {} events", clips.len(), event_count)
 }
 
+fn build_settings() -> Result<String, String> {
+    let binding = env::var("USERPROFILE").unwrap() + "\\Documents\\Melies\\settings.json";
+    let settings_path = Path::new(&binding);
+    let settings_prefix = settings_path.parent().unwrap();
+    std::fs::create_dir_all(settings_prefix).unwrap();
+
+    File::create(settings_path).unwrap();
+
+    let settings = json!({
+        "tf_folder": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Team Fortress 2\\tf",
+        "clear_events": true,
+        "safe_mode": 1,
+        "output": {
+            "method": "h264",
+            "framerate": 60,
+            "crosshair": 0,
+            "HUD": 1,
+            "text_chat": 0,
+            "voice_chat": 0,
+            "snd_fix": 1,
+            "lock": 1
+        },
+        "recording": {
+            "commands": "exec recbinds",
+            "end_commands": "crosshair 1",
+            "start_delay": 50,
+            "minimum_ticks_between_clips": 500,
+            "before_bookmark": 1000,
+            "after_bookmark": 200,
+            "before_killstreak_per_kill": 500,
+            "after_killstreak": 300,
+            "interval_for_rewind_double_taps": 66,
+            "rewind_amount": 1000,
+            "Fov": 90,
+            "viewmodel_fov": 90,
+            "record_continuous": 1,
+            "auto_close": 1,
+            "auto_suffix": 1
+        }
+    });
+    
+    fs::write(settings_path, settings.to_string()).unwrap();
+    Ok(settings.to_string())
+}
+
 #[command]
 fn load_settings() -> Result<String, String> {
-    let file = fs::read_to_string("settings.json").unwrap();
-    let settings = json::parse(&file).unwrap();
+    let settings_path = env::var("USERPROFILE").unwrap() + "\\Documents\\Melies\\settings.json";
 
-    Ok(settings.dump())
+    if Path::new(&settings_path).exists() {
+        let file = fs::read_to_string(settings_path).unwrap();
+        let settings: Value = serde_json::from_str(&file).unwrap();
+    
+        return Ok(settings.to_string());
+    }
+
+    build_settings()
 }
 
 #[command]
 fn save_settings(new_settings: String) -> Result<String, String> {
-    let settings = json::parse(&new_settings).unwrap();
-    fs::write("settings.json", settings.pretty(4)).unwrap();
-    Ok(settings.dump()) 
+    let settings: Value = serde_json::from_str(&new_settings).unwrap();
+    let settings_path = env::var("USERPROFILE").unwrap() + "\\Documents\\Melies\\settings.json";
+
+    if Path::new(&settings_path).exists() {
+        fs::write(settings_path, settings.to_string()).unwrap();
+        return Ok(settings.to_string());
+    }
+
+    build_settings()
 }
 
 fn main() {

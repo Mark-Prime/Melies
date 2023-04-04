@@ -1,4 +1,4 @@
-use json::JsonValue;
+use serde_json::Value;
 
 use crate::event::Event;
 use crate::event::EventStyle::*;
@@ -10,12 +10,13 @@ pub struct Clip {
     pub has_killstreak: bool,
     pub has_bookmark: bool,
     pub ks_value: i64,
+    pub bm_value: String,
     pub start_tick: i64,
     pub end_tick: i64
 }
 
 impl Clip {
-    pub fn new(event: Event, settings: &JsonValue) -> Clip {
+    pub fn new(event: Event, settings: &Value) -> Clip {
         let demo_name = String::from(event.demo_name.clone());
         match &event.value {
             Killstreak(killstreak_value) => {
@@ -25,17 +26,19 @@ impl Clip {
                     has_killstreak: true,
                     has_bookmark: false,
                     ks_value: killstreak_value.to_owned(),
+                    bm_value: "".to_string(),
                     start_tick: &event.tick - (settings["recording"]["before_killstreak_per_kill"].as_i64().unwrap() * killstreak_value),
                     end_tick: &event.tick + settings["recording"]["after_killstreak"].as_i64().unwrap()
                 };
             },
-            Bookmark(_) => {
+            Bookmark(bookmark_value) => {
                 return Clip {
                     events: vec![event.clone()],
                     demo_name: demo_name.to_string(),
                     has_killstreak: false,
                     has_bookmark: true,
                     ks_value: 0,
+                    bm_value: bookmark_value.to_string(),
                     start_tick: &event.tick - settings["recording"]["before_bookmark"].as_i64().unwrap(),
                     end_tick: &event.tick + settings["recording"]["after_bookmark"].as_i64().unwrap()
                 };
@@ -69,7 +72,7 @@ impl Clip {
         self.ks_value = self.ks_value + ks_count;
     }
 
-    pub fn can_include(&self, event: &Event, settings: &JsonValue ) -> bool {
+    pub fn can_include(&self, event: &Event, settings: &Value ) -> bool {
         if self.demo_name != event.demo_name {
             return false;
         }
@@ -102,8 +105,8 @@ impl Clip {
         false
     }
 
-    pub fn include(&mut self, event: Event, settings: &JsonValue) {
-        let mut new_end;
+    pub fn include(&mut self, event: Event, settings: &Value) {
+        let new_end;
 
         match &event.value {
             Bookmark(_) => {

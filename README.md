@@ -29,6 +29,15 @@ Currently, pretty much everything is to-do. I'll keep this page updated with the
 - [x] Combine close events into a single clip
 - [x] Name clips appropriately
 - [x] Make VDM crate (whole different thing I'm doing)
+- [x] Add auto-suffix option to settings
+- [x] Make auto-suffix setting functional 
+- [x] add FOV and view model FOV settings
+- [x] Create default settings if first time use
+- [x] Hide console on build
+- [ ] Display events.txt or killstreaks.txt file on home page
+- [ ] Beautify events display
+- [ ] Add edit button
+- [ ] Allow editing of events
 
 ### Style
 
