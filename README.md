@@ -34,9 +34,12 @@ Currently, pretty much everything is to-do. I'll keep this page updated with the
 - [x] add FOV and view model FOV settings
 - [x] Create default settings if first time use
 - [x] Hide console on build
-- [ ] Display events.txt or killstreaks.txt file on home page
+- [x] Display events.txt or killstreaks.txt file on home page
+- [ ] Clear events file after running (if that option is selected)
+- [ ] Create backups
+- [ ] Create logs
 - [ ] Beautify events display
-- [ ] Add edit button
+- [x] Add edit button
 - [ ] Allow editing of events
 
 ### Style
@@ -78,6 +81,13 @@ Currently, pretty much everything is to-do. I'll keep this page updated with the
 - [ ] Allow event selection for recording
 - [ ] POV selection
 - [ ] Turn selected events into 
+
+### Demo scanning
+
+- [ ] Locate demo files in the tf folder
+- [ ] Parse a list of kills in the demo
+- [ ] Display list to user
+- [ ] Allow user to select what to record
 
 ## License
 

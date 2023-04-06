@@ -9,11 +9,12 @@
   }
 </script>
 
-<div>
-  <div class="row">
-    <button on:click={greet}>
-      Run
-    </button>
-  </div>
-  <p>{greetMsg}</p>
-</div>
+<button on:click={greet}>
+  Run
+</button>
+
+<style>
+  button {
+    width: 100%;
+  }
+</style>

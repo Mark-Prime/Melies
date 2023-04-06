@@ -47,7 +47,6 @@
 
 .container {
   margin: 0;
-  padding-top: 3rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -118,8 +117,21 @@ button {
   cursor: pointer;
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: .3;
+}
+
 button:hover {
   border-color: var(--pri-con-text);
+}
+
+.input--sec:hover {
+  border-color: var(--sec-con-text);
+}
+
+.input--tert:hover {
+  border-color: var(--tert-con-text);
 }
 
 #greet-input {

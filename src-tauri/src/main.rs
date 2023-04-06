@@ -3,7 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use std::fs::File;
+use std::fs::{File, DirBuilder, DirEntry};
 use std::io::Write;
 use std::{fs, env};
 use std::path::Path;
@@ -38,15 +38,15 @@ macro_rules! extend {
 fn write_cfg(settings: &Value) {
     let mut cfg = String::new();
 
-    // println!("cl_drawhud {}", settings["output"]["HUD"]);
+    // println!("cl_drawhud {}", settings["output"]["hud"]);
 
-    extend!(cfg, "echo \"Execing Melies Config\";\r\ncl_drawhud {};\r\n", settings["output"]["HUD"]);
+    extend!(cfg, "echo \"Execing Melies Config\";\r\ncl_drawhud {};\r\n", settings["output"]["hud"]);
     extend!(cfg, "sv_cheats {};\r\n", "1");
     extend!(cfg, "voice_enable {};\r\n", settings["output"]["voice_chat"]);
     extend!(cfg, "hud_saytext_time {};\r\n", settings["output"]["text_chat"]);
     extend!(cfg, "crosshair {};\r\n", settings["output"]["crosshair"]);
     extend!(cfg, "viewmodel_fov {};\r\n", settings["recording"]["viewmodel_fov"]);
-    extend!(cfg, "fov_desired {};\r\n", settings["recording"]["Fov"]);
+    extend!(cfg, "fov_desired {};\r\n", settings["recording"]["fov"]);
     extend!(cfg, "{};\r\n", settings["recording"]["commands"].as_str().unwrap());
 
     if settings["output"]["lock"].as_i64().unwrap() == 1 {
@@ -165,8 +165,23 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
 }
 
 fn find_dir(settings: &Value) -> Result<String, String> {
-    for entry in fs::read_dir(format!("{}\\demos", settings["tf_folder"].as_str().unwrap())).unwrap() {
-        let dir = entry.unwrap();
+    let files = fs::read_dir(format!("{}\\demos", settings["tf_folder"].as_str().unwrap()));
+
+    let entries;
+
+    match files {
+        Ok(ent) => entries = ent,
+        Err(err) => return Err("Could not find _events.txt or KillStreaks.txt\r\nPlease check your settings to ensure the tf folder is correctly linked".to_string()),
+    }
+
+    for entry in entries {
+        let dir: DirEntry;
+
+        match entry {
+            Ok(directory) => dir = directory,
+            Err(err) => return Err(err.to_string()),
+        };
+
         let dir_str = dir.path().to_string_lossy().to_string();
 
         if dir_str.ends_with("\\_events.txt") {
@@ -196,7 +211,7 @@ fn find_dir(settings: &Value) -> Result<String, String> {
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[command]
-fn ryukbot() -> String {
+fn ryukbot() -> Value {
     let settings_path = env::var("USERPROFILE").unwrap() + "\\Documents\\Melies\\settings.json";
 
     let file = fs::read_to_string(settings_path).unwrap();
@@ -208,8 +223,12 @@ fn ryukbot() -> String {
         Ok(directory) => {
             dir = directory;
         },
-        Err(err) => {
-            return err;
+        Err(_) => {
+            return 
+            json!({
+                "code": 404,
+                "err_text": "Could not find _events.txt or KillStreaks.txt\r\nPlease check your settings to ensure the tf folder is correctly linked".to_string()
+            });
         }
     };
 
@@ -217,8 +236,12 @@ fn ryukbot() -> String {
         Ok(text) => {
             text
         },
-        Err(err) => {
-            return err.to_string();
+        Err(_) => {
+            return 
+            json!({
+                "code": 404,
+                "err_text": "Could not find _events.txt or KillStreaks.txt\r\nPlease check your settings to ensure the tf folder is correctly linked".to_string()
+            });
         }
     };
 
@@ -272,15 +295,23 @@ fn ryukbot() -> String {
 
     vdms.push(vdm);
 
+    let vdm_count = &vdms.len();
+
     for (i, vdm) in vdms.iter().enumerate() {
         let vdm = end_vdm(&mut vdm.clone(), &settings, ifelse!(vdms.len() > i + 1, String::from(&vdms[i + 1].name), String::new()));
         vdm.export(&format!("{}\\demos\\{}.vdm", settings["tf_folder"].as_str().unwrap(), vdm.name));
     }
 
-    format!("_events.txt contains {} clips from {} events", clips.len(), event_count)
+    // format!("_events.txt contains {} clips from {} events", clips.len(), event_count)
+    json!({
+        "clips": clips.len(),
+        "events": event_count,
+        "vdms": vdm_count,
+        "code": 200
+    })
 }
 
-fn build_settings() -> Result<String, String> {
+fn build_settings() -> Value {
     let binding = env::var("USERPROFILE").unwrap() + "\\Documents\\Melies\\settings.json";
     let settings_path = Path::new(&binding);
     let settings_prefix = settings_path.parent().unwrap();
@@ -296,7 +327,7 @@ fn build_settings() -> Result<String, String> {
             "method": "h264",
             "framerate": 60,
             "crosshair": 0,
-            "HUD": 1,
+            "hud": 1,
             "text_chat": 0,
             "voice_chat": 0,
             "snd_fix": 1,
@@ -313,7 +344,7 @@ fn build_settings() -> Result<String, String> {
             "after_killstreak": 300,
             "interval_for_rewind_double_taps": 66,
             "rewind_amount": 1000,
-            "Fov": 90,
+            "fov": 90,
             "viewmodel_fov": 90,
             "record_continuous": 1,
             "auto_close": 1,
@@ -322,39 +353,75 @@ fn build_settings() -> Result<String, String> {
     });
     
     fs::write(settings_path, settings.to_string()).unwrap();
-    Ok(settings.to_string())
+    settings
 }
 
 #[command]
-fn load_settings() -> Result<String, String> {
+fn load_settings() -> Value {
     let settings_path = env::var("USERPROFILE").unwrap() + "\\Documents\\Melies\\settings.json";
 
     if Path::new(&settings_path).exists() {
         let file = fs::read_to_string(settings_path).unwrap();
         let settings: Value = serde_json::from_str(&file).unwrap();
     
-        return Ok(settings.to_string());
+        return settings;
     }
 
     build_settings()
 }
 
 #[command]
-fn save_settings(new_settings: String) -> Result<String, String> {
+fn save_settings(new_settings: String) -> Value {
     let settings: Value = serde_json::from_str(&new_settings).unwrap();
     let settings_path = env::var("USERPROFILE").unwrap() + "\\Documents\\Melies\\settings.json";
 
     if Path::new(&settings_path).exists() {
         fs::write(settings_path, settings.to_string()).unwrap();
-        return Ok(settings.to_string());
+        return settings;
     }
 
     build_settings()
 }
 
+#[command]
+fn load_events() -> Value {
+    let settings = load_settings();
+
+    let dir;
+
+    match find_dir(&settings) {
+        Ok(directory) => {
+            dir = directory;
+        },
+        Err(err) => {
+            return json!({
+                "code": 404,
+                "err_text": err
+            });
+        }
+    };
+
+    let file_text = match fs::read_to_string(dir) {
+        Ok(text) => {
+            text
+        },
+        Err(err) => {
+            return json!({
+                "code": 400,
+                "err_text": err.to_string()
+            });
+        }
+    };
+
+    json!({
+        "code": 200,
+        "events": file_text
+    })
+}
+
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![ryukbot, load_settings, save_settings])
+        .invoke_handler(tauri::generate_handler![ryukbot, load_settings, save_settings, load_events])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

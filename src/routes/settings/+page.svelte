@@ -1,5 +1,5 @@
 <script>
-// @ts-nocheck
+  // @ts-nocheck
 
   import { invoke } from "@tauri-apps/api/tauri"
   let settings = {};
@@ -7,7 +7,7 @@
   let recording_settings = {};
 
   async function loadSettings(){
-    settings = JSON.parse(await invoke("load_settings"));
+    settings = await invoke("load_settings");
     output_settings = settings.output
     recording_settings = settings.recording
   }
@@ -188,7 +188,7 @@
   </button>
 </div>
 
-<style>
+<style lang="scss">
   .cancel-btn {
     width: 100%;
     border-radius: 8px;
@@ -216,27 +216,29 @@
     padding: 0rem 2rem;
   }
 
-  .settings__input-group {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    width: 100%;
-  }
+  .settings {
+    &__input-group {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      width: 100%;
 
-  .settings__input-group > input {
-    width: 100%;
-  }
+      & > input {
+        width: 100%;
+      }
+    }
 
-  .settings__switch {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    width: 100%;
-  }
+    &__switch {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      width: 100%;
+    }
 
-  .settings__span {
-    grid-column-start: 1;
-    grid-column-end: span 2;
+    &__span {
+      grid-column-start: 1;
+      grid-column-end: span 2;
+    }
   }
 </style>
   
