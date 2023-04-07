@@ -198,10 +198,14 @@
     font-weight: 500;
     font-family: inherit;
     color: var(--err-con-text);
-    background-color: var(--err-con);
+    border-color: var(--err-con);
     transition: border-color 0.25s;
     box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
     outline: none;
+  }
+
+  .cancel-btn:hover:hover {
+    border-color: var(--err-con-text);
   }
 
   .setting {
