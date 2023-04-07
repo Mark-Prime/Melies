@@ -189,25 +189,6 @@
 </div>
 
 <style lang="scss">
-  .cancel-btn {
-    width: 100%;
-    border-radius: 8px;
-    border: 1px solid transparent;
-    padding: 0.5rem .7rem;
-    font-size: 1em;
-    font-weight: 500;
-    font-family: inherit;
-    color: var(--err-con-text);
-    border-color: var(--err-con);
-    transition: border-color 0.25s;
-    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
-    outline: none;
-  }
-
-  .cancel-btn:hover:hover {
-    border-color: var(--err-con-text);
-  }
-
   .setting {
     display: grid;
     grid-template-columns: 1fr 1fr;
