@@ -1,18 +1,32 @@
 <script>
   import { invoke } from "@tauri-apps/api/tauri"
 
-  let events = "";
+  /**
+   * @type {any[]}
+   */
+  let demos = [];
+
   let resp = { vdms: 0, clips: 0, events: 0, code: 0 };
 
   async function loadEvents(){
     let event_list = await invoke("load_events");
-
+    
     if (event_list.code === 200) {
-      events = event_list.events;
+      event_list.events.forEach((/** @type {{ demo_name: any; }} */ event, /** @type {number} */ i) => {
+        if (i === 0 || event_list.events[i - 1].demo_name != event.demo_name) {
+          demos.push([event]);
+          return;
+        }
+
+        demos[demos.length - 1].push(event);
+      });
+
+      console.log("DEMOS", demos);
+
+      demos = demos;
+
       return;
     }
-
-    events = event_list.err_text;
   }
 
   async function runMelies(){
@@ -26,13 +40,18 @@
 <div class="home-page">
   <h1 class="header">Méliès</h1>
   <div class="events">
-    { 
-      resp.code === 0 ? (
-        events || "_events.txt or KillStreaks.txt is empty"
-      ) : (
-        `Created ${resp.vdms} VDMs containing ${resp.clips} containing ${resp.events} events.`
-      )
-    }
+    {#if !resp.code}
+      {#each demos as demo}
+        {#each demo as event, i (event.event)}
+          {#if !i}
+            <div class="carrot">></div>
+          {/if}
+          <div class="event" class:bookmark={event.value.Bookmark}>{event.event}</div>
+        {/each}
+      {/each}
+    {:else}
+      {`Created ${resp.vdms} VDMs containing ${resp.clips} containing ${resp.events} events.`}
+    {/if}
   </div>
 
   <a href="/settings">Settings</a>
@@ -66,7 +85,7 @@
     grid-row-start: 2;
     grid-row-end: 25;
 
-    border-left: var(--outline) 1px solid;
+    border-left: var(--pri-con) 1px solid;
     white-space: pre-line;
 
     text-align: left;
@@ -75,5 +94,17 @@
     overflow-y: auto;
 
     border-radius: .7rem;
+  }
+
+  .carrot {
+    color: var(--pri);
+  }
+
+  .event {
+    color: var(--tert);
+  }
+
+  .bookmark {
+    color: var(--sec)
   }
 </style>

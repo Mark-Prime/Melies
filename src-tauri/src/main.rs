@@ -3,7 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use std::fs::{File, DirBuilder, DirEntry};
+use std::fs::{File, DirEntry};
 use std::io::Write;
 use std::{fs, env};
 use std::path::Path;
@@ -171,7 +171,7 @@ fn find_dir(settings: &Value) -> Result<String, String> {
 
     match files {
         Ok(ent) => entries = ent,
-        Err(err) => return Err("Could not find _events.txt or KillStreaks.txt\r\nPlease check your settings to ensure the tf folder is correctly linked".to_string()),
+        Err(_) => return Err("Could not find _events.txt or KillStreaks.txt\r\nPlease check your settings to ensure the tf folder is correctly linked".to_string()),
     }
 
     for entry in entries {
@@ -244,14 +244,14 @@ fn ryukbot() -> Value {
             });
         }
     };
-
-    write_cfg(&settings);
     
     let mut event_count = 0;
 
     let re = Regex::new("\\[(.*)\\] (.*) \\(\"(.*)\" at (\\d*)\\)").unwrap();
 
     let events = re.captures_iter(&file_text);
+
+    write_cfg(&settings);
 
     let mut clips: Vec<Clip> = vec![];
 
@@ -413,9 +413,21 @@ fn load_events() -> Value {
         }
     };
 
+    let re = Regex::new("\\[(.*)\\] (.*) \\(\"(.*)\" at (\\d*)\\)").unwrap();
+
+    let events_regex = re.captures_iter(&file_text);
+
+    let mut events = vec![];
+    
+    for event_capture in events_regex {
+        let event = event::Event::new(event_capture).unwrap();
+
+        events.push(event)
+    }
+
     json!({
         "code": 200,
-        "events": file_text
+        "events": events
     })
 }
 

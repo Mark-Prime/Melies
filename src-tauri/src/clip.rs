@@ -46,23 +46,6 @@ impl Clip {
         }
     }
 
-    pub fn first(&self) -> &Event {
-        &self.events[&self.events.len() - 1]
-    }
-
-    pub fn last(&self) -> &Event {
-        &self.events[0]
-    }
-
-    pub fn first_mut(&mut self) -> &mut Event {
-        let i = &self.events.len() - 1;
-        &mut self.events[i]
-    }
-
-    pub fn last_mut(&mut self) -> &mut Event {
-        &mut self.events[0]
-    }
-
     fn calc_ks(&mut self, ks_count: i64) {
         if (self.ks_value + 1) == ks_count {
             self.ks_value = ks_count;

@@ -38,7 +38,7 @@ Currently, pretty much everything is to-do. I'll keep this page updated with the
 - [ ] Clear events file after running (if that option is selected)
 - [ ] Create backups
 - [ ] Create logs
-- [ ] Beautify events display
+- [x] Beautify events display
 - [x] Add edit button
 - [ ] Allow editing of events
 

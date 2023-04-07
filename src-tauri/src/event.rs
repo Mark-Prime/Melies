@@ -1,4 +1,5 @@
 use regex::Captures;
+use serde::{Serialize, Deserialize};
 use std::fmt::{self, Display, Formatter};
 
 #[derive(Debug)]
@@ -15,13 +16,13 @@ impl Display for EventError {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum EventStyle {
     Bookmark(String),
     Killstreak(i64)
 }
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Event {
     event: String,
     pub demo_name: String,

@@ -82,34 +82,36 @@ button {
   font-weight: 500;
   font-family: inherit;
   color: var(--pri-con-text);
-  background-color: var(--pri-con);
+  border-color: var(--pri-con);
+  background-color: transparent;
   transition: border-color 0.25s;
   box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
   outline: none;
+  filter: drop-shadow(3px 3px 10px black);
 }
 
 input::placeholder {
-  color: var(--pri);
+  color: var(--pri-con);
   opacity: .7;
 }
 
 .input--sec {
   color: var(--sec-con-text);
-  background-color: var(--sec-con);
+  border-color: var(--sec-con);
 }
 
 .input--sec::placeholder {
-  color: var(--sec);
+  color: var(--sec-con);
   opacity: .7;
 }
 
 .input--tert {
   color: var(--tert-con-text);
-  background-color: var(--tert-con);
+  border-color: var(--tert-con);
 }
 
 .input--tert::placeholder {
-  color: var(--tert);
+  color: var(--tert-con);
   opacity: .7;
 }
 
@@ -122,15 +124,15 @@ button:disabled {
   opacity: .3;
 }
 
-button:hover {
+button:not(:disabled):hover {
   border-color: var(--pri-con-text);
 }
 
-.input--sec:hover {
+.input--sec:not(:disabled):hover {
   border-color: var(--sec-con-text);
 }
 
-.input--tert:hover {
+.input--tert:not(:disabled):hover {
   border-color: var(--tert-con-text);
 }
 
