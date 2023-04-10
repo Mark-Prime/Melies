@@ -35,12 +35,15 @@ Currently, pretty much everything is to-do. I'll keep this page updated with the
 - [x] Create default settings if first time use
 - [x] Hide console on build
 - [x] Display events.txt or killstreaks.txt file on home page
-- [ ] Clear events file after running (if that option is selected)
+- [x] Clear events file after running (if that option is selected)
 - [ ] Create backups
 - [ ] Create logs
 - [x] Beautify events display
 - [x] Add edit button
-- [ ] Allow editing of events
+- [x] Allow editing of events
+- [ ] Edit demo name
+- [ ] Add new demos
+- [ ] Save the events after edited
 
 ### Style
 

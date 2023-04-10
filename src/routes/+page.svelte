@@ -1,4 +1,7 @@
 <script>
+// @ts-nocheck
+
+   // @ts-ignore
   import { invoke } from "@tauri-apps/api/tauri"
 
   /**
@@ -17,6 +20,15 @@
     
     if (event_list.code === 200) {
       event_list.events.forEach((/** @type {{ demo_name: any; }} */ event, /** @type {number} */ i) => {
+        // @ts-ignore
+        event.isKillstreak = false;
+        
+        // @ts-ignore
+        if (event.value.Killstreak) {
+          // @ts-ignore
+          event.isKillstreak = true;
+        }
+
         if (i === 0 || event_list.events[i - 1].demo_name != event.demo_name) {
           demos.push([event]);
           return;
@@ -80,6 +92,30 @@
     demos = demos;
   }
 
+  // @ts-ignore
+  function toggleKillstreak(demo_i, i) {
+    let event = demos[demo_i][i];
+
+    if (event.isKillstreak) {
+      event.isKillstreak = false;
+
+      if (!event.value.Bookmark) {
+        event.value.Bookmark = 'General';
+      } 
+
+      demos = demos;
+      return;
+    }
+
+    event.isKillstreak = true;
+
+    if (!event.value.Killstreak) {
+      event.value.Killstreak = 3;
+    } 
+    
+    demos = demos;
+  }
+
   loadEvents();
 </script>
 
@@ -103,15 +139,43 @@
               </div>
             {/if}
             <div class="demo__event-container">
-              <div class="demo__event" class:demo__event--bookmark={event.value.Bookmark}>
-                {#if event.value.Bookmark}
-                  <div data-tooltip="Change to Killstreak">Bookmark</div>
-                  <div data-tooltip="Edit Bookmark label">{event.value.Bookmark}</div>
+              <div class="demo__event" class:demo__event--bookmark={!event.isKillstreak}>
+                {#if !event.isKillstreak}
+                  <a 
+                    class="demo__event-link"
+                    data-tooltip="Change to Killstreak" 
+                    on:click={() => toggleKillstreak(demo_i, i)}
+                    href="/"
+                  >
+                    Bookmark
+                  </a>
+                  <input 
+                    class="demo__event-input"
+                    data-tooltip="Edit Bookmark label"
+                    bind:value={event.value.Bookmark}
+                  />
                 {:else}
-                  <div data-tooltip="Change to Bookmark">Killstreak</div>
-                  <div data-tooltip="Edit Killstreak count">{event.value.Killstreak}</div>
+                  <a
+                    class="demo__event-link"
+                    data-tooltip="Change to Bookmark"
+                    on:click={() => toggleKillstreak(demo_i, i)}
+                    href="/"
+                  >
+                    Killstreak
+                  </a>
+                  <input 
+                    class="demo__event-input"
+                    data-tooltip="Edit Killstreak count"
+                    bind:value={event.value.Killstreak}
+                    type="number"
+                  />
                 {/if}
-                <div data-tooltip="Edit tick">{event.tick}</div>
+                <input 
+                    class="demo__event-input"
+                    data-tooltip="Edit tick"
+                    bind:value={event.tick}
+                    type="number"
+                  />
                 <a class="demo__event-delete" href="/" on:click={() => deleteEvent(demo_i, i)}>
                   Delete
                 </a>
@@ -172,6 +236,7 @@
   }
 
   .events {
+    font-family: 'Source Code Pro', monospace;
     grid-column-start: 1;
     grid-column-end: 6;
     grid-row-start: 2;
@@ -238,14 +303,33 @@
       border: var(--tert-con) 1px solid;
       border-radius: 3px;
       margin: 1px 0;
-      padding: 0 .5rem;
+      padding: 1px .5rem;
       font-size: 1rem;
       display: grid;
+      gap: 2px;
 
       grid-template-columns: 1fr 1fr 1fr 0px;
 
       transition: all .2s;
       z-index: 1;
+
+      &-input {
+        padding: inherit;
+        border-width: 1px;
+        border-style: solid;
+        box-shadow: none;
+        border-top: 0;
+        border-left: 0;
+        border-right: 0;
+        border-radius: 0;
+        border-color: transparent;
+
+        &:hover,
+        &:active,
+        &:focus {
+          border-color: var(--tert);
+        }
+      }
 
       &-container {
         position: relative;
@@ -270,9 +354,14 @@
         }
       }
 
-      & > div {
+      .demo__event-link,
+      .demo__event-input,
+      .demo__event-input {
         cursor: pointer;
         position: relative;
+        text-align: left;
+        width: 100%;
+        color: var(--tert-con-text);
 
         &::before {
           content: attr(data-tooltip);
@@ -285,6 +374,7 @@
           border: var(--outline) 1px solid;
           padding: .2rem .5rem;
           border-radius: .5rem;
+          white-space: nowrap;
         }
 
         &::after {
@@ -299,8 +389,9 @@
           clip-path: polygon(100% 0, 0 0, 50% 100%);
         }
 
-        &:hover {
-          color: var(--tert);
+        &:hover, &:active, &:focus {
+          color: var(--sec);
+          border-color: var(--sec);
 
           &::before {
             display: block;
@@ -317,13 +408,19 @@
         border: var(--sec-con) 1px solid;
         border-radius: 3px;
         margin: 1px 0;
-        padding: 0 .5rem;
+        padding: 1px .5rem;
+
+        .demo__event-link, .demo__event-input {
+          color: var(--sec-con-text);
+        }
 
         &:hover {
           border-color: var(--sec);
         }
 
-        div:hover {
+        .demo__event-link:hover,
+        .demo__event-input:hover,
+        .demo__event-input:active {
           color: var(--sec);
         }
       }

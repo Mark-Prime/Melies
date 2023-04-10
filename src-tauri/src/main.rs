@@ -298,11 +298,23 @@ fn ryukbot() -> Value {
     let vdm_count = &vdms.len();
 
     for (i, vdm) in vdms.iter().enumerate() {
+        let file_location = format!("{}\\demos\\{}.vdm", &settings["tf_folder"].as_str().unwrap(), &vdm.name);
+        
+        if settings["safe_mode"].as_i64().unwrap() == 1 {
+            let file_path = Path::new(&file_location);
+            if file_path.exists() {
+                continue;
+            }
+        }
+
         let vdm = end_vdm(&mut vdm.clone(), &settings, ifelse!(vdms.len() > i + 1, String::from(&vdms[i + 1].name), String::new()));
-        vdm.export(&format!("{}\\demos\\{}.vdm", settings["tf_folder"].as_str().unwrap(), vdm.name));
+        vdm.export(&file_location);
     }
 
-    // format!("_events.txt contains {} clips from {} events", clips.len(), event_count)
+    if settings["clear_events"].as_bool().unwrap() {
+        clear_events(settings);
+    }
+
     json!({
         "clips": clips.len(),
         "events": event_count,
@@ -428,6 +440,29 @@ fn load_events() -> Value {
     json!({
         "code": 200,
         "events": events
+    })
+}
+
+fn clear_events(settings: Value) -> Value {
+    let dir;
+
+    match find_dir(&settings) {
+        Ok(directory) => {
+            dir = directory;
+        },
+        Err(err) => {
+            return json!({
+                "code": 404,
+                "err_text": err
+            });
+        }
+    };
+
+    File::create(dir).unwrap();
+
+    json!({
+        "code": 200,
+        "events": []
     })
 }
 
