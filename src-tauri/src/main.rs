@@ -12,7 +12,10 @@ use regex::Regex;
 use tauri::command;
 use vdm::VDM;
 use vdm::action::ActionType;
+use chrono::prelude::*;
 
+use crate::event::EventStyle::{Bookmark, Killstreak};
+use crate::event::Event;
 use crate::clip::Clip;
 
 mod event;
@@ -443,6 +446,118 @@ fn load_events() -> Value {
     })
 }
 
+#[command]
+fn save_events(new_events: Value) -> Value {
+    let mut events: Vec<Event> = vec![];
+    let mut new_events_text = String::new();
+
+    for demo in new_events.as_array().unwrap() {
+        extend!(new_events_text, "{}\r\n", ">");
+
+        for event in demo.as_array().unwrap() {
+            let re = Regex::new("\\[(.*)\\] (.*) \\(\"(.*)\" at (\\d*)\\)").unwrap();
+            let events_regex = re.captures(event["event"].as_str().unwrap()).unwrap();
+
+            let original_event = event::Event::new(events_regex).unwrap();
+
+            match &original_event.value {
+                Bookmark(bm) => {
+                    if event["isKillstreak"].as_bool().unwrap() {
+                        let built_event = build_event_from_json(event);
+                        extend!(new_events_text, "{}\r\n", built_event.event);
+                        events.push(built_event);
+                        continue;
+                    }
+
+                    if bm.to_owned() != event["value"]["Bookmark"].as_str().unwrap() {
+                        let built_event = build_event_from_json(event);
+                        extend!(new_events_text, "{}\r\n", built_event.event);
+                        events.push(built_event);
+                        continue;
+                    }
+                },
+                Killstreak(ks) => {
+                    if !event["isKillstreak"].as_bool().unwrap() {
+                        let built_event = build_event_from_json(event);
+                        extend!(new_events_text, "{}\r\n", built_event.event);
+                        events.push(built_event);
+                        continue;
+                    }
+
+                    if ks.to_owned() != event["value"]["Killstreak"].as_i64().unwrap() {
+                        let built_event = build_event_from_json(event);
+                        extend!(new_events_text, "{}\r\n", built_event.event);
+                        events.push(built_event);
+                        continue;
+                    }
+
+                },
+            }
+
+            extend!(new_events_text, "{}\r\n", original_event.event);
+            events.push(original_event);
+        }
+    }
+
+    let settings = load_settings();
+
+    let dir;
+
+    match find_dir(&settings) {
+        Ok(directory) => {
+            dir = directory;
+        },
+        Err(err) => {
+            return json!({
+                "code": 404,
+                "err_text": err
+            });
+        }
+    };
+
+    fs::write(dir, new_events_text).unwrap();
+
+    return json!({
+        "code": 200,
+        "events": events
+    });
+}
+
+fn build_event_from_json(event_json: &Value) -> Event {
+    let sys_time: DateTime<Local> = Local::now();
+
+    match event_json["isKillstreak"].as_bool().unwrap() {
+        true => {
+            return Event {
+                event: format!(
+                    "[{}] Killstreak {} (\"{}\" at {})",
+                    sys_time.format("%Y/%m/%d %H:%M").to_string().replace("\"", ""),
+                    event_json["value"]["Killstreak"],
+                    event_json["demo_name"].as_str().unwrap(),
+                    event_json["tick"].as_i64().unwrap()
+                ),
+                demo_name: event_json["demo_name"].as_str().unwrap().to_string(),
+                tick: event_json["tick"].as_i64().unwrap(),
+                value: Killstreak(event_json["value"]["Killstreak"].as_i64().unwrap()),
+            }
+        },
+        false => {
+            return Event {
+                event: format!(
+                    "[{}] Bookmark {} (\"{}\" at {})",
+                    sys_time.format("%Y/%m/%d %H:%M").to_string(),
+                    event_json["value"]["Bookmark"].as_str().unwrap(),
+                    event_json["demo_name"].as_str().unwrap(),
+                    event_json["tick"].as_i64().unwrap()
+                ),
+                demo_name: event_json["demo_name"].as_str().unwrap().to_string(),
+                tick: event_json["tick"].as_i64().unwrap(),
+                value: Bookmark(event_json["value"]["Bookmark"].as_str().unwrap().to_string()),
+            }
+        }
+    }
+}
+
 fn clear_events(settings: Value) -> Value {
     let dir;
 
@@ -468,7 +583,13 @@ fn clear_events(settings: Value) -> Value {
 
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![ryukbot, load_settings, save_settings, load_events])
+        .invoke_handler(tauri::generate_handler![
+            ryukbot,
+            load_settings,
+            save_settings,
+            load_events,
+            save_events,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

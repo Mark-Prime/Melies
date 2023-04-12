@@ -24,7 +24,7 @@ pub enum EventStyle {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Event {
-    event: String,
+    pub event: String,
     pub demo_name: String,
     pub tick: i64,
     pub value: EventStyle 

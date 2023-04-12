@@ -43,14 +43,14 @@ Currently, pretty much everything is to-do. I'll keep this page updated with the
 - [x] Allow editing of events
 - [ ] Edit demo name
 - [ ] Add new demos
-- [ ] Save the events after edited
+- [x] Save the events after edited
 
 ### Style
 
 - [x] Decide default color scheme
 - [ ] Build basic reusable component set
 - [ ] Create logo/icon
-- [ ] Decide Font
+- [x] Decide Font
 
 ### Customization
 

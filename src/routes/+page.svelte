@@ -1,31 +1,21 @@
 <script>
-// @ts-nocheck
-
-   // @ts-ignore
+  // @ts-nocheck
   import { invoke } from "@tauri-apps/api/tauri"
 
-  /**
-   * @type {any[]}
-   */
   let demos = [];
-
-  // @ts-ignore
-  let editting = true;
+  
+  let editting = false;
 
   let resp = { vdms: 0, clips: 0, events: 0, code: 0 };
 
-  // @ts-ignore
-  async function loadEvents(){
-    let event_list = await invoke("load_events");
-    
+  function setEvents(event_list) {
+    demos = []
+
     if (event_list.code === 200) {
       event_list.events.forEach((/** @type {{ demo_name: any; }} */ event, /** @type {number} */ i) => {
-        // @ts-ignore
         event.isKillstreak = false;
         
-        // @ts-ignore
         if (event.value.Killstreak) {
-          // @ts-ignore
           event.isKillstreak = true;
         }
 
@@ -45,30 +35,35 @@
     }
   }
 
-  // @ts-ignore
+  async function loadEvents(){
+    let event_list = await invoke("load_events");
+    
+    setEvents(event_list);
+  }
+
   async function runMelies() {
     // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
     resp = await invoke("ryukbot")
   }
 
-  // @ts-ignore
   function enableEditing() {
     editting = true;
   }
 
-  // @ts-ignore
-  function disableEditing() {
+  async function disableEditing() {
+    let new_demos = await invoke("save_events", { newEvents: demos });
+
+    setEvents(new_demos);
+
     editting = false;
   }
 
-  // @ts-ignore
   function deleteEvent(demo_i, i) {
     demos[demo_i].splice(i, 1);
 
     demos = demos;
   }
 
-  // @ts-ignore
   function addEvent(demo_i) {
     demos[demo_i].push({
       value: {
@@ -76,23 +71,19 @@
       },
       tick: 0,
       demo_name: demos[demo_i][0].demo_name,
-      // @ts-ignore
-      event: `[${
-        (new Date().toLocaleString('en-GB', { hour12: false })).replace(",", "")
-      }] Bookmark General (\"${demos[demo_i][0].demo_name}\" at 0)`,
+      event: `[_] Bookmark _ (\"_\" at 0)`,
+      isKillstreak: false
     });
 
     demos = demos;
   }
 
-  // @ts-ignore
   function deleteDemo(demo_i) {
     demos.splice(demo_i, 1);
 
     demos = demos;
   }
 
-  // @ts-ignore
   function toggleKillstreak(demo_i, i) {
     let event = demos[demo_i][i];
 
@@ -124,7 +115,7 @@
   <div class="events">
     {#if !resp.code}
       {#each demos as demo, demo_i}
-        {#each demo as event, i (event.event)}
+        {#each demo as event, i (`${event.demo_name}__${i}`)}
           {#if editting}
             {#if !i}
               <div class="demo demo__header">
@@ -193,7 +184,7 @@
             {#if !i}
               <div class="carrot">></div>
             {/if}
-            <div class="event" class:bookmark={event.value.Bookmark}>{event.event}</div>
+            <div class="event" class:bookmark={!event.isKillstreak}>{event.event}</div>
           {/if}
         {/each}
       {/each}
