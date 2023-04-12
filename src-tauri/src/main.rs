@@ -147,7 +147,7 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
             ifelse!(settings["output"]["snd_fix"] == 1, "snd_restart; ", ""),
             settings["output"]["framerate"],
             clip_name,
-            settings["output"]["method"]
+            settings["output"]["method"].as_str().unwrap()
         );
 
         start_record.start_tick = Some(clip.start_tick);
@@ -162,7 +162,7 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
         end_record.name = "Stop Recording".to_string();
         end_record.commands = format!(
             "{}; host_framerate 0; endmovie;",
-            settings["recording"]["end_commands"],
+            settings["recording"]["end_commands"].as_str().unwrap(),
         );
     }
 }
