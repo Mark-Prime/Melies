@@ -35,7 +35,7 @@
     }
   }
 
-  async function loadEvents(){
+  async function loadEvents() {
     let event_list = await invoke("load_events");
     
     setEvents(event_list);
@@ -46,11 +46,38 @@
     resp = await invoke("ryukbot")
   }
 
+  function addDemo() {
+    demos.push([
+      {
+        value: {
+          Bookmark: "General"
+        },
+        tick: 0,
+        demo_name: "new_demo",
+        event: `[_] Bookmark _ (\"_\" at 0)`,
+        isKillstreak: false
+      }
+    ])
+
+    demos = demos;
+  }
+
+  function cancelEditing() {
+    loadEvents();
+
+    editting = false;
+  }
+
   function enableEditing() {
+    resp.code = 0;
     editting = true;
   }
 
   async function disableEditing() {
+    for (let demo of demos) {
+      demo.sort((a, b) =>  a.tick - b.tick)
+    }
+
     let new_demos = await invoke("save_events", { newEvents: demos });
 
     setEvents(new_demos);
@@ -61,7 +88,20 @@
   function deleteEvent(demo_i, i) {
     demos[demo_i].splice(i, 1);
 
+    if (demos[demo_i].length === 0) {
+      demos.splice(demo_i, 1)
+    }
+
     demos = demos;
+  }
+
+  function editDemoName(demo_i, new_name) {
+    for (let event of demos[demo_i]) {
+      event.demo_name = new_name;
+    }
+
+    demos = demos;
+    console.log(demos)
   }
 
   function addEvent(demo_i) {
@@ -115,11 +155,16 @@
   <div class="events">
     {#if !resp.code}
       {#each demos as demo, demo_i}
-        {#each demo as event, i (`${event.demo_name}__${i}`)}
+        {#each demo as event, i (`${demo_i}__${i}`)}
           {#if editting}
             {#if !i}
               <div class="demo demo__header">
-                {event.demo_name}
+                <input 
+                    class="demo__header-input"
+                    data-tooltip="Edit Demo Name"
+                    value={event.demo_name}
+                    on:change={(e) => editDemoName(demo_i, e.target.value)}
+                  />
                 <a 
                   class="demo-delete" 
                   href="/" 
@@ -188,24 +233,28 @@
           {/if}
         {/each}
       {/each}
+      {#if editting}
+        <div class="new-demo">
+          <a href="/" class="new-demo__1" on:click={addDemo}>Add Manual Events</a>
+          <p href="/" class="new-demo__2" >Logs.tf</p>
+          <p href="/" class="new-demo__3" >Scan Demo</p>
+        </div>
+      {/if}
     {:else}
       {`Created ${resp.vdms} VDMs containing ${resp.clips} containing ${resp.events} events.`}
     {/if}
   </div>
 
-  <a href="/settings">Settings</a>
-
-  <button class="input--tert" disabled>Scan Demo</button>
-
   {#if editting}
-    <button class="input--sec" on:click={disableEditing}>Save Events</button>
+    <button class="cancel-btn" on:click={cancelEditing}>Cancel</button>
+    <button on:click={disableEditing}>Save Events</button>
   {:else}
+    <button class="input--tert" on:click={loadEvents}>Refresh</button>
     <button class="input--sec" on:click={enableEditing}>Edit Events</button>
-  {/if}
+    <button on:click={runMelies}>Run</button>
 
-  <button on:click={runMelies}>
-    Run
-  </button>
+    <a href="/settings">Settings</a>
+  {/if}
 </div>
 
 <style lang="scss">
@@ -224,6 +273,55 @@
   .header {
     grid-column-start: 1;
     grid-column-end: 7;
+  }
+
+  .new-demo {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 2px;
+
+    & > a, & > p {
+      width: 100%;
+      padding: 1px .5rem;
+      border-radius: 3px;
+
+      transition: all .2s;
+    }
+
+    & > p {
+      cursor: not-allowed;
+      opacity: .3;
+    }
+
+    &__1 {
+      color: var(--pri-con-text);
+      border: var(--pri-con) 1px solid;
+
+      &:hover {
+        color: var(--pri);
+        border-color: var(--pri);
+      }
+    }
+
+    &__2 {
+      color: var(--sec-con-text);
+      border: var(--sec-con) 1px solid;
+
+      &:not(p):hover {
+        color: var(--sec);
+        border-color: var(--sec);
+      }
+    }
+
+    &__3 {
+      color: var(--tert-con-text);
+      border: var(--tert-con) 1px solid;
+
+      &:not(p):hover {
+        color: var(--sec);
+        border-color: var(--sec);
+      }
+    }
   }
 
   .events {
@@ -279,12 +377,37 @@
     &__header {
       display: grid;
       grid-template-columns: 1fr 0px;
+      gap: 0rem;
+      transition: all .2s;
 
       &:hover {
         grid-template-columns: 1fr 5rem;
+        gap: 1rem;
 
         .demo-delete {
           opacity: 1;
+        }
+      }
+
+      &-input {
+        padding: 0 .5rem;
+        border-width: 1px;
+        border-style: solid;
+        box-shadow: none;
+        border-top: 0;
+        border-left: 0;
+        border-right: 0;
+        border-radius: 0;
+        border-color: transparent;
+        margin-left: 1rem;
+        width: 100%;
+        text-align: center;
+        transition: all .2s;
+
+        &:hover,
+        &:active,
+        &:focus {
+          border-color: var(--pri);
         }
       }
     }
@@ -381,8 +504,8 @@
         }
 
         &:hover, &:active, &:focus {
-          color: var(--sec);
-          border-color: var(--sec);
+          color: var(--tert);
+          border-color: var(--tert);
 
           &::before {
             display: block;

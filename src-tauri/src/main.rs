@@ -460,6 +460,20 @@ fn save_events(new_events: Value) -> Value {
 
             let original_event = event::Event::new(events_regex).unwrap();
 
+            if event["demo_name"].as_str().unwrap() != original_event.demo_name {
+                let built_event = build_event_from_json(event);
+                extend!(new_events_text, "{}\r\n", built_event.event);
+                events.push(built_event);
+                continue;
+            }
+
+            if event["tick"].as_i64().unwrap() != original_event.tick {
+                let built_event = build_event_from_json(event);
+                extend!(new_events_text, "{}\r\n", built_event.event);
+                events.push(built_event);
+                continue;
+            }
+
             match &original_event.value {
                 Bookmark(bm) => {
                     if event["isKillstreak"].as_bool().unwrap() {
