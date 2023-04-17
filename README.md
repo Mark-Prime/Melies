@@ -41,9 +41,9 @@ Currently, pretty much everything is to-do. I'll keep this page updated with the
 - [x] Beautify events display
 - [x] Add edit button
 - [x] Allow editing of events
-- [ ] Edit demo name
-- [ ] Add new demos
 - [x] Save the events after edited
+- [x] Allow clip_start and clip_end to work
+- [x] enabled native spec_modes
 
 ### Style
 
@@ -67,10 +67,12 @@ Currently, pretty much everything is to-do. I'll keep this page updated with the
 ### Events editor
 
 - [x] Open events file
-- [ ] Add new events to the end
-- [ ] View current events
-- [ ] Edit already existing events
-- [ ] Save the txt file
+- [x] Add new events to the end
+- [x] View current events
+- [x] Edit already existing events
+- [x] Save the txt file
+- [x] Edit demo name
+- [x] Add new demos
 
 ### VDM editor
 

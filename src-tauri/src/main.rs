@@ -88,6 +88,27 @@ fn end_vdm(vdm: &mut VDM, settings: &Value, next_demoname: String) -> VDM {
     vdm.to_owned()
 }
 
+fn check_spec(clip: &Clip, commands: String) -> String {
+    if clip.spec_type == 0 {
+        return commands;
+    }
+
+    let mut new_commands = commands;
+
+    new_commands = format!("{}; spec_player {}; spec_mode;",
+        new_commands,
+        clip.spec_player
+    );
+
+    if clip.spec_type == 3 {
+        new_commands = format!("{} spec_mode;",
+            new_commands
+        );
+    }
+
+    return new_commands
+}
+
 fn start_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
     if clip.start_tick > settings["recording"]["start_delay"].as_i64().unwrap() + 100 {
         let mut skip_props = vdm.create_action(ActionType::SkipAhead).props_mut();
@@ -138,8 +159,13 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
 
         let mut clip_name = format!("{}_{}-{}_{}", vdm_name, clip.start_tick, clip.end_tick, suffix);
 
-        if clip.bm_value != "".to_string() && settings["recording"]["auto_suffix"] == 1 && clip.bm_value != "General".to_string() {
-            clip_name = format!("{}_{}", clip_name, clip.bm_value.replace(" ", "-"));
+        let mut bm_value = clip.bm_value.to_owned();
+
+        bm_value = bm_value.replace("clip_start", "");
+        bm_value = bm_value.replace("clip_end", "");
+
+        if bm_value != "".to_string() && settings["recording"]["auto_suffix"] == 1 && bm_value != "General".to_string() {
+            clip_name = format!("{}_{}", clip_name, bm_value.replace(" ", "-"));
         }
 
         let commands = format!(
@@ -150,6 +176,8 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
             settings["output"]["method"].as_str().unwrap()
         );
 
+        let commands = check_spec(clip, commands);
+
         start_record.start_tick = Some(clip.start_tick);
         start_record.name = "Start Recording".to_string();
         start_record.commands = commands;
@@ -158,12 +186,28 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
     {
         let mut end_record = vdm.create_action(ActionType::PlayCommands).props_mut();
 
-        end_record.start_tick = Some(clip.end_tick);
-        end_record.name = "Stop Recording".to_string();
-        end_record.commands = format!(
+        let mut commands = format!(
             "{}; host_framerate 0; endmovie;",
             settings["recording"]["end_commands"].as_str().unwrap(),
         );
+
+        if clip.spec_type == 1 {
+            commands = format!(
+                "{} spec_mode; spec_mode;",
+                commands,
+            );
+        }
+        
+        if clip.spec_type == 3 {
+            commands = format!(
+                "{} spec_mode;",
+                commands,
+            );
+        }
+
+        end_record.start_tick = Some(clip.end_tick);
+        end_record.name = "Stop Recording".to_string();
+        end_record.commands = commands;
     }
 }
 
@@ -268,7 +312,9 @@ fn ryukbot() -> Value {
             continue;
         }
 
-        if clips.last().unwrap().can_include(&event, &settings) {
+        let clip_len = clips.len();
+
+        if clips[clip_len - 1].can_include(&event, &settings) {
             clips.last_mut().unwrap().include(event, &settings);
             continue;
         }
