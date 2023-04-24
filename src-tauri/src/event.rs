@@ -63,6 +63,9 @@ impl Event {
                 event_name.remove(0);
                 value = EventStyle::Bookmark(event_name.join(" "));
             },
+            "player" => {
+                value = EventStyle::Bookmark("General".to_owned());
+            },
             _ => {
                 value = EventStyle::Bookmark(event_name.join(" "));
             }
