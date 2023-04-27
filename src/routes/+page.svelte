@@ -1,10 +1,12 @@
 <script>
   // @ts-nocheck
   import { invoke } from "@tauri-apps/api/tauri"
+  import Logstf from "../lib/logstf.svelte";
 
   let demos = [];
   
   let editting = false;
+  let logstfModal = false;
 
   let resp = { vdms: 0, clips: 0, events: 0, code: 0 };
 
@@ -42,7 +44,6 @@
   }
 
   async function runMelies() {
-    // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
     resp = await invoke("ryukbot")
   }
 
@@ -58,6 +59,30 @@
         isKillstreak: false
       }
     ])
+
+    demos = demos;
+  }
+
+  function parseLogEvents(demo_name, events) {
+    let new_demo = []
+    
+    for (let event of events) {
+      new_demo.push(
+        {
+          value: {
+            Bookmark: `spec ${event.steamid64}`
+          },
+          tick: event.time * 66,
+          demo_name: demo_name,
+          event: `[logs.tf_${event.label}] spec ${event.steamid64} (\"${demo_name}\" at ${event.time * 66})`,
+          isKillstreak: false
+        }
+      )
+    }
+
+    console.log(new_demo);
+
+    demos.push(new_demo);
 
     demos = demos;
   }
@@ -147,12 +172,17 @@
     demos = demos;
   }
 
+  function toggleModal() {
+    logstfModal = !logstfModal;
+  }
+
   loadEvents();
 </script>
 
 <div class="home-page">
   <h1 class="header">Méliès</h1>
   <div class="events">
+    <Logstf enabled={logstfModal} toggle={toggleModal} parseLogEvents={parseLogEvents}/>
     {#if !resp.code}
       {#each demos as demo, demo_i}
         {#each demo as event, i (`${demo_i}__${i}`)}
@@ -236,7 +266,7 @@
       {#if editting}
         <div class="new-demo">
           <a href="/" class="new-demo__1" on:click={addDemo}>Add Manual Events</a>
-          <p href="/" class="new-demo__2" >Logs.tf</p>
+          <a href="/" class="new-demo__2" on:click={toggleModal}>Logs.tf</a>
           <p href="/" class="new-demo__3" >Scan Demo</p>
         </div>
       {/if}
@@ -264,9 +294,8 @@
     grid-template-rows: repeat(24, 1fr);
     gap: 1rem;
     height: calc(100vh - 1.4rem);
-    overflow: hidden;
     width: 100%;
-    max-width: calc(800px - 2rem);
+    max-width: calc(1000px - 2rem);
     margin: auto;
   }
 

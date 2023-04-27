@@ -33,6 +33,9 @@
   --err-con: #ffdad6;
   --err-con-text: #410002;
 
+  --red: #f35355;
+  --blu: #65b1e2;
+
   color: var(--bg-text);
   background-color: var(--bg);
 
@@ -73,26 +76,46 @@ h1 {
   text-align: center;
 }
 
+.padding-0 {
+  padding: 0;
+  margin: 0;
+}
+
+.centered {
+  text-align: center;
+}
+
+.align-right {
+  text-align: right;
+}
+
+.align-left {
+  text-align: left;
+}
+
 input,
 button {
   border-radius: 8px;
-  border: 1px solid transparent;
+  border: 1px solid var(--pri-con);
   padding: 0.5rem .7rem;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
   color: var(--pri-con-text);
-  border-color: var(--pri-con);
-  background-color: transparent;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+  background-color: var(--bg);
+  transition: border-color 0.25s, filter 0.3s;
   outline: none;
-  filter: drop-shadow(3px 3px 10px black);
+  filter: drop-shadow(0px 0px -1px var(--pri));
 }
 
 input::placeholder {
   color: var(--pri-con);
   opacity: .7;
+}
+
+.input {
+  color: var(--pri-con-text);
+  border-color: var(--pri-con);
 }
 
 .input--sec {
@@ -126,14 +149,23 @@ button:disabled {
 
 button:not(:disabled):hover {
   border-color: var(--pri-con-text);
+  filter: drop-shadow(0px 0px 2px var(--pri-con-text));
+}
+
+.input:not(:disabled):hover {
+  border-color: var(--pri-con-text);
+  filter: drop-shadow(0px 0px 2px var(--pri-con-text));
 }
 
 .input--sec:not(:disabled):hover {
   border-color: var(--sec-con-text);
+  filter: drop-shadow(0px 0px 2px var(--sec-con-text));
 }
 
 .input--tert:not(:disabled):hover {
   border-color: var(--tert-con-text);
+  filter: drop-shadow(0px 0px 2px var(--tert-con-text));
+
 }
 
 .cancel-btn {
@@ -146,13 +178,15 @@ button:not(:disabled):hover {
   font-family: inherit;
   color: var(--err-con-text);
   border-color: var(--err-con);
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+  background-color: var(--bg);
+  transition: border-color 0.25s, filter 0.3s;
   outline: none;
+  filter: drop-shadow(0px 0px -1px var(--err));
 }
 
-.cancel-btn:hover:hover {
+.cancel-btn:hover {
   border-color: var(--err-con-text);
+  filter: drop-shadow(0px 0px 2px var(--err-con-text));
 }
 
 .switch {
@@ -261,6 +295,17 @@ input:checked + .slider--tert:before {
 
 .pointer {
   cursor: pointer;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.input-group > input {
+  width: 100%;
 }
 
 @media (prefers-color-scheme: dark) {

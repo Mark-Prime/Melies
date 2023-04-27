@@ -17,9 +17,11 @@ use chrono::prelude::*;
 use crate::event::EventStyle::{Bookmark, Killstreak};
 use crate::event::Event;
 use crate::clip::Clip;
+use crate::logstf::parse;
 
 mod event;
 mod clip;
+mod logstf;
 
 macro_rules! ifelse {
     ($c:expr, $v:expr, $v1:expr) => {
@@ -641,6 +643,11 @@ fn clear_events(settings: Value) -> Value {
     })
 }
 
+#[command]
+fn parse_log(url: Value) -> Value {
+    parse(url)
+}
+
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
@@ -649,6 +656,7 @@ fn main() {
             save_settings,
             load_events,
             save_events,
+            parse_log
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

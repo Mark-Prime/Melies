@@ -24,9 +24,9 @@
 <h1>Settings</h1>
 
 <div class="setting">
-  <div class="settings__input-group  settings__span">
+  <div class="settings__input-group settings__span">
     <label for="tf_folder" class="settings__label">\tf Folder</label>
-    <input bind:value={settings.tf_folder} id="tf_folder" class="settings__input"/>
+    <input bind:value={settings.tf_folder} id="tf_folder" class="settings__input input"/>
   </div>
   <div class="settings__switch">
     <label class="switch">
