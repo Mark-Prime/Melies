@@ -33,7 +33,7 @@ async function parseLog(){
             switch (event.type) {
                 case 'charge': ubers[i].push(event); continue;
                 case 'medic_death': {
-                    if (round["events"][index - 1].type === 'drop') {
+                    if (round["events"][index - 1]?.type === 'drop') {
                         event.isDrop = true;
                     }
 
@@ -181,8 +181,8 @@ function closeModal() {
                                     >
                                         {resp["names"][event.killer]}
                                     </a>{#if event.isDrop}
-                                        <strong>dropped</strong>{:else}
-                                        killed{/if}<a
+                                        <strong>dropped </strong>{:else}
+                                        killed {/if}<a
                                         href={`https://logs.tf/profile/${resp["players"][event.steamid]["steamid64"]}`}
                                         class={resp["players"][event.steamid]["team"] + " player"}
                                         data-tooltip={parseClasses(resp["players"][event.steamid]["class_stats"])}
