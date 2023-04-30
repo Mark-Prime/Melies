@@ -18,10 +18,12 @@ use crate::event::EventStyle::{Bookmark, Killstreak};
 use crate::event::Event;
 use crate::clip::Clip;
 use crate::logstf::parse;
+use crate::demos::{scan_for_demos, scan_demo};
 
 mod event;
 mod clip;
 mod logstf;
+mod demos;
 
 macro_rules! ifelse {
     ($c:expr, $v:expr, $v1:expr) => {
@@ -45,13 +47,13 @@ fn write_cfg(settings: &Value) {
 
     // println!("cl_drawhud {}", settings["output"]["hud"]);
 
-    extend!(cfg, "echo \"Execing Melies Config\";\r\ncl_drawhud {};\r\n", settings["output"]["hud"]);
+    extend!(cfg, "echo \"Execing Melies Config\";\r\ncl_drawhud {};\r\n", settings["output"]["HUD"]);
     extend!(cfg, "sv_cheats {};\r\n", "1");
     extend!(cfg, "voice_enable {};\r\n", settings["output"]["voice_chat"]);
     extend!(cfg, "hud_saytext_time {};\r\n", settings["output"]["text_chat"]);
     extend!(cfg, "crosshair {};\r\n", settings["output"]["crosshair"]);
     extend!(cfg, "viewmodel_fov {};\r\n", settings["recording"]["viewmodel_fov"]);
-    extend!(cfg, "fov_desired {};\r\n", settings["recording"]["fov"]);
+    extend!(cfg, "fov_desired {};\r\n", settings["recording"]["Fov"]);
     extend!(cfg, "{};\r\n", settings["recording"]["commands"].as_str().unwrap());
 
     if settings["output"]["lock"].as_i64().unwrap() == 1 {
@@ -604,9 +606,24 @@ fn build_event_from_json(event_json: &Value) -> Event {
             }
         },
         false => {
+            if event_json["value"]["Bookmark"] == "General" {
+                return Event {
+                    event: format!(
+                        "[{}] Bookmark {} (\"{}\" at {})",
+                        sys_time.format("%Y/%m/%d %H:%M").to_string(),
+                        event_json["value"]["Bookmark"].as_str().unwrap(),
+                        event_json["demo_name"].as_str().unwrap(),
+                        event_json["tick"].as_i64().unwrap()
+                    ),
+                    demo_name: event_json["demo_name"].as_str().unwrap().to_string(),
+                    tick: event_json["tick"].as_i64().unwrap(),
+                    value: Bookmark(event_json["value"]["Bookmark"].as_str().unwrap().to_string()),
+                }
+            }
+            
             return Event {
                 event: format!(
-                    "[{}] Bookmark {} (\"{}\" at {})",
+                    "[{}] {} (\"{}\" at {})",
                     sys_time.format("%Y/%m/%d %H:%M").to_string(),
                     event_json["value"]["Bookmark"].as_str().unwrap(),
                     event_json["demo_name"].as_str().unwrap(),
@@ -648,6 +665,16 @@ fn parse_log(url: Value) -> Value {
     parse(url)
 }
 
+#[command]
+fn load_demos() -> Value {
+    scan_for_demos(load_settings())
+}
+
+#[command]
+fn parse_demo(path: String) -> Value {
+    scan_demo(load_settings(), path)
+}
+
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
@@ -656,7 +683,9 @@ fn main() {
             save_settings,
             load_events,
             save_events,
-            parse_log
+            parse_log,
+            load_demos,
+            parse_demo
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

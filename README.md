@@ -81,18 +81,19 @@ Currently, pretty much everything is to-do. I'll keep this page updated with the
 
 ### Logs.tf integration
 
-- [ ] Open log using logs.tf API
-- [ ] Parse data from the JSON and display it
-- [ ] Allow event selection for recording
+- [x] Open log using logs.tf API
+- [x] Parse data from the JSON and display it
+- [x] Allow event selection for recording
 - [ ] POV selection
-- [ ] Turn selected events into 
+- [x] Turn selected events into 
+- [ ] make it stop crashing if the loading takes too long
 
 ### Demo scanning
 
-- [ ] Locate demo files in the tf folder
-- [ ] Parse a list of kills in the demo
-- [ ] Display list to user
-- [ ] Allow user to select what to record
+- [x] Locate demo files in the tf folder
+- [x] Parse a list of kills in the demo
+- [x] Display list to user
+- [x] Allow user to select what to record
 
 ## License
 

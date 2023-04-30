@@ -21,6 +21,11 @@ tauri = { version = "1.2", features = ["shell-open"] }
 vdm = "1.0.7"
 reqwest = { version = "0.11", features = ["blocking", "json"] }
 steamid-ng = "1.0.0"
+tf-demo-parser = "0.4.0"
+fnv = "1.0.7"
+bitbuffer = { version = "0.10.9", features = ["serde"] }
+num_enum = "0.5.7"
+parse-display = "0.8.0"
 tauri-plugin-store = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "dev" }
 
 [features]

@@ -137,7 +137,7 @@ impl Clip {
                     self.spec_type = 3;
                     self.spec_player = split.last().unwrap().to_string();
                 } else if split.contains(&"spec") {
-                    self.spec_type = 3;
+                    self.spec_type = 1;
                     self.spec_player = split.last().unwrap().to_string();
                 };
 

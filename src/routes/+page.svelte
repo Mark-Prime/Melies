@@ -2,11 +2,13 @@
   // @ts-nocheck
   import { invoke } from "@tauri-apps/api/tauri"
   import Logstf from "../lib/logstf.svelte";
+  import Demo from "../lib/demo.svelte";
 
   let demos = [];
   
   let editting = false;
   let logstfModal = false;
+  let demoModal = false;
 
   let resp = { vdms: 0, clips: 0, events: 0, code: 0 };
 
@@ -75,6 +77,46 @@
           tick: event.time * 66,
           demo_name: demo_name,
           event: `[logs.tf_${event.label}] spec ${event.steamid64} (\"${demo_name}\" at ${event.time * 66})`,
+          isKillstreak: false
+        }
+      )
+    }
+
+    console.log(new_demo);
+
+    demos.push(new_demo);
+
+    demos = demos;
+  }
+
+  function parseDemoEvents(demo_name, events) {
+    let new_demo = []
+    
+    for (let event of events) {
+      if (event.start) {
+        new_demo.push(
+          {
+            value: {
+              Bookmark: `clip_start spec ${event.steamid64}`
+            },
+            tick: event.time,
+            demo_name: demo_name,
+            event: `[demo_${event.label}] clip_start ${event.kills}k spec ${event.steamid64} (\"${demo_name}\" at ${event.time})`,
+            isKillstreak: false
+          }
+        )
+
+        continue;
+      }
+
+      new_demo.push(
+        {
+          value: {
+            Bookmark: `clip_end`
+          },
+          tick: event.time,
+          demo_name: demo_name,
+          event: `[demo_${event.label}] clip_end (\"${demo_name}\" at ${event.time})`,
           isKillstreak: false
         }
       )
@@ -172,8 +214,12 @@
     demos = demos;
   }
 
-  function toggleModal() {
+  function toggleLogModal() {
     logstfModal = !logstfModal;
+  }
+
+  function toggleDemoModal() {
+    demoModal = !demoModal;
   }
 
   loadEvents();
@@ -182,7 +228,8 @@
 <div class="home-page">
   <h1 class="header">Méliès</h1>
   <div class="events">
-    <Logstf enabled={logstfModal} toggle={toggleModal} parseLogEvents={parseLogEvents}/>
+    <Logstf enabled={logstfModal} toggle={toggleLogModal} parseLogEvents={parseLogEvents}/>
+    <Demo enabled={demoModal} toggle={toggleDemoModal} parseDemoEvents={parseDemoEvents}/>
     {#if !resp.code}
       {#each demos as demo, demo_i}
         {#each demo as event, i (`${demo_i}__${i}`)}
@@ -266,8 +313,8 @@
       {#if editting}
         <div class="new-demo">
           <a href="/" class="new-demo__1" on:click={addDemo}>Add Manual Events</a>
-          <a href="/" class="new-demo__2" on:click={toggleModal}>Logs.tf</a>
-          <p href="/" class="new-demo__3" >Scan Demo</p>
+          <a href="/" class="new-demo__2" on:click={toggleLogModal}>Logs.tf</a>
+          <a href="/" class="new-demo__3" on:click={toggleDemoModal}>Scan Demo</a>
         </div>
       {/if}
     {:else}
@@ -309,17 +356,12 @@
     grid-template-columns: 1fr 1fr 1fr;
     gap: 2px;
 
-    & > a, & > p {
+    & > a {
       width: 100%;
       padding: 1px .5rem;
       border-radius: 3px;
 
       transition: all .2s;
-    }
-
-    & > p {
-      cursor: not-allowed;
-      opacity: .3;
     }
 
     &__1 {
