@@ -77,7 +77,7 @@ fn end_vdm(vdm: &mut VDM, settings: &Value, next_demoname: String) -> VDM {
     {
         let mut exec_commands = vdm.create_action(ActionType::PlayCommands).props_mut();
 
-        exec_commands.start_tick = Some(last_tick + 100);
+        exec_commands.start_tick = Some(last_tick + 66);
 
         if settings["recording"]["record_continuous"] == 1 && next_demoname != "" {
             exec_commands.name = format!("Start the next demo ({}.dem)", next_demoname);
@@ -114,11 +114,11 @@ fn check_spec(clip: &Clip, commands: String) -> String {
 }
 
 fn start_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
-    if clip.start_tick > settings["recording"]["start_delay"].as_i64().unwrap() + 100 {
+    if clip.start_tick > settings["recording"]["start_delay"].as_i64().unwrap() + 66 {
         let mut skip_props = vdm.create_action(ActionType::SkipAhead).props_mut();
 
         skip_props.start_tick = Some(settings["recording"]["start_delay"].as_i64().unwrap());
-        skip_props.skip_to_tick = Some(clip.start_tick - 100);
+        skip_props.skip_to_tick = Some(clip.start_tick - 66);
     }
 
     record_clip(vdm, clip, settings);
@@ -130,8 +130,8 @@ fn add_clip_to_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
     if clip.start_tick > last_tick + 300 {
         let mut skip_props = vdm.create_action(ActionType::SkipAhead).props_mut();
 
-        skip_props.start_tick = Some(last_tick + 100);
-        skip_props.skip_to_tick = Some(clip.start_tick - 100);
+        skip_props.start_tick = Some(last_tick + 66);
+        skip_props.skip_to_tick = Some(clip.start_tick - 66);
     }
 
     record_clip(vdm, clip, settings);
@@ -153,7 +153,7 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
     {
         let mut exec_commands = vdm.create_action(ActionType::PlayCommands).props_mut();
 
-        exec_commands.start_tick = Some(clip.start_tick - 50);
+        exec_commands.start_tick = Some(clip.start_tick - 33);
         exec_commands.name = "Exec Melies Commands".to_string();
         exec_commands.commands = "exec melies;".to_string();
     }
@@ -191,7 +191,7 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
         let mut end_record = vdm.create_action(ActionType::PlayCommands).props_mut();
 
         let mut commands = format!(
-            "{}; host_framerate 0; endmovie;",
+            "{}; endmovie; host_framerate 0;",
             settings["recording"]["end_commands"].as_str().unwrap(),
         );
 

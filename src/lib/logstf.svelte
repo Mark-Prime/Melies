@@ -148,7 +148,7 @@ function closeModal() {
                     <div class={"event streak " + (killstreak.selected && "event--selected")}>
                         <p>
                             <a
-                                href={`https://logs.tf/profile/${resp["players"][killstreak.steamid]["steamid64"]}`}
+                                href={`https://logs.tf/profile/${resp["players"][killstreak.steamid]["steamid64"] || ""}`}
                                 class={resp["players"][killstreak.steamid]["team"] + " player"}
                                 data-tooltip={parseClasses(resp["players"][killstreak.steamid]["class_stats"])}
                                 target="_blank" rel="noopener noreferrer"
@@ -174,7 +174,7 @@ function closeModal() {
                             <div class={"event death" + (event.selected && " event--selected ") + (event.isDrop && " drop")}>
                                 <p>
                                     <a
-                                        href={`https://logs.tf/profile/${resp["players"][event.killer]["steamid64"]}`}
+                                        href={`https://logs.tf/profile/${resp["players"][event.killer]["steamid64"] || ""}`}
                                         class={resp["players"][event.killer]["team"] + " player"}
                                         data-tooltip={parseClasses(resp["players"][event.killer]["class_stats"])}
                                         target="_blank" rel="noopener noreferrer"
@@ -183,7 +183,7 @@ function closeModal() {
                                     </a>{#if event.isDrop}
                                         <strong>dropped </strong>{:else}
                                         killed {/if}<a
-                                        href={`https://logs.tf/profile/${resp["players"][event.steamid]["steamid64"]}`}
+                                        href={`https://logs.tf/profile/${resp["players"][event.steamid]["steamid64"] || ""}`}
                                         class={resp["players"][event.steamid]["team"] + " player"}
                                         data-tooltip={parseClasses(resp["players"][event.steamid]["class_stats"])}
                                         target="_blank" rel="noopener noreferrer"
@@ -211,7 +211,7 @@ function closeModal() {
                             <div class={"event uber " + (event.selected && "event--selected")}>
                                 <p>
                                     <a
-                                        href={`https://logs.tf/profile/${resp["players"][event.steamid]["steamid64"]}`}
+                                        href={`https://logs.tf/profile/${resp["players"][event.steamid]["steamid64"] || ""}`}
                                         class={resp["players"][event.steamid]["team"] + " player"}
                                         data-tooltip={parseClasses(resp["players"][event.steamid]["class_stats"])}
                                         target="_blank" rel="noopener noreferrer"

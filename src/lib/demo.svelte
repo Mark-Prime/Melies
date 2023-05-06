@@ -9,6 +9,8 @@
     let resp = {loaded: false, loading: false};
     let parsed_demo = {loaded: false, loading: false};
     let selected = [];
+    let displayLives = false;
+    let displayPlayers = false;
     
     let current_demo = "";
 
@@ -16,6 +18,8 @@
         selected = [];
         current_demo = "";
         parsed_demo = {loaded: false, loading: false};
+        displayLives = false;
+        displayPlayers = false;
 
         for (let demo of resp.demos) {
             demo.selected = false;
@@ -85,6 +89,54 @@
             closeModal();
         }
     }
+
+    function displayPlayer(player) {
+        if (player == 0) {
+            return false;
+        }
+
+        if (displayPlayers) {
+            return true;
+        }
+
+        if (parsed_demo.data.player_lives[player].length == 0) {
+            return false;
+        }
+
+        if (displayLives) {
+            return true;
+        }
+
+        for (let life of parsed_demo.data.player_lives[player]) {
+            if (life.kills > 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function recordEntireDemo(steamId) {
+        let events = [
+            {
+                time: 66,
+                label: parsed_demo.data.users[steamId].steamId64,
+                steamid64: parsed_demo.data.users[steamId].steamId64,
+                kills: 0,
+                start: true
+            },{
+                time: parsed_demo.header.ticks - 99,
+                label: parsed_demo.data.users[steamId].steamId64,
+                steamid64: parsed_demo.data.users[steamId].steamId64
+            }
+        ];
+        
+        let name_split = current_demo.replace(".dem", "").split("\\");
+        console.log(name_split)
+
+        parseDemoEvents(name_split[name_split.length - 1], events.sort((a, b) => a.time - b.time));
+        nextDemo();
+    }
 </script>
 
 {#if enabled}
@@ -113,12 +165,29 @@
                 {:else} 
                     <h1>{current_demo}</h1>
                     {#if !parsed_demo.loading}
+                        <h4 class="centered">{parsed_demo.header.map}</h4>
+                        <div class="buttons">
+                            <div class="settings__switch">
+                                <label class="switch">
+                                    <input type="checkbox" bind:checked={displayLives}>
+                                    <span class="slider round slider--tert"></span>
+                                </label>
+                                <p>Display lives with 0 Kills</p>
+                            </div>
+                            <div class="settings__switch">
+                                <label class="switch">
+                                    <input type="checkbox" bind:checked={displayPlayers}>
+                                    <span class="slider round slider--tert"></span>
+                                </label>
+                                <p>Display players with 0 displayed lives</p>
+                            </div>
+                        </div>
                         <div>
                             {#each Object.keys(parsed_demo.data.player_lives) as player}
-                                {#if player != 0 && parsed_demo.data.player_lives[player].length > 0}
+                                {#if displayPlayer(player)}
                                     <h2>
                                         <a
-                                            href={`https://logs.tf/profile/${parsed_demo.data.users[player]["steamid64"]}`}
+                                            href={`https://logs.tf/profile/${parsed_demo.data.users[player]["steamId64"]}`}
                                             class={parsed_demo.data.users[player]["team"] + " player"}
                                             data-tooltip="Open logs.tf profile"
                                             target="_blank" rel="noopener noreferrer"
@@ -126,29 +195,32 @@
                                     </h2>
                                     {#each parsed_demo.data.player_lives[player] as life}
                                         {#if life.start != 0}
-                                            <div class={"demo demo__life " + (life.selected && "demo--selected")}>
-                                                <p class={
-                                                    (life.kills >= 3 && "killstreak ") +
-                                                    (life.kills >= 5 && " killstreak--large ") +
-                                                    (life.kills >= 10 && " killstreak--massive ")
-                                                }>Kills: {life.kills}</p>
-                                                <p class={
-                                                    (life.assists >= 3 && "killstreak ") +
-                                                    (life.assists >= 5 && " killstreak--large ") +
-                                                    (life.assists >= 10 && " killstreak--massive ")
-                                                }>Assists: {life.assists}</p>
-                                                <p>Start: {life.start - parsed_demo.data.start_tick}</p>
-                                                <p>End: {life.end - parsed_demo.data.start_tick}</p>
-                                                <div class="add_demo">
-                                                    {#if life.selected}
-                                                        <button class="cancel-btn" on:click={toggleSelected(life)}>Remove</button>
-                                                    {:else}
-                                                        <button on:click={toggleSelected(life)}>Add</button>
-                                                    {/if}
+                                            {#if displayLives || life.kills > 0}
+                                                <div class={"demo demo__life " + (life.selected && "demo--selected")}>
+                                                    <p class={
+                                                        (life.kills >= 3 && "killstreak ") +
+                                                        (life.kills >= 5 && " killstreak--large ") +
+                                                        (life.kills >= 10 && " killstreak--massive ")
+                                                    }>Kills: {life.kills}</p>
+                                                    <p class={
+                                                        (life.assists >= 3 && "killstreak ") +
+                                                        (life.assists >= 5 && " killstreak--large ") +
+                                                        (life.assists >= 10 && " killstreak--massive ")
+                                                    }>Assists: {life.assists}</p>
+                                                    <p>Start: {life.start - parsed_demo.data.start_tick}</p>
+                                                    <p>End: {life.end - parsed_demo.data.start_tick}</p>
+                                                    <div class="add_demo">
+                                                        {#if life.selected}
+                                                            <button class="cancel-btn" on:click={toggleSelected(life)}>Remove</button>
+                                                        {:else}
+                                                            <button on:click={toggleSelected(life)}>Add</button>
+                                                        {/if}
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            {/if}
                                         {/if}
                                     {/each}
+                                    <button class="full_demo" on:click={recordEntireDemo(player)}>Record entire demo</button>
                                 {/if}
                             {/each}
                         </div>
@@ -191,6 +263,40 @@
 
     .blue {
         color: var(--blu);
+    }
+
+    .settings__switch {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .full_demo {
+        font-size: small;
+        width: 100%;
+        padding: .3rem .5rem;
+        margin: 2px 0;
+        font-family: 'Source Code Pro', monospace;
+        color: transparent;
+        border: 1px solid var(--tert-con);
+        border-radius: 5px;
+
+        display: grid;
+        grid-template-columns: 1fr;
+        text-align: center;
+        white-space: nowrap;
+        height: 0px;
+        cursor: pointer;
+
+        overflow: hidden;
+
+        transition: all .2s;
+
+        &:hover {
+            border: 1px solid var(--tert-con-text);
+        color: var(--tert-con-text);
+            height: 28px;
+        }
     }
 
     .player {
