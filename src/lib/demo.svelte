@@ -119,7 +119,7 @@
     function recordEntireDemo(steamId) {
         let events = [
             {
-                time: 66,
+                time: 99,
                 label: parsed_demo.data.users[steamId].steamId64,
                 steamid64: parsed_demo.data.users[steamId].steamId64,
                 kills: 0,

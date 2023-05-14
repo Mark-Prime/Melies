@@ -94,7 +94,8 @@ h1 {
 }
 
 input,
-button {
+button,
+select {
   border-radius: 8px;
   border: 1px solid var(--pri-con);
   padding: 0.5rem .7rem;

@@ -172,13 +172,17 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
             clip_name = format!("{}_{}", clip_name, bm_value.replace(" ", "-"));
         }
 
-        let commands = format!(
-            "{}host_framerate {}; startmovie {} {}; clear;",
-            ifelse!(settings["output"]["snd_fix"] == 1, "snd_restart; ", ""),
-            settings["output"]["framerate"],
-            clip_name,
-            settings["output"]["method"].as_str().unwrap()
-        );
+        let mut commands = "".to_string();
+
+        if settings["output"]["method"] != "none" {
+            commands = format!(
+                "{}host_framerate {}; startmovie {} {}; clear;",
+                ifelse!(settings["output"]["snd_fix"] == 1, "snd_restart; ", ""),
+                settings["output"]["framerate"],
+                clip_name,
+                settings["output"]["method"].as_str().unwrap()
+            );
+        }
 
         let commands = check_spec(clip, commands);
 
@@ -364,6 +368,14 @@ fn ryukbot() -> Value {
         vdm.export(&file_location);
     }
 
+    let mut backup_location = "".to_string();
+
+    if settings["save_backups"].as_bool().unwrap() {
+        let saved = save_backup(&settings);
+
+        backup_location = saved["output_path"].as_str().unwrap().to_owned();
+    }
+
     if settings["clear_events"].as_bool().unwrap() {
         clear_events(settings);
     }
@@ -372,7 +384,8 @@ fn ryukbot() -> Value {
         "clips": clips.len(),
         "events": event_count,
         "vdms": vdm_count,
-        "code": 200
+        "code": 200,
+        "backup_location": backup_location
     })
 }
 
@@ -387,6 +400,7 @@ fn build_settings() -> Value {
     let settings = json!({
         "tf_folder": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Team Fortress 2\\tf",
         "clear_events": true,
+        "save_backups": true,
         "safe_mode": 1,
         "output": {
             "method": "h264",
@@ -657,6 +671,38 @@ fn clear_events(settings: Value) -> Value {
     json!({
         "code": 200,
         "events": []
+    })
+}
+
+fn save_backup(settings: &Value) -> Value {
+    let dir;
+
+    match find_dir(&settings) {
+        Ok(directory) => {
+            dir = directory;
+        },
+        Err(err) => {
+            return json!({
+                "code": 404,
+                "err_text": err
+            });
+        }
+    };
+
+    let sys_time: DateTime<Local> = Local::now();
+    let date = sys_time.format("%Y-%m-%d_%H-%M-%S").to_string().replace("\"", "");
+
+    let output_path = format!("{}\\Documents\\Melies\\backups\\{}.txt", env::var("USERPROFILE").unwrap(), date);
+
+    fs::create_dir_all(format!("{}\\Documents\\Melies\\backups", env::var("USERPROFILE").unwrap())).unwrap();
+
+    // println!("{}", output_path);
+
+    fs::copy(dir, &output_path).unwrap();
+
+    json!({
+        "code": 200,
+        "output_path": output_path
     })
 }
 

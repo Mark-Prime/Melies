@@ -42,6 +42,13 @@
     </label>
     Clear events after running.
   </div>
+  <div class="settings__switch">
+    <label class="switch">
+      <input type="checkbox" bind:checked={settings.save_backups}>
+      <span class="slider round"></span>
+    </label>
+    Save backups of events
+  </div>
 </div>
 
 <h2>Output</h2>
@@ -49,7 +56,11 @@
 <div class="setting">
   <div class="settings__input-group">
     <label for="tf_folder" class="settings__label">Recording Method</label>
-    <input bind:value={output_settings.method} id="tf_folder" class="settings__input input--sec"/>
+    <select bind:value={output_settings.method} id="tf_folder" class="settings__input input--sec">
+      <option value="h264">h264</option>
+      <option value="jpeg">jpeg</option>
+      <option value="none">Do not record</option>
+    </select>
   </div>
   <div class="settings__input-group">
     <label for="tf_folder" class="settings__label">Framerate</label>
@@ -208,7 +219,7 @@
       align-items: flex-start;
       width: 100%;
 
-      & > input {
+      & > input, & > select {
         width: 100%;
       }
     }

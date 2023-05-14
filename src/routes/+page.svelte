@@ -318,7 +318,14 @@
         </div>
       {/if}
     {:else}
-      {`Created ${resp.vdms} VDMs containing ${resp.clips} containing ${resp.events} events.`}
+      <p>
+        {`Created ${resp.vdms} VDMs containing ${resp.clips} containing ${resp.events} events.`}
+      </p>
+      {#if resp.output_path != ""}
+      <p>
+        Backup saved to: {resp.backup_location}
+      </p>
+      {/if}
     {/if}
   </div>
 

@@ -552,15 +552,8 @@ impl MessageHandler for Analyser {
     }
 
     fn handle_message(&mut self, message: &Message, tick: u32) {
-        if self.state.start_tick == 0 {
-            self.state.start_tick = ServerTick(tick);
-        }
+        self.state.end_tick = ServerTick(tick);
         match message {
-            Message::NetTick(msg) => {
-                if self.state.start_tick == 0 {
-                    self.state.start_tick = ServerTick(msg.tick);
-                }
-            }
             Message::ServerInfo(message) => {
                 self.state.interval_per_tick = message.interval_per_tick
             }
@@ -657,6 +650,6 @@ pub struct MatchState {
     pub deaths: Vec<Death>,
     pub spawns: Vec<Spawn>,
     pub rounds: Vec<Round>,
-    pub start_tick: ServerTick,
+    pub end_tick: ServerTick,
     pub interval_per_tick: f32,
 }
