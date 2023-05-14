@@ -36,7 +36,7 @@ Currently, pretty much everything is to-do. I'll keep this page updated with the
 - [x] Hide console on build
 - [x] Display events.txt or killstreaks.txt file on home page
 - [x] Clear events file after running (if that option is selected)
-- [ ] Create backups
+- [x] Create backups
 - [ ] Create logs
 - [x] Beautify events display
 - [x] Add edit button
@@ -85,7 +85,7 @@ Currently, pretty much everything is to-do. I'll keep this page updated with the
 - [x] Parse data from the JSON and display it
 - [x] Allow event selection for recording
 - [ ] POV selection
-- [x] Turn selected events into 
+- [x] Turn selected into events
 - [ ] make it stop crashing if the loading takes too long
 
 ### Demo scanning
@@ -94,6 +94,7 @@ Currently, pretty much everything is to-do. I'll keep this page updated with the
 - [x] Parse a list of kills in the demo
 - [x] Display list to user
 - [x] Allow user to select what to record
+- [x] Record entire demo
 
 ## License
 
