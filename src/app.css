@@ -309,6 +309,11 @@ input:checked + .slider--tert:before {
   width: 100%;
 }
 
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #1a1c1e;
