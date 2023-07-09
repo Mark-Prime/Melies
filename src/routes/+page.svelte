@@ -31,7 +31,7 @@
         demos[demos.length - 1].push(event);
       });
 
-      console.log("DEMOS", demos);
+      // console.log("DEMOS", demos);
 
       demos = demos;
 
@@ -82,7 +82,7 @@
       )
     }
 
-    console.log(new_demo);
+    // console.log(new_demo);
 
     demos.push(new_demo);
 
@@ -168,7 +168,7 @@
     }
 
     demos = demos;
-    console.log(demos)
+    // console.log(demos)
   }
 
   function addEvent(demo_i) {

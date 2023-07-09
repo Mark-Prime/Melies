@@ -85,6 +85,25 @@
             current_demo = selected.shift();
             parsed_demo = await invoke("parse_demo", { path: current_demo });
             console.log(parsed_demo);
+            // console.log(parsed_demo.data.users)
+
+            let steamid64s = [];
+
+            for (let i in parsed_demo.data.users) {
+                let user = parsed_demo.data.users[i];
+                if (user.steamId64 != '0') {
+                    steamid64s.push(user.steamId64)
+                }
+            }
+
+            console.log(steamid64s);
+
+            // const res = await fetch('https://api.rgl.gg/v0/profile/getmany', {
+            //     method: 'POST',
+            //     body: JSON.stringify(steamid64s)
+            // })
+
+            // console.log(res)
         } else {
             closeModal();
         }
@@ -119,7 +138,7 @@
     function recordEntireDemo(steamId) {
         let events = [
             {
-                time: 99,
+                time: 349,
                 label: parsed_demo.data.users[steamId].steamId64,
                 steamid64: parsed_demo.data.users[steamId].steamId64,
                 kills: 0,
@@ -294,7 +313,7 @@
 
         &:hover {
             border: 1px solid var(--tert-con-text);
-        color: var(--tert-con-text);
+            color: var(--tert-con-text);
             height: 28px;
         }
     }
@@ -305,7 +324,7 @@
         &::before {
             content: attr(data-tooltip);
             position: absolute;
-            top: -2.8rem;
+            top: -2.4rem;
             left: 0rem;
             display: none;
             background-color: var(--bg);
@@ -314,13 +333,14 @@
             padding: .2rem .5rem;
             border-radius: .5rem;
             white-space: nowrap;
+            font-size: 12px;
         }
 
         &::after {
             content: '';
             display: none;
             position: absolute;
-            top: -.6rem;
+            top: -.2rem;
             left: .5rem;
             height: .5rem;
             width: .8rem;

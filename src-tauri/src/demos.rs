@@ -5,6 +5,7 @@ use serde::Serialize;
 use serde_json::json;
 use serde_json::Value;
 use tf_demo_parser::{Demo, DemoParser};
+use std::path::Path;
 
 use self::custom_analyser::Death;
 use self::custom_analyser::Spawn;
@@ -100,18 +101,20 @@ pub(crate) fn scan_for_demos(settings: Value) -> Value {
         }
     }
 
-    let paths = fs::read_dir(format!("{}\\demos", settings["tf_folder"].as_str().unwrap())).unwrap();
+    if Path::new(&format!("{}\\demos", settings["tf_folder"].as_str().unwrap())).exists() {
+        let paths = fs::read_dir(format!("{}\\demos", settings["tf_folder"].as_str().unwrap())).unwrap();
 
-    for path in paths {
-        let file_name = path.unwrap().path().display().to_string();
-
-        if file_name.ends_with(".dem") {
-            let parsed_file_name = file_name.replace(settings["tf_folder"].as_str().unwrap(), "");
-
-            let mut demo = Value::from({});
-            demo["name"] = Value::from(parsed_file_name);
-
-            demos.push(demo);
+        for path in paths {
+            let file_name = path.unwrap().path().display().to_string();
+    
+            if file_name.ends_with(".dem") {
+                let parsed_file_name = file_name.replace(settings["tf_folder"].as_str().unwrap(), "");
+    
+                let mut demo = Value::from({});
+                demo["name"] = Value::from(parsed_file_name);
+    
+                demos.push(demo);
+            }
         }
     }
 

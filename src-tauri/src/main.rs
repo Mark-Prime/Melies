@@ -43,6 +43,7 @@ macro_rules! extend {
 )]
 
 fn write_cfg(settings: &Value) {
+    println!("write_cfg({:?})", settings);
     let mut cfg = String::new();
 
     // println!("cl_drawhud {}", settings["output"]["hud"]);
@@ -56,7 +57,7 @@ fn write_cfg(settings: &Value) {
     extend!(cfg, "fov_desired {};\r\n", settings["recording"]["Fov"]);
     extend!(cfg, "{};\r\n", settings["recording"]["commands"].as_str().unwrap());
 
-    if settings["output"]["lock"].as_i64().unwrap() == 1 {
+    if settings["output"]["lock"].as_i64().is_some() {
         extend!(cfg, "\r\necho \"Preventing settings from changing\";\r\nalias cl_drawhud \"{}\";\r\n", "");
         extend!(cfg, "alias voice_enable \"{}\";\r\n", "");
         extend!(cfg, "alias hud_saytext_time \"{}\";\r\n", "");
@@ -71,6 +72,7 @@ fn write_cfg(settings: &Value) {
 }
 
 fn end_vdm(vdm: &mut VDM, settings: &Value, next_demoname: String) -> VDM {
+    println!("end_vdm({:?}, {:?}, {:?})", vdm, settings, next_demoname);
     println!("{}", vdm.name);
     let last_tick = vdm.last().props().start_tick.unwrap();
 
@@ -93,6 +95,7 @@ fn end_vdm(vdm: &mut VDM, settings: &Value, next_demoname: String) -> VDM {
 }
 
 fn check_spec(clip: &Clip, commands: String) -> String {
+    println!("check_spec({:?}, {:?})", clip, commands);
     if clip.spec_type == 0 {
         return commands;
     }
@@ -104,7 +107,7 @@ fn check_spec(clip: &Clip, commands: String) -> String {
         clip.spec_player
     );
 
-    if clip.spec_type == 3 {
+    if clip.spec_type == 1 {
         new_commands = format!("{} spec_mode;",
             new_commands
         );
@@ -114,6 +117,7 @@ fn check_spec(clip: &Clip, commands: String) -> String {
 }
 
 fn start_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
+    println!("start_vdm({:?}, {:?}, {:?})", vdm, clip, settings);
     if clip.start_tick > settings["recording"]["start_delay"].as_i64().unwrap() + 66 {
         let mut skip_props = vdm.create_action(ActionType::SkipAhead).props_mut();
 
@@ -125,6 +129,7 @@ fn start_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
 }
 
 fn add_clip_to_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
+    println!("add_clip_to_vdm({:?}, {:?}, {:?})", vdm, clip, settings);
     let last_tick = vdm.last().props().start_tick.unwrap();
     
     if clip.start_tick > last_tick + 300 {
@@ -138,6 +143,7 @@ fn add_clip_to_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
 }
 
 fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
+    println!("record_clip({:?}, {:?}, {:?})", vdm, clip, settings);
     let vdm_name = vdm.name.clone();
 
     let mut suffix = "bm".to_string();
@@ -220,6 +226,7 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
 }
 
 fn find_dir(settings: &Value) -> Result<String, String> {
+    println!("find_dir({:?})", settings);
     let files = fs::read_dir(format!("{}\\demos", settings["tf_folder"].as_str().unwrap()));
 
     let entries;
@@ -267,6 +274,7 @@ fn find_dir(settings: &Value) -> Result<String, String> {
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[command]
 fn ryukbot() -> Value {
+    println!("ryukbot()");
     let settings_path = env::var("USERPROFILE").unwrap() + "\\Documents\\Melies\\settings.json";
 
     let file = fs::read_to_string(settings_path).unwrap();
@@ -390,6 +398,7 @@ fn ryukbot() -> Value {
 }
 
 fn build_settings() -> Value {
+    println!("build_settings()");
     let binding = env::var("USERPROFILE").unwrap() + "\\Documents\\Melies\\settings.json";
     let settings_path = Path::new(&binding);
     let settings_prefix = settings_path.parent().unwrap();
@@ -437,6 +446,7 @@ fn build_settings() -> Value {
 
 #[command]
 fn load_settings() -> Value {
+    println!("load_settings()");
     let settings_path = env::var("USERPROFILE").unwrap() + "\\Documents\\Melies\\settings.json";
 
     if Path::new(&settings_path).exists() {
@@ -451,6 +461,7 @@ fn load_settings() -> Value {
 
 #[command]
 fn save_settings(new_settings: String) -> Value {
+    println!("save_settings()");
     let settings: Value = serde_json::from_str(&new_settings).unwrap();
     let settings_path = env::var("USERPROFILE").unwrap() + "\\Documents\\Melies\\settings.json";
 
@@ -464,6 +475,7 @@ fn save_settings(new_settings: String) -> Value {
 
 #[command]
 fn load_events() -> Value {
+    println!("load_events()");
     let settings = load_settings();
 
     let dir;
@@ -512,6 +524,7 @@ fn load_events() -> Value {
 
 #[command]
 fn save_events(new_events: Value) -> Value {
+    println!("save_events()");
     let mut events: Vec<Event> = vec![];
     let mut new_events_text = String::new();
 
@@ -602,6 +615,7 @@ fn save_events(new_events: Value) -> Value {
 }
 
 fn build_event_from_json(event_json: &Value) -> Event {
+    println!("build_event_from_json({:?})", event_json);
     let sys_time: DateTime<Local> = Local::now();
 
     match event_json["isKillstreak"].as_bool().unwrap() {
@@ -652,6 +666,7 @@ fn build_event_from_json(event_json: &Value) -> Event {
 }
 
 fn clear_events(settings: Value) -> Value {
+    println!("clear_events({:?})", settings);
     let dir;
 
     match find_dir(&settings) {
@@ -675,6 +690,7 @@ fn clear_events(settings: Value) -> Value {
 }
 
 fn save_backup(settings: &Value) -> Value {
+    println!("save_backup({:?})", settings);
     let dir;
 
     match find_dir(&settings) {
@@ -708,16 +724,19 @@ fn save_backup(settings: &Value) -> Value {
 
 #[command]
 fn parse_log(url: Value) -> Value {
+    println!("parse_log({:?})", url);
     parse(url)
 }
 
 #[command]
 fn load_demos() -> Value {
+    println!("load_demos()");
     scan_for_demos(load_settings())
 }
 
 #[command]
 fn parse_demo(path: String) -> Value {
+    println!("parse_demo({:?})", path);
     scan_demo(load_settings(), path)
 }
 
