@@ -207,13 +207,40 @@
                                     {#each Object.keys(parsed_demo.data.player_lives) as player}
                                         {#if displayPlayer(player) & parsed_demo.data?.users[player]?.team === team}
                                             <div class="flex-between align-center">
-                                                <h2>
+                                                <h2 class="player__header">
                                                     <a
                                                         href={`https://logs.tf/profile/${parsed_demo.data.users[player]["steamId64"]}`}
                                                         class={parsed_demo.data.users[player]["team"] + " player"}
                                                         data-tooltip="Open logs.tf profile"
                                                         target="_blank" rel="noopener noreferrer"
                                                     >{parsed_demo.data.users[player].name}</a>
+                                                    {#if parsed_demo.data.users[player]["classes"]["1"]}
+                                                        <img src="https://wiki.teamfortress.com/w/images/a/ad/Leaderboard_class_scout.png" alt="icon" />
+                                                    {/if}
+                                                    {#if parsed_demo.data.users[player]["classes"]["3"]}
+                                                        <img src="https://wiki.teamfortress.com/w/images/9/96/Leaderboard_class_soldier.png" alt="icon" />
+                                                    {/if}
+                                                    {#if parsed_demo.data.users[player]["classes"]["7"]}
+                                                        <img src="https://wiki.teamfortress.com/w/images/8/80/Leaderboard_class_pyro.png" alt="icon" />
+                                                    {/if}
+                                                    {#if parsed_demo.data.users[player]["classes"]["4"]}
+                                                        <img src="https://wiki.teamfortress.com/w/images/4/47/Leaderboard_class_demoman.png" alt="icon" />
+                                                    {/if}
+                                                    {#if parsed_demo.data.users[player]["classes"]["6"]}
+                                                        <img src="https://wiki.teamfortress.com/w/images/5/5a/Leaderboard_class_heavy.png" alt="icon" />
+                                                    {/if}
+                                                    {#if parsed_demo.data.users[player]["classes"]["9"]}
+                                                        <img src="https://wiki.teamfortress.com/w/images/1/12/Leaderboard_class_engineer.png" alt="icon" />
+                                                    {/if}
+                                                    {#if parsed_demo.data.users[player]["classes"]["5"]}
+                                                        <img src="https://wiki.teamfortress.com/w/images/e/e5/Leaderboard_class_medic.png" alt="icon" />
+                                                    {/if}
+                                                    {#if parsed_demo.data.users[player]["classes"]["2"]}
+                                                        <img src="https://wiki.teamfortress.com/w/images/f/fe/Leaderboard_class_sniper.png" alt="icon" />
+                                                    {/if}
+                                                    {#if parsed_demo.data.users[player]["classes"]["8"]}
+                                                        <img src="https://wiki.teamfortress.com/w/images/3/33/Leaderboard_class_spy.png" alt="icon" />
+                                                    {/if}
                                                 </h2>
                                                 {#if parsed_demo.data.users[player].hide}
                                                     <button on:click={() => parsed_demo.data.users[player].hide = false} class="hide-toggle">
@@ -282,6 +309,17 @@
 {/if}
 
 <style lang="scss">
+    img {
+        height: 1.5rem;
+    }
+
+    .player__header {
+        display: flex;
+        justify-content: left;
+        align-items: center;
+        gap: 1rem;
+    }
+
     .team {
         min-width: 550px;
         flex-grow: 1;
