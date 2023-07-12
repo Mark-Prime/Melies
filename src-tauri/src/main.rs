@@ -1,7 +1,7 @@
-#![cfg_attr(
-    all(not(debug_assertions), target_os = "windows"),
-    windows_subsystem = "windows"
-)]
+// #![cfg_attr(
+//     all(not(debug_assertions), target_os = "windows"),
+//     windows_subsystem = "windows"
+// )]
 
 use std::fs::{File, DirEntry};
 use std::io::Write;
@@ -37,10 +37,10 @@ macro_rules! extend {
     };
 }
 
-#[cfg_attr(
-    all(not(debug_assertions), target_os = "windows"),
-    windows_subsystem = "windows"
-)]
+// #[cfg_attr(
+//     all(not(debug_assertions), target_os = "windows"),
+//     windows_subsystem = "windows"
+// )]
 
 fn write_cfg(settings: &Value) {
     println!("write_cfg({:?})", settings);
@@ -365,10 +365,12 @@ fn ryukbot() -> Value {
     for (i, vdm) in vdms.iter().enumerate() {
         let file_location = format!("{}\\demos\\{}.vdm", &settings["tf_folder"].as_str().unwrap(), &vdm.name);
         
-        if settings["safe_mode"].as_i64().unwrap() == 1 {
-            let file_path = Path::new(&file_location);
-            if file_path.exists() {
-                continue;
+        if settings["safe_mode"].as_i64().is_some() {
+            if settings["safe_mode"].as_i64().unwrap() == 1 {
+                let file_path = Path::new(&file_location);
+                if file_path.exists() {
+                    continue;
+                }
             }
         }
 
