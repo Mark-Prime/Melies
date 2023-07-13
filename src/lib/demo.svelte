@@ -75,8 +75,20 @@
                 }
             }
 
+            for (let i in parsed_demo.data.chat) {
+                let message = parsed_demo.data.chat[i];
+
+                if (message.selected) {
+                    events.push({
+                        time: message.tick - parsed_demo.data.start_tick,
+                        label: `message-sent`,
+                        steamid64: parsed_demo.data.users[message.from].steamId64,
+                        bookmark: true,
+                    })
+                }
+            }
+
             let name_split = current_demo.replace(".dem", "").split("\\");
-            console.log(name_split)
 
             parseDemoEvents(name_split[name_split.length - 1], events.sort((a, b) => a.time - b.time));
         }
@@ -85,7 +97,7 @@
             parsed_demo = {loaded: false, loading: true};
             current_demo = selected.shift();
             parsed_demo = await invoke("parse_demo", { path: current_demo });
-            console.log(parsed_demo);
+            console.log({parsed_demo});
             // console.log(parsed_demo.data.users)
 
             let steamid64s = [];
@@ -97,7 +109,7 @@
                 }
             }
 
-            console.log(steamid64s);
+            // console.log(JSON.stringify(steamid64s));
 
             // const res = await fetch('https://api.rgl.gg/v0/profile/getmany', {
             //     method: 'POST',
@@ -237,6 +249,19 @@
             }
         }
     }
+
+    function getMessageType(message_type) {
+        switch (message_type) {
+            case "TF_Chat_AllDead":
+                return " (Dead)";
+            case "TF_Chat_Team":
+                return " (Team)";
+            case "TF_Chat_AllSpec":
+                return " (Spectator)";
+            default:
+                return "";
+        }
+    }
 </script>
 
 {#if enabled}
@@ -251,9 +276,9 @@
                             <p>{demo.name}</p>
                             <div class="add_demo">
                                 {#if demo.selected}
-                                    <button class="cancel-btn" on:click={toggleSelected(demo)}>Remove</button>
+                                    <button class="cancel-btn" on:click={toggleSelected(demo)}>-</button>
                                 {:else}
-                                    <button on:click={toggleSelected(demo)}>Add</button>
+                                    <button on:click={toggleSelected(demo)}>+</button>
                                 {/if}
                             </div>
                         </div>
@@ -298,11 +323,11 @@
                                             <div class="flex-start align-center">
                                                 {#if parsed_demo.data.users[player].hide}
                                                     <button on:click={() => parsed_demo.data.users[player].hide = false} class="hide-toggle">
-                                                        Show
+                                                        +
                                                     </button>
                                                 {:else}
-                                                    <button on:click={() => parsed_demo.data.users[player].hide = true} class="hide-toggle">
-                                                        Hide
+                                                    <button on:click={() => parsed_demo.data.users[player].hide = true} class="cancel-btn hide-toggle">
+                                                        -
                                                     </button>
                                                 {/if}
                                                 <h3 class="player__header">
@@ -369,9 +394,9 @@
                                                                 <div>End: {life.end - parsed_demo.data.start_tick}</div>
                                                                 <div class="add_demo">
                                                                     {#if life.selected}
-                                                                        <button class="cancel-btn" on:click={toggleSelected(life)}>Remove</button>
+                                                                        <button class="cancel-btn" on:click={toggleSelected(life)}>-</button>
                                                                     {:else}
-                                                                        <button on:click={toggleSelected(life)}>Add</button>
+                                                                        <button on:click={toggleSelected(life)}>+</button>
                                                                     {/if}
                                                                 </div>
                                                             </div>
@@ -382,6 +407,23 @@
                                             {/if}
                                         {/if}
                                     {/each}
+                                </div>
+                            {/each}
+                        </div>
+                        <h2 class="centered">Chat</h2>
+                        <div class="chat">
+                            {#each parsed_demo.data.chat as chat}
+                                {#if chat.selected}
+                                    <button class="cancel-btn" on:click={toggleSelected(chat)}>-</button>
+                                {:else}
+                                    <button on:click={toggleSelected(chat)}>+</button>
+                                {/if}
+                                <div class="chat__tick">
+                                    {chat.tick - parsed_demo.data.start_tick}
+                                </div>
+                                <div class="chat__text">
+                                    <span class={`chat__name ${parsed_demo.data?.users[chat.from]?.team}`}>{chat.name}{getMessageType(chat.message.kind)}:</span>
+                                    {chat.text}
                                 </div>
                             {/each}
                         </div>
@@ -407,6 +449,28 @@
 {/if}
 
 <style lang="scss">
+    .chat {
+        width: 100%;
+        display: grid;
+        grid-template-columns: min-content min-content 1fr;
+        width: 100%;
+        max-width: 750px;
+        margin: auto;
+        gap: .2rem;
+
+        &__tick {
+            text-align: right;
+            margin: 0 .3rem;
+            padding-right: .5rem;
+            border-right: var(--tert-con) solid 1px;
+        }
+
+        & > button {
+            padding: 0 .5rem;
+            // min-width: 25px;
+        }
+    }
+
     .flex-wrap {
         flex-wrap: wrap;
     }
@@ -509,6 +573,8 @@
     .hide-toggle {
         height: 2.4rem;
         margin-right: 1rem;
+        font-weight: bold;
+        width: 2.4rem;
     }
 
     .red {

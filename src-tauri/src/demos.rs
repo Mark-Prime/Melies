@@ -239,6 +239,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
             // "spawns": state.spawns,
             "rounds": state.rounds,
             "users": state.users,
+            "chat": state.chat,
             "start_tick": state.end_tick - header.ticks,
             "user_events": sorted_events,
             "player_lives": player_lives,

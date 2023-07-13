@@ -109,6 +109,22 @@
         continue;
       }
 
+      if (event.bookmark) {
+        new_demo.push(
+          {
+            value: {
+              Bookmark: `spec ${event.steamid64}`
+            },
+            tick: event.time,
+            demo_name: demo_name,
+            event: `[demo_${event.label}] spec ${event.steamid64} (\"${demo_name}\" at ${event.time})`,
+            isKillstreak: false
+          }
+        )
+
+        continue;
+      }
+
       new_demo.push(
         {
           value: {
@@ -121,8 +137,6 @@
         }
       )
     }
-
-    console.log(new_demo);
 
     demos.push(new_demo);
 

@@ -2,6 +2,7 @@ use tf_demo_parser::demo::gameevent_gen::{
     GameEvent, PlayerDeathEvent, PlayerSpawnEvent, TeamPlayRoundWinEvent,
 };
 use tf_demo_parser::demo::message::packetentities::EntityId;
+use tf_demo_parser::demo::message::usermessage::{ChatMessageKind, SayText2Message};
 use tf_demo_parser::demo::message::{Message, MessageType};
 use tf_demo_parser::demo::packet::stringtable::StringTableEntry;
 use tf_demo_parser::demo::parser::handler::{BorrowMessageHandler, MessageHandler};
@@ -560,6 +561,25 @@ impl MessageHandler for Analyser {
                 self.state.interval_per_tick = message.interval_per_tick
             }
             Message::GameEvent(message) => self.handle_event(&message.event, DemoTick(tick)),
+            Message::UserMessage(message) => {
+                match message {
+                    tf_demo_parser::demo::message::usermessage::UserMessage::SayText2(text) => {
+                        let from = text.clone().from.clone();
+                        let message_text: String = text.clone().text;
+                        if from.is_some() {
+                            let name = text.from.clone().unwrap();
+                            self.state.chat.push(ChatMessage { 
+                                from: self.state.user_name_map[&from.unwrap()].into(), 
+                                name: name,
+                                text: message_text,
+                                tick: tick.into(), 
+                                message: *text.to_owned() 
+                            });
+                        }
+                    },
+                    _ => {}
+                }
+            },
             _ => {}
         }
     }
@@ -632,6 +652,13 @@ impl Analyser {
         if let Some(user_info) =
             tf_demo_parser::demo::data::UserInfo::parse_from_string_table(text, data)?
         {
+            let player_info = user_info.player_info.clone();
+
+            self.state.user_name_map.entry(player_info.name.into()).and_modify(|info| {
+                *info = player_info.user_id;
+            })
+            .or_insert_with(|| player_info.user_id.into());
+
             self.state
                 .users
                 .entry(user_info.player_info.user_id.into())
@@ -649,9 +676,21 @@ impl Analyser {
 #[serde(rename_all = "camelCase")]
 pub struct MatchState {
     pub users: BTreeMap<UserId, UserInfo>,
+    pub user_name_map: BTreeMap<String, u32>,
+    pub chat: Vec<ChatMessage>,
     pub deaths: Vec<Death>,
     pub spawns: Vec<Spawn>,
     pub rounds: Vec<Round>,
     pub end_tick: ServerTick,
     pub interval_per_tick: f32,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct ChatMessage {
+    from: u32,
+    tick: DemoTick,
+    name: String,
+    text: String,
+    message: SayText2Message
 }
