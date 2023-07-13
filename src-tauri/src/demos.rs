@@ -67,8 +67,8 @@ impl PartialEq for Event {
 struct Life {
     pub start: u32,
     pub end: u32,
-    pub kills: i64,
-    pub assists: i64,
+    pub kills: Vec<Death>,
+    pub assists: Vec<Death>,
     pub classes: Vec<String>
 }
 
@@ -77,8 +77,8 @@ impl Life {
         Life {
             start,
             end: 0,
-            kills: 0,
-            assists: 0,
+            kills: vec![],
+            assists: vec![],
             classes
         }
     }
@@ -192,11 +192,11 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
                         current_life.classes.push(spawn.class.to_string());
                     }
                 },
-                Event::Kill(_kill) => {
-                    current_life.kills += 1;
+                Event::Kill(kill) => {
+                    current_life.kills.push(kill.to_owned());
                 },
-                Event::Assist(_assist) => {
-                    current_life.assists += 1;
+                Event::Assist(assist) => {
+                    current_life.assists.push(assist.to_owned());
                 },
                 Event::Death(death) => {
                     if current_life.start != 0 {

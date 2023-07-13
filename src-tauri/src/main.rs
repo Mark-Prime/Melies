@@ -233,7 +233,7 @@ fn find_dir(settings: &Value) -> Result<String, String> {
 
     match files {
         Ok(ent) => entries = ent,
-        Err(_) => return Err("Could not find _events.txt or KillStreaks.txt\r\nPlease check your settings to ensure the tf folder is correctly linked".to_string()),
+        Err(_) => return Err("Could not find the _events.txt or KillStreaks.txt files.\r\nPlease check your settings to ensure the tf folder is correctly linked.\r\nIf you do not have either file, please make one in the \\tf or \\tf\\demos folder.".to_string()),
     }
 
     for entry in entries {
@@ -424,8 +424,8 @@ fn build_settings() -> Value {
             "lock": 1
         },
         "recording": {
-            "commands": "exec recbinds",
-            "end_commands": "crosshair 1",
+            "commands": "",
+            "end_commands": "",
             "start_delay": 50,
             "minimum_ticks_between_clips": 500,
             "before_bookmark": 1000,

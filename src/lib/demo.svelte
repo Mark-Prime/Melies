@@ -10,6 +10,7 @@
     let parsed_demo = {loaded: false, loading: false};
     let selected = [];
     let displayLives = false;
+    let displayAssists = false;
     let displayPlayers = false;
     
     let current_demo = "";
@@ -59,15 +60,15 @@
                     if (life.selected) {
                         events.push({
                             time: (life.start + 20) - parsed_demo.data.start_tick,
-                            label: `${life.kills}k-${life.assists}a_start`,
+                            label: `${life.kills.length}k-${life.assists.length}a_start`,
                             steamid64: parsed_demo.data.users[i].steamId64,
-                            kills: life.kills,
+                            kills: life.kills.length,
                             start: true
                         })
 
                         events.push({
                             time: (life.end + 132) - parsed_demo.data.start_tick,
-                            label: `${life.kills}k-${life.assists}a_end`,
+                            label: `${life.kills.length}k-${life.assists.length}a_end`,
                             steamid64: parsed_demo.data.users[i].steamId64
                         })
                     }
@@ -127,8 +128,14 @@
         }
 
         for (let life of parsed_demo.data.player_lives[player]) {
-            if (life.kills > 0) {
+            if (life.kills.length > 0) {
                 return true;
+            }
+
+            if (displayAssists) {
+                if (life.assists.length > 0) {
+                    return true;
+                }
             }
         }
 
@@ -155,6 +162,80 @@
 
         parseDemoEvents(name_split[name_split.length - 1], events.sort((a, b) => a.time - b.time));
         nextDemo();
+    }
+
+    function getImgUrl(player_class) {
+        switch (player_class) {
+            case "scout":
+                return "https://wiki.teamfortress.com/w/images/a/ad/Leaderboard_class_scout.png";
+            case "soldier":
+                return "https://wiki.teamfortress.com/w/images/9/96/Leaderboard_class_soldier.png"
+            case "pyro":
+                return "https://wiki.teamfortress.com/w/images/8/80/Leaderboard_class_pyro.png";
+            case "demoman":
+                return "https://wiki.teamfortress.com/w/images/4/47/Leaderboard_class_demoman.png"
+            case "heavy":
+                return "https://wiki.teamfortress.com/w/images/5/5a/Leaderboard_class_heavy.png";
+            case "engineer":
+                return "https://wiki.teamfortress.com/w/images/1/12/Leaderboard_class_engineer.png"
+            case "medic":
+                return "https://wiki.teamfortress.com/w/images/e/e5/Leaderboard_class_medic.png";
+            case "sniper":
+                return "https://wiki.teamfortress.com/w/images/f/fe/Leaderboard_class_sniper.png"
+            case "spy":
+                return "https://wiki.teamfortress.com/w/images/3/33/Leaderboard_class_spy.png";
+            case "1":
+                return "https://wiki.teamfortress.com/w/images/a/ad/Leaderboard_class_scout.png";
+            case "3":
+                return "https://wiki.teamfortress.com/w/images/9/96/Leaderboard_class_soldier.png"
+            case "7":
+                return "https://wiki.teamfortress.com/w/images/8/80/Leaderboard_class_pyro.png";
+            case "4":
+                return "https://wiki.teamfortress.com/w/images/4/47/Leaderboard_class_demoman.png"
+            case "6":
+                return "https://wiki.teamfortress.com/w/images/5/5a/Leaderboard_class_heavy.png";
+            case "9":
+                return "https://wiki.teamfortress.com/w/images/1/12/Leaderboard_class_engineer.png"
+            case "5":
+                return "https://wiki.teamfortress.com/w/images/e/e5/Leaderboard_class_medic.png";
+            case "2":
+                return "https://wiki.teamfortress.com/w/images/f/fe/Leaderboard_class_sniper.png"
+            case "8":
+                return "https://wiki.teamfortress.com/w/images/3/33/Leaderboard_class_spy.png";
+            default:
+                return ""
+        }
+    }
+
+    function toggleClass(player, player_class) {
+        let class_mapping = ['scout', 'sniper', 'soldier', 'demoman', 'medic', 'heavy', 'pyro', 'spy', 'engineer'];
+
+        if (parsed_demo.data.users[player].hide) {
+            return;
+        }
+
+        for (let life of parsed_demo.data.player_lives[player]) {
+            if (!life.classes.includes(class_mapping[Number(player_class) - 1])) {
+                continue;
+            }
+
+            if (displayLives) {
+                toggleSelected(life);
+                continue;
+            }
+
+            if (life.kills.length > 0) {
+                toggleSelected(life);
+                continue;
+            }
+
+            if (displayAssists) {
+                if (life.assists.length > 0) {
+                    toggleSelected(life);
+                    continue;
+                }
+            }
+        }
     }
 </script>
 
@@ -185,13 +266,20 @@
                     <h1>{current_demo}</h1>
                     {#if !parsed_demo.loading}
                         <h4 class="centered">{parsed_demo.header.map}</h4>
-                        <div class="buttons">
+                        <div class="flex-between flex-wrap">
                             <div class="settings__switch">
                                 <label class="switch">
                                     <input type="checkbox" bind:checked={displayLives}>
                                     <span class="slider round slider--tert"></span>
                                 </label>
-                                <p>Display lives with 0 Kills</p>
+                                <p>Display all lives</p>
+                            </div>
+                            <div class="settings__switch">
+                                <label class="switch">
+                                    <input type="checkbox" bind:checked={displayAssists}>
+                                    <span class="slider round slider--tert"></span>
+                                </label>
+                                <p>Display lives with 0 Kills if they have an Assist</p>
                             </div>
                             <div class="settings__switch">
                                 <label class="switch">
@@ -204,44 +292,10 @@
                         <div class="teams">
                             {#each ["blue", "red"] as team}
                                 <div class="team">
+                                    <h2 class={"team__label " + team}>{team[0].toUpperCase() + team.slice(1)}</h2>
                                     {#each Object.keys(parsed_demo.data.player_lives) as player}
                                         {#if displayPlayer(player) & parsed_demo.data?.users[player]?.team === team}
-                                            <div class="flex-between align-center">
-                                                <h2 class="player__header">
-                                                    <a
-                                                        href={`https://logs.tf/profile/${parsed_demo.data.users[player]["steamId64"]}`}
-                                                        class={parsed_demo.data.users[player]["team"] + " player"}
-                                                        data-tooltip="Open logs.tf profile"
-                                                        target="_blank" rel="noopener noreferrer"
-                                                    >{parsed_demo.data.users[player].name}</a>
-                                                    {#if parsed_demo.data.users[player]["classes"]["1"]}
-                                                        <img src="https://wiki.teamfortress.com/w/images/a/ad/Leaderboard_class_scout.png" alt="icon" />
-                                                    {/if}
-                                                    {#if parsed_demo.data.users[player]["classes"]["3"]}
-                                                        <img src="https://wiki.teamfortress.com/w/images/9/96/Leaderboard_class_soldier.png" alt="icon" />
-                                                    {/if}
-                                                    {#if parsed_demo.data.users[player]["classes"]["7"]}
-                                                        <img src="https://wiki.teamfortress.com/w/images/8/80/Leaderboard_class_pyro.png" alt="icon" />
-                                                    {/if}
-                                                    {#if parsed_demo.data.users[player]["classes"]["4"]}
-                                                        <img src="https://wiki.teamfortress.com/w/images/4/47/Leaderboard_class_demoman.png" alt="icon" />
-                                                    {/if}
-                                                    {#if parsed_demo.data.users[player]["classes"]["6"]}
-                                                        <img src="https://wiki.teamfortress.com/w/images/5/5a/Leaderboard_class_heavy.png" alt="icon" />
-                                                    {/if}
-                                                    {#if parsed_demo.data.users[player]["classes"]["9"]}
-                                                        <img src="https://wiki.teamfortress.com/w/images/1/12/Leaderboard_class_engineer.png" alt="icon" />
-                                                    {/if}
-                                                    {#if parsed_demo.data.users[player]["classes"]["5"]}
-                                                        <img src="https://wiki.teamfortress.com/w/images/e/e5/Leaderboard_class_medic.png" alt="icon" />
-                                                    {/if}
-                                                    {#if parsed_demo.data.users[player]["classes"]["2"]}
-                                                        <img src="https://wiki.teamfortress.com/w/images/f/fe/Leaderboard_class_sniper.png" alt="icon" />
-                                                    {/if}
-                                                    {#if parsed_demo.data.users[player]["classes"]["8"]}
-                                                        <img src="https://wiki.teamfortress.com/w/images/3/33/Leaderboard_class_spy.png" alt="icon" />
-                                                    {/if}
-                                                </h2>
+                                            <div class="flex-start align-center">
                                                 {#if parsed_demo.data.users[player].hide}
                                                     <button on:click={() => parsed_demo.data.users[player].hide = false} class="hide-toggle">
                                                         Show
@@ -251,24 +305,68 @@
                                                         Hide
                                                     </button>
                                                 {/if}
+                                                <h3 class="player__header">
+                                                    <a
+                                                        href={`https://logs.tf/profile/${parsed_demo.data.users[player]["steamId64"]}`}
+                                                        class={parsed_demo.data.users[player]["team"] + " player"}
+                                                        data-tooltip="Open logs.tf profile"
+                                                        target="_blank" rel="noopener noreferrer"
+                                                    >{parsed_demo.data.users[player].name}</a>
+                                                    {#each Object.keys(parsed_demo.data.users[player]["classes"]) as player_class}
+                                                    <div 
+                                                        class="tooltip" 
+                                                        data-tooltip={`Lives: ${parsed_demo.data.users[player]["classes"][player_class]}`} 
+                                                        style="--kills: 0"
+                                                        on:click={toggleClass(player, player_class)}
+                                                        on:keydown={toggleClass(player, player_class)}
+                                                    >
+                                                        <img src={getImgUrl(player_class)} alt="icon"/>
+                                                    </div>
+                                                    {/each}
+                                                </h3>
                                             </div>
                                             {#if !parsed_demo.data.users[player].hide}
                                                 {#each parsed_demo.data.player_lives[player] as life}
                                                     {#if life.start != 0}
-                                                        {#if displayLives || life.kills > 0}
+                                                        {#if displayLives || life.kills.length > 0 || (displayAssists && life.assists.length > 0)}
                                                             <div class={"demo demo__life " + (life.selected && "demo--selected")}>
-                                                                <p class={
-                                                                    (life.kills >= 3 && "killstreak ") +
-                                                                    (life.kills >= 5 && " killstreak--large ") +
-                                                                    (life.kills >= 10 && " killstreak--massive ")
-                                                                }>Kills: {life.kills}</p>
-                                                                <p class={
-                                                                    (life.assists >= 3 && "killstreak ") +
-                                                                    (life.assists >= 5 && " killstreak--large ") +
-                                                                    (life.assists >= 10 && " killstreak--massive ")
-                                                                }>Assists: {life.assists}</p>
-                                                                <p>Start: {life.start - parsed_demo.data.start_tick}</p>
-                                                                <p>End: {life.end - parsed_demo.data.start_tick}</p>
+                                                                <div>
+                                                                    {#each life.classes as player_class}
+                                                                        <img src={getImgUrl(player_class)} alt="icon" />
+                                                                    {/each}
+                                                                </div>
+                                                                <div 
+                                                                    data-tooltip={`${
+                                                                        life.kills.length ? 
+                                                                        `Player${(life.kills.length > 1) ? "s" : ""} Killed: ` :
+                                                                        `No Kills`
+                                                                    }\n\r${life.kills.map((kill) => {
+                                                                        let crit_types = ["", " Mini-Crit", " CRITICAL HIT!"]
+                                                                        return `${parsed_demo.data.users[kill.victim].name} (tick: ${kill.tick - parsed_demo.data.start_tick})${crit_types[kill.crit_type]}`
+                                                                    }).join(", \n\r")}`}
+                                                                    style={`--kills: ${life.kills.length};`}
+                                                                    on:click={toggleSelected(life)}
+                                                                    on:keydown={toggleSelected(life)}
+                                                                    class={
+                                                                        `tooltip ` +
+                                                                        (life.kills.length >= 3 && " killstreak ") +
+                                                                        (life.kills.length >= 5 && " killstreak--large ") +
+                                                                        (life.kills.length >= 10 && " killstreak--massive ")
+                                                                    }
+                                                                >
+                                                                    Kills: {life.kills.length}
+                                                                </div>
+                                                                <div 
+                                                                    class={
+                                                                        (life.assists.length >= 3 && "killstreak ") +
+                                                                        (life.assists.length >= 5 && " killstreak--large ") +
+                                                                        (life.assists.length >= 10 && " killstreak--massive ")
+                                                                    }
+                                                                >
+                                                                    Assists: {life.assists.length}
+                                                                </div>
+                                                                <div>Start: {life.start - parsed_demo.data.start_tick}</div>
+                                                                <div>End: {life.end - parsed_demo.data.start_tick}</div>
                                                                 <div class="add_demo">
                                                                     {#if life.selected}
                                                                         <button class="cancel-btn" on:click={toggleSelected(life)}>Remove</button>
@@ -309,8 +407,64 @@
 {/if}
 
 <style lang="scss">
+    .flex-wrap {
+        flex-wrap: wrap;
+    }
+
+    .tooltip {
+        position: relative;
+        cursor: pointer;
+
+        &::before {
+            content: attr(data-tooltip);
+            position: absolute;
+            top: calc(-2.4rem - (1.72rem * var(--kills)));
+            left: 0rem;
+            display: none;
+            background-color: var(--bg);
+            color: var(--bg-text);
+            border: var(--outline) 1px solid;
+            padding: .2rem .5rem;
+            border-radius: .5rem;
+            width: max-content;
+            max-width: 500px;
+            overflow: hidden;
+            white-space: pre;
+            font-size: 12px;
+        }
+
+        &::after {
+            content: '';
+            display: none;
+            position: absolute;
+            top: -.2rem;
+            left: .5rem;
+            height: .5rem;
+            width: .8rem;
+            background-color: var(--outline);
+            clip-path: polygon(100% 0, 0 0, 50% 100%);
+        }
+
+        &:hover, &:active, &:focus {
+            color: var(--sec);
+
+            &::before {
+                display: block;
+            }
+
+            &::after {
+                display: block;
+            }
+        }
+    }
+    
     img {
         height: 1.5rem;
+    }
+
+    .flex-start {
+        display: flex;
+        justify-content: flex-start;
     }
 
     .player__header {
@@ -324,13 +478,17 @@
         min-width: 550px;
         flex-grow: 1;
         flex-shrink: 0;
+
+        &__label {
+            text-align: center;
+        }
     }
 
     .teams {
         width: 100%;
-        display: flex;
+        display: grid;
         gap: 1rem;
-        flex-wrap: wrap;
+        grid-template-columns: repeat(auto-fit, minmax(550px, 1fr));
     }
 
     .buttons {
@@ -350,6 +508,7 @@
 
     .hide-toggle {
         height: 2.4rem;
+        margin-right: 1rem;
     }
 
     .red {
@@ -453,17 +612,19 @@
         transition: all .2s;
 
         &__life {
-            grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+            grid-template-columns: .5fr 1fr 1fr 1fr 1fr min-content;
         }
 
         &--selected {
             border: 1px solid var(--tert);
         }
 
-        & > p {
+        & > div, & > p {
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
             padding: 0;
             margin: 0;
-            white-space: nowrap;
         }
 
         &:hover {
@@ -486,14 +647,15 @@
 
     .add_demo {
         display: flex;
-        align-items: end;
-        justify-content: end;
+        align-items: center;
+        justify-content: flex-end;
         gap: 1px;
 
         & > button {
-            padding: 0 .7rem;
+            font-size: 12px;
+            padding: .3rem .7rem;
             margin: 0;
-            height: 100%;
+            // height: 100%;
             border-radius: 5px;
             width: fit-content;
         }

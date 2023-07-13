@@ -490,6 +490,7 @@ pub struct Death {
     pub assister: Option<UserId>,
     pub killer: UserId,
     pub tick: DemoTick,
+    pub crit_type: u16
 }
 
 impl Death {
@@ -505,6 +506,7 @@ impl Death {
             killer: UserId::from(event.attacker),
             weapon: event.weapon.to_string(),
             victim: UserId::from(event.user_id),
+            crit_type: event.crit_type
         }
     }
 }
@@ -593,11 +595,11 @@ impl Analyser {
         Self::default()
     }
 
-    fn change_name(&mut self, from: String, to: String) {
-        if let Some(user) = self.state.users.values_mut().find(|user| user.name == from) {
-            user.name = to;
-        }
-    }
+    // fn change_name(&mut self, from: String, to: String) {
+    //     if let Some(user) = self.state.users.values_mut().find(|user| user.name == from) {
+    //         user.name = to;
+    //     }
+    // }
 
     fn handle_event(&mut self, event: &GameEvent, tick: DemoTick) {
         const WIN_REASON_TIME_LIMIT: u8 = 6;
