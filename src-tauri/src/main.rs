@@ -54,7 +54,7 @@ fn write_cfg(settings: &Value) {
     extend!(cfg, "hud_saytext_time {};\r\n", settings["output"]["text_chat"]);
     extend!(cfg, "crosshair {};\r\n", settings["output"]["crosshair"]);
     extend!(cfg, "viewmodel_fov {};\r\n", settings["recording"]["viewmodel_fov"]);
-    extend!(cfg, "fov_desired {};\r\n", settings["recording"]["Fov"]);
+    extend!(cfg, "fov_desired {};\r\n", settings["recording"]["fov"]);
     extend!(cfg, "{};\r\n", settings["recording"]["commands"].as_str().unwrap());
 
     if settings["output"]["lock"].as_i64().is_some() {

@@ -163,7 +163,7 @@
   </div>
   <div class="settings__input-group">
     <label for="FOV" class="settings__label">FOV</label>
-    <input bind:value={recording_settings.Fov} id="FOV" class="settings__input input--tert" type="number"/>
+    <input bind:value={recording_settings.fov} id="FOV" class="settings__input input--tert" type="number"/>
   </div>
   <div class="settings__input-group">
     <label for="viewodel_fov" class="settings__label">Viewmodel FOV</label>
