@@ -410,7 +410,7 @@
                                 </div>
                             {/each}
                         </div>
-                        <h2 class="centered">Chat</h2>
+                        <h2 class="centered chat__title">Chat</h2>
                         <div class="chat">
                             {#each parsed_demo.data.chat as chat}
                                 {#if chat.selected}
@@ -457,6 +457,9 @@
         max-width: 750px;
         margin: auto;
         gap: .2rem;
+        border: 1px solid var(--tert-con);
+        border-radius: 5px;
+        padding: 1rem;
 
         &__tick {
             text-align: right;
@@ -465,9 +468,16 @@
             border-right: var(--tert-con) solid 1px;
         }
 
+        &__title {
+            margin-top: 3rem;
+        }
+
         & > button {
-            padding: 0 .5rem;
-            // min-width: 25px;
+            height: 25px;
+            width: 25px;
+            padding: 0 0 0 1px;
+            display: table-cell;
+            vertical-align: middle;
         }
     }
 
@@ -536,6 +546,12 @@
         justify-content: left;
         align-items: center;
         gap: 1rem;
+
+        & > div {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
     }
 
     .team {
@@ -786,22 +802,22 @@
     }
 
     @keyframes ldio-h6cxzkuee3g-o {
-        0%    { opacity: 1; transform: translate(0 0) }
-        49.99% { opacity: 1; transform: translate(80px,0) }
-        50%    { opacity: 0; transform: translate(80px,0) }
-        100%    { opacity: 0; transform: translate(0,0) }
+        0%    { opacity: 1; transform: translate(0, 0) }
+        49.99% { opacity: 1; transform: translate(100px, 0) }
+        50%    { opacity: 0; transform: translate(100px, 0) }
+        100%    { opacity: 0; transform: translate(0, 0) }
     }
     @keyframes ldio-h6cxzkuee3g {
-        0% { transform: translate(0,0) }
-        50% { transform: translate(80px,0) }
-        100% { transform: translate(0,0) }
+        0% { transform: translate(0, 0) }
+        50% { transform: translate(100px, 0) }
+        100% { transform: translate(0, 0) }
     }
     .ldio-h6cxzkuee3g div {
         position: absolute;
-        width: 50px;
-        height: 50px;
+        width: 60px;
+        height: 60px;
         border-radius: 50%;
-        top: 60px;
+        top: 40px;
         left: 20px;
     }
     .ldio-h6cxzkuee3g div:nth-child(1) {

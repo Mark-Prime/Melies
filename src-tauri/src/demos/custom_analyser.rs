@@ -2,7 +2,7 @@ use tf_demo_parser::demo::gameevent_gen::{
     GameEvent, PlayerDeathEvent, PlayerSpawnEvent, TeamPlayRoundWinEvent,
 };
 use tf_demo_parser::demo::message::packetentities::EntityId;
-use tf_demo_parser::demo::message::usermessage::{ChatMessageKind, SayText2Message};
+use tf_demo_parser::demo::message::usermessage::SayText2Message;
 use tf_demo_parser::demo::message::{Message, MessageType};
 use tf_demo_parser::demo::packet::stringtable::StringTableEntry;
 use tf_demo_parser::demo::parser::handler::{BorrowMessageHandler, MessageHandler};
