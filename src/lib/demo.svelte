@@ -12,6 +12,7 @@
     let displayLives = false;
     let displayAssists = false;
     let displayPlayers = false;
+    let scale = 1.0;
     
     let current_demo = "";
 
@@ -427,6 +428,115 @@
                                 </div>
                             {/each}
                         </div>
+                        <!-- <div class="settings__input-group">
+                            <label for="tf_folder" class="settings__label">scale</label>
+                            <input bind:value={scale} id="tf_folder" class="settings__input input--tert" type="number"/>
+                        </div> -->
+                        <div class="timeline">
+                            <div class="timeline__labels">
+                                {#each ["blue", "red"] as team}
+                                    {#each Object.keys(parsed_demo.data.player_lives) as player}
+                                        {#if displayPlayer(player) & parsed_demo.data?.users[player]?.team === team}
+                                            <div class={`timeline__label ${team}`}>
+                                                {parsed_demo.data?.users[player]?.name}
+                                            </div>
+                                        {/if}
+                                    {/each}
+                                {/each}
+                            </div>
+                            <div class="timeline__lives-container">
+                                {#each ["blue", "red"] as team}
+                                    {#each Object.keys(parsed_demo.data.player_lives) as player}
+                                        {#if displayPlayer(player) & parsed_demo.data?.users[player]?.team === team}
+                                            <div class="timeline__lives">
+                                                {#each parsed_demo.data.player_lives[player] as life}
+                                                    {#if life.start != 0 && (displayLives || life.kills.length > 0 || (displayAssists && life.assists.length > 0))}
+                                                        <div class={"timeline__life " + (life.selected ? "demo--selected" : "")} on:click={toggleSelected(life)} on:keydown={toggleSelected(life)} style={`
+                                                            --length: ${(life.end - life.start)/scale}px;
+                                                            --start: ${(life.start - parsed_demo.data.start_tick)/scale}px
+                                                        `}>
+                                                            <div
+                                                                on:click={toggleSelected(life)} on:keydown={toggleSelected(life)}
+                                                                class={`timeline__data-tooltip tooltip ${parsed_demo.data?.users[player]?.team == "blue" ? "tooltip__lower" : ""}` }
+                                                                data-tooltip={`${
+                                                                    life.kills.length ? 
+                                                                    `Player${(life.kills.length > 1) ? "s" : ""} Killed: ` :
+                                                                    `No Kills`
+                                                                }\n\r${life.kills.map((kill) => {
+                                                                    let crit_types = ["", " Mini-Crit", " CRITICAL HIT!"]
+                                                                    return `${parsed_demo.data.users[kill.victim].name} (tick: ${kill.tick - parsed_demo.data.start_tick})${crit_types[kill.crit_type]}`
+                                                                }).join(", \n\r")}`}
+                                                                style={`
+                                                                    --kills: ${life.kills.length};
+                                                                `}
+                                                            >
+                                                                <div class="timeline__data" on:click={toggleSelected(life)} on:keydown={toggleSelected(life)}>
+                                                                    <div  on:click={toggleSelected(life)} on:keydown={toggleSelected(life)}>
+                                                                        {#each life.classes as player_class}
+                                                                            <img src={getImgUrl(player_class)} alt="icon" on:click={toggleSelected(life)} on:keydown={toggleSelected(life)}/>
+                                                                        {/each}
+                                                                    </div>
+                                                                    <div
+                                                                        on:click={toggleSelected(life)} on:keydown={toggleSelected(life)}
+                                                                        class={
+                                                                            (life.kills.length >= 3 && " killstreak ") +
+                                                                            (life.kills.length >= 5 && " killstreak--large ") +
+                                                                            (life.kills.length >= 10 && " killstreak--massive ")
+                                                                        }
+                                                                    >
+                                                                        K: {life.kills.length}
+                                                                    </div>
+                                                                    <div 
+                                                                        on:click={toggleSelected(life)} on:keydown={toggleSelected(life)}
+                                                                        class={
+                                                                            (life.assists.length >= 3 && "killstreak ") +
+                                                                            (life.assists.length >= 5 && " killstreak--large ") +
+                                                                            (life.assists.length >= 10 && " killstreak--massive ")
+                                                                        }
+                                                                    >
+                                                                        A: {life.assists.length}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div 
+                                                                class={`timeline__marker ${parsed_demo.data?.users[player]?.team == "blue" ? "timeline__marker--lower" : ""}`}
+                                                                data-tooltip={`Start: ${life.start - parsed_demo.data.start_tick}`}
+                                                                style={`
+                                                                    --position: -1px;
+                                                                    --kills: 0;
+                                                                `}
+                                                            ></div>
+                                                            <div 
+                                                                class={`timeline__marker ${parsed_demo.data?.users[player]?.team == "blue" ? "timeline__marker--lower" : ""}`}
+                                                                data-tooltip={`End: ${life.end - parsed_demo.data.start_tick}`}
+                                                                style={`
+                                                                    --position: ${((life.end - life.start) / scale) - 2}px;
+                                                                    --kills: 0;
+                                                                `}
+                                                            ></div>
+                                                            {#each life.kills as kill} 
+                                                                <div 
+                                                                    class={`timeline__marker ${parsed_demo.data?.users[player]?.team == "blue" ? "timeline__marker--lower" : ""}`}
+                                                                    data-tooltip={`Killed: ${parsed_demo.data.users[kill.victim].name}\r\nTick: ${kill.tick - parsed_demo.data.start_tick}`}
+                                                                    style={`
+                                                                        --position: ${((kill.tick - life.start) / scale) - 2}px;
+                                                                        --kills: 1;
+                                                                    `}
+                                                                ></div>
+                                                            {/each}
+                                                        </div>
+                                                    {/if}
+                                                {/each}
+                                            </div>
+                                        {/if}
+                                    {/each}
+                                {/each}
+                            </div>
+                            <div class="settings__input-group">
+                                <!-- <label for="myRange" class="settings__label">scale</label> -->
+                                <input type="range" min="1" max="30" bind:value={scale} class="input__slider" id="myRange">
+                            </div>
+                        </div>
                         <div class="buttons">
                             <button class="cancel-btn" on:click={closeModal}>Cancel</button>
                             <button on:click={nextDemo}>Save</button>
@@ -449,6 +559,41 @@
 {/if}
 
 <style lang="scss">
+    .input__slider {
+        -webkit-appearance: none;  /* Override default CSS styles */
+        appearance: none;
+        width: 95%; /* Full-width */
+        height: 0px; /* Specified height */
+        background: var(--tert); /* Grey background */
+        outline: none; /* Remove outline */
+        opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
+        -webkit-transition: .2s; /* 0.2 seconds transition on hover */
+        transition: opacity .2s;
+        position: relative;
+        top: -1.3rem;
+
+        &:hover {
+            opacity: 1;
+        }
+
+        &::-webkit-slider-thumb {
+            -webkit-appearance: none; /* Override default look */
+            appearance: none;
+            width: 10px; /* Set a specific slider handle width */
+            height: 10px; /* Slider handle height */
+            background: var(--tert-con); /* Green background */
+            cursor: pointer; /* Cursor on hover */
+            border-radius: 100%;
+        }
+
+        &::-moz-range-thumb {
+            width: 25px; /* Set a specific slider handle width */
+            height: 25px; /* Slider handle height */
+            background: var(--tert-con); /* Green background */
+            cursor: pointer; /* Cursor on hover */
+        }
+    }
+
     .chat {
         width: 100%;
         display: grid;
@@ -490,6 +635,7 @@
         cursor: pointer;
 
         &::before {
+            z-index: 1000;
             content: attr(data-tooltip);
             position: absolute;
             top: calc(-2.4rem - (1.72rem * var(--kills)));
@@ -508,6 +654,7 @@
         }
 
         &::after {
+            z-index: 1000;
             content: '';
             display: none;
             position: absolute;
@@ -519,6 +666,20 @@
             clip-path: polygon(100% 0, 0 0, 50% 100%);
         }
 
+        &__lower {
+            &::before {
+                top: 1.9rem;
+                background-color: var(--bg);
+                z-index: 1000;
+            }
+
+            &::after {
+                top: 1.45rem;
+                z-index: 1000;
+                clip-path: polygon(50% 0, 0 100%, 100% 100%);
+            }
+        }
+
         &:hover, &:active, &:focus {
             color: var(--sec);
 
@@ -528,6 +689,155 @@
 
             &::after {
                 display: block;
+            }
+        }
+    }
+
+    .timeline {
+        display: grid;
+        grid-template-columns: min-content 1fr;
+        text-align: right;
+        margin-top: 3rem;
+        overflow-y: visible;
+        padding: .5rem;
+        border-radius: 5px;
+        border: 1px solid var(--tert-con);
+
+        &__labels {
+            padding-top: 1rem;
+        }
+
+        &__label {
+            white-space: nowrap;
+            padding-right: 1rem;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: end;
+            margin-bottom: .2rem;
+            text-align: right;
+            border-right: var(--tert-con) solid 1px;
+        }
+
+        &__lives {
+            user-select: none;
+            height: 35px;
+            position: relative;
+            width: min-content;
+            overflow: visible;
+            margin-bottom: .2rem;
+        }
+
+        &__lives-container {
+            overflow-x: scroll;
+            overflow-y: visible;
+            padding-top: 1rem;
+            background-color: var(--bg2);
+            border-radius: 5px;
+        }
+
+        &__life {
+            height: 100%;
+            border: 1px solid var(--tert-con);
+            text-align: left;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            padding: 0 4px;
+            width: var(--length);
+            position: absolute;
+            left: var(--start);
+            top: 0;
+            white-space: nowrap;
+            overflow: visible;
+            cursor: pointer;
+        }
+
+        &--selected {
+            border: 1px solid var(--tert);
+        }
+
+        &__data-tooltip {
+            width: 100%;
+            position: relative;
+        }
+
+        &__data {
+            width: 100%;
+            display: grid;
+            gap: 1rem;
+            grid-template-columns: min-content min-content min-content;
+            overflow: hidden;
+            z-index: 10000;
+        }
+
+        &__marker {
+            position: absolute;
+            top: -1px;
+            left: calc(-.4rem + var(--position));
+            height: 37px;
+            width: .8rem;
+            background-color: transparent;
+            cursor: pointer;
+            overflow: visible;
+
+            &::before {
+                z-index: 1001;
+                content: attr(data-tooltip);
+                position: absolute;
+                top: calc(-2.2rem - (1.72rem * var(--kills)));
+                left: -.4rem;
+                display: none;
+                background-color: var(--bg);
+                color: var(--bg-text);
+                border: var(--outline) 1px solid;
+                padding: .2rem .5rem;
+                border-radius: .5rem;
+                width: max-content;
+                max-width: 500px;
+                overflow: hidden;
+                white-space: pre;
+                font-size: 12px;
+            }
+
+            &::after {
+                z-index: 999;
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                height: 35px;
+                width: .8rem;
+                background-color: var(--tert-con);
+                clip-path: polygon(40% 100%, 60% 100%, 60% 25%, 100% 0, 0 0, 40% 25%);
+            }
+
+            &--lower {
+                // top: calc(100% - .5rem + 1px);
+
+                &::before {
+                    top: 34px;
+                    background-color: var(--bg);
+                    z-index: 1000;
+                }
+
+                &::after {
+                    z-index: 999;
+                    clip-path: polygon(40% 0, 60% 0, 60% 75%, 100% 100%, 0 100%, 40% 75%);
+                }
+            }
+
+            &:hover, &:active, &:focus {
+                color: var(--sec);
+
+                &::before {
+                    display: block;
+                }
+
+                &::after {
+                    display: block;
+                    background-color: var(--outline);
+                }
             }
         }
     }

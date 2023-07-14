@@ -9,6 +9,7 @@
   font-weight: 400;
 
   --bg: #fdfbff;
+  --bg2: #ffffff;
   --bg-text: #1a1c1e;
 
   --outline: #74777f;
@@ -317,6 +318,7 @@ input:checked + .slider--tert:before {
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #1a1c1e;
+    --bg2: #131516;
     --bg-text: #e3e2e6;
 
     --outline: #8e9199;

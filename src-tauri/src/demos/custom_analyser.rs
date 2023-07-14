@@ -633,12 +633,12 @@ impl Analyser {
                     user_state.team = spawn.team;
                 }
                 self.state.spawns.push(spawn);
-            }
+            },
             GameEvent::TeamPlayRoundWin(event) => {
                 if event.win_reason != WIN_REASON_TIME_LIMIT {
                     self.state.rounds.push(Round::from_event(event, tick))
                 }
-            }
+            },
             _ => {}
         }
     }
