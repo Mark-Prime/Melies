@@ -2,6 +2,7 @@
     // @ts-nocheck
     import { invoke } from "@tauri-apps/api/tauri"
     import { onMount } from 'svelte';
+    import { useMousePosition } from '@svelteuidev/composables';
     export let enabled;
     export let toggle;
     export let parseDemoEvents;
@@ -13,6 +14,17 @@
     let displayAssists = false;
     let displayPlayers = false;
     let scale = 1.0;
+    let timeline;
+    let sleft = 0;
+
+    let divWidth;
+
+	const [position, ref] = useMousePosition();
+	$: ({ x, y } = $position);
+
+    $: if (scale > parsed_demo?.header?.ticks / divWidth) {
+        scale = parsed_demo?.header?.ticks / divWidth
+    };
     
     let current_demo = "";
 
@@ -411,27 +423,7 @@
                                 </div>
                             {/each}
                         </div>
-                        <h2 class="centered chat__title">Chat</h2>
-                        <div class="chat">
-                            {#each parsed_demo.data.chat as chat}
-                                {#if chat.selected}
-                                    <button class="cancel-btn" on:click={toggleSelected(chat)}>-</button>
-                                {:else}
-                                    <button on:click={toggleSelected(chat)}>+</button>
-                                {/if}
-                                <div class="chat__tick">
-                                    {chat.tick - parsed_demo.data.start_tick}
-                                </div>
-                                <div class="chat__text">
-                                    <span class={`chat__name ${parsed_demo.data?.users[chat.from]?.team}`}>{chat.name}{getMessageType(chat.message.kind)}:</span>
-                                    {chat.text}
-                                </div>
-                            {/each}
-                        </div>
-                        <!-- <div class="settings__input-group">
-                            <label for="tf_folder" class="settings__label">scale</label>
-                            <input bind:value={scale} id="tf_folder" class="settings__input input--tert" type="number"/>
-                        </div> -->
+                        <h2 class="centered chat__title">Timeline</h2>
                         <div class="timeline">
                             <div class="timeline__labels">
                                 {#each ["blue", "red"] as team}
@@ -444,19 +436,19 @@
                                     {/each}
                                 {/each}
                             </div>
-                            <div class="timeline__lives-container">
+                            <div class="timeline__lives-container" bind:clientWidth={divWidth} bind:this={timeline} on:scroll={()=>sleft=timeline.scrollLeft} use:ref>
                                 {#each ["blue", "red"] as team}
                                     {#each Object.keys(parsed_demo.data.player_lives) as player}
                                         {#if displayPlayer(player) & parsed_demo.data?.users[player]?.team === team}
                                             <div class="timeline__lives">
                                                 {#each parsed_demo.data.player_lives[player] as life}
                                                     {#if life.start != 0 && (displayLives || life.kills.length > 0 || (displayAssists && life.assists.length > 0))}
-                                                        <div class={"timeline__life " + (life.selected ? "demo--selected" : "")} on:click={toggleSelected(life)} on:keydown={toggleSelected(life)} style={`
-                                                            --length: ${(life.end - life.start)/scale}px;
-                                                            --start: ${(life.start - parsed_demo.data.start_tick)/scale}px
-                                                        `}>
+                                                        <div class={`timeline__life timeline__life--${team} ${(life.selected ? "demo--selected" : "")}`} on:click={toggleSelected(life)} on:keydown={toggleSelected(life)} style={`
+                                                                --length: ${(life.end - life.start)/scale}px;
+                                                                --start: ${(life.start - parsed_demo.data.start_tick)/scale}px
+                                                            `}
+                                                        >
                                                             <div
-                                                                on:click={toggleSelected(life)} on:keydown={toggleSelected(life)}
                                                                 class={`timeline__data-tooltip tooltip ${parsed_demo.data?.users[player]?.team == "blue" ? "tooltip__lower" : ""}` }
                                                                 data-tooltip={`${
                                                                     life.kills.length ? 
@@ -470,14 +462,13 @@
                                                                     --kills: ${life.kills.length};
                                                                 `}
                                                             >
-                                                                <div class="timeline__data" on:click={toggleSelected(life)} on:keydown={toggleSelected(life)}>
-                                                                    <div  on:click={toggleSelected(life)} on:keydown={toggleSelected(life)}>
+                                                                <div class="timeline__data">
+                                                                    <div>
                                                                         {#each life.classes as player_class}
-                                                                            <img src={getImgUrl(player_class)} alt="icon" on:click={toggleSelected(life)} on:keydown={toggleSelected(life)}/>
+                                                                            <img src={getImgUrl(player_class)} alt="icon"/>
                                                                         {/each}
                                                                     </div>
                                                                     <div
-                                                                        on:click={toggleSelected(life)} on:keydown={toggleSelected(life)}
                                                                         class={
                                                                             (life.kills.length >= 3 && " killstreak ") +
                                                                             (life.kills.length >= 5 && " killstreak--large ") +
@@ -486,8 +477,7 @@
                                                                     >
                                                                         K: {life.kills.length}
                                                                     </div>
-                                                                    <div 
-                                                                        on:click={toggleSelected(life)} on:keydown={toggleSelected(life)}
+                                                                    <div
                                                                         class={
                                                                             (life.assists.length >= 3 && "killstreak ") +
                                                                             (life.assists.length >= 5 && " killstreak--large ") +
@@ -534,9 +524,41 @@
                             </div>
                             <div class="settings__input-group">
                                 <!-- <label for="myRange" class="settings__label">scale</label> -->
-                                <input type="range" min="1" max="30" bind:value={scale} class="input__slider" id="myRange">
+                                <input type="range" min="1" max={parsed_demo?.header?.ticks / divWidth} step=".01" bind:value={scale} class="input__slider" id="myRange">
+                            </div>
+                            <div class="timeline__states">
+                                <div>
+                                    Zoom: {Math.round((scale / (parsed_demo?.header?.ticks / divWidth)) * 100)}% 
+                                </div>
+                                <div>
+                                    Range: {Math.round(sleft * scale)} - {Math.min(Math.round((sleft + divWidth) * scale), parsed_demo?.header?.ticks)}
+                                </div>
+                                <div>
+                                    Pos: {Math.min(Math.round((sleft + x) * scale), parsed_demo?.header?.ticks)}
+                                </div>
                             </div>
                         </div>
+                        <h2 class="centered chat__title">Chat</h2>
+                        <div class="chat">
+                            {#each parsed_demo.data.chat as chat}
+                                {#if chat.selected}
+                                    <button class="cancel-btn" on:click={toggleSelected(chat)}>-</button>
+                                {:else}
+                                    <button on:click={toggleSelected(chat)}>+</button>
+                                {/if}
+                                <div class="chat__tick">
+                                    {chat.tick - parsed_demo.data.start_tick}
+                                </div>
+                                <div class="chat__text">
+                                    <span class={`chat__name ${parsed_demo.data?.users[chat.from]?.team}`}>{chat.name}{getMessageType(chat.message.kind)}:</span>
+                                    {chat.text}
+                                </div>
+                            {/each}
+                        </div>
+                        <!-- <div class="settings__input-group">
+                            <label for="tf_folder" class="settings__label">scale</label>
+                            <input bind:value={scale} id="tf_folder" class="settings__input input--tert" type="number"/>
+                        </div> -->
                         <div class="buttons">
                             <button class="cancel-btn" on:click={closeModal}>Cancel</button>
                             <button on:click={nextDemo}>Save</button>
@@ -734,6 +756,29 @@
             padding-top: 1rem;
             background-color: var(--bg2);
             border-radius: 5px;
+
+            /* width */
+            &::-webkit-scrollbar {
+                width: 16px;
+            }
+
+            /* Track */
+            &::-webkit-scrollbar-track {
+                background: var(--tert);
+            }
+
+            /* Handle */
+            &::-webkit-scrollbar-thumb {
+                background: var(--tert-con);
+            }
+        }
+
+        &__states {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+            text-align: left;
         }
 
         &__life {
@@ -751,6 +796,14 @@
             white-space: nowrap;
             overflow: visible;
             cursor: pointer;
+
+            &--red {
+                background: linear-gradient(-45deg, #f3535533, transparent);
+            }
+
+            &--blue {
+                background: linear-gradient(-45deg, #65b1e233, transparent);
+            }
         }
 
         &--selected {
