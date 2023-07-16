@@ -60,7 +60,7 @@ impl Clip {
                     clip.spec_type = 3;
                     clip.spec_player = split.last().unwrap().to_string();
                 } else if split.contains(&"spec") {
-                    clip.spec_type = 3;
+                    clip.spec_type = 1;
                     clip.spec_player = split.last().unwrap().to_string();
                 };
 
@@ -95,9 +95,13 @@ impl Clip {
                     return true;
                 }
 
-                let new_start = &event.tick - settings["recording"]["before_bookmark"].as_i64().unwrap();
+                let mut new_start = event.tick;
+                let mut min_tick_between = 0;
 
-                let min_tick_between = settings["recording"]["minimum_ticks_between_clips"].as_i64().unwrap();
+                if !bm.contains("clip_start") {
+                    new_start = event.tick - settings["recording"]["before_bookmark"].as_i64().unwrap();
+                    min_tick_between = settings["recording"]["minimum_ticks_between_clips"].as_i64().unwrap();
+                }
 
                 if (new_start - min_tick_between) < self.end_tick {
                     return true;
