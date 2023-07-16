@@ -102,13 +102,13 @@ fn check_spec(clip: &Clip, commands: String) -> String {
 
     let mut new_commands = commands;
 
-    new_commands = format!("{}; spec_player {};",
+    new_commands = format!("{}; spec_player {}; spec_mode;",
         new_commands,
         clip.spec_player
     );
 
     if clip.spec_type == 3 {
-        new_commands = format!("{} spec_mode; spec_mode;",
+        new_commands = format!("{} spec_mode;",
             new_commands
         );
     }
