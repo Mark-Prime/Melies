@@ -48,7 +48,7 @@ fn write_cfg(settings: &Value) {
 
     // println!("cl_drawhud {}", settings["output"]["hud"]);
 
-    extend!(cfg, "echo \"Execing Melies Config\";\r\ncl_drawhud {};\r\n", settings["output"]["HUD"]);
+    extend!(cfg, "echo \"Execing Melies Config\";\r\ncl_drawhud {};\r\n", settings["output"]["hud"]);
     extend!(cfg, "sv_cheats {};\r\n", "1");
     extend!(cfg, "voice_enable {};\r\n", settings["output"]["voice_chat"]);
     extend!(cfg, "hud_saytext_time {};\r\n", settings["output"]["text_chat"]);

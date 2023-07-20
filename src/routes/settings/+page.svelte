@@ -154,14 +154,6 @@
     <input bind:value={recording_settings.rewind_amount} id="tf_folder" class="settings__input input--tert" type="number"/>
   </div>
   <div class="settings__input-group">
-    <label for="tf_folder" class="settings__label">Delay before initial skip</label>
-    <input bind:value={recording_settings.start_delay} id="tf_folder" class="settings__input input--tert" type="number"/>
-  </div>
-  <div class="settings__input-group">
-    <label for="tf_folder" class="settings__label">Minimum ticks between clips</label>
-    <input bind:value={recording_settings.minimum_ticks_between_clips} id="tf_folder" class="settings__input input--tert" type="number"/>
-  </div>
-  <div class="settings__input-group">
     <label for="FOV" class="settings__label">FOV</label>
     <input bind:value={recording_settings.fov} id="FOV" class="settings__input input--tert" type="number"/>
   </div>
