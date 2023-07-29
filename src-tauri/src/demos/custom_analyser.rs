@@ -133,6 +133,10 @@ impl DemoTick {
     pub fn range_inclusive(&self, till: Self) -> impl Iterator<Item = Self> {
         (self.0..=till.0).into_iter().map(Self::from)
     }
+
+    pub fn as_i64(&self) -> i64 {
+        self.0.into()
+    }
 }
 
 impl PartialEq<u32> for DemoTick {
@@ -501,6 +505,7 @@ impl Death {
         } else {
             None
         };
+
         Death {
             assister,
             tick,

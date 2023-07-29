@@ -2,12 +2,14 @@ use std::fs;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use serde::Serialize;
+use serde::__private::de;
 use serde_json::json;
 use serde_json::Value;
 use tf_demo_parser::{Demo, DemoParser};
 use std::path::Path;
 
 use self::custom_analyser::Death;
+use self::custom_analyser::DemoTick;
 use self::custom_analyser::Spawn;
 
 mod custom_analyser;
@@ -64,9 +66,24 @@ impl PartialEq for Event {
 }
 
 #[derive(Debug, Serialize, Clone)]
+struct Killstreak {
+    pub kills: Vec<Death>
+}
+
+impl Killstreak {
+    fn new(death: Death) -> Self {
+        Killstreak {
+            kills: vec![death]
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Clone)]
 struct Life {
     pub start: u32,
     pub end: u32,
+    pub last_kill_tick: DemoTick,
+    pub killstreaks: Vec<Killstreak>,
     pub kills: Vec<Death>,
     pub assists: Vec<Death>,
     pub classes: Vec<String>
@@ -77,6 +94,8 @@ impl Life {
         Life {
             start,
             end: 0,
+            last_kill_tick: DemoTick::from(0),
+            killstreaks: vec![],
             kills: vec![],
             assists: vec![],
             classes
@@ -184,6 +203,13 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
         let mut current_life: Life = Life::new(0, vec!["".to_string()]);
 
         for event in &events {
+            let streak_count = current_life.killstreaks.len();
+            let mut kill_count = 0;
+
+            if streak_count > 0 {
+                kill_count = current_life.killstreaks[streak_count - 1].kills.len();
+            }
+
             match event {
                 Event::Spawn(spawn) => {
                     if current_life.start == 0 {
@@ -193,6 +219,20 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
                     }
                 },
                 Event::Kill(kill) => {
+                    if kill.killer == kill.victim {
+                        continue;
+                    }
+
+                    if kill_count == 0 {
+                        current_life.killstreaks.push(Killstreak::new(kill.to_owned()));
+                    } else if kill.tick.as_i64() < current_life.last_kill_tick.as_i64() + settings["recording"]["before_killstreak_per_kill"].as_i64().unwrap() {
+                        current_life.killstreaks[streak_count - 1].kills.push(kill.to_owned());
+                    } else if kill_count < 3 {
+                        current_life.killstreaks[streak_count - 1].kills = vec![kill.to_owned()];
+                    }
+
+                    current_life.last_kill_tick = kill.tick;
+
                     current_life.kills.push(kill.to_owned());
                 },
                 Event::Assist(assist) => {
@@ -200,14 +240,23 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
                 },
                 Event::Death(death) => {
                     if current_life.start != 0 {
+                        if kill_count > 0 && kill_count < 3 {
+                            current_life.killstreaks.remove(streak_count - 1);
+                        }
+
                         current_life.end = death.tick.into();
 
                         current_player.push(current_life);
 
                         current_life = Life::new(0, vec!["".to_string()]);
                     }
+                    
                 },
                 Event::RoundEnd(tick) => {
+                    if kill_count > 0 && kill_count < 3 {
+                        current_life.killstreaks.remove(streak_count - 1);
+                    }
+
                     current_life.end = tick.to_owned();
                     current_player.push(current_life);
 

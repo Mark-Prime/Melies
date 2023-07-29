@@ -101,7 +101,7 @@
             },
             tick: event.time,
             demo_name: demo_name,
-            event: `[demo_${event.label}] clip_start ${event.kills}k spec ${event.steamid64} (\"${demo_name}\" at ${event.time})`,
+            event: `[demo_${event.label}] clip_start spec ${event.steamid64} (\"${demo_name}\" at ${event.time})`,
             isKillstreak: false
           }
         )
@@ -119,6 +119,22 @@
             demo_name: demo_name,
             event: `[demo_${event.label}] spec ${event.steamid64} (\"${demo_name}\" at ${event.time})`,
             isKillstreak: false
+          }
+        )
+
+        continue;
+      }
+
+      if (event.killstreak) {
+        new_demo.push(
+          {
+            value: {
+              Killstreak: event.kills
+            },
+            tick: event.time,
+            demo_name: demo_name,
+            event: `[demo_${event.label}] Killstreak ${event.kills} (\"${demo_name}\" at ${event.time})`,
+            isKillstreak: true
           }
         )
 

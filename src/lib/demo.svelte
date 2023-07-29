@@ -28,6 +28,15 @@
     
     let current_demo = "";
 
+    
+    let settings = {};
+    let recording_settings = {};
+
+    async function loadSettings(){
+        settings = await invoke("load_settings");
+        recording_settings = settings.recording
+    }
+
     function closeModal() {
         selected = [];
         current_demo = "";
@@ -44,10 +53,27 @@
 
     onMount(async () => {
 		resp = await invoke("load_demos");
+        loadSettings();
 	});
 
     function toggleSelected(demo) {
         demo.selected = !demo.selected;
+
+        if (demo.selected_as_bookmark) {
+            demo.selected_as_bookmark = false;
+        }
+
+        resp = resp;
+        parsed_demo = parsed_demo;
+    }
+
+    function toggleBookmarkSelected(demo) {
+        demo.selected_as_bookmark = !demo.selected_as_bookmark;
+
+        if (demo.selected) {
+            demo.selected = false;
+        }
+
         resp = resp;
         parsed_demo = parsed_demo;
     }
@@ -81,9 +107,48 @@
 
                         events.push({
                             time: (life.end + 132) - parsed_demo.data.start_tick,
-                            label: `${life.kills.length}k-${life.assists.length}a_end`,
-                            steamid64: parsed_demo.data.users[i].steamId64
+                            label: `${life.kills.length}k-${life.assists.length}a_end`
                         })
+                    }
+
+                    for (let killstreak of life.killstreaks) {
+                        if (killstreak.selected) {
+                            events.push({
+                                time: killstreak.kills[killstreak.kills.length - 1].tick - parsed_demo.data.start_tick,
+                                label: `${killstreak.kills.length}ks`,
+                                steamid64: parsed_demo.data.users[i].steamId64,
+                                kills: killstreak.kills.length,
+                                killstreak: true
+                            })
+
+                            continue;
+                        }
+
+                        if (killstreak.selected_as_bookmark) {
+                            let start_time = killstreak.kills[0].tick - recording_settings.before_killstreak_per_kill;
+                            let end_time = killstreak.kills[killstreak.kills.length - 1].tick + recording_settings.after_killstreak;
+
+                            if (life.start + 20 > start_time) {
+                                start_time = life.start + 20
+                            }
+
+                            if (life.end + 132 < end_time) {
+                                end_time = life.end + 132
+                            }
+
+                            events.push({
+                                time: start_time - parsed_demo.data.start_tick,
+                                label: `${killstreak.kills.length}ks_start`,
+                                steamid64: parsed_demo.data.users[i].steamId64,
+                                kills: killstreak.kills.length,
+                                start: true
+                            })
+
+                            events.push({
+                                time: end_time - parsed_demo.data.start_tick,
+                                label: `${killstreak.kills.length}ks_end`
+                            })
+                        }
                     }
                 }
             }
@@ -417,6 +482,64 @@
                                                     {/if}
                                                 {/each}
                                                 <button class="full_demo" on:click={recordEntireDemo(player)}>Record entire demo</button>
+
+                                                {#if parsed_demo.data.player_lives[player].filter(life => life.killstreaks.length > 0).length > 0}
+                                                    <h4 class="centered">Killstreaks</h4>
+                                                    {#each parsed_demo.data.player_lives[player].filter(life => life.killstreaks.length > 0) as life}
+                                                        {#each life.killstreaks as killstreak}
+                                                            <div class={"demo demo__killstreak " + ((killstreak.selected || killstreak.selected_as_bookmark) && "demo--selected")}>
+                                                                <div>
+                                                                    {#each life.classes as player_class}
+                                                                        <img src={getImgUrl(player_class)} alt="icon" />
+                                                                    {/each}
+                                                                </div>
+                                                                <div 
+                                                                    data-tooltip={`${
+                                                                        killstreak.kills.length ? 
+                                                                        `Player${(killstreak.kills.length > 1) ? "s" : ""} Killed: ` :
+                                                                        `No Kills`
+                                                                    }\n\r${killstreak.kills.map((kill) => {
+                                                                        let crit_types = ["", " Mini-Crit", " CRITICAL HIT!"]
+                                                                        return `${parsed_demo.data.users[kill.victim].name} (tick: ${kill.tick - parsed_demo.data.start_tick})${crit_types[kill.crit_type]}`
+                                                                    }).join(", \n\r")}`}
+                                                                    style={`--kills: ${killstreak.kills.length};`}
+                                                                    on:click={toggleBookmarkSelected(killstreak)}
+                                                                    on:keydown={toggleBookmarkSelected(killstreak)}
+                                                                    class={
+                                                                        `tooltip ` +
+                                                                        (killstreak.kills.length >= 3 && " killstreak ") +
+                                                                        (killstreak.kills.length >= 5 && " killstreak--large ") +
+                                                                        (killstreak.kills.length >= 10 && " killstreak--massive ")
+                                                                    }
+                                                                >
+                                                                    Kills: {killstreak.kills.length}
+                                                                </div>
+                                                                <div>
+                                                                    First: {killstreak.kills[0].tick - parsed_demo.data.start_tick}
+                                                                </div>
+                                                                <div>
+                                                                    Last: {killstreak.kills[killstreak.kills.length - 1].tick - parsed_demo.data.start_tick}
+                                                                </div>
+                                                                <div class="killstreak__buttons">
+                                                                    <div class="add_demo tooltip tooltip--left" data-tooltip="As Killstreak" style={`--kills: 0;`}>
+                                                                        {#if killstreak.selected}
+                                                                            <button class="cancel-btn" on:click={toggleSelected(killstreak)}>-</button>
+                                                                        {:else}
+                                                                            <button on:click={toggleSelected(killstreak)}>+</button>
+                                                                        {/if}
+                                                                    </div>
+                                                                    <div class="add_demo tooltip tooltip--left" data-tooltip="As Bookmarks" style={`--kills: 0;`}>
+                                                                        {#if killstreak.selected_as_bookmark}
+                                                                            <button class="cancel-btn" on:click={toggleBookmarkSelected(killstreak)}>-</button>
+                                                                        {:else}
+                                                                            <button on:click={toggleBookmarkSelected(killstreak)}>+</button>
+                                                                        {/if}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        {/each}
+                                                    {/each}
+                                                {/if}
                                             {/if}
                                         {/if}
                                     {/each}
@@ -581,6 +704,13 @@
 {/if}
 
 <style lang="scss">
+    .killstreak__buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: end;
+        grid-column: 6;
+    }
+
     .input__slider {
         -webkit-appearance: none;  /* Override default CSS styles */
         appearance: none;
@@ -699,6 +829,18 @@
                 top: 1.45rem;
                 z-index: 1000;
                 clip-path: polygon(50% 0, 0 100%, 100% 100%);
+            }
+        }
+
+        &--left {
+            &::before {
+                left: auto;
+                right: 0rem;
+            }
+
+            &::after {
+                left: auto;
+                right: .5rem;
             }
         }
 
@@ -1058,6 +1200,10 @@
 
         &__life {
             grid-template-columns: .5fr 1fr 1fr 1fr 1fr min-content;
+        }
+
+        &__killstreak {
+            grid-template-columns: .5fr 1fr 1fr 1fr min-content;
         }
 
         &--selected {
