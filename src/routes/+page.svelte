@@ -347,7 +347,7 @@
           <a href="/" class="new-demo__3" on:click={toggleDemoModal}>Scan Demo</a>
         </div>
       {/if}
-    {:else}
+    {:else if resp.code === 200}
       <p>
         {`Created ${resp.vdms} VDMs containing ${resp.clips} containing ${resp.events} events.`}
       </p>
@@ -356,6 +356,9 @@
         Backup saved to: {resp.backup_location}
       </p>
       {/if}
+    {:else}
+      <p>Error {resp.code}</p>
+      <p>{resp.err_text}</p>
     {/if}
   </div>
 

@@ -290,12 +290,12 @@ fn ryukbot() -> Value {
             return 
             json!({
                 "code": 404,
-                "err_text": "Could not find _events.txt or KillStreaks.txt\r\nPlease check your settings to ensure the tf folder is correctly linked".to_string()
+                "err_text": format!("Could not find _events.txt or KillStreaks.txt\r\nPlease check your settings to ensure the tf folder is correctly linked.\r\n\r\n tf folder setting: {}", settings["tf_folder"].as_str().unwrap())
             });
         }
     };
 
-    let file_text = match fs::read_to_string(dir) {
+    let file_text = match fs::read_to_string(dir.clone()) {
         Ok(text) => {
             text
         },
@@ -303,12 +303,23 @@ fn ryukbot() -> Value {
             return 
             json!({
                 "code": 404,
-                "err_text": "Could not find _events.txt or KillStreaks.txt\r\nPlease check your settings to ensure the tf folder is correctly linked".to_string()
+                "err_text": "Could not find _events.txt or KillStreaks.txt\r\nPlease check your settings to ensure the tf folder is correctly linked.".to_string()
             });
         }
     };
-    
-    let mut event_count = 0;
+
+    let re = Regex::new("\\[(.*)\\] (.*) \\(\"(.*)\" at (\\d*)\\)").unwrap();
+
+    let events = re.captures_iter(&file_text);
+
+    let event_len = events.count();
+
+    if event_len == 0 {
+        return json!({
+                "code": 410,
+                "err_text": format!("_events.txt or KillStreaks.txt was found but found no valid events. Please add events before running again.\r\n\r\nFile Location: {}", dir)
+            });
+    }
 
     let re = Regex::new("\\[(.*)\\] (.*) \\(\"(.*)\" at (\\d*)\\)").unwrap();
 
@@ -317,18 +328,20 @@ fn ryukbot() -> Value {
     write_cfg(&settings);
 
     let mut clips: Vec<Clip> = vec![];
+    
+    let mut event_count = 0;
 
     for event_capture in events {
         event_count = event_count +  1;
 
         let event = event::Event::new(event_capture).unwrap();
 
-        if clips.len() == 0 {
+        let clip_len = clips.len();
+
+        if clip_len == 0 {
             clips.push(Clip::new(event, &settings));
             continue;
         }
-
-        let clip_len = clips.len();
 
         if clips[clip_len - 1].can_include(&event, &settings) {
             clips.last_mut().unwrap().include(event, &settings);
