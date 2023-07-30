@@ -666,7 +666,8 @@
                                                                 class={`
                                                                     timeline__data-tooltip tooltip 
                                                                     ${parsed_demo.data?.users[player]?.team == "blue" ? "tooltip__lower" : ""}
-                                                                    ${(life.start - parsed_demo.data.start_tick)/scale > (sleft + divWidth) * .8 && "tooltip--left"}
+                                                                    ${life.start - parsed_demo.data.start_tick > (sleft * scale) + ((divWidth * scale) * .7) && "tooltip--left"}
+                                                                    ${life.start - parsed_demo.data.start_tick < sleft * scale && "tooltip--custom"}
                                                                 ` }
                                                                 data-tooltip={`${
                                                                     life.kills.length ? 
@@ -678,6 +679,7 @@
                                                                 }).join(", \n\r")}`}
                                                                 style={`
                                                                     --kills: ${life.kills.length};
+                                                                    --pos: ${((sleft * scale) - (life.start - parsed_demo.data.start_tick))/scale}px;
                                                                 `}
                                                             >
                                                                 <div class="timeline__data">
@@ -710,7 +712,7 @@
                                                                 class={`
                                                                     timeline__marker 
                                                                     ${parsed_demo.data?.users[player]?.team == "blue" ? "timeline__marker--lower" : ""}
-                                                                    ${(x > divWidth * .8) && "timeline__marker--left"}
+                                                                    ${(x > divWidth * .7) && "timeline__marker--left"}
                                                                 `}
                                                                 data-tooltip={`Start: ${life.start - parsed_demo.data.start_tick}`}
                                                                 style={`
@@ -722,7 +724,7 @@
                                                                 class={`
                                                                     timeline__marker 
                                                                     ${parsed_demo.data?.users[player]?.team == "blue" ? "timeline__marker--lower" : ""}
-                                                                    ${(x > divWidth * .8) && "timeline__marker--left"}
+                                                                    ${(x > divWidth * .7) && "timeline__marker--left"}
                                                                 `}
                                                                 data-tooltip={`End: ${life.end - parsed_demo.data.start_tick}`}
                                                                 style={`
@@ -734,7 +736,7 @@
                                                                 <div 
                                                                     class={`timeline__marker 
                                                                         ${parsed_demo.data?.users[player]?.team == "blue" ? "timeline__marker--lower" : ""}
-                                                                        ${(x > divWidth * .8) && "timeline__marker--left"}
+                                                                        ${(x > divWidth * .7) && "timeline__marker--left"}
                                                                     `}
                                                                     data-tooltip={`Killed: ${parsed_demo.data.users[kill.victim].name}\r\nTick: ${kill.tick - parsed_demo.data.start_tick}`}
                                                                     style={`
@@ -952,6 +954,16 @@
             &::after {
                 left: auto;
                 right: calc(100% - .5rem);
+            }
+        }
+
+        &--custom {
+            &::before {
+                left: calc(var(--pos) + .5rem);
+            }
+
+            &::after {
+                left: calc(var(--pos) + 1rem);
             }
         }
 
