@@ -745,6 +745,25 @@
                                                                     `}
                                                                 ></div>
                                                             {/each}
+                                                            {#each life.killstreaks as ks} 
+                                                                <div 
+                                                                    class={`timeline__ks
+                                                                        ${parsed_demo.data?.users[player]?.team == "blue" ? "timeline__ks--lower" : ""}
+                                                                        ${(x > divWidth * .7) && "timeline__ks--left"}
+                                                                    `}
+                                                                    data-tooltip={`${
+                                                                        `Players Killed in Killstreak: ` 
+                                                                    }\n\r${ks.kills.map((kill) => {
+                                                                        let crit_types = ["", " Mini-Crit", " CRITICAL HIT!"]
+                                                                        return `${parsed_demo.data.users[kill.victim].name} (tick: ${kill.tick - parsed_demo.data.start_tick})${crit_types[kill.crit_type]}`
+                                                                    }).join(", \n\r")}`}
+                                                                    style={`
+                                                                        --position: ${((ks.kills[0].tick - life.start) / scale) - 2}px;
+                                                                        --kills: ${ks.kills.length};
+                                                                        --length: ${((ks.kills[ks.kills.length - 1].tick - life.start) / scale) - ((ks.kills[0].tick - life.start) / scale)}px;
+                                                                    `}
+                                                                ></div>
+                                                            {/each}
                                                         </div>
                                                     {/if}
                                                 {/each}
@@ -1140,6 +1159,83 @@
                 &::after {
                     z-index: 999;
                     clip-path: polygon(40% 0, 60% 0, 60% 75%, 100% 100%, 0 100%, 40% 75%);
+                }
+            }
+
+            &--left {
+                &::before {
+                    left: auto;
+                    right: -.4rem;
+                }
+
+                &::after {
+                    left: auto;
+                    right: 0;
+                }
+            }
+
+            &:hover, &:active, &:focus {
+                color: var(--sec);
+
+                &::before {
+                    display: block;
+                }
+
+                &::after {
+                    display: block;
+                    background-color: var(--outline);
+                }
+            }
+        }
+
+        &__ks {
+            position: absolute;
+            top: -1px;
+            left: var(--position);
+            height: 3px;
+            width: var(--length);
+            background-color: transparent;
+            cursor: pointer;
+            overflow: visible;
+
+            &::before {
+                z-index: 1001;
+                content: attr(data-tooltip);
+                position: absolute;
+                top: calc(-2.2rem - (1.72rem * var(--kills)));
+                left: 50%;
+                display: none;
+                background-color: var(--bg);
+                color: var(--bg-text);
+                border: var(--outline) 1px solid;
+                padding: .2rem .5rem;
+                border-radius: .5rem;
+                width: max-content;
+                max-width: 500px;
+                overflow: hidden;
+                white-space: pre;
+                font-size: 12px;
+                transform: translateX(-50%);
+            }
+
+            &::after {
+                z-index: 998;
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                height: 3px;
+                width: var(--length);
+                background-color: var(--tert-con);
+            }
+
+            &--lower {
+                top: 30px;
+
+                &::before {
+                    top: 3px;
+                    background-color: var(--bg);
+                    z-index: 1000;
                 }
             }
 
