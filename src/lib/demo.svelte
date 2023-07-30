@@ -56,22 +56,68 @@
         loadSettings();
 	});
 
-    function toggleSelected(demo) {
+    function limitStringLength(str, len) {
+        if (str.length < len) {
+            return str;
+        }
+
+        return str.substring(0, len - 3) + '...'
+    }
+
+    function toggleSelected(demo, isKillstreak = null) {
         demo.selected = !demo.selected;
 
         if (demo.selected_as_bookmark) {
             demo.selected_as_bookmark = false;
         }
 
+        if (isKillstreak) {
+            let player = parsed_demo.data.player_lives[demo.kills[0].killer];
+            for (let life of player) {
+                for (let killstreak of life.killstreaks) {
+                    if (JSON.stringify(killstreak.kills[0]) === JSON.stringify(demo.kills[0])) {
+                        toggleSelected(killstreak);
+                        break;
+                    } 
+                }
+            }
+        } else if (isKillstreak === false) {
+            for (let killstreak of parsed_demo.data.killstreaks) {
+                if (JSON.stringify(killstreak.kills[0]) === JSON.stringify(demo.kills[0])) {
+                    toggleSelected(killstreak);
+                    break;
+                } 
+            }
+        }
+
         resp = resp;
         parsed_demo = parsed_demo;
     }
 
-    function toggleBookmarkSelected(demo) {
+    function toggleBookmarkSelected(demo, isKillstreak = null) {
         demo.selected_as_bookmark = !demo.selected_as_bookmark;
 
         if (demo.selected) {
             demo.selected = false;
+        }
+
+        if (isKillstreak) {
+            let player = parsed_demo.data.player_lives[demo.kills[0].killer];
+            for (let life of player) {
+                for (let killstreak of life.killstreaks) {
+                    if (JSON.stringify(killstreak.kills[0]) === JSON.stringify(demo.kills[0])) {
+                        toggleBookmarkSelected(killstreak);
+                        break;
+                    } 
+                }
+            }
+        } else if (isKillstreak === false) {
+            for (let killstreak of parsed_demo.data.killstreaks) {
+                if (JSON.stringify(killstreak.kills[0]) === JSON.stringify(demo.kills[0])) {
+                    toggleBookmarkSelected(killstreak);
+                    break;
+                } 
+            }
         }
 
         resp = resp;
@@ -176,25 +222,6 @@
             current_demo = selected.shift();
             parsed_demo = await invoke("parse_demo", { path: current_demo });
             console.log({parsed_demo});
-            // console.log(parsed_demo.data.users)
-
-            let steamid64s = [];
-
-            for (let i in parsed_demo.data.users) {
-                let user = parsed_demo.data.users[i];
-                if (user.steamId64 != '0') {
-                    steamid64s.push(user.steamId64)
-                }
-            }
-
-            // console.log(JSON.stringify(steamid64s));
-
-            // const res = await fetch('https://api.rgl.gg/v0/profile/getmany', {
-            //     method: 'POST',
-            //     body: JSON.stringify(steamid64s)
-            // })
-
-            // console.log(res)
         } else {
             closeModal();
         }
@@ -414,6 +441,7 @@
                                                         class={parsed_demo.data.users[player]["team"] + " player"}
                                                         data-tooltip="Open logs.tf profile"
                                                         target="_blank" rel="noopener noreferrer"
+                                                        id={`player-${parsed_demo.data.users[player].name}`}
                                                     >{parsed_demo.data.users[player].name}</a>
                                                     {#each Object.keys(parsed_demo.data.users[player]["classes"]) as player_class}
                                                     <div 
@@ -523,16 +551,16 @@
                                                                 <div class="killstreak__buttons">
                                                                     <div class="add_demo tooltip tooltip--left" data-tooltip="As Killstreak" style={`--kills: 0;`}>
                                                                         {#if killstreak.selected}
-                                                                            <button class="cancel-btn" on:click={toggleSelected(killstreak)}>-</button>
+                                                                            <button class="cancel-btn" on:click={toggleSelected(killstreak, false)}>-</button>
                                                                         {:else}
-                                                                            <button on:click={toggleSelected(killstreak)}>+</button>
+                                                                            <button on:click={toggleSelected(killstreak, false)}>+</button>
                                                                         {/if}
                                                                     </div>
                                                                     <div class="add_demo tooltip tooltip--left" data-tooltip="As Bookmarks" style={`--kills: 0;`}>
                                                                         {#if killstreak.selected_as_bookmark}
-                                                                            <button class="cancel-btn" on:click={toggleBookmarkSelected(killstreak)}>-</button>
+                                                                            <button class="cancel-btn" on:click={toggleBookmarkSelected(killstreak, false)}>-</button>
                                                                         {:else}
-                                                                            <button on:click={toggleBookmarkSelected(killstreak)}>+</button>
+                                                                            <button on:click={toggleBookmarkSelected(killstreak, false)}>+</button>
                                                                         {/if}
                                                                     </div>
                                                                 </div>
@@ -543,6 +571,69 @@
                                             {/if}
                                         {/if}
                                     {/each}
+                                </div>
+                            {/each}
+                        </div>
+                        <h2 class="centered chat__title">All Killstreaks</h2>
+                        <div class="killstreaks">
+                            {#each parsed_demo.data.killstreaks as killstreak}
+                                <div class={"demo demo__life " + ((killstreak.selected || killstreak.selected_as_bookmark) && "demo--selected")}>
+                                    <div>
+                                        {#each killstreak.classes as player_class}
+                                            <img src={getImgUrl(player_class)} alt="icon" />
+                                        {/each}
+                                    </div>
+                                    <a 
+                                        href={`#player-${parsed_demo.data.users[killstreak.kills[0].killer].name}`} 
+                                        style="width: 100%; --kills: 0;" 
+                                        class={parsed_demo.data.users[killstreak.kills[0].killer]["team"] + " tooltip"}
+                                        data-tooltip="Jump To Player"
+                                    >
+                                        {limitStringLength(parsed_demo.data.users[killstreak.kills[0].killer].name, 16)}
+                                    </a>
+                                    <div 
+                                        data-tooltip={`${
+                                            killstreak.kills.length ? 
+                                            `Player${(killstreak.kills.length > 1) ? "s" : ""} Killed: ` :
+                                            `No Kills`
+                                        }\n\r${killstreak.kills.map((kill) => {
+                                            let crit_types = ["", " Mini-Crit", " CRITICAL HIT!"]
+                                            return `${parsed_demo.data.users[kill.victim].name} (tick: ${kill.tick - parsed_demo.data.start_tick})${crit_types[kill.crit_type]}`
+                                        }).join(", \n\r")}`}
+                                        style={`--kills: ${killstreak.kills.length};`}
+                                        on:click={toggleBookmarkSelected(killstreak, true)}
+                                        on:keydown={toggleBookmarkSelected(killstreak, true)}
+                                        class={
+                                            `tooltip ` +
+                                            (killstreak.kills.length >= 3 && " killstreak ") +
+                                            (killstreak.kills.length >= 5 && " killstreak--large ") +
+                                            (killstreak.kills.length >= 10 && " killstreak--massive ")
+                                        }
+                                    >
+                                        Kills: {killstreak.kills.length}
+                                    </div>
+                                    <div>
+                                        First: {killstreak.kills[0].tick - parsed_demo.data.start_tick}
+                                    </div>
+                                    <div>
+                                        Last: {killstreak.kills[killstreak.kills.length - 1].tick - parsed_demo.data.start_tick}
+                                    </div>
+                                    <div class="killstreak__buttons">
+                                        <div class="add_demo tooltip tooltip--left" data-tooltip="As Killstreak" style={`--kills: 0;`}>
+                                            {#if killstreak.selected}
+                                                <button class="cancel-btn" on:click={toggleSelected(killstreak, true)}>-</button>
+                                            {:else}
+                                                <button on:click={toggleSelected(killstreak, true)}>+</button>
+                                            {/if}
+                                        </div>
+                                        <div class="add_demo tooltip tooltip--left" data-tooltip="As Bookmarks" style={`--kills: 0;`}>
+                                            {#if killstreak.selected_as_bookmark}
+                                                <button class="cancel-btn" on:click={toggleBookmarkSelected(killstreak, true)}>-</button>
+                                            {:else}
+                                                <button on:click={toggleBookmarkSelected(killstreak, true)}>+</button>
+                                            {/if}
+                                        </div>
+                                    </div>
                                 </div>
                             {/each}
                         </div>
@@ -744,6 +835,11 @@
             background: var(--tert-con); /* Green background */
             cursor: pointer; /* Cursor on hover */
         }
+    }
+
+    .killstreaks {
+        max-width: 800px;
+        margin: auto;
     }
 
     .chat {

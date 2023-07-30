@@ -1,6 +1,7 @@
 /* https://colorhunt.co/palette/16213e0f3460533483e94560  */
 * {
   box-sizing: border-box;
+  scroll-behavior: smooth;
 }
 
 :root {

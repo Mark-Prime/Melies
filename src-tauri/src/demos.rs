@@ -2,7 +2,6 @@ use std::fs;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use serde::Serialize;
-use serde::__private::de;
 use serde_json::json;
 use serde_json::Value;
 use tf_demo_parser::{Demo, DemoParser};
@@ -67,14 +66,26 @@ impl PartialEq for Event {
 
 #[derive(Debug, Serialize, Clone)]
 struct Killstreak {
-    pub kills: Vec<Death>
+    pub kills: Vec<Death>,
+    pub classes: Vec<String>
 }
 
 impl Killstreak {
     fn new(death: Death) -> Self {
         Killstreak {
-            kills: vec![death]
+            kills: vec![death],
+            classes: vec![]
         }
+    }
+
+    fn average(&self) -> u32 {
+        let mut total = 0;
+
+        for kill in &self.kills {
+            total = total + u32::from(kill.tick);
+        }
+
+        return total / self.kills.len() as u32;
     }
 }
 
@@ -193,6 +204,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
 
     let mut sorted_events: HashMap<u16, Vec<Event>> = HashMap::new();
     let mut player_lives: HashMap<u16, Vec<Life>> = HashMap::new();
+    let mut killstreaks: Vec<Killstreak> = vec![];
 
     for (key, events) in &user_events {
         let mut current_player = vec![];
@@ -244,6 +256,11 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
                             current_life.killstreaks.remove(streak_count - 1);
                         }
 
+                        for mut ks in current_life.killstreaks.to_owned() {
+                            ks.classes = current_life.classes.clone();
+                            killstreaks.push(ks)
+                        }
+
                         current_life.end = death.tick.into();
 
                         current_player.push(current_life);
@@ -257,6 +274,11 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
                         current_life.killstreaks.remove(streak_count - 1);
                     }
 
+                    for mut ks in current_life.killstreaks.to_owned() {
+                        ks.classes = current_life.classes.clone();
+                        killstreaks.push(ks)
+                    }
+
                     current_life.end = tick.to_owned();
                     current_player.push(current_life);
 
@@ -268,6 +290,8 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
         player_lives.insert(key.to_owned(), current_player);
         sorted_events.insert(key.to_owned(), events.to_vec());
     }
+
+    killstreaks.sort_by_key(|ks| (ks.average()));
 
     let resp = json!({
         "header": {
@@ -292,6 +316,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
             "start_tick": state.end_tick - header.ticks,
             "user_events": sorted_events,
             "player_lives": player_lives,
+            "killstreaks": killstreaks,
         },
         "loaded": true,
         "loading": false
