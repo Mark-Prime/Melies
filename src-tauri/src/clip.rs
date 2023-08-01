@@ -15,7 +15,7 @@ pub struct Clip {
     pub end_tick: i64,
     pub spec_type: i64,
     pub spec_player: String,
-    long_clip: bool
+    long_clip: bool,
 }
 
 impl Clip {
@@ -30,13 +30,16 @@ impl Clip {
                     has_bookmark: false,
                     ks_value: killstreak_value.to_owned(),
                     bm_value: "".to_string(),
-                    start_tick: &event.tick - (settings["recording"]["before_killstreak_per_kill"].as_i64().unwrap() * killstreak_value),
-                    end_tick: &event.tick + settings["recording"]["after_killstreak"].as_i64().unwrap(),
+                    start_tick: &event.tick -
+                    settings["recording"]["before_killstreak_per_kill"].as_i64().unwrap() *
+                        killstreak_value,
+                    end_tick: &event.tick +
+                    settings["recording"]["after_killstreak"].as_i64().unwrap(),
                     spec_type: 0,
                     spec_player: "".to_string(),
-                    long_clip: false
+                    long_clip: false,
                 };
-            },
+            }
             Bookmark(bookmark_value) => {
                 let mut clip = Clip {
                     events: vec![event.clone()],
@@ -45,11 +48,13 @@ impl Clip {
                     has_bookmark: true,
                     ks_value: 0,
                     bm_value: bookmark_value.to_string(),
-                    start_tick: &event.tick - settings["recording"]["before_bookmark"].as_i64().unwrap(),
-                    end_tick: &event.tick + settings["recording"]["after_bookmark"].as_i64().unwrap(),
+                    start_tick: &event.tick -
+                    settings["recording"]["before_bookmark"].as_i64().unwrap(),
+                    end_tick: &event.tick +
+                    settings["recording"]["after_bookmark"].as_i64().unwrap(),
                     spec_type: 0,
                     spec_player: "".to_string(),
-                    long_clip: false
+                    long_clip: false,
                 };
 
                 let split_bm = bookmark_value.split(" ");
@@ -62,7 +67,7 @@ impl Clip {
                 } else if split.contains(&"spec") {
                     clip.spec_type = 1;
                     clip.spec_player = split.last().unwrap().to_string();
-                };
+                }
 
                 if split.contains(&"clip_start") {
                     clip.long_clip = true;
@@ -70,24 +75,24 @@ impl Clip {
                 }
 
                 return clip;
-            },
+            }
         }
     }
 
     fn calc_ks(&mut self, ks_count: i64) {
-        if (self.ks_value + 1) == ks_count {
+        if self.ks_value + 1 == ks_count {
             self.ks_value = ks_count;
             return;
         }
-        
+
         self.ks_value = self.ks_value + ks_count;
     }
 
-    pub fn can_include(&mut self, event: &Event, settings: &Value ) -> bool {
+    pub fn can_include(&mut self, event: &Event, settings: &Value) -> bool {
         if self.demo_name != event.demo_name {
             return false;
         }
-        
+
         match &event.value {
             Bookmark(bm) => {
                 if self.long_clip && bm.contains("clip_end") {
@@ -99,28 +104,36 @@ impl Clip {
                 let mut min_tick_between = 0;
 
                 if !bm.contains("clip_start") {
-                    new_start = event.tick - settings["recording"]["before_bookmark"].as_i64().unwrap();
-                    min_tick_between = settings["recording"]["minimum_ticks_between_clips"].as_i64().unwrap();
+                    new_start =
+                        event.tick - settings["recording"]["before_bookmark"].as_i64().unwrap();
+                    min_tick_between = settings["recording"]["minimum_ticks_between_clips"]
+                        .as_i64()
+                        .unwrap();
                 }
 
-                if (new_start - min_tick_between) < self.end_tick {
-                    return true;
-                }
-            },
-            Killstreak(killstreak_value) => {
-                if killstreak_value.to_owned() == (self.ks_value + 1) {
-                    return true;
-                }
-
-                let new_start = &event.tick - (settings["recording"]["before_killstreak_per_kill"].as_i64().unwrap() * killstreak_value);
-
-                let min_tick_between = settings["recording"]["minimum_ticks_between_clips"].as_i64().unwrap();
-
-                if (new_start - min_tick_between) < self.end_tick {
+                if new_start - min_tick_between < self.end_tick {
                     return true;
                 }
             }
-        };
+            Killstreak(killstreak_value) => {
+                if killstreak_value.to_owned() == self.ks_value + 1 {
+                    return true;
+                }
+
+                let new_start =
+                    &event.tick -
+                    settings["recording"]["before_killstreak_per_kill"].as_i64().unwrap() *
+                        killstreak_value;
+
+                let min_tick_between = settings["recording"]["minimum_ticks_between_clips"]
+                    .as_i64()
+                    .unwrap();
+
+                if new_start - min_tick_between < self.end_tick {
+                    return true;
+                }
+            }
+        }
 
         false
     }
@@ -143,7 +156,7 @@ impl Clip {
                 } else if split.contains(&"spec") {
                     self.spec_type = 1;
                     self.spec_player = split.last().unwrap().to_string();
-                };
+                }
 
                 if split.contains(&"clip_start") {
                     self.long_clip = true;
@@ -153,19 +166,19 @@ impl Clip {
                     new_end = event.tick;
                     self.long_clip = false;
                 }
-            },
+            }
             Killstreak(killstreak_value) => {
                 new_end = &event.tick + settings["recording"]["after_killstreak"].as_i64().unwrap();
                 self.has_killstreak = true;
 
                 self.calc_ks(killstreak_value.to_owned());
             }
-        };
+        }
 
         if new_end > self.end_tick {
             self.end_tick = new_end;
         }
-        
+
         self.events.push(event);
     }
 }

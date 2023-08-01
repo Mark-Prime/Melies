@@ -1,11 +1,15 @@
-use serde_json::{self, Value};
+use serde_json::{ self, Value };
 use steamid_ng::SteamID;
 use reqwest;
 
 pub(crate) fn parse(url: Value) -> Value {
     let log_id = url.as_str().unwrap();
     println!("Logs.tf url: https://logs.tf/json/{}", log_id);
-    let binding = reqwest::blocking::get(format!("https://logs.tf/json/{}", log_id)).unwrap().text().unwrap();
+    let binding = reqwest::blocking
+        ::get(format!("https://logs.tf/json/{}", log_id))
+        .unwrap()
+        .text()
+        .unwrap();
     let resp = binding.as_str();
     let mut info: Value = serde_json::from_str(resp).unwrap();
     let players = &info["players"].as_object().unwrap().to_owned();
@@ -21,7 +25,13 @@ pub(crate) fn parse(url: Value) -> Value {
         demo_api = demo_api + "players[]=" + &steamid64.to_string() + "&";
     }
 
-    let demo_api = format!("{}map={}&after={}&before={}", demo_api, info["info"]["map"].as_str().unwrap(), info["info"]["date"], info["info"]["date"].as_i64().unwrap() + 300);
+    let demo_api = format!(
+        "{}map={}&after={}&before={}",
+        demo_api,
+        info["info"]["map"].as_str().unwrap(),
+        info["info"]["date"],
+        info["info"]["date"].as_i64().unwrap() + 300
+    );
 
     let binding = reqwest::blocking::get(demo_api).unwrap().text().unwrap();
     let resp = binding.as_str();
@@ -33,7 +43,9 @@ pub(crate) fn parse(url: Value) -> Value {
         println!("Demos.tf url: https://demos.tf/{}", demo_info[0]["id"]);
         println!("Download: {}", demo_info[0]["url"].as_str().unwrap());
 
-        important_info["demo_url"] = Value::from(format!("https://demos.tf/{}", demo_info[0]["id"]));
+        important_info["demo_url"] = Value::from(
+            format!("https://demos.tf/{}", demo_info[0]["id"])
+        );
         important_info["demo_download"] = Value::from(demo_info[0]["url"].as_str().unwrap());
     }
 
