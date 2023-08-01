@@ -1,23 +1,26 @@
+use bitbuffer::{ BitRead, BitWrite, BitWriteStream, Endianness };
+use num_enum::TryFromPrimitive;
+use parse_display::{ Display, FromStr };
+use serde::de::Error;
+use serde::{ ser::SerializeMap, Deserialize, Deserializer, Serialize, Serializer };
+use std::cmp::Ordering;
+use std::collections::{ BTreeMap, HashMap };
+use std::convert::TryFrom;
+use std::ops::{ Add, Index, IndexMut, Sub };
+use steamid_ng::SteamID;
 use tf_demo_parser::demo::gameevent_gen::{
-    GameEvent, PlayerDeathEvent, PlayerSpawnEvent, TeamPlayRoundWinEvent,
+    GameEvent,
+    PlayerDeathEvent,
+    PlayerSpawnEvent,
+    TeamPlayRoundWinEvent,
 };
 use tf_demo_parser::demo::message::packetentities::EntityId;
 use tf_demo_parser::demo::message::usermessage::SayText2Message;
-use tf_demo_parser::demo::message::{Message, MessageType};
+use tf_demo_parser::demo::message::{ Message, MessageType };
 use tf_demo_parser::demo::packet::stringtable::StringTableEntry;
-use tf_demo_parser::demo::parser::handler::{BorrowMessageHandler, MessageHandler};
+use tf_demo_parser::demo::parser::handler::{ BorrowMessageHandler, MessageHandler };
 use tf_demo_parser::demo::vector::Vector;
-use tf_demo_parser::{ParserState, ReadResult, Stream};
-use bitbuffer::{BitWrite, BitWriteStream, Endianness, BitRead};
-use num_enum::TryFromPrimitive;
-use parse_display::{Display, FromStr};
-use serde::de::Error;
-use serde::{ser::SerializeMap, Deserialize, Deserializer, Serialize, Serializer};
-use std::cmp::Ordering;
-use std::collections::{BTreeMap, HashMap};
-use std::convert::TryFrom;
-use std::ops::{Index, IndexMut, Add, Sub};
-use steamid_ng::SteamID;
+use tf_demo_parser::{ ParserState, ReadResult, Stream };
 
 /// Tick relative to the start of the game on the server
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -33,7 +36,7 @@ use steamid_ng::SteamID;
     BitWrite,
     Serialize,
     Deserialize,
-    Default,
+    Default
 )]
 pub struct ServerTick(u32);
 
@@ -125,7 +128,7 @@ impl Sub<ServerTick> for ServerTick {
     BitWrite,
     Serialize,
     Deserialize,
-    Default,
+    Default
 )]
 pub struct DemoTick(u32);
 
@@ -218,15 +221,8 @@ pub enum Team {
 }
 
 impl Team {
-    pub fn new<U>(number: U) -> Self
-    where
-        u8: TryFrom<U>,
-    {
+    pub fn new<U>(number: U) -> Self where u8: TryFrom<U> {
         Team::try_from(u8::try_from(number).unwrap_or_default()).unwrap_or_default()
-    }
-
-    pub fn is_player(&self) -> bool {
-        *self == Team::Red || *self == Team::Blue
     }
 }
 
@@ -236,9 +232,7 @@ impl Default for Team {
     }
 }
 
-#[derive(
-    Debug, Clone, Serialize, Copy, PartialEq, Eq, Hash, TryFromPrimitive, Display, FromStr,
-)]
+#[derive(Debug, Clone, Serialize, Copy, PartialEq, Eq, Hash, TryFromPrimitive, Display, FromStr)]
 #[display(style = "lowercase")]
 #[serde(rename_all = "lowercase")]
 #[repr(u8)]
@@ -256,10 +250,7 @@ pub enum Class {
 }
 
 impl<'de> Deserialize<'de> for Class {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de> {
         #[derive(Deserialize, Debug)]
         #[serde(untagged)]
         enum IntOrStr<'a> {
@@ -271,8 +262,9 @@ impl<'de> Deserialize<'de> for Class {
         match raw {
             IntOrStr::Int(class) => Class::try_from_primitive(class).map_err(D::Error::custom),
             IntOrStr::Str(class) if class.len() == 1 => {
-                Class::try_from_primitive(class.parse().map_err(D::Error::custom)?)
-                    .map_err(D::Error::custom)
+                Class::try_from_primitive(class.parse().map_err(D::Error::custom)?).map_err(
+                    D::Error::custom
+                )
             }
             IntOrStr::Str(class) => class.parse().map_err(D::Error::custom),
         }
@@ -287,10 +279,7 @@ fn test_class_deserialize() {
 }
 
 impl Class {
-    pub fn new<U>(number: U) -> Self
-    where
-        u8: TryFrom<U>,
-    {
+    pub fn new<U>(number: U) -> Self where u8: TryFrom<U> {
         Class::try_from(u8::try_from(number).unwrap_or_default()).unwrap_or_default()
     }
 }
@@ -322,11 +311,11 @@ impl IndexMut<Class> for ClassList {
 }
 
 impl Serialize for ClassList {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let count = self.0.iter().filter(|c| **c > 0).count();
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+        let count = self.0
+            .iter()
+            .filter(|c| **c > 0)
+            .count();
         let mut classes = serializer.serialize_map(Some(count))?;
         for (class, count) in self.0.iter().copied().enumerate() {
             if count > 0 {
@@ -351,9 +340,7 @@ impl From<HashMap<Class, u8>> for ClassList {
 }
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(
-    Debug, Clone, Serialize, Deserialize, Copy, PartialEq, Eq, Hash, Ord, PartialOrd, Default,
-)]
+#[derive(Debug, Clone, Serialize, Deserialize, Copy, PartialEq, Eq, Hash, Ord, PartialOrd, Default)]
 pub struct UserId(pub u16);
 
 impl<E: Endianness> BitWrite<E> for UserId {
@@ -433,7 +420,7 @@ pub struct UserInfo {
 impl From<tf_demo_parser::demo::data::UserInfo> for UserInfo {
     fn from(info: tf_demo_parser::demo::data::UserInfo) -> Self {
         let mut steam_id64 = 0;
-        
+
         if info.player_info.steam_id != "BOT" {
             steam_id64 = u64::from(SteamID::from_steam3(&info.player_info.steam_id).unwrap());
         }
@@ -452,11 +439,11 @@ impl From<tf_demo_parser::demo::data::UserInfo> for UserInfo {
 
 impl PartialEq for UserInfo {
     fn eq(&self, other: &UserInfo) -> bool {
-        self.classes == other.classes
-            && self.name == other.name
-            && self.user_id == other.user_id
-            && self.steam_id == other.steam_id
-            && self.team == other.team
+        self.classes == other.classes &&
+            self.name == other.name &&
+            self.user_id == other.user_id &&
+            self.steam_id == other.steam_id &&
+            self.team == other.team
     }
 }
 
@@ -467,12 +454,12 @@ pub struct Death {
     pub assister: Option<UserId>,
     pub killer: UserId,
     pub tick: DemoTick,
-    pub crit_type: u16
+    pub crit_type: u16,
 }
 
 impl Death {
     pub fn from_event(event: &PlayerDeathEvent, tick: DemoTick) -> Self {
-        let assister = if event.assister < (16 * 1024) {
+        let assister = if event.assister < 16 * 1024 {
             Some(UserId::from(event.assister))
         } else {
             None
@@ -484,7 +471,7 @@ impl Death {
             killer: UserId::from(event.attacker),
             weapon: event.weapon.to_string(),
             victim: UserId::from(event.user_id),
-            crit_type: event.crit_type
+            crit_type: event.crit_type,
         }
     }
 }
@@ -524,53 +511,50 @@ impl MessageHandler for Analyser {
     fn does_handle(message_type: MessageType) -> bool {
         matches!(
             message_type,
-            MessageType::GameEvent
-                | MessageType::UserMessage
-                | MessageType::ServerInfo
-                | MessageType::NetTick
+            MessageType::GameEvent |
+                MessageType::UserMessage |
+                MessageType::ServerInfo |
+                MessageType::NetTick
         )
     }
 
     fn handle_message(&mut self, message: &Message, tick: u32) {
         self.state.end_tick = ServerTick(tick);
+        if tick > 0 && self.state.start_tick.0 == 0 {
+            self.state.start_tick = ServerTick(tick);
+        }
         match message {
             Message::ServerInfo(message) => {
-                self.state.interval_per_tick = message.interval_per_tick
+                self.state.interval_per_tick = message.interval_per_tick;
             }
             Message::GameEvent(message) => self.handle_event(&message.event, DemoTick(tick)),
-            Message::UserMessage(message) => {
+            Message::UserMessage(message) =>
                 match message {
                     tf_demo_parser::demo::message::usermessage::UserMessage::SayText2(text) => {
                         let from = text.clone().from.clone();
                         let message_text: String = text.clone().text;
                         if from.is_some() {
                             let name = text.from.clone().unwrap();
-                            self.state.chat.push(ChatMessage { 
-                                from: self.state.user_name_map[&from.unwrap()].into(), 
+                            self.state.chat.push(ChatMessage {
+                                from: self.state.user_name_map[&from.unwrap()].into(),
                                 name: name,
                                 text: message_text,
-                                tick: tick.into(), 
-                                message: *text.to_owned() 
+                                tick: tick.into(),
+                                message: *text.to_owned(),
                             });
                         }
-                    },
+                    }
                     _ => {}
                 }
-            },
             _ => {}
         }
     }
 
-    fn handle_string_entry(
-        &mut self,
-        table: &str,
-        _index: usize,
-        entry: &StringTableEntry
-    ) {
+    fn handle_string_entry(&mut self, table: &str, _index: usize, entry: &StringTableEntry) {
         if table == "userinfo" {
             let _ = self.parse_user_info(
                 entry.text.as_ref().map(|s| s.as_ref()),
-                entry.extra_data.as_ref().map(|data| data.data.clone()),
+                entry.extra_data.as_ref().map(|data| data.data.clone())
             );
         }
     }
@@ -609,33 +593,33 @@ impl Analyser {
                     user_state.team = spawn.team;
                 }
                 self.state.spawns.push(spawn);
-            },
+            }
             GameEvent::TeamPlayRoundWin(event) => {
                 if event.win_reason != WIN_REASON_TIME_LIMIT {
                     self.state.rounds.push(Round::from_event(event, tick))
                 }
-            },
+            }
             _ => {}
         }
     }
 
-    fn parse_user_info(
-        &mut self,
-        text: Option<&str>,
-        data: Option<Stream>,
-    ) -> ReadResult<()> {
-        if let Some(user_info) =
-            tf_demo_parser::demo::data::UserInfo::parse_from_string_table(text, data)?
+    fn parse_user_info(&mut self, text: Option<&str>, data: Option<Stream>) -> ReadResult<()> {
+        if
+            let Some(user_info) = tf_demo_parser::demo::data::UserInfo::parse_from_string_table(
+                text,
+                data
+            )?
         {
             let player_info = user_info.player_info.clone();
 
-            self.state.user_name_map.entry(player_info.name.into()).and_modify(|info| {
-                *info = player_info.user_id;
-            })
-            .or_insert_with(|| player_info.user_id.into());
+            self.state.user_name_map
+                .entry(player_info.name.into())
+                .and_modify(|info| {
+                    *info = player_info.user_id;
+                })
+                .or_insert_with(|| player_info.user_id.into());
 
-            self.state
-                .users
+            self.state.users
                 .entry(user_info.player_info.user_id.into())
                 .and_modify(|info| {
                     info.entity_id = user_info.entity_id;
@@ -657,6 +641,7 @@ pub struct MatchState {
     pub spawns: Vec<Spawn>,
     pub rounds: Vec<Round>,
     pub end_tick: ServerTick,
+    pub start_tick: ServerTick,
     pub interval_per_tick: f32,
 }
 
@@ -667,5 +652,5 @@ pub struct ChatMessage {
     tick: DemoTick,
     name: String,
     text: String,
-    message: SayText2Message
+    message: SayText2Message,
 }

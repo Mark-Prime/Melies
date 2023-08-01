@@ -59,6 +59,8 @@
     <select bind:value={output_settings.method} id="tf_folder" class="settings__input input--sec">
       <option value="h264">h264</option>
       <option value="jpeg">jpeg</option>
+      <option value="tga">tga</option>
+      <option value="lawena">Lawena</option>
       <option value="none">Do not record</option>
     </select>
   </div>

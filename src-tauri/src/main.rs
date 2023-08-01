@@ -1,24 +1,21 @@
-#![cfg_attr(
-    all(not(debug_assertions), target_os = "windows"),
-    windows_subsystem = "windows"
-)]
+#![cfg_attr(all(not(debug_assertions), target_os = "windows"), windows_subsystem = "windows")]
 
-use std::fs::{File, DirEntry};
+use std::fs::{ File, DirEntry };
 use std::io::Write;
-use std::{fs, env};
+use std::{ fs, env };
 use std::path::Path;
-use serde_json::{self, Value, json};
+use serde_json::{ self, Value, json };
 use regex::Regex;
 use tauri::command;
 use vdm::VDM;
 use vdm::action::ActionType;
 use chrono::prelude::*;
 
-use crate::event::EventStyle::{Bookmark, Killstreak};
+use crate::event::EventStyle::{ Bookmark, Killstreak };
 use crate::event::Event;
 use crate::clip::Clip;
 use crate::logstf::parse;
-use crate::demos::{scan_for_demos, scan_demo};
+use crate::demos::{ scan_for_demos, scan_demo };
 
 mod event;
 mod clip;
@@ -45,20 +42,33 @@ macro_rules! extend {
 fn write_cfg(settings: &Value) {
     println!("write_cfg({:?})", settings);
     let mut cfg = String::new();
+    let mut crosshair = 0;
+
+    if settings["output"]["crosshair"].as_bool().unwrap() {
+        crosshair = 1;
+    }
 
     // println!("cl_drawhud {}", settings["output"]["hud"]);
 
-    extend!(cfg, "echo \"Execing Melies Config\";\r\ncl_drawhud {};\r\n", settings["output"]["hud"]);
+    extend!(
+        cfg,
+        "echo \"Execing Melies Config\";\r\ncl_drawhud {};\r\n",
+        settings["output"]["hud"]
+    );
     extend!(cfg, "sv_cheats {};\r\n", "1");
     extend!(cfg, "voice_enable {};\r\n", settings["output"]["voice_chat"]);
     extend!(cfg, "hud_saytext_time {};\r\n", settings["output"]["text_chat"]);
-    extend!(cfg, "crosshair {};\r\n", settings["output"]["crosshair"]);
+    extend!(cfg, "crosshair {};\r\n", crosshair);
     extend!(cfg, "viewmodel_fov {};\r\n", settings["recording"]["viewmodel_fov"]);
     extend!(cfg, "fov_desired {};\r\n", settings["recording"]["fov"]);
     extend!(cfg, "{};\r\n", settings["recording"]["commands"].as_str().unwrap());
 
     if settings["output"]["lock"].as_i64().is_some() {
-        extend!(cfg, "\r\necho \"Preventing settings from changing\";\r\nalias cl_drawhud \"{}\";\r\n", "");
+        extend!(
+            cfg,
+            "\r\necho \"Preventing settings from changing\";\r\nalias cl_drawhud \"{}\";\r\n",
+            ""
+        );
         extend!(cfg, "alias voice_enable \"{}\";\r\n", "");
         extend!(cfg, "alias hud_saytext_time \"{}\";\r\n", "");
         extend!(cfg, "alias crosshair \"{}\";\r\n", "");
@@ -66,7 +76,9 @@ fn write_cfg(settings: &Value) {
         extend!(cfg, "alias fov_desired \"{}\";\r\n", "");
     }
 
-    let mut file = File::create(format!("{}\\cfg\\melies.cfg", settings["tf_folder"].as_str().unwrap())).unwrap();
+    let mut file = File::create(
+        format!("{}\\cfg\\melies.cfg", settings["tf_folder"].as_str().unwrap())
+    ).unwrap();
 
     file.write_all(cfg.as_bytes()).unwrap();
 }
@@ -102,18 +114,13 @@ fn check_spec(clip: &Clip, commands: String) -> String {
 
     let mut new_commands = commands;
 
-    new_commands = format!("{}; spec_player {}; spec_mode;",
-        new_commands,
-        clip.spec_player
-    );
+    new_commands = format!("{}; spec_player {}; spec_mode;", new_commands, clip.spec_player);
 
     if clip.spec_type == 3 {
-        new_commands = format!("{} spec_mode;",
-            new_commands
-        );
+        new_commands = format!("{} spec_mode;", new_commands);
     }
 
-    return new_commands
+    return new_commands;
 }
 
 fn start_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
@@ -131,7 +138,7 @@ fn start_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
 fn add_clip_to_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
     println!("add_clip_to_vdm({:?}, {:?}, {:?})", vdm, clip, settings);
     let last_tick = vdm.last().props().start_tick.unwrap();
-    
+
     if clip.start_tick > last_tick + 300 {
         let mut skip_props = vdm.create_action(ActionType::SkipAhead).props_mut();
 
@@ -155,7 +162,7 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
             suffix = format!("bm{}+", clip.ks_value);
         }
     }
-    
+
     {
         let mut exec_commands = vdm.create_action(ActionType::PlayCommands).props_mut();
 
@@ -167,27 +174,54 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
     {
         let mut start_record = vdm.create_action(ActionType::PlayCommands).props_mut();
 
-        let mut clip_name = format!("{}_{}-{}_{}", vdm_name, clip.start_tick, clip.end_tick, suffix);
+        let mut clip_name = format!(
+            "{}_{}-{}_{}",
+            vdm_name,
+            clip.start_tick,
+            clip.end_tick,
+            suffix
+        );
 
         let mut bm_value = clip.bm_value.to_owned();
 
         bm_value = bm_value.replace("clip_start", "");
         bm_value = bm_value.replace("clip_end", "");
 
-        if bm_value != "".to_string() && settings["recording"]["auto_suffix"] == 1 && bm_value != "General".to_string() {
+        if
+            bm_value != "".to_string() &&
+            settings["recording"]["auto_suffix"] == 1 &&
+            bm_value != "General".to_string()
+        {
             clip_name = format!("{}_{}", clip_name, bm_value.replace(" ", "-"));
         }
 
         let mut commands = "".to_string();
 
-        if settings["output"]["method"] != "none" {
-            commands = format!(
-                "{}host_framerate {}; startmovie {} {}; clear;",
-                ifelse!(settings["output"]["snd_fix"] == 1, "snd_restart; ", ""),
-                settings["output"]["framerate"],
-                clip_name,
-                settings["output"]["method"].as_str().unwrap()
-            );
+        match settings["output"]["method"].as_str().unwrap() {
+            "h264" | "jpeg" => {
+                commands = format!(
+                    "{}host_framerate {}; startmovie {} {}; clear;",
+                    ifelse!(settings["output"]["snd_fix"] == 1, "snd_restart; ", ""),
+                    settings["output"]["framerate"],
+                    clip_name,
+                    settings["output"]["method"].as_str().unwrap()
+                );
+            }
+            "tga" => {
+                commands = format!(
+                    "{}host_framerate {}; startmovie {}; clear;",
+                    ifelse!(settings["output"]["snd_fix"] == 1, "snd_restart; ", ""),
+                    settings["output"]["framerate"],
+                    clip_name
+                );
+            }
+            "lawena" => {
+                commands = format!(
+                    "{}startrecording",
+                    ifelse!(settings["output"]["snd_fix"] == 1, "snd_restart; ", ""),
+                );
+            }
+            _ => {}
         }
 
         let commands = check_spec(clip, commands);
@@ -199,24 +233,29 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
 
     {
         let mut end_record = vdm.create_action(ActionType::PlayCommands).props_mut();
+        let mut commands = String::new();
 
-        let mut commands = format!(
-            "{}; endmovie; host_framerate 0;",
-            settings["recording"]["end_commands"].as_str().unwrap(),
-        );
+        match settings["output"]["method"].as_str().unwrap() {
+            "h264" | "jpeg" | "tga" => {
+                commands = format!(
+                    "{}; endmovie; host_framerate 0;",
+                    settings["recording"]["end_commands"].as_str().unwrap()
+                );
+            }
+            "lawena" => {
+                commands = format!(
+                    "stoprecording;"
+                );
+            }
+            _ => {}
+        }
 
         if clip.spec_type == 1 {
-            commands = format!(
-                "{} spec_mode; spec_mode;",
-                commands,
-            );
+            commands = format!("{} spec_mode; spec_mode;", commands);
         }
-        
+
         if clip.spec_type == 3 {
-            commands = format!(
-                "{} spec_mode;",
-                commands,
-            );
+            commands = format!("{} spec_mode;", commands);
         }
 
         end_record.start_tick = Some(clip.end_tick);
@@ -232,17 +271,27 @@ fn find_dir(settings: &Value) -> Result<String, String> {
     let entries;
 
     match files {
-        Ok(ent) => entries = ent,
-        Err(_) => return Err("Could not find the _events.txt or KillStreaks.txt files.\r\nPlease check your settings to ensure the tf folder is correctly linked.\r\nIf you do not have either file, please make one in the \\tf or \\tf\\demos folder.".to_string()),
+        Ok(ent) => {
+            entries = ent;
+        }
+        Err(_) => {
+            return Err(
+                "Could not find the _events.txt or KillStreaks.txt files.\r\nPlease check your settings to ensure the tf folder is correctly linked.\r\nIf you do not have either file, please make one in the \\tf or \\tf\\demos folder.".to_string()
+            );
+        }
     }
 
     for entry in entries {
         let dir: DirEntry;
 
         match entry {
-            Ok(directory) => dir = directory,
-            Err(err) => return Err(err.to_string()),
-        };
+            Ok(directory) => {
+                dir = directory;
+            }
+            Err(err) => {
+                return Err(err.to_string());
+            }
+        }
 
         let dir_str = dir.path().to_string_lossy().to_string();
 
@@ -268,7 +317,12 @@ fn find_dir(settings: &Value) -> Result<String, String> {
         }
     }
 
-    Err(format!("File Not Found: Please ensure the setting tf_folder is correct: ({})", settings["tf_folder"].as_str().unwrap()))
+    Err(
+        format!(
+            "File Not Found: Please ensure the setting tf_folder is correct: ({})",
+            settings["tf_folder"].as_str().unwrap()
+        )
+    )
 }
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
@@ -285,23 +339,19 @@ fn ryukbot() -> Value {
     match find_dir(&settings) {
         Ok(directory) => {
             dir = directory;
-        },
+        }
         Err(_) => {
-            return 
-            json!({
+            return json!({
                 "code": 404,
                 "err_text": format!("Could not find _events.txt or KillStreaks.txt\r\nPlease check your settings to ensure the tf folder is correctly linked.\r\n\r\n tf folder setting: {}", settings["tf_folder"].as_str().unwrap())
             });
         }
-    };
+    }
 
     let file_text = match fs::read_to_string(dir.clone()) {
-        Ok(text) => {
-            text
-        },
+        Ok(text) => { text }
         Err(_) => {
-            return 
-            json!({
+            return json!({
                 "code": 404,
                 "err_text": "Could not find _events.txt or KillStreaks.txt\r\nPlease check your settings to ensure the tf folder is correctly linked.".to_string()
             });
@@ -328,11 +378,11 @@ fn ryukbot() -> Value {
     write_cfg(&settings);
 
     let mut clips: Vec<Clip> = vec![];
-    
+
     let mut event_count = 0;
 
     for event_capture in events {
-        event_count = event_count +  1;
+        event_count = event_count + 1;
 
         let event = event::Event::new(event_capture).unwrap();
 
@@ -376,8 +426,12 @@ fn ryukbot() -> Value {
     let vdm_count = &vdms.len();
 
     for (i, vdm) in vdms.iter().enumerate() {
-        let file_location = format!("{}\\demos\\{}.vdm", &settings["tf_folder"].as_str().unwrap(), &vdm.name);
-        
+        let file_location = format!(
+            "{}\\demos\\{}.vdm",
+            &settings["tf_folder"].as_str().unwrap(),
+            &vdm.name
+        );
+
         if settings["safe_mode"].as_i64().is_some() {
             if settings["safe_mode"].as_i64().unwrap() == 1 {
                 let file_path = Path::new(&file_location);
@@ -387,7 +441,11 @@ fn ryukbot() -> Value {
             }
         }
 
-        let vdm = end_vdm(&mut vdm.clone(), &settings, ifelse!(vdms.len() > i + 1, String::from(&vdms[i + 1].name), String::new()));
+        let vdm = end_vdm(
+            &mut vdm.clone(),
+            &settings,
+            ifelse!(vdms.len() > i + 1, String::from(&vdms[i + 1].name), String::new())
+        );
         vdm.export(&file_location);
     }
 
@@ -421,7 +479,8 @@ fn build_settings() -> Value {
 
     File::create(settings_path).unwrap();
 
-    let settings = json!({
+    let settings =
+        json!({
         "tf_folder": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Team Fortress 2\\tf",
         "clear_events": true,
         "save_backups": true,
@@ -454,7 +513,7 @@ fn build_settings() -> Value {
             "auto_suffix": 1
         }
     });
-    
+
     fs::write(settings_path, settings.to_string()).unwrap();
     settings
 }
@@ -467,7 +526,7 @@ fn load_settings() -> Value {
     if Path::new(&settings_path).exists() {
         let file = fs::read_to_string(settings_path).unwrap();
         let settings: Value = serde_json::from_str(&file).unwrap();
-    
+
         return settings;
     }
 
@@ -498,19 +557,17 @@ fn load_events() -> Value {
     match find_dir(&settings) {
         Ok(directory) => {
             dir = directory;
-        },
+        }
         Err(err) => {
             return json!({
                 "code": 404,
                 "err_text": err
             });
         }
-    };
+    }
 
     let file_text = match fs::read_to_string(dir) {
-        Ok(text) => {
-            text
-        },
+        Ok(text) => { text }
         Err(err) => {
             return json!({
                 "code": 400,
@@ -524,11 +581,11 @@ fn load_events() -> Value {
     let events_regex = re.captures_iter(&file_text);
 
     let mut events = vec![];
-    
+
     for event_capture in events_regex {
         let event = event::Event::new(event_capture).unwrap();
 
-        events.push(event)
+        events.push(event);
     }
 
     json!({
@@ -581,7 +638,7 @@ fn save_events(new_events: Value) -> Value {
                         events.push(built_event);
                         continue;
                     }
-                },
+                }
                 Killstreak(ks) => {
                     if !event["isKillstreak"].as_bool().unwrap() {
                         let built_event = build_event_from_json(event);
@@ -596,8 +653,7 @@ fn save_events(new_events: Value) -> Value {
                         events.push(built_event);
                         continue;
                     }
-
-                },
+                }
             }
 
             extend!(new_events_text, "{}\r\n", original_event.event);
@@ -612,14 +668,14 @@ fn save_events(new_events: Value) -> Value {
     match find_dir(&settings) {
         Ok(directory) => {
             dir = directory;
-        },
+        }
         Err(err) => {
             return json!({
                 "code": 404,
                 "err_text": err
             });
         }
-    };
+    }
 
     fs::write(dir, new_events_text).unwrap();
 
@@ -646,8 +702,8 @@ fn build_event_from_json(event_json: &Value) -> Event {
                 demo_name: event_json["demo_name"].as_str().unwrap().to_string(),
                 tick: event_json["tick"].as_i64().unwrap(),
                 value: Killstreak(event_json["value"]["Killstreak"].as_i64().unwrap()),
-            }
-        },
+            };
+        }
         false => {
             if event_json["value"]["Bookmark"] == "General" {
                 return Event {
@@ -661,9 +717,9 @@ fn build_event_from_json(event_json: &Value) -> Event {
                     demo_name: event_json["demo_name"].as_str().unwrap().to_string(),
                     tick: event_json["tick"].as_i64().unwrap(),
                     value: Bookmark(event_json["value"]["Bookmark"].as_str().unwrap().to_string()),
-                }
+                };
             }
-            
+
             return Event {
                 event: format!(
                     "[{}] {} (\"{}\" at {})",
@@ -675,7 +731,7 @@ fn build_event_from_json(event_json: &Value) -> Event {
                 demo_name: event_json["demo_name"].as_str().unwrap().to_string(),
                 tick: event_json["tick"].as_i64().unwrap(),
                 value: Bookmark(event_json["value"]["Bookmark"].as_str().unwrap().to_string()),
-            }
+            };
         }
     }
 }
@@ -687,14 +743,14 @@ fn clear_events(settings: Value) -> Value {
     match find_dir(&settings) {
         Ok(directory) => {
             dir = directory;
-        },
+        }
         Err(err) => {
             return json!({
                 "code": 404,
                 "err_text": err
             });
         }
-    };
+    }
 
     File::create(dir).unwrap();
 
@@ -711,21 +767,27 @@ fn save_backup(settings: &Value) -> Value {
     match find_dir(&settings) {
         Ok(directory) => {
             dir = directory;
-        },
+        }
         Err(err) => {
             return json!({
                 "code": 404,
                 "err_text": err
             });
         }
-    };
+    }
 
     let sys_time: DateTime<Local> = Local::now();
     let date = sys_time.format("%Y-%m-%d_%H-%M-%S").to_string().replace("\"", "");
 
-    let output_path = format!("{}\\Documents\\Melies\\backups\\{}.txt", env::var("USERPROFILE").unwrap(), date);
+    let output_path = format!(
+        "{}\\Documents\\Melies\\backups\\{}.txt",
+        env::var("USERPROFILE").unwrap(),
+        date
+    );
 
-    fs::create_dir_all(format!("{}\\Documents\\Melies\\backups", env::var("USERPROFILE").unwrap())).unwrap();
+    fs::create_dir_all(
+        format!("{}\\Documents\\Melies\\backups", env::var("USERPROFILE").unwrap())
+    ).unwrap();
 
     // println!("{}", output_path);
 
@@ -756,17 +818,20 @@ fn parse_demo(path: String) -> Value {
 }
 
 fn main() {
-    tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![
-            ryukbot,
-            load_settings,
-            save_settings,
-            load_events,
-            save_events,
-            parse_log,
-            load_demos,
-            parse_demo
-        ])
+    tauri::Builder
+        ::default()
+        .invoke_handler(
+            tauri::generate_handler![
+                ryukbot,
+                load_settings,
+                save_settings,
+                load_events,
+                save_events,
+                parse_log,
+                load_demos,
+                parse_demo
+            ]
+        )
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

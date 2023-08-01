@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use serde::Serialize;
 use serde_json::json;
 use serde_json::Value;
-use tf_demo_parser::{Demo, DemoParser};
+use tf_demo_parser::{ Demo, DemoParser };
 use std::path::Path;
 
 use self::custom_analyser::Death;
@@ -19,7 +19,7 @@ enum Event {
     Spawn(Spawn),
     Kill(Death),
     Assist(Death),
-    RoundEnd(u32)
+    RoundEnd(u32),
 }
 
 impl Event {
@@ -27,19 +27,19 @@ impl Event {
         match self {
             Event::Death(val) => {
                 return val.tick.into();
-            },
+            }
             Event::Spawn(val) => {
                 return val.tick.into();
-            },
+            }
             Event::Kill(val) => {
                 return val.tick.into();
-            },
+            }
             Event::Assist(val) => {
                 return val.tick.into();
-            },
+            }
             Event::RoundEnd(val) => {
                 return val.to_owned();
-            },
+            }
         }
     }
 }
@@ -67,14 +67,14 @@ impl PartialEq for Event {
 #[derive(Debug, Serialize, Clone)]
 struct Killstreak {
     pub kills: Vec<Death>,
-    pub classes: Vec<String>
+    pub classes: Vec<String>,
 }
 
 impl Killstreak {
     fn new(death: Death) -> Self {
         Killstreak {
             kills: vec![death],
-            classes: vec![]
+            classes: vec![],
         }
     }
 
@@ -85,7 +85,7 @@ impl Killstreak {
             total = total + u32::from(kill.tick);
         }
 
-        return total / self.kills.len() as u32;
+        return total / (self.kills.len() as u32);
     }
 }
 
@@ -97,7 +97,7 @@ struct Life {
     pub killstreaks: Vec<Killstreak>,
     pub kills: Vec<Death>,
     pub assists: Vec<Death>,
-    pub classes: Vec<String>
+    pub classes: Vec<String>,
 }
 
 impl Life {
@@ -109,13 +109,13 @@ impl Life {
             killstreaks: vec![],
             kills: vec![],
             assists: vec![],
-            classes
+            classes,
         }
     }
 }
 
 pub(crate) fn scan_for_demos(settings: Value) -> Value {
-    let mut demos:Vec<Value> = vec![];
+    let mut demos: Vec<Value> = vec![];
     let paths = fs::read_dir(settings["tf_folder"].as_str().unwrap()).unwrap();
 
     for path in paths {
@@ -123,7 +123,7 @@ pub(crate) fn scan_for_demos(settings: Value) -> Value {
 
         if file_name.ends_with(".dem") {
             let parsed_file_name = file_name.replace(settings["tf_folder"].as_str().unwrap(), "");
-            
+
             let mut demo = Value::from({});
             demo["name"] = Value::from(parsed_file_name);
 
@@ -132,17 +132,22 @@ pub(crate) fn scan_for_demos(settings: Value) -> Value {
     }
 
     if Path::new(&format!("{}\\demos", settings["tf_folder"].as_str().unwrap())).exists() {
-        let paths = fs::read_dir(format!("{}\\demos", settings["tf_folder"].as_str().unwrap())).unwrap();
+        let paths = fs
+            ::read_dir(format!("{}\\demos", settings["tf_folder"].as_str().unwrap()))
+            .unwrap();
 
         for path in paths {
             let file_name = path.unwrap().path().display().to_string();
-    
+
             if file_name.ends_with(".dem") {
-                let parsed_file_name = file_name.replace(settings["tf_folder"].as_str().unwrap(), "");
-    
+                let parsed_file_name = file_name.replace(
+                    settings["tf_folder"].as_str().unwrap(),
+                    ""
+                );
+
                 let mut demo = Value::from({});
                 demo["name"] = Value::from(parsed_file_name);
-    
+
                 demos.push(demo);
             }
         }
@@ -160,12 +165,15 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
     println!("{}{}", settings["tf_folder"].as_str().unwrap(), path);
 
     let file_path = format!("{}{}", settings["tf_folder"].as_str().unwrap(), path);
-    
+
     let file = fs::read(file_path).unwrap();
 
     let demo = Demo::new(&file);
 
-    let parser = DemoParser::new_all_with_analyser(demo.get_stream(), custom_analyser::Analyser::new());
+    let parser = DemoParser::new_all_with_analyser(
+        demo.get_stream(),
+        custom_analyser::Analyser::new()
+    );
     let (header, state) = parser.parse().unwrap();
 
     let mut user_events: HashMap<u16, Vec<Event>> = HashMap::new();
@@ -178,7 +186,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
         let assist_id = death.assister;
 
         if assist_id.is_some() {
-            let assister = user_events.entry( assist_id.unwrap().0.into() ).or_insert(vec![]);
+            let assister = user_events.entry(assist_id.unwrap().0.into()).or_insert(vec![]);
 
             assister.push(Event::Assist(death.clone()));
         }
@@ -196,9 +204,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
 
     for round in &state.rounds {
         for user in &mut user_events {
-            user.1.push(
-                Event::RoundEnd(round.end_tick.into())
-            );
+            user.1.push(Event::RoundEnd(round.end_tick.into()));
         }
     }
 
@@ -209,7 +215,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
     for (key, events) in &user_events {
         let mut current_player = vec![];
         let mut events = events.to_owned();
-        
+
         events.sort_by(|a, b| a.cmp(b));
 
         let mut current_life: Life = Life::new(0, vec!["".to_string()]);
@@ -229,7 +235,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
                     } else if !current_life.classes.contains(&spawn.class.to_string()) {
                         current_life.classes.push(spawn.class.to_string());
                     }
-                },
+                }
                 Event::Kill(kill) => {
                     if kill.killer == kill.victim {
                         continue;
@@ -237,7 +243,11 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
 
                     if kill_count == 0 {
                         current_life.killstreaks.push(Killstreak::new(kill.to_owned()));
-                    } else if kill.tick.as_i64() < current_life.last_kill_tick.as_i64() + settings["recording"]["before_killstreak_per_kill"].as_i64().unwrap() {
+                    } else if
+                        kill.tick.as_i64() <
+                        current_life.last_kill_tick.as_i64() +
+                            settings["recording"]["before_killstreak_per_kill"].as_i64().unwrap()
+                    {
                         current_life.killstreaks[streak_count - 1].kills.push(kill.to_owned());
                     } else if kill_count < 3 {
                         current_life.killstreaks[streak_count - 1].kills = vec![kill.to_owned()];
@@ -246,10 +256,10 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
                     current_life.last_kill_tick = kill.tick;
 
                     current_life.kills.push(kill.to_owned());
-                },
+                }
                 Event::Assist(assist) => {
                     current_life.assists.push(assist.to_owned());
-                },
+                }
                 Event::Death(death) => {
                     if current_life.start != 0 {
                         if kill_count > 0 && kill_count < 3 {
@@ -258,7 +268,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
 
                         for mut ks in current_life.killstreaks.to_owned() {
                             ks.classes = current_life.classes.clone();
-                            killstreaks.push(ks)
+                            killstreaks.push(ks);
                         }
 
                         current_life.end = death.tick.into();
@@ -267,8 +277,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
 
                         current_life = Life::new(0, vec!["".to_string()]);
                     }
-                    
-                },
+                }
                 Event::RoundEnd(tick) => {
                     if kill_count > 0 && kill_count < 3 {
                         current_life.killstreaks.remove(streak_count - 1);
@@ -276,14 +285,14 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
 
                     for mut ks in current_life.killstreaks.to_owned() {
                         ks.classes = current_life.classes.clone();
-                        killstreaks.push(ks)
+                        killstreaks.push(ks);
                     }
 
                     current_life.end = tick.to_owned();
                     current_player.push(current_life);
 
                     current_life = Life::new(0, vec!["".to_string()]);
-                },
+                }
             }
         }
 
@@ -291,9 +300,16 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
         sorted_events.insert(key.to_owned(), events.to_vec());
     }
 
-    killstreaks.sort_by_key(|ks| (ks.average()));
+    killstreaks.sort_by_key(|ks| ks.average());
 
-    let resp = json!({
+    let mut start_tick = state.end_tick - header.ticks;
+
+    if header.ticks == 0 {
+        start_tick = state.start_tick;
+    }
+
+    let resp =
+        json!({
         "header": {
             "demo_type": header.demo_type,
             "version": header.version,
@@ -313,7 +329,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
             "rounds": state.rounds,
             "users": state.users,
             "chat": state.chat,
-            "start_tick": state.end_tick - header.ticks,
+            "start_tick": start_tick,
             "user_events": sorted_events,
             "player_lives": player_lives,
             "killstreaks": killstreaks,
