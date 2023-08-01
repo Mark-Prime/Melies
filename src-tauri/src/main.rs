@@ -353,7 +353,7 @@ fn ryukbot() -> Value {
         Err(_) => {
             return json!({
                 "code": 404,
-                "err_text": "Could not find _events.txt or KillStreaks.txt\r\nPlease check your settings to ensure the tf folder is correctly linked.".to_string()
+                "err_text": "Failed to read _events.txt or KillStreaks.txt\r\nPlease check your settings to ensure the tf folder is correctly linked.".to_string()
             });
         }
     };
