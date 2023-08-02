@@ -892,23 +892,25 @@
                                 </div>
                             </div>
                         </div>
-                        <h2 class="centered chat__title">Chat</h2>
-                        <div class="chat">
-                            {#each parsed_demo.data.chat as chat}
-                                {#if chat.selected}
-                                    <button class="cancel-btn" on:click={toggleSelected(chat)}>-</button>
-                                {:else}
-                                    <button on:click={toggleSelected(chat)}>+</button>
-                                {/if}
-                                <div class="chat__tick">
-                                    {chat.tick - parsed_demo.data.start_tick}
-                                </div>
-                                <div class="chat__text">
-                                    <span class={`chat__name ${parsed_demo.data?.users[chat.from]?.team}`}>{chat.name}{getMessageType(chat.message.kind)}:</span>
-                                    {chat.text}
-                                </div>
-                            {/each}
-                        </div>
+                        {#if parsed_demo.data.chat.length > 0}
+                            <h2 class="centered chat__title">Chat</h2>
+                            <div class="chat">
+                                {#each parsed_demo.data.chat as chat}
+                                    {#if chat.selected}
+                                        <button class="cancel-btn" on:click={toggleSelected(chat)}>-</button>
+                                    {:else}
+                                        <button on:click={toggleSelected(chat)}>+</button>
+                                    {/if}
+                                    <div class="chat__tick">
+                                        {chat.tick - parsed_demo.data.start_tick}
+                                    </div>
+                                    <div class="chat__text">
+                                        <span class={`chat__name ${parsed_demo.data?.users[chat.from]?.team}`}>{chat.name}{getMessageType(chat.message.kind)}:</span>
+                                        {chat.text}
+                                    </div>
+                                {/each}
+                            </div>
+                        {/if}
                         <!-- <div class="settings__input-group">
                             <label for="tf_folder" class="settings__label">scale</label>
                             <input bind:value={scale} id="tf_folder" class="settings__input input--tert" type="number"/>
