@@ -535,13 +535,15 @@ impl MessageHandler for Analyser {
                         let message_text: String = text.clone().text;
                         if from.is_some() {
                             let name = text.from.clone().unwrap();
-                            self.state.chat.push(ChatMessage {
-                                from: self.state.user_name_map[&from.unwrap()].into(),
-                                name: name,
-                                text: message_text,
-                                tick: tick.into(),
-                                message: *text.to_owned(),
-                            });
+                            if self.state.user_name_map.contains_key(&from.clone().unwrap()) {
+                                self.state.chat.push(ChatMessage {
+                                    from: self.state.user_name_map[&from.unwrap()].into(),
+                                    name: name,
+                                    text: message_text,
+                                    tick: tick.into(),
+                                    message: *text.to_owned(),
+                                });
+                            }
                         }
                     }
                     _ => {}
