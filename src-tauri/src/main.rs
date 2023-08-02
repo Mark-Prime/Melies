@@ -34,33 +34,52 @@ macro_rules! extend {
     };
 }
 
-// #[cfg_attr(
-//     all(not(debug_assertions), target_os = "windows"),
-//     windows_subsystem = "windows"
-// )]
-
-fn write_cfg(settings: &Value) {
-    println!("write_cfg({:?})", settings);
-    let mut cfg = String::new();
-    let mut crosshair = 0;
-
-    if settings["output"]["crosshair"].as_bool().unwrap() {
-        crosshair = 1;
+fn setting_as_bin(setting: &Value) -> i64 {
+    if !setting.is_boolean() {
+        return setting.as_i64().unwrap();
     }
 
-    // println!("cl_drawhud {}", settings["output"]["hud"]);
+    match setting.as_bool() {
+        Some(val) => {
+            match val {
+                true => 1,
+                false => 0
+            }
+        }
+        _ => 0
+    }
+}
+
+fn setting_as_bool(setting: &Value) -> bool {
+    if setting.is_boolean() {
+        return setting.as_bool().unwrap();
+    }
+
+    match setting.as_i64() {
+        Some(val) => {
+            match val {
+                1 => true,
+                _ => false
+            }
+        }
+        _ => false
+    }
+}
+
+fn write_cfg(settings: &Value) {
+    let mut cfg = String::new();
 
     extend!(
         cfg,
         "echo \"Execing Melies Config\";\r\ncl_drawhud {};\r\n",
-        settings["output"]["hud"]
+        setting_as_bin(&settings["output"]["hud"])
     );
     extend!(cfg, "sv_cheats {};\r\n", "1");
-    extend!(cfg, "voice_enable {};\r\n", settings["output"]["voice_chat"]);
-    extend!(cfg, "hud_saytext_time {};\r\n", settings["output"]["text_chat"]);
-    extend!(cfg, "crosshair {};\r\n", crosshair);
-    extend!(cfg, "viewmodel_fov {};\r\n", settings["recording"]["viewmodel_fov"]);
-    extend!(cfg, "fov_desired {};\r\n", settings["recording"]["fov"]);
+    extend!(cfg, "voice_enable {};\r\n", setting_as_bin(&settings["output"]["voice_chat"]));
+    extend!(cfg, "hud_saytext_time {};\r\n", setting_as_bin(&settings["output"]["text_chat"]));
+    extend!(cfg, "crosshair {};\r\n", setting_as_bin(&settings["output"]["crosshair"]));
+    extend!(cfg, "viewmodel_fov {};\r\n", setting_as_bin(&settings["recording"]["viewmodel_fov"]));
+    extend!(cfg, "fov_desired {};\r\n", setting_as_bin(&settings["recording"]["fov"]));
     extend!(cfg, "{};\r\n", settings["recording"]["commands"].as_str().unwrap());
 
     if settings["output"]["lock"].as_i64().is_some() {
@@ -84,8 +103,6 @@ fn write_cfg(settings: &Value) {
 }
 
 fn end_vdm(vdm: &mut VDM, settings: &Value, next_demoname: String) -> VDM {
-    println!("end_vdm({:?}, {:?}, {:?})", vdm, settings, next_demoname);
-    println!("{}", vdm.name);
     let last_tick = vdm.last().props().start_tick.unwrap();
 
     {
@@ -93,7 +110,7 @@ fn end_vdm(vdm: &mut VDM, settings: &Value, next_demoname: String) -> VDM {
 
         exec_commands.start_tick = Some(last_tick + 66);
 
-        if settings["recording"]["record_continuous"] == 1 && next_demoname != "" {
+        if setting_as_bool(&settings["recording"]["record_continuous"]) && next_demoname != "" {
             exec_commands.name = format!("Start the next demo ({}.dem)", next_demoname);
             exec_commands.commands = format!("playdemo {};", next_demoname);
             return vdm.to_owned();
@@ -107,7 +124,6 @@ fn end_vdm(vdm: &mut VDM, settings: &Value, next_demoname: String) -> VDM {
 }
 
 fn check_spec(clip: &Clip, commands: String) -> String {
-    println!("check_spec({:?}, {:?})", clip, commands);
     if clip.spec_type == 0 {
         return commands;
     }
@@ -124,7 +140,6 @@ fn check_spec(clip: &Clip, commands: String) -> String {
 }
 
 fn start_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
-    println!("start_vdm({:?}, {:?}, {:?})", vdm, clip, settings);
     if clip.start_tick > settings["recording"]["start_delay"].as_i64().unwrap() + 66 {
         let mut skip_props = vdm.create_action(ActionType::SkipAhead).props_mut();
 
@@ -136,7 +151,6 @@ fn start_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
 }
 
 fn add_clip_to_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
-    println!("add_clip_to_vdm({:?}, {:?}, {:?})", vdm, clip, settings);
     let last_tick = vdm.last().props().start_tick.unwrap();
 
     if clip.start_tick > last_tick + 300 {
@@ -150,7 +164,6 @@ fn add_clip_to_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
 }
 
 fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
-    println!("record_clip({:?}, {:?}, {:?})", vdm, clip, settings);
     let vdm_name = vdm.name.clone();
 
     let mut suffix = "bm".to_string();
@@ -189,7 +202,7 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
 
         if
             bm_value != "".to_string() &&
-            settings["recording"]["auto_suffix"] == 1 &&
+            setting_as_bool(&settings["recording"]["auto_suffix"]) &&
             bm_value != "General".to_string()
         {
             clip_name = format!("{}_{}", clip_name, bm_value.replace(" ", "-"));
@@ -201,7 +214,7 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
             "h264" | "jpeg" => {
                 commands = format!(
                     "{}host_framerate {}; startmovie {} {}; clear;",
-                    ifelse!(settings["output"]["snd_fix"] == 1, "snd_restart; ", ""),
+                    ifelse!(setting_as_bool(&settings["output"]["snd_fix"]), "snd_restart; ", ""),
                     settings["output"]["framerate"],
                     clip_name,
                     settings["output"]["method"].as_str().unwrap()
@@ -210,7 +223,7 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
             "tga" => {
                 commands = format!(
                     "{}host_framerate {}; startmovie {}; clear;",
-                    ifelse!(settings["output"]["snd_fix"] == 1, "snd_restart; ", ""),
+                    ifelse!(setting_as_bool(&settings["output"]["snd_fix"]), "snd_restart; ", ""),
                     settings["output"]["framerate"],
                     clip_name
                 );
@@ -218,7 +231,7 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
             "lawena" => {
                 commands = format!(
                     "{}startrecording",
-                    ifelse!(settings["output"]["snd_fix"] == 1, "snd_restart; ", ""),
+                    ifelse!(setting_as_bool(&settings["output"]["snd_fix"]), "snd_restart; ", ""),
                 );
             }
             _ => {}
@@ -265,7 +278,6 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
 }
 
 fn find_dir(settings: &Value) -> Result<String, String> {
-    println!("find_dir({:?})", settings);
     let files = fs::read_dir(format!("{}\\demos", settings["tf_folder"].as_str().unwrap()));
 
     let entries;
@@ -328,7 +340,6 @@ fn find_dir(settings: &Value) -> Result<String, String> {
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[command]
 fn ryukbot() -> Value {
-    println!("ryukbot()");
     let settings_path = env::var("USERPROFILE").unwrap() + "\\Documents\\Melies\\settings.json";
 
     let file = fs::read_to_string(settings_path).unwrap();
@@ -433,7 +444,7 @@ fn ryukbot() -> Value {
         );
 
         if settings["safe_mode"].as_i64().is_some() {
-            if settings["safe_mode"].as_i64().unwrap() == 1 {
+            if setting_as_bool(&settings["safe_mode"]) {
                 let file_path = Path::new(&file_location);
                 if file_path.exists() {
                     continue;
@@ -471,7 +482,6 @@ fn ryukbot() -> Value {
 }
 
 fn build_settings() -> Value {
-    println!("build_settings()");
     let binding = env::var("USERPROFILE").unwrap() + "\\Documents\\Melies\\settings.json";
     let settings_path = Path::new(&binding);
     let settings_prefix = settings_path.parent().unwrap();
@@ -484,16 +494,16 @@ fn build_settings() -> Value {
         "tf_folder": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Team Fortress 2\\tf",
         "clear_events": true,
         "save_backups": true,
-        "safe_mode": 1,
+        "safe_mode": true,
         "output": {
             "method": "h264",
             "framerate": 60,
-            "crosshair": 0,
-            "hud": 1,
-            "text_chat": 0,
-            "voice_chat": 0,
-            "snd_fix": 1,
-            "lock": 1
+            "crosshair": false,
+            "hud": true,
+            "text_chat": false,
+            "voice_chat": false,
+            "snd_fix": true,
+            "lock": true
         },
         "recording": {
             "commands": "",
@@ -508,9 +518,9 @@ fn build_settings() -> Value {
             "rewind_amount": 1000,
             "fov": 90,
             "viewmodel_fov": 90,
-            "record_continuous": 1,
-            "auto_close": 1,
-            "auto_suffix": 1
+            "record_continuous": true,
+            "auto_close": true,
+            "auto_suffix": true
         }
     });
 
@@ -520,7 +530,6 @@ fn build_settings() -> Value {
 
 #[command]
 fn load_settings() -> Value {
-    println!("load_settings()");
     let settings_path = env::var("USERPROFILE").unwrap() + "\\Documents\\Melies\\settings.json";
 
     if Path::new(&settings_path).exists() {
@@ -535,7 +544,6 @@ fn load_settings() -> Value {
 
 #[command]
 fn save_settings(new_settings: String) -> Value {
-    println!("save_settings()");
     let settings: Value = serde_json::from_str(&new_settings).unwrap();
     let settings_path = env::var("USERPROFILE").unwrap() + "\\Documents\\Melies\\settings.json";
 
@@ -549,7 +557,6 @@ fn save_settings(new_settings: String) -> Value {
 
 #[command]
 fn load_events() -> Value {
-    println!("load_events()");
     let settings = load_settings();
 
     let dir;
@@ -596,7 +603,6 @@ fn load_events() -> Value {
 
 #[command]
 fn save_events(new_events: Value) -> Value {
-    println!("save_events()");
     let mut events: Vec<Event> = vec![];
     let mut new_events_text = String::new();
 
@@ -686,7 +692,6 @@ fn save_events(new_events: Value) -> Value {
 }
 
 fn build_event_from_json(event_json: &Value) -> Event {
-    println!("build_event_from_json({:?})", event_json);
     let sys_time: DateTime<Local> = Local::now();
 
     match event_json["isKillstreak"].as_bool().unwrap() {
@@ -737,7 +742,6 @@ fn build_event_from_json(event_json: &Value) -> Event {
 }
 
 fn clear_events(settings: Value) -> Value {
-    println!("clear_events({:?})", settings);
     let dir;
 
     match find_dir(&settings) {
@@ -761,7 +765,6 @@ fn clear_events(settings: Value) -> Value {
 }
 
 fn save_backup(settings: &Value) -> Value {
-    println!("save_backup({:?})", settings);
     let dir;
 
     match find_dir(&settings) {
@@ -789,8 +792,6 @@ fn save_backup(settings: &Value) -> Value {
         format!("{}\\Documents\\Melies\\backups", env::var("USERPROFILE").unwrap())
     ).unwrap();
 
-    // println!("{}", output_path);
-
     fs::copy(dir, &output_path).unwrap();
 
     json!({
@@ -801,19 +802,16 @@ fn save_backup(settings: &Value) -> Value {
 
 #[command]
 fn parse_log(url: Value) -> Value {
-    println!("parse_log({:?})", url);
     parse(url)
 }
 
 #[command]
 fn load_demos() -> Value {
-    println!("load_demos()");
     scan_for_demos(load_settings())
 }
 
 #[command]
 fn parse_demo(path: String) -> Value {
-    println!("parse_demo({:?})", path);
     scan_demo(load_settings(), path)
 }
 

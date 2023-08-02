@@ -538,7 +538,7 @@ impl MessageHandler for Analyser {
                             if self.state.user_name_map.contains_key(&from.clone().unwrap()) {
                                 self.state.chat.push(ChatMessage {
                                     from: self.state.user_name_map[&from.unwrap()].into(),
-                                    name: name,
+                                    name,
                                     text: message_text,
                                     tick: tick.into(),
                                     message: *text.to_owned(),
