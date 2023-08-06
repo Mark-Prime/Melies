@@ -37,6 +37,10 @@
         recording_settings = settings.recording
     }
 
+    async function loadDemos() {
+        resp = await invoke("load_demos");
+    };
+
     function closeModal() {
         selected = [];
         current_demo = "";
@@ -52,9 +56,14 @@
     }
 
     onMount(async () => {
-		resp = await invoke("load_demos");
+		loadDemos();
         loadSettings();
 	});
+
+    $: {
+        console.log("Modal Enabled:", enabled);
+        loadDemos()
+    }
 
     function limitStringLength(str, len) {
         if (str.length < len) {
@@ -221,6 +230,9 @@
             parsed_demo = {loaded: false, loading: true};
             current_demo = selected.shift();
             parsed_demo = await invoke("parse_demo", { path: current_demo });
+
+            verifyTicks();
+
             console.log({parsed_demo});
         } else {
             closeModal();
@@ -262,13 +274,13 @@
     function recordEntireDemo(steamId) {
         let events = [
             {
-                time: 349,
+                time: settings.recording.start_delay,
                 label: parsed_demo.data.users[steamId].steamId64,
                 steamid64: parsed_demo.data.users[steamId].steamId64,
                 kills: 0,
                 start: true
             },{
-                time: parsed_demo.header.ticks - 99,
+                time: Math.max(parsed_demo.header.ticks - 99, settings.recording.start_delay + 66),
                 label: parsed_demo.data.users[steamId].steamId64,
                 steamid64: parsed_demo.data.users[steamId].steamId64
             }
@@ -320,7 +332,7 @@
             case "8":
                 return "https://wiki.teamfortress.com/w/images/3/33/Leaderboard_class_spy.png";
             default:
-                return ""
+                return false;
         }
     }
 
@@ -380,6 +392,14 @@
             default:
                 return "";
         }
+    }
+    
+    function verifyTicks() {
+        if (parsed_demo?.header?.ticks > 0) {
+            return;
+        }
+
+        parsed_demo.header.ticks = parsed_demo.data.end_tick - parsed_demo.data.start_tick;
     }
 </script>
 
@@ -458,15 +478,17 @@
                                                         id={`player-${parsed_demo.data.users[player].name}`}
                                                     >{parsed_demo.data.users[player].name}</a>
                                                     {#each Object.keys(parsed_demo.data.users[player]["classes"]) as player_class}
-                                                    <div 
-                                                        class="tooltip" 
-                                                        data-tooltip={`Lives: ${parsed_demo.data.users[player]["classes"][player_class]}`} 
-                                                        style="--kills: 0"
-                                                        on:click={toggleClass(player, player_class)}
-                                                        on:keydown={toggleClass(player, player_class)}
-                                                    >
-                                                        <img src={getImgUrl(player_class)} alt="icon"/>
-                                                    </div>
+                                                        {#if getImgUrl(player_class)}
+                                                            <div 
+                                                                class="tooltip" 
+                                                                data-tooltip={`Lives: ${parsed_demo.data.users[player]["classes"][player_class]}`} 
+                                                                style="--kills: 0"
+                                                                on:click={toggleClass(player, player_class)}
+                                                                on:keydown={toggleClass(player, player_class)}
+                                                            >
+                                                                <img src={getImgUrl(player_class)} alt="icon"/>
+                                                            </div>
+                                                        {/if}
                                                     {/each}
                                                 </h3>
                                             </div>
@@ -477,7 +499,9 @@
                                                             <div class={"demo demo__life " + (life.selected && "demo--selected")}>
                                                                 <div>
                                                                     {#each life.classes as player_class}
-                                                                        <img src={getImgUrl(player_class)} alt="icon" />
+                                                                        {#if getImgUrl(player_class)}
+                                                                            <img src={getImgUrl(player_class)} alt="icon" />
+                                                                        {/if}
                                                                     {/each}
                                                                 </div>
                                                                 <div 
@@ -544,7 +568,9 @@
                                                             <div class={"demo demo__killstreak " + ((killstreak.selected || killstreak.selected_as_bookmark || life.selected) && "demo--selected")}>
                                                                 <div>
                                                                     {#each life.classes as player_class}
-                                                                        <img src={getImgUrl(player_class)} alt="icon" />
+                                                                        {#if getImgUrl(player_class)}
+                                                                            <img src={getImgUrl(player_class)} alt="icon" />
+                                                                        {/if}
                                                                     {/each}
                                                                 </div>
                                                                 <div 
@@ -645,7 +671,9 @@
                                     <div class={"demo demo__life " + ((killstreak.selected || killstreak.selected_as_bookmark || getLifeFromKillstreak(killstreak)?.selected) && "demo--selected")}>
                                         <div>
                                             {#each killstreak.classes as player_class}
-                                                <img src={getImgUrl(player_class)} alt="icon" />
+                                                {#if getImgUrl(player_class)}
+                                                    <img src={getImgUrl(player_class)} alt="icon" />
+                                                {/if}
                                             {/each}
                                         </div>
                                         <a 
@@ -789,7 +817,9 @@
                                                                 <div class="timeline__data">
                                                                     <div>
                                                                         {#each life.classes as player_class}
-                                                                            <img src={getImgUrl(player_class)} alt="icon"/>
+                                                                            {#if getImgUrl(player_class)}
+                                                                                <img src={getImgUrl(player_class)} alt="icon" />
+                                                                            {/if}
                                                                         {/each}
                                                                     </div>
                                                                     <div

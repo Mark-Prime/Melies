@@ -12,7 +12,7 @@
 
   let resp = { vdms: 0, clips: 0, events: 0, code: 0 };
 
-  function setEvents(event_list) {
+  function setEvents(event_list = []) {
     demos = []
 
     if (event_list.code === 200) {
@@ -46,7 +46,9 @@
   }
 
   async function runMelies() {
-    resp = await invoke("ryukbot")
+    resp = await invoke("ryukbot");
+    
+    setEvents();
   }
 
   function addDemo() {
@@ -81,8 +83,6 @@
         }
       )
     }
-
-    // console.log(new_demo);
 
     demos.push(new_demo);
 

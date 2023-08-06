@@ -49,7 +49,22 @@ async function parseLog(){
 
     resp.loaded = true
     resp = resp
-    console.log(resp);
+}
+
+function getPlayerStats(steamid) {
+    return resp.players[steamid];
+}
+
+function getPlayerName(steamid) {
+    return resp.names[steamid];
+}
+
+function isPlayer(steamid) {
+    if (Object.hasOwn(resp.names, steamid)) {
+        return true;
+    }
+
+    return false;
 }
 
 function parseClasses(class_stats) {
@@ -76,9 +91,8 @@ function saveSelected() {
             events.push({
                 time: killstreak.time,
                 label: "killstreak",
-                steamid64: resp["players"][killstreak.steamid]["steamid64"]
+                steamid64: getPlayerStats(killstreak.steamid).steamid64
             })
-            // events.push(`[logs.tf_killstreak] spec ${resp["players"][killstreak.steamid]["steamid64"]} ("${demo_name}" at ${killstreak.time * 66})`)
         }
     }
 
@@ -88,9 +102,8 @@ function saveSelected() {
                 events.push({
                     time: event.time,
                     label: "medic-death",
-                    steamid64: resp["players"][event.steamid]["steamid64"]
+                    steamid64: getPlayerStats(event.killer).steamid64
                 })
-                // events.push(`[logs.tf_medic-death] spec ${resp["players"][event.killer]["steamid64"]} ("${demo_name}" at ${event.time * 66})`)
             }
         }
     }
@@ -101,9 +114,8 @@ function saveSelected() {
                 events.push({
                     time: event.time,
                     label: "ubercharge",
-                    steamid64: resp["players"][event.steamid]["steamid64"]
+                    steamid64: getPlayerStats(event.steamid).steamid64
                 })
-                // events.push(`[logs.tf_ubercharge] spec ${resp["players"][event.steamid]["steamid64"]} ("${demo_name}" at ${event.time * 66})`)
             }
         }
     }
@@ -113,7 +125,8 @@ function saveSelected() {
 }
 
 function closeModal() {
-    resp = { loading: false };
+    resp = {}
+    resp.loading = false;
     url = "";
     toggle();
 }
@@ -145,25 +158,27 @@ function closeModal() {
                     </div>
                     <h2 class="section_header">Killstreaks</h2>
                     {#each killstreaks as killstreak}
-                    <div class={"event streak " + (killstreak.selected && "event--selected")}>
-                        <p>
-                            <a
-                                href={`https://logs.tf/profile/${resp["players"][killstreak.steamid]["steamid64"] || ""}`}
-                                class={resp["players"][killstreak.steamid]["team"] + " player"}
-                                data-tooltip={parseClasses(resp["players"][killstreak.steamid]["class_stats"])}
-                                target="_blank" rel="noopener noreferrer"
-                            >
-                                {resp["names"][killstreak.steamid]}
-                            </a>got a {killstreak.streak}ks at {killstreak.time * 66}
-                        </p>
-                        <div class="add_event">
-                            {#if killstreak.selected}
-                                <button class="cancel-btn" on:click={toggleSelected(killstreak)}>Remove</button>
-                            {:else}
-                                <button on:click={toggleSelected(killstreak)}>Add</button>
-                            {/if}
-                        </div>
-                    </div>
+                        {#if isPlayer(killstreak.steamid)}
+                            <div class={"event streak " + (killstreak.selected && "event--selected")}>
+                                <p>
+                                    <a
+                                        href={`https://logs.tf/profile/${getPlayerStats(killstreak.steamid)?.steamid64}`}
+                                        class={getPlayerStats(killstreak.steamid)?.team + " player"}
+                                        data-tooltip={parseClasses(getPlayerStats(killstreak.steamid).class_stats)}
+                                        target="_blank" rel="noopener noreferrer"
+                                    >
+                                        {getPlayerName(killstreak.steamid)}
+                                    </a>got a {killstreak.streak}ks at {killstreak.time * 66}
+                                </p>
+                                <div class="add_event">
+                                    {#if killstreak.selected}
+                                        <button class="cancel-btn" on:click={toggleSelected(killstreak)}>Remove</button>
+                                    {:else}
+                                        <button on:click={toggleSelected(killstreak)}>Add</button>
+                                    {/if}
+                                </div>
+                            </div>
+                        {/if}
                     {/each}
 
                     <h2 class="section_header">Medic Kills</h2>
@@ -171,34 +186,36 @@ function closeModal() {
                         {#if round.length > 1}
                             <h4 class="round">Round {index + 1}</h4>
                             {#each round as event}
-                            <div class={"event death" + (event.selected && " event--selected ") + (event.isDrop && " drop")}>
-                                <p>
-                                    <a
-                                        href={`https://logs.tf/profile/${resp["players"][event.killer]["steamid64"] || ""}`}
-                                        class={resp["players"][event.killer]["team"] + " player"}
-                                        data-tooltip={parseClasses(resp["players"][event.killer]["class_stats"])}
-                                        target="_blank" rel="noopener noreferrer"
-                                    >
-                                        {resp["names"][event.killer]}
-                                    </a>{#if event.isDrop}
-                                        <strong>dropped </strong>{:else}
-                                        killed {/if}<a
-                                        href={`https://logs.tf/profile/${resp["players"][event.steamid]["steamid64"] || ""}`}
-                                        class={resp["players"][event.steamid]["team"] + " player"}
-                                        data-tooltip={parseClasses(resp["players"][event.steamid]["class_stats"])}
-                                        target="_blank" rel="noopener noreferrer"
-                                    >
-                                        {resp["names"][event.steamid]}
-                                    </a>at {event.time * 66}
-                                </p>
-                                <div class="add_event">
-                                    {#if event.selected}
-                                        <button class="cancel-btn" on:click={toggleSelected(event)}>Remove</button>
-                                    {:else}
-                                        <button on:click={toggleSelected(event)}>Add</button>
-                                    {/if}
-                                </div>
-                            </div>
+                                {#if isPlayer(event.killer) && isPlayer(event.steamid)}
+                                    <div class={"event death" + (event.selected && " event--selected ") + (event.isDrop && " drop")}>
+                                        <p>
+                                            <a
+                                                href={`https://logs.tf/profile/${getPlayerStats(event.killer)?.steamid64}`}
+                                                class={getPlayerStats(event.killer)?.team + " player"}
+                                                data-tooltip={parseClasses(getPlayerStats(event.killer).class_stats)}
+                                                target="_blank" rel="noopener noreferrer"
+                                            >
+                                                {getPlayerName(event.killer)}
+                                            </a>{#if event.isDrop}
+                                                <strong>dropped </strong>{:else}
+                                                killed {/if}<a
+                                                href={`https://logs.tf/profile/${getPlayerStats(event.steamid)?.steamid64}`}
+                                                class={getPlayerStats(event.steamid)?.team + " player"}
+                                                data-tooltip={parseClasses(getPlayerStats(event.steamid).class_stats)}
+                                                target="_blank" rel="noopener noreferrer"
+                                            >
+                                                {getPlayerName(event.steamid)}
+                                            </a>at {event.time * 66}
+                                        </p>
+                                        <div class="add_event">
+                                            {#if event.selected}
+                                                <button class="cancel-btn" on:click={toggleSelected(event)}>Remove</button>
+                                            {:else}
+                                                <button on:click={toggleSelected(event)}>Add</button>
+                                            {/if}
+                                        </div>
+                                    </div>
+                                {/if}
                             {/each}
                         {/if}
                     {/each}
@@ -208,25 +225,27 @@ function closeModal() {
                         {#if round.length > 1}
                             <h4 class="round">Round {index + 1}</h4>
                             {#each round as event}
-                            <div class={"event uber " + (event.selected && "event--selected")}>
-                                <p>
-                                    <a
-                                        href={`https://logs.tf/profile/${resp["players"][event.steamid]["steamid64"] || ""}`}
-                                        class={resp["players"][event.steamid]["team"] + " player"}
-                                        data-tooltip={parseClasses(resp["players"][event.steamid]["class_stats"])}
-                                        target="_blank" rel="noopener noreferrer"
-                                    >
-                                        {resp["names"][event.steamid]}
-                                    </a>used Übercharge ({event.medigun}) at {event.time * 66}
-                                </p>
-                                <div class="add_event">
-                                    {#if event.selected}
-                                        <button class="cancel-btn" on:click={toggleSelected(event)}>Remove</button>
-                                    {:else}
-                                        <button on:click={toggleSelected(event)}>Add</button>
-                                    {/if}
-                                </div>
-                            </div>
+                                {#if isPlayer(event.steamid)}
+                                    <div class={"event uber " + (event.selected && "event--selected")}>
+                                        <p>
+                                            <a
+                                                href={`https://logs.tf/profile/${getPlayerStats(event.steamid)?.steamid64}`}
+                                                class={getPlayerStats(event.steamid)?.team + " player"}
+                                                data-tooltip={parseClasses(getPlayerStats(event.steamid).class_stats)}
+                                                target="_blank" rel="noopener noreferrer"
+                                            >
+                                                {resp["names"][event.steamid]}
+                                            </a>used Übercharge ({event.medigun}) at {event.time * 66}
+                                        </p>
+                                        <div class="add_event">
+                                            {#if event.selected}
+                                                <button class="cancel-btn" on:click={toggleSelected(event)}>Remove</button>
+                                            {:else}
+                                                <button on:click={toggleSelected(event)}>Add</button>
+                                            {/if}
+                                        </div>
+                                    </div>
+                                {/if}
                             {/each}
                         {/if}
                     {/each}
