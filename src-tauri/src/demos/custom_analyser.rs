@@ -38,7 +38,7 @@ use tf_demo_parser::{ ParserState, ReadResult, Stream };
     Deserialize,
     Default
 )]
-pub struct ServerTick(u32);
+pub struct ServerTick(pub u32);
 
 impl ServerTick {
     pub fn range_inclusive(&self, till: Self) -> impl Iterator<Item = Self> {

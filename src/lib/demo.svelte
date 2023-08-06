@@ -1180,6 +1180,7 @@
 
             /* width */
             &::-webkit-scrollbar {
+                transition: width .1s;
                 width: 16px;
             }
 

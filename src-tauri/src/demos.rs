@@ -11,6 +11,12 @@ use self::custom_analyser::Death;
 use self::custom_analyser::DemoTick;
 use self::custom_analyser::Spawn;
 
+macro_rules! ifelse {
+    ($c:expr, $v:expr, $v1:expr) => {
+        if $c {$v} else {$v1}
+    };
+}
+
 mod custom_analyser;
 
 #[derive(Debug, Serialize, Clone)]
@@ -319,7 +325,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
             "map": header.map,
             "game": header.game,
             "duration": header.duration,
-            "ticks": header.ticks,
+            "ticks": ifelse!(header.ticks != 0, header.ticks, state.end_tick.0 - state.start_tick.0),
             "frames": header.frames,
             "signon": header.signon,
         },
