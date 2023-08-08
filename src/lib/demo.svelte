@@ -293,8 +293,33 @@
         nextDemo();
     }
 
-    function getImgUrl(player_class) {
+    function classConverter(player_class) {
         switch (player_class) {
+            case "1":
+                return "scout";
+            case "3":
+                return "soldier"
+            case "7":
+                return "pyro";
+            case "4":
+                return "demoman"
+            case "6":
+                return "heavy";
+            case "9":
+                return "engineer"
+            case "5":
+                return "medic";
+            case "2":
+                return "sniper"
+            case "8":
+                return "spy";
+            default:
+                return player_class;
+        }
+    }
+
+    function getImgUrl(player_class) {
+        switch (classConverter(player_class)) {
             case "scout":
                 return "https://wiki.teamfortress.com/w/images/a/ad/Leaderboard_class_scout.png";
             case "soldier":
@@ -312,24 +337,6 @@
             case "sniper":
                 return "https://wiki.teamfortress.com/w/images/f/fe/Leaderboard_class_sniper.png"
             case "spy":
-                return "https://wiki.teamfortress.com/w/images/3/33/Leaderboard_class_spy.png";
-            case "1":
-                return "https://wiki.teamfortress.com/w/images/a/ad/Leaderboard_class_scout.png";
-            case "3":
-                return "https://wiki.teamfortress.com/w/images/9/96/Leaderboard_class_soldier.png"
-            case "7":
-                return "https://wiki.teamfortress.com/w/images/8/80/Leaderboard_class_pyro.png";
-            case "4":
-                return "https://wiki.teamfortress.com/w/images/4/47/Leaderboard_class_demoman.png"
-            case "6":
-                return "https://wiki.teamfortress.com/w/images/5/5a/Leaderboard_class_heavy.png";
-            case "9":
-                return "https://wiki.teamfortress.com/w/images/1/12/Leaderboard_class_engineer.png"
-            case "5":
-                return "https://wiki.teamfortress.com/w/images/e/e5/Leaderboard_class_medic.png";
-            case "2":
-                return "https://wiki.teamfortress.com/w/images/f/fe/Leaderboard_class_sniper.png"
-            case "8":
                 return "https://wiki.teamfortress.com/w/images/3/33/Leaderboard_class_spy.png";
             default:
                 return false;
@@ -401,6 +408,14 @@
 
         parsed_demo.header.ticks = parsed_demo.data.end_tick - parsed_demo.data.start_tick;
     }
+
+    function refreshList() {
+        displayLives = displayLives;
+        displayAssists = displayAssists;
+        displayPlayers = displayPlayers;
+        resp = resp;
+        parsed_demo = parsed_demo;
+    }
 </script>
 
 {#if enabled}
@@ -433,21 +448,21 @@
                         <div class="flex-between flex-wrap">
                             <div class="settings__switch">
                                 <label class="switch">
-                                    <input type="checkbox" bind:checked={displayLives}>
+                                    <input type="checkbox" bind:checked={displayLives} on:changed={refreshList}>
                                     <span class="slider round slider--tert"></span>
                                 </label>
                                 <p>Display all lives</p>
                             </div>
                             <div class="settings__switch">
                                 <label class="switch">
-                                    <input type="checkbox" bind:checked={displayAssists}>
+                                    <input type="checkbox" bind:checked={displayAssists} on:changed={refreshList}>
                                     <span class="slider round slider--tert"></span>
                                 </label>
                                 <p>Display lives with 0 Kills if they have an Assist</p>
                             </div>
                             <div class="settings__switch">
                                 <label class="switch">
-                                    <input type="checkbox" bind:checked={displayPlayers}>
+                                    <input type="checkbox" bind:checked={displayPlayers} on:changed={refreshList}>
                                     <span class="slider round slider--tert"></span>
                                 </label>
                                 <p>Display players with 0 displayed lives</p>
@@ -500,30 +515,69 @@
                                                                 <div>
                                                                     {#each life.classes as player_class}
                                                                         {#if getImgUrl(player_class)}
-                                                                            <img src={getImgUrl(player_class)} alt="icon" />
+                                                                            <div 
+                                                                                class="tooltip demo__icon" 
+                                                                                data-tooltip={`Kills: ${life.kills.filter((kill) => kill.killer_class === classConverter(player_class)).length}`} 
+                                                                                style={`--kills: 0;`}
+                                                                            >
+                                                                                <img src={getImgUrl(player_class)} alt={`${classConverter(player_class)} icon`} />
+                                                                            </div>
                                                                         {/if}
                                                                     {/each}
                                                                 </div>
                                                                 <div 
-                                                                    data-tooltip={`${
-                                                                        life.kills.length ? 
-                                                                        `Player${(life.kills.length > 1) ? "s" : ""} Killed: ` :
-                                                                        `No Kills`
-                                                                    }\n\r${life.kills.map((kill) => {
-                                                                        let crit_types = ["", " Mini-Crit", " CRITICAL HIT!"]
-                                                                        return `${parsed_demo.data.users[kill.victim].name} (tick: ${kill.tick - parsed_demo.data.start_tick})${crit_types[kill.crit_type]}`
-                                                                    }).join(", \n\r")}`}
-                                                                    style={`--kills: ${life.kills.length};`}
                                                                     on:click={toggleSelected(life)}
                                                                     on:keydown={toggleSelected(life)}
                                                                     class={
-                                                                        `tooltip ` +
+                                                                        "demo__kill-count " +
                                                                         (life.kills.length >= 3 && " killstreak ") +
                                                                         (life.kills.length >= 5 && " killstreak--large ") +
                                                                         (life.kills.length >= 10 && " killstreak--massive ")
                                                                     }
                                                                 >
                                                                     Kills: {life.kills.length}
+                                                                </div>
+                                                                <div class="demo__kills">
+                                                                    {#each life.kills as kill}
+                                                                        <div class="demo__kill">
+                                                                            {#if getImgUrl(kill.killer_class)}
+                                                                                <div 
+                                                                                    class="demo__icon"
+                                                                                >
+                                                                                    <img src={getImgUrl(kill.killer_class)} alt={`${classConverter(kill.killer_class)} icon`} />
+                                                                                </div>
+                                                                            {/if} killed
+                                                                            <a 
+                                                                                href={`#player-${parsed_demo.data.users[kill.victim].name}`} 
+                                                                                class={parsed_demo.data.users[kill.victim]["team"] + " tooltip"} 
+                                                                                style="--kills: 0;"
+                                                                                data-tooltip="Jump To Player"
+                                                                            >
+                                                                                {#if getImgUrl(kill.victim_class)}
+                                                                                    <div 
+                                                                                        class="demo__icon"
+                                                                                    >
+                                                                                        <img src={getImgUrl(kill.victim_class)} alt={`${classConverter(kill.victim_class)} icon`} />
+                                                                                    </div>
+                                                                                {/if}
+                                                                                {parsed_demo.data.users[kill.victim].name}
+                                                                            </a>
+                                                                            with {kill.weapon}
+                                                                            {#if kill.crit_type}
+                                                                                <span class={["", "killstreak", "killstreak--large"][kill.crit_type]}>
+                                                                                    {["", " (Mini-Crit) ", " (CRITICAL HIT!) "][kill.crit_type]}
+                                                                                </span>
+                                                                            {/if}
+                                                                            at
+                                                                            <span 
+                                                                                class="tooltip"
+                                                                                style={`--kills: 0;`}
+                                                                                data-tooltip={`Timecode: ${Math.floor(Math.round((kill.tick - parsed_demo.data.start_tick) / 66) / 60)}m ${Math.round((kill.tick - parsed_demo.data.start_tick) / 66) % 60}s`}
+                                                                            >
+                                                                                {kill.tick - parsed_demo.data.start_tick}
+                                                                            </span>
+                                                                        </div>
+                                                                    {/each}
                                                                 </div>
                                                                 <div 
                                                                     class={
@@ -569,30 +623,69 @@
                                                                 <div>
                                                                     {#each life.classes as player_class}
                                                                         {#if getImgUrl(player_class)}
-                                                                            <img src={getImgUrl(player_class)} alt="icon" />
+                                                                            <div 
+                                                                                class="tooltip demo__icon" 
+                                                                                data-tooltip={`Kills: ${killstreak.kills.filter((kill) => kill.killer_class === classConverter(player_class)).length}`}
+                                                                                style={`--kills: 0;`}
+                                                                            >
+                                                                                <img src={getImgUrl(player_class)} alt={`${classConverter(player_class)} icon`} />
+                                                                            </div>
                                                                         {/if}
                                                                     {/each}
                                                                 </div>
-                                                                <div 
-                                                                    data-tooltip={`${
-                                                                        killstreak.kills.length ? 
-                                                                        `Player${(killstreak.kills.length > 1) ? "s" : ""} Killed: ` :
-                                                                        `No Kills`
-                                                                    }\n\r${killstreak.kills.map((kill) => {
-                                                                        let crit_types = ["", " Mini-Crit", " CRITICAL HIT!"]
-                                                                        return `${parsed_demo.data.users[kill.victim].name} (tick: ${kill.tick - parsed_demo.data.start_tick})${crit_types[kill.crit_type]}`
-                                                                    }).join(", \n\r")}`}
-                                                                    style={`--kills: ${killstreak.kills.length};`}
+                                                                <div
                                                                     on:click={toggleBookmarkSelected(killstreak)}
                                                                     on:keydown={toggleBookmarkSelected(killstreak)}
                                                                     class={
-                                                                        `tooltip ` +
+                                                                        `demo__kill-count ` +
                                                                         (killstreak.kills.length >= 3 && " killstreak ") +
                                                                         (killstreak.kills.length >= 5 && " killstreak--large ") +
                                                                         (killstreak.kills.length >= 10 && " killstreak--massive ")
                                                                     }
                                                                 >
                                                                     Kills: {killstreak.kills.length}
+                                                                </div>
+                                                                <div class="demo__kills">
+                                                                    {#each killstreak.kills as kill}
+                                                                        <div class="demo__kill">
+                                                                            {#if getImgUrl(kill.killer_class)}
+                                                                                <div 
+                                                                                    class="demo__icon"
+                                                                                >
+                                                                                    <img src={getImgUrl(kill.killer_class)} alt={`${classConverter(kill.killer_class)} icon`} />
+                                                                                </div>
+                                                                            {/if}
+                                                                            killed
+                                                                            <a 
+                                                                                href={`#player-${parsed_demo.data.users[kill.victim].name}`} 
+                                                                                class={parsed_demo.data.users[kill.victim]["team"] + " tooltip"} 
+                                                                                style="--kills: 0;"
+                                                                                data-tooltip="Jump To Player"
+                                                                            >
+                                                                                {#if getImgUrl(kill.victim_class)}
+                                                                                    <div 
+                                                                                        class="demo__icon"
+                                                                                    >
+                                                                                        <img src={getImgUrl(kill.victim_class)} alt={`${classConverter(kill.victim_class)} icon`} />
+                                                                                    </div>
+                                                                                {/if}
+                                                                                {parsed_demo.data.users[kill.victim].name}
+                                                                            </a> with {kill.weapon}
+                                                                            {#if kill.crit_type}
+                                                                                <span class={["", "killstreak", "killstreak--large"][kill.crit_type]}>
+                                                                                    {["", " (Mini-Crit) ", " (CRITICAL HIT!) "][kill.crit_type]}
+                                                                                </span>
+                                                                            {/if}
+                                                                            at 
+                                                                            <span 
+                                                                                class="tooltip"
+                                                                                style={`--kills: 0;`}
+                                                                                data-tooltip={`Timecode: ${Math.floor(Math.round((kill.tick - parsed_demo.data.start_tick) / 66) / 60)}m ${Math.round((kill.tick - parsed_demo.data.start_tick) / 66) % 60}s`}
+                                                                            >
+                                                                                {kill.tick - parsed_demo.data.start_tick}
+                                                                            </span>
+                                                                        </div>
+                                                                    {/each}
                                                                 </div>
                                                                 <div
                                                                     class="tooltip"
@@ -615,8 +708,7 @@
                                                                 <div
                                                                     class="tooltip"
                                                                     style={`--kills: 0;`}
-                                                                    data-tooltip={
-                                                                    `Length: ${
+                                                                    data-tooltip={`Length: ${
                                                                         Math.floor(
                                                                             Math.round(
                                                                                 (killstreak.kills[killstreak.kills.length - 1].tick - killstreak.kills[0].tick) / 66
@@ -672,7 +764,13 @@
                                         <div>
                                             {#each killstreak.classes as player_class}
                                                 {#if getImgUrl(player_class)}
-                                                    <img src={getImgUrl(player_class)} alt="icon" />
+                                                    <div 
+                                                        class="tooltip demo__icon" 
+                                                        data-tooltip={`Kills: ${killstreak.kills.filter((kill) => kill.killer_class === classConverter(player_class)).length}`} 
+                                                        style={`--kills: 0;`}
+                                                    >
+                                                        <img src={getImgUrl(player_class)} alt={`${classConverter(player_class)} icon`} />
+                                                    </div>
                                                 {/if}
                                             {/each}
                                         </div>
@@ -685,25 +783,58 @@
                                             {limitStringLength(parsed_demo.data.users[killstreak.kills[0].killer].name, 16)}
                                         </a>
                                         <div 
-                                            data-tooltip={`${
-                                                killstreak.kills.length ? 
-                                                `Player${(killstreak.kills.length > 1) ? "s" : ""} Killed: ` :
-                                                `No Kills`
-                                            }\n\r${killstreak.kills.map((kill) => {
-                                                let crit_types = ["", " Mini-Crit", " CRITICAL HIT!"]
-                                                return `${parsed_demo.data.users[kill.victim].name} (tick: ${kill.tick - parsed_demo.data.start_tick})${crit_types[kill.crit_type]}`
-                                            }).join(", \n\r")}`}
-                                            style={`--kills: ${killstreak.kills.length};`}
                                             on:click={toggleBookmarkSelected(killstreak, true)}
                                             on:keydown={toggleBookmarkSelected(killstreak, true)}
                                             class={
-                                                `tooltip ` +
+                                                `demo__kill-count ` +
                                                 (killstreak.kills.length >= 3 && " killstreak ") +
                                                 (killstreak.kills.length >= 5 && " killstreak--large ") +
                                                 (killstreak.kills.length >= 10 && " killstreak--massive ")
                                             }
                                         >
                                             Kills: {killstreak.kills.length}
+                                        </div>
+                                        <div class="demo__kills">
+                                            {#each killstreak.kills as kill}
+                                                <div class="demo__kill">
+                                                    {#if getImgUrl(kill.killer_class)}
+                                                        <div 
+                                                            class="demo__icon"
+                                                        >
+                                                            <img src={getImgUrl(kill.killer_class)} alt={`${classConverter(kill.killer_class)} icon`} />
+                                                        </div>
+                                                    {/if}
+                                                    killed
+                                                    <a 
+                                                        href={`#player-${parsed_demo.data.users[kill.victim].name}`} 
+                                                        class={parsed_demo.data.users[kill.victim]["team"] + " tooltip"} 
+                                                        style="--kills: 0;"
+                                                        data-tooltip="Jump To Player"
+                                                    >
+                                                        {#if getImgUrl(kill.victim_class)}
+                                                            <div 
+                                                                class="demo__icon"
+                                                            >
+                                                                <img src={getImgUrl(kill.victim_class)} alt={`${classConverter(kill.victim_class)} icon`} />
+                                                            </div>
+                                                        {/if}
+                                                        {parsed_demo.data.users[kill.victim].name}
+                                                    </a> with {kill.weapon}
+                                                    {#if kill.crit_type}
+                                                        <span class={["", "killstreak", "killstreak--large"][kill.crit_type]}>
+                                                            {["", " (Mini-Crit) ", " (CRITICAL HIT!) "][kill.crit_type]}
+                                                        </span>
+                                                    {/if}
+                                                    at 
+                                                    <span 
+                                                        class="tooltip"
+                                                        style={`--kills: 0;`}
+                                                        data-tooltip={`Timecode: ${Math.floor(Math.round((kill.tick - parsed_demo.data.start_tick) / 66) / 60)}m ${Math.round((kill.tick - parsed_demo.data.start_tick) / 66) % 60}s`}
+                                                    >
+                                                        {kill.tick - parsed_demo.data.start_tick}
+                                                    </span>
+                                                </div>
+                                            {/each}
                                         </div>
                                         <div
                                             class="tooltip"
@@ -1574,8 +1705,104 @@
 
         transition: all .2s;
 
+        &__icon {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        &__kills {
+            grid-row: 2;
+            grid-column: 1 / 7;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            transition: all 0.2s;
+            border-radius: 3px;
+            padding: .5rem;
+
+            &:hover {
+                background-color: rgba(256, 256, 256, 0.03);
+
+                & .demo__kill {
+                    opacity: 1;
+                    display: flex;
+                    gap: .5rem;
+                    height: 100%;
+                }
+            }
+        }
+
+        &__kill {
+            width: 100%;
+            opacity: 0;
+            display: none;
+            transition: all 0.2s;
+            height: 0;
+            padding: 0 .5rem;
+
+            &:first-of-type {
+                margin-top: .5rem;
+            }
+
+            &:last-of-type {
+                margin-bottom: .5rem;
+            }
+
+            a {
+                display: flex;
+                justify-content: start;
+                align-items: center;
+                gap: .5rem;
+                margin: 0;
+
+                &:first-of-type {
+                    margin-left: 0;
+                }
+            }
+
+            span {
+                margin: 0;
+            }
+        }
+
+        &__kill-count {
+            cursor: pointer;
+            transition: all 0.2s;
+            background-color: transparent;
+            border-radius: 3px 3px 0 0;
+
+            &:hover {
+                color: var(--sec);
+                background-color: rgba(256, 256, 256, 0.03);
+
+                & + .demo__kills {
+                    background-color: rgba(256, 256, 256, 0.03);
+                
+                    & .demo__kill {
+                        opacity: 1;
+                        display: flex;
+                        gap: .5rem;
+                        height: 100%;
+                    }
+                }
+            }
+        }
+
+        & .demo__kill-count {
+            padding-left: .5rem;
+            margin-right: .5rem;
+        }
+
         &__life {
             grid-template-columns: .5fr 1fr 1fr 1fr 1fr min-content;
+            height: auto;
+            max-height: 35.75px;
+            transition: all 0.2s;
+
+            &:hover {
+                max-height: 100%;
+            }
         }
 
         &__killstreak {
@@ -1596,6 +1823,7 @@
 
         &:hover {
             border: 1px solid var(--tert-con-text);
+            max-height: 100vh;
         }
     }
 

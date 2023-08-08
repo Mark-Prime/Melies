@@ -7,6 +7,8 @@ use serde_json::Value;
 use tf_demo_parser::{ Demo, DemoParser };
 use std::path::Path;
 
+use crate::demos::custom_analyser::Class;
+
 use self::custom_analyser::Death;
 use self::custom_analyser::DemoTick;
 use self::custom_analyser::Spawn;
@@ -167,6 +169,28 @@ pub(crate) fn scan_for_demos(settings: Value) -> Value {
     return resp;
 }
 
+#[derive(Clone, Copy, Debug)]
+struct ClassSpawn {
+    pub class: Class,
+    pub tick: DemoTick
+}
+
+fn get_player_class(mut user_classes: HashMap<u16, Vec<ClassSpawn>>, user_id: u16, tick: DemoTick) -> Class {
+    let player = user_classes.entry(user_id).or_insert(vec![]);
+
+    for (i, class) in player.iter().enumerate() {
+        if player.len() <= i + 1 {
+            return class.class;
+        }
+
+        if tick > class.tick && tick < player[i + 1].tick {
+            return class.class;
+        }
+    }
+
+    Class::Other
+}
+
 pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
     println!("{}{}", settings["tf_folder"].as_str().unwrap(), path);
 
@@ -180,12 +204,37 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
         demo.get_stream(),
         custom_analyser::Analyser::new()
     );
-    let (header, state) = parser.parse().unwrap();
+    let (header, mut state) = parser.parse().unwrap();
 
     let mut user_events: HashMap<u16, Vec<Event>> = HashMap::new();
+    let mut user_classes: HashMap<u16, Vec<ClassSpawn>> = HashMap::new();
 
-    for death in &state.deaths {
+    for spawn in &state.spawns {
+        let user = user_events.entry(spawn.user.0.into()).or_insert(vec![]);
+        let user_class = user_classes.entry(spawn.user.0.into()).or_insert(vec![]);
+        
+        user_class.push(ClassSpawn {
+            class: spawn.class.clone(),
+            tick: spawn.tick
+        });
+
+        user.push(Event::Spawn(spawn.clone()));
+    }
+
+    for death in &mut state.deaths {
+
         let killer = user_events.entry(death.killer.0.into()).or_insert(vec![]);
+
+        {
+            let user_classes_clone = user_classes.clone();
+            death.killer_class = get_player_class(user_classes_clone, death.killer.0.into(), death.tick);
+        }
+
+        {
+            let user_classes_clone = user_classes.clone();
+            death.victim_class = get_player_class(user_classes_clone, death.victim.0.into(), death.tick);
+        }
+
 
         killer.push(Event::Kill(death.clone()));
 
@@ -200,12 +249,6 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
         let victim = user_events.entry(death.victim.0.into()).or_insert(vec![]);
 
         victim.push(Event::Death(death.clone()));
-    }
-
-    for spawn in &state.spawns {
-        let user = user_events.entry(spawn.user.0.into()).or_insert(vec![]);
-
-        user.push(Event::Spawn(spawn.clone()));
     }
 
     for round in &state.rounds {

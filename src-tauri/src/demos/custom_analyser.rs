@@ -130,7 +130,7 @@ impl Sub<ServerTick> for ServerTick {
     Deserialize,
     Default
 )]
-pub struct DemoTick(u32);
+pub struct DemoTick(pub u32);
 
 impl DemoTick {
     pub fn range_inclusive(&self, till: Self) -> impl Iterator<Item = Self> {
@@ -455,6 +455,10 @@ pub struct Death {
     pub killer: UserId,
     pub tick: DemoTick,
     pub crit_type: u16,
+    pub rocket_jump: bool,
+    pub penetration: bool,
+    pub killer_class: Class,
+    pub victim_class: Class,
 }
 
 impl Death {
@@ -465,6 +469,12 @@ impl Death {
             None
         };
 
+        let penetration = if event.player_penetrate_count > 0 {
+            true
+        } else {
+            false
+        };
+
         Death {
             assister,
             tick,
@@ -472,6 +482,10 @@ impl Death {
             weapon: event.weapon.to_string(),
             victim: UserId::from(event.user_id),
             crit_type: event.crit_type,
+            rocket_jump: event.rocket_jump,
+            penetration,
+            killer_class: Class::Other,
+            victim_class: Class::Other
         }
     }
 }
@@ -587,7 +601,9 @@ impl Analyser {
         const WIN_REASON_TIME_LIMIT: u8 = 6;
 
         match event {
-            GameEvent::PlayerDeath(event) => self.state.deaths.push(Death::from_event(event, tick)),
+            GameEvent::PlayerDeath(event) => {
+                self.state.deaths.push(Death::from_event(event, tick));
+            }
             GameEvent::PlayerSpawn(event) => {
                 let spawn = Spawn::from_event(event, tick);
                 if let Some(user_state) = self.state.users.get_mut(&spawn.user) {
