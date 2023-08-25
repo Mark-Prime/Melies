@@ -611,7 +611,15 @@ fn save_events(new_events: Value) -> Value {
 
         for event in demo.as_array().unwrap() {
             let re = Regex::new("\\[(.*)\\] (.*) \\(\"(.*)\" at (\\d*)\\)").unwrap();
-            let events_regex = re.captures(event["event"].as_str().unwrap()).unwrap();
+
+            println!("{}", event["event"]);
+
+            let events_regex = match re.captures(event["event"].as_str().unwrap()) {
+                Some(val) => val,
+                None => {
+                    continue;
+                }
+            };
 
             let original_event = event::Event::new(events_regex).unwrap();
 

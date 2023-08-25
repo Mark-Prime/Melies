@@ -102,7 +102,11 @@ impl Sub<u32> for ServerTick {
     type Output = ServerTick;
 
     fn sub(self, rhs: u32) -> Self::Output {
-        ServerTick(self.0 - rhs)
+        if self.0 > rhs {
+            ServerTick(self.0 - rhs)
+        } else {
+            ServerTick(0)
+        }
     }
 }
 
@@ -110,7 +114,11 @@ impl Sub<ServerTick> for ServerTick {
     type Output = ServerTick;
 
     fn sub(self, rhs: ServerTick) -> Self::Output {
-        ServerTick(self.0 - rhs.0)
+        if self.0 > rhs.0 {
+            ServerTick(self.0 - rhs.0)
+        } else {
+            ServerTick(0)
+        }
     }
 }
 

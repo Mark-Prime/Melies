@@ -11,10 +11,33 @@ let resp = { loading: false };
 
 let ubers = [],
     med_deaths = [],
-    killstreaks = [];
+    killstreaks = [],
+    logs = [];
+
+let index = 0,
+    total = 0;
+
+function parseUrls() {
+    logs = url.split(',')
+
+    total = logs.length;
+
+    parseLog();
+}
 
 async function parseLog(){
     resp.loading = true;
+
+    url = logs.pop();
+
+    if (!url) {
+        return false;
+    }
+
+    ubers = [];
+    med_deaths = [];
+    killstreaks = [];
+    index += 1;
 
     try {
         let parsed_url = new URL(url);
@@ -49,6 +72,8 @@ async function parseLog(){
 
     resp.loaded = true
     resp = resp
+
+    return true;
 }
 
 function getPlayerStats(steamid) {
@@ -121,7 +146,13 @@ function saveSelected() {
     }
 
     parseLogEvents(demo_name, events.sort((a, b) => a.time - b.time));
-    closeModal()
+
+    if (logs.length === 0) {
+        closeModal();
+        return;
+    }
+
+    parseLog();
 }
 
 function closeModal() {
@@ -143,7 +174,7 @@ function closeModal() {
                         <div></div><div></div><div></div>
                         </div>
                     </div>
-                    <h4>Loading...</h4>
+                    <h4>Loading {index}/{total}...</h4>
                 </div>
             {:else if resp.loaded}
                 <div>
@@ -264,7 +295,7 @@ function closeModal() {
                 </div>
                 <div class="buttons">
                     <button class="cancel-btn" on:click={closeModal}>Cancel</button>
-                    <button on:click={parseLog}>Parse</button>
+                    <button on:click={parseUrls}>Parse</button>
                 </div>
             {/if}
         </div>

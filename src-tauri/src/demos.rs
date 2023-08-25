@@ -204,7 +204,18 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
         demo.get_stream(),
         custom_analyser::Analyser::new()
     );
-    let (header, mut state) = parser.parse().unwrap();
+    let (header, mut state) = match parser.parse() {
+        Ok(val) => {
+            val
+        }
+        Err(err) => {
+            println!("{}", err);
+            return json!({
+                "code": 400,
+                "err_text": format!("{}", err)
+            });
+        }
+    };
 
     let mut user_events: HashMap<u16, Vec<Event>> = HashMap::new();
     let mut user_classes: HashMap<u16, Vec<ClassSpawn>> = HashMap::new();

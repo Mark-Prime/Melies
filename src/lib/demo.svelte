@@ -2,7 +2,12 @@
     // @ts-nocheck
     import { invoke } from "@tauri-apps/api/tauri"
     import { onMount } from 'svelte';
-    import { useMousePosition } from '@svelteuidev/composables';
+
+    let index = 0,
+        total = 0;
+
+    import Timeline from "./timeline.svelte";
+
     export let enabled;
     export let toggle;
     export let parseDemoEvents;
@@ -13,21 +18,8 @@
     let displayLives = false;
     let displayAssists = false;
     let displayPlayers = false;
-    let scale = 1.0;
-    let timeline;
-    let sleft = 0;
-
-    let divWidth;
-
-	const [position, ref] = useMousePosition();
-	$: ({ x, y } = $position);
-
-    $: if (scale > parsed_demo?.header?.ticks / divWidth) {
-        scale = parsed_demo?.header?.ticks / divWidth
-    };
     
     let current_demo = "";
-
     
     let settings = {};
     let recording_settings = {};
@@ -45,8 +37,8 @@
         selected = [];
         current_demo = "";
         parsed_demo = {loaded: false, loading: false};
-        displayLives = false;
-        displayPlayers = false;
+        // displayLives = false;
+        // displayPlayers = false;
 
         for (let demo of resp.demos) {
             demo.selected = false;
@@ -140,10 +132,15 @@
             }
         }
         
+        total = selected.length;
+        index = 0;
+
         nextDemo();
     }
 
     async function nextDemo() {
+        index += 1;
+
         if (current_demo != "") {
             let events = [];
 
@@ -233,7 +230,7 @@
 
             verifyTicks();
 
-            console.log({parsed_demo});
+            console.log(parsed_demo);
         } else {
             closeModal();
         }
@@ -287,7 +284,6 @@
         ];
         
         let name_split = current_demo.replace(".dem", "").split("\\");
-        console.log(name_split)
 
         parseDemoEvents(name_split[name_split.length - 1], events.sort((a, b) => a.time - b.time));
         nextDemo();
@@ -405,6 +401,10 @@
         if (parsed_demo?.header?.ticks > 0) {
             return;
         }
+        
+        if (parsed_demo.err_text) {
+            return;
+        }
 
         parsed_demo.header.ticks = parsed_demo.data.end_tick - parsed_demo.data.start_tick;
     }
@@ -415,6 +415,20 @@
         displayPlayers = displayPlayers;
         resp = resp;
         parsed_demo = parsed_demo;
+    }
+
+    function tickToTime(ticks) {
+        return `${
+            Math.floor(
+                Math.round(
+                    (ticks) / 66
+                    ) / 60
+                )
+            }m ${
+                Math.round(
+                    (ticks) / 66
+                ) % 60
+            }s`
     }
 </script>
 
@@ -441,7 +455,7 @@
                         <button class="cancel-btn" on:click={closeModal}>Cancel</button>
                         <button on:click={parseDemos}>Parse</button>
                     </div>
-                {:else} 
+                {:else if !parsed_demo.err_text} 
                     <h1>{current_demo}</h1>
                     {#if !parsed_demo.loading}
                         <h4 class="centered">{parsed_demo.header.map}</h4>
@@ -572,7 +586,7 @@
                                                                             <span 
                                                                                 class="tooltip"
                                                                                 style={`--kills: 0;`}
-                                                                                data-tooltip={`Timecode: ${Math.floor(Math.round((kill.tick - parsed_demo.data.start_tick) / 66) / 60)}m ${Math.round((kill.tick - parsed_demo.data.start_tick) / 66) % 60}s`}
+                                                                                data-tooltip={`Timecode: ${tickToTime(kill.tick - parsed_demo.data.start_tick)}`}
                                                                             >
                                                                                 {kill.tick - parsed_demo.data.start_tick}
                                                                             </span>
@@ -591,14 +605,14 @@
                                                                 <div
                                                                     class="tooltip"
                                                                     style={`--kills: 0;`}
-                                                                    data-tooltip={`Timecode: ${Math.floor(Math.round((life.start - parsed_demo.data.start_tick) / 66) / 60)}m ${Math.round((life.start - parsed_demo.data.start_tick) / 66) % 60}s`}
+                                                                    data-tooltip={`Timecode: ${tickToTime(life.start - parsed_demo.data.start_tick)}`}
                                                                 >
                                                                     Start: {life.start - parsed_demo.data.start_tick}
                                                                 </div>
                                                                 <div
                                                                     class="tooltip"
                                                                     style={`--kills: 0;`}
-                                                                    data-tooltip={`Length: ${Math.floor(Math.round((life.end - life.start) / 66) / 60)}m ${Math.round((life.end - life.start) / 66) % 60}s`}
+                                                                    data-tooltip={`Length: ${tickToTime(life.end - life.start)}`}
                                                                 >
                                                                     End: {life.end - parsed_demo.data.start_tick}
                                                                 </div>
@@ -680,7 +694,7 @@
                                                                             <span 
                                                                                 class="tooltip"
                                                                                 style={`--kills: 0;`}
-                                                                                data-tooltip={`Timecode: ${Math.floor(Math.round((kill.tick - parsed_demo.data.start_tick) / 66) / 60)}m ${Math.round((kill.tick - parsed_demo.data.start_tick) / 66) % 60}s`}
+                                                                                data-tooltip={`Timecode: ${tickToTime(kill.tick - parsed_demo.data.start_tick)}`}
                                                                             >
                                                                                 {kill.tick - parsed_demo.data.start_tick}
                                                                             </span>
@@ -708,18 +722,7 @@
                                                                 <div
                                                                     class="tooltip"
                                                                     style={`--kills: 0;`}
-                                                                    data-tooltip={`Length: ${
-                                                                        Math.floor(
-                                                                            Math.round(
-                                                                                (killstreak.kills[killstreak.kills.length - 1].tick - killstreak.kills[0].tick) / 66
-                                                                                ) / 60
-                                                                            )
-                                                                        }m ${
-                                                                            Math.round(
-                                                                                (killstreak.kills[killstreak.kills.length - 1].tick - killstreak.kills[0].tick) / 66
-                                                                            ) % 60
-                                                                        }s`
-                                                                    }
+                                                                    data-tooltip={`Length: ${tickToTime(killstreak.kills[killstreak.kills.length - 1].tick - killstreak.kills[0].tick)}`}
                                                                 >
                                                                     Last: {killstreak.kills[killstreak.kills.length - 1].tick - parsed_demo.data.start_tick}
                                                                 </div>
@@ -776,9 +779,9 @@
                                         </div>
                                         <a 
                                             href={`#player-${parsed_demo.data.users[killstreak.kills[0].killer].name}`} 
+                                            data-tooltip="Jump To Player"
                                             style="width: 100%; --kills: 0;" 
                                             class={parsed_demo.data.users[killstreak.kills[0].killer]["team"] + " tooltip"}
-                                            data-tooltip="Jump To Player"
                                         >
                                             {limitStringLength(parsed_demo.data.users[killstreak.kills[0].killer].name, 16)}
                                         </a>
@@ -829,7 +832,7 @@
                                                     <span 
                                                         class="tooltip"
                                                         style={`--kills: 0;`}
-                                                        data-tooltip={`Timecode: ${Math.floor(Math.round((kill.tick - parsed_demo.data.start_tick) / 66) / 60)}m ${Math.round((kill.tick - parsed_demo.data.start_tick) / 66) % 60}s`}
+                                                        data-tooltip={`Timecode: ${tickToTime(kill.tick - parsed_demo.data.start_tick)}`}
                                                     >
                                                         {kill.tick - parsed_demo.data.start_tick}
                                                     </span>
@@ -857,19 +860,7 @@
                                         <div
                                             class="tooltip"
                                             style={`--kills: 0;`}
-                                            data-tooltip={
-                                            `Length: ${
-                                                Math.floor(
-                                                    Math.round(
-                                                        (killstreak.kills[killstreak.kills.length - 1].tick - killstreak.kills[0].tick) / 66
-                                                        ) / 60
-                                                    )
-                                                }m ${
-                                                    Math.round(
-                                                        (killstreak.kills[killstreak.kills.length - 1].tick - killstreak.kills[0].tick) / 66
-                                                    ) % 60
-                                                }s`
-                                            }
+                                            data-tooltip={`Length: ${tickToTime(killstreak.kills[killstreak.kills.length - 1].tick - killstreak.kills[0].tick)}`}
                                         >
                                             Last: {killstreak.kills[killstreak.kills.length - 1].tick - parsed_demo.data.start_tick}
                                         </div>
@@ -900,159 +891,15 @@
                                 {/each}
                             </div>
                         {/if}
-                        <h2 class="centered chat__title">Timeline</h2>
-                        <div class="timeline">
-                            <div class="timeline__labels">
-                                {#each ["blue", "red"] as team}
-                                    {#each Object.keys(parsed_demo.data.player_lives) as player}
-                                        {#if displayPlayer(player) & parsed_demo.data?.users[player]?.team === team}
-                                            <div class={`timeline__label ${team}`}>
-                                                {parsed_demo.data?.users[player]?.name}
-                                            </div>
-                                        {/if}
-                                    {/each}
-                                {/each}
-                            </div>
-                            <div class="timeline__lives-container" bind:clientWidth={divWidth} bind:this={timeline} on:scroll={()=>sleft=timeline.scrollLeft} use:ref>
-                                {#each ["blue", "red"] as team}
-                                    {#each Object.keys(parsed_demo.data.player_lives) as player}
-                                        {#if displayPlayer(player) & parsed_demo.data?.users[player]?.team === team}
-                                            <div class="timeline__lives">
-                                                {#each parsed_demo.data.player_lives[player] as life}
-                                                    {#if life.start != 0 && (displayLives || life.kills.length > 0 || (displayAssists && life.assists.length > 0))}
-                                                        <div class={`timeline__life timeline__life--${team} ${(life.selected ? "timeline--selected" : "")}`} on:click={toggleSelected(life)} on:keydown={toggleSelected(life)} style={`
-                                                                --length: ${(life.end - life.start)/scale}px;
-                                                                --start: ${(life.start - parsed_demo.data.start_tick)/scale}px
-                                                            `}
-                                                        >
-                                                            <div
-                                                                class={`
-                                                                    timeline__data-tooltip tooltip 
-                                                                    ${parsed_demo.data?.users[player]?.team == "blue" ? "tooltip__lower" : ""}
-                                                                    ${life.start - parsed_demo.data.start_tick > (sleft * scale) + ((divWidth * scale) * .7) && "tooltip--left"}
-                                                                    ${life.start - parsed_demo.data.start_tick < sleft * scale && "tooltip--custom"}
-                                                                ` }
-                                                                data-tooltip={`${
-                                                                    life.kills.length ? 
-                                                                    `Player${(life.kills.length > 1) ? "s" : ""} Killed: ` :
-                                                                    `No Kills`
-                                                                }\n\r${life.kills.map((kill) => {
-                                                                    let crit_types = ["", " Mini-Crit", " CRITICAL HIT!"]
-                                                                    return `${parsed_demo.data.users[kill.victim].name} (tick: ${kill.tick - parsed_demo.data.start_tick})${crit_types[kill.crit_type]}`
-                                                                }).join(", \n\r")}`}
-                                                                style={`
-                                                                    --kills: ${life.kills.length};
-                                                                    --pos: ${((sleft * scale) - (life.start - parsed_demo.data.start_tick))/scale}px;
-                                                                `}
-                                                            >
-                                                                <div class="timeline__data">
-                                                                    <div>
-                                                                        {#each life.classes as player_class}
-                                                                            {#if getImgUrl(player_class)}
-                                                                                <img src={getImgUrl(player_class)} alt="icon" />
-                                                                            {/if}
-                                                                        {/each}
-                                                                    </div>
-                                                                    <div
-                                                                        class={
-                                                                            (life.kills.length >= 3 && " killstreak ") +
-                                                                            (life.kills.length >= 5 && " killstreak--large ") +
-                                                                            (life.kills.length >= 10 && " killstreak--massive ")
-                                                                        }
-                                                                    >
-                                                                        K: {life.kills.length}
-                                                                    </div>
-                                                                    <div
-                                                                        class={
-                                                                            (life.assists.length >= 3 && "killstreak ") +
-                                                                            (life.assists.length >= 5 && " killstreak--large ") +
-                                                                            (life.assists.length >= 10 && " killstreak--massive ")
-                                                                        }
-                                                                    >
-                                                                        A: {life.assists.length}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div 
-                                                                class={`
-                                                                    timeline__marker 
-                                                                    ${parsed_demo.data?.users[player]?.team == "blue" ? "timeline__marker--lower" : ""}
-                                                                    ${(x > divWidth * .7) && "timeline__marker--left"}
-                                                                `}
-                                                                data-tooltip={`Start: ${life.start - parsed_demo.data.start_tick}`}
-                                                                style={`
-                                                                    --position: -1px;
-                                                                    --kills: 0;
-                                                                `}
-                                                            ></div>
-                                                            <div 
-                                                                class={`
-                                                                    timeline__marker 
-                                                                    ${parsed_demo.data?.users[player]?.team == "blue" ? "timeline__marker--lower" : ""}
-                                                                    ${(x > divWidth * .7) && "timeline__marker--left"}
-                                                                `}
-                                                                data-tooltip={`End: ${life.end - parsed_demo.data.start_tick}`}
-                                                                style={`
-                                                                    --position: ${((life.end - life.start) / scale) - 2}px;
-                                                                    --kills: 0;
-                                                                `}
-                                                            ></div>
-                                                            {#each life.kills as kill} 
-                                                                <div 
-                                                                    class={`timeline__marker 
-                                                                        ${parsed_demo.data?.users[player]?.team == "blue" ? "timeline__marker--lower" : ""}
-                                                                        ${(x > divWidth * .7) && "timeline__marker--left"}
-                                                                    `}
-                                                                    data-tooltip={`Killed: ${parsed_demo.data.users[kill.victim].name}\r\nTick: ${kill.tick - parsed_demo.data.start_tick}`}
-                                                                    style={`
-                                                                        --position: ${((kill.tick - life.start) / scale) - 2}px;
-                                                                        --kills: 1;
-                                                                    `}
-                                                                ></div>
-                                                            {/each}
-                                                            {#each life.killstreaks as ks} 
-                                                                <div 
-                                                                    class={`timeline__ks
-                                                                        ${parsed_demo.data?.users[player]?.team == "blue" ? "timeline__ks--lower" : ""}
-                                                                        ${(x > divWidth * .7) && "timeline__ks--left"}
-                                                                    `}
-                                                                    data-tooltip={`${
-                                                                        `Players Killed in Killstreak: ` 
-                                                                    }\n\r${ks.kills.map((kill) => {
-                                                                        let crit_types = ["", " Mini-Crit", " CRITICAL HIT!"]
-                                                                        return `${parsed_demo.data.users[kill.victim].name} (tick: ${kill.tick - parsed_demo.data.start_tick})${crit_types[kill.crit_type]}`
-                                                                    }).join(", \n\r")}`}
-                                                                    style={`
-                                                                        --position: ${((ks.kills[0].tick - life.start) / scale) - 2}px;
-                                                                        --kills: ${ks.kills.length};
-                                                                        --length: ${((ks.kills[ks.kills.length - 1].tick - life.start) / scale) - ((ks.kills[0].tick - life.start) / scale)}px;
-                                                                    `}
-                                                                ></div>
-                                                            {/each}
-                                                        </div>
-                                                    {/if}
-                                                {/each}
-                                            </div>
-                                        {/if}
-                                    {/each}
-                                {/each}
-                            </div>
-                            <div class="settings__input-group">
-                                <!-- <label for="myRange" class="settings__label">scale</label> -->
-                                <input type="range" min="1" max={parsed_demo?.header?.ticks / divWidth} step=".01" bind:value={scale} class="input__slider" id="myRange">
-                            </div>
-                            <div class="timeline__states">
-                                <div>
-                                    Zoom: {Math.round((scale / (parsed_demo?.header?.ticks / divWidth)) * 100)}% 
-                                </div>
-                                <div>
-                                    Range: {Math.round(sleft * scale)} - {Math.min(Math.round((sleft + divWidth) * scale), parsed_demo?.header?.ticks)}
-                                </div>
-                                <div>
-                                    Pos: {Math.min(Math.round((sleft + x) * scale), parsed_demo?.header?.ticks)}
-                                </div>
-                            </div>
-                        </div>
+                        <Timeline 
+                            parsed_demo={parsed_demo} 
+                            tickToTime={tickToTime} 
+                            displayPlayer={displayPlayer} 
+                            toggleSelected={toggleSelected}
+                            displayLives={displayLives}
+                            displayAssists={displayAssists}
+                            getImgUrl={getImgUrl}
+                        />
                         {#if parsed_demo.data.chat.length > 0}
                             <h2 class="centered chat__title">Chat</h2>
                             <div class="chat">
@@ -1086,9 +933,12 @@
                                 <div></div><div></div><div></div>
                                 </div>
                             </div>
-                            <h4>Loading...</h4>
+                            <h4>Loading {index}/{total}...</h4>
                         </div>
                     {/if}
+                    {:else if parsed_demo.err_text}
+                    <h1>Error: {parsed_demo.code}</h1>
+                    <h2 class='centered'>{parsed_demo.err_text}</h2>
                 {/if}
             {:else}
                 <h1>LOADING DEMOS</h1>
@@ -1179,369 +1029,6 @@
 
     .flex-wrap {
         flex-wrap: wrap;
-    }
-
-    .tooltip {
-        position: relative;
-        cursor: pointer;
-
-        &::before {
-            z-index: 1000;
-            content: attr(data-tooltip);
-            position: absolute;
-            top: calc(-2.4rem - (1.72rem * var(--kills)));
-            left: 0rem;
-            display: none;
-            background-color: var(--bg);
-            color: var(--bg-text);
-            border: var(--outline) 1px solid;
-            padding: .2rem .5rem;
-            border-radius: .5rem;
-            width: max-content;
-            max-width: 500px;
-            overflow: hidden;
-            white-space: pre;
-            font-size: 12px;
-        }
-
-        &::after {
-            z-index: 1000;
-            content: '';
-            display: none;
-            position: absolute;
-            top: -.2rem;
-            left: .5rem;
-            height: .5rem;
-            width: .8rem;
-            background-color: var(--outline);
-            clip-path: polygon(100% 0, 0 0, 50% 100%);
-        }
-
-        &__lower {
-            &::before {
-                top: 1.9rem;
-                background-color: var(--bg);
-                z-index: 1000;
-            }
-
-            &::after {
-                top: 1.45rem;
-                z-index: 1000;
-                clip-path: polygon(50% 0, 0 100%, 100% 100%);
-            }
-        }
-
-        &--left {
-            &::before {
-                left: auto;
-                right: calc(100% - 2rem);
-            }
-
-            &::after {
-                left: auto;
-                right: calc(100% - 1.3rem);
-            }
-        }
-
-        &--custom {
-            &::before {
-                left: calc(var(--pos) + .5rem);
-            }
-
-            &::after {
-                left: calc(var(--pos) + 1rem);
-            }
-        }
-
-        &:hover, &:active, &:focus {
-            color: var(--sec);
-
-            &::before {
-                display: block;
-            }
-
-            &::after {
-                display: block;
-            }
-        }
-    }
-
-    .timeline {
-        display: grid;
-        grid-template-columns: min-content 1fr;
-        text-align: right;
-        margin-top: 3rem;
-        overflow-y: visible;
-        padding: .5rem;
-        border-radius: 5px;
-        border: 1px solid var(--tert-con);
-        transition: all .2s;
-
-        &__labels {
-            padding-top: 1rem;
-        }
-
-        &__label {
-            white-space: nowrap;
-            padding-right: 1rem;
-            height: 35px;
-            display: flex;
-            align-items: center;
-            justify-content: end;
-            margin-bottom: .2rem;
-            text-align: right;
-            border-right: var(--tert-con) solid 1px;
-        }
-
-        &__lives {
-            user-select: none;
-            height: 35px;
-            position: relative;
-            width: min-content;
-            overflow: visible;
-            margin-bottom: .2rem;
-        }
-
-        &__lives-container {
-            overflow-x: scroll;
-            overflow-y: visible;
-            padding-top: 1rem;
-            background-color: var(--bg2);
-            border-radius: 5px;
-
-            /* width */
-            &::-webkit-scrollbar {
-                transition: width .1s;
-                width: 16px;
-            }
-
-            /* Track */
-            &::-webkit-scrollbar-track {
-                background: var(--tert);
-            }
-
-            /* Handle */
-            &::-webkit-scrollbar-thumb {
-                background: var(--tert-con);
-            }
-        }
-
-        &__states {
-            width: 100%;
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 1rem;
-            text-align: left;
-        }
-
-        &__life {
-            height: 100%;
-            border: 1px solid var(--tert-con);
-            text-align: left;
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-            padding: 0 4px;
-            width: var(--length);
-            position: absolute;
-            left: var(--start);
-            top: 0;
-            white-space: nowrap;
-            overflow: visible;
-            cursor: pointer;
-            transition: all .2s;
-
-            &--red {
-                background: linear-gradient(-45deg, #f3535533, transparent);
-            }
-
-            &--blue {
-                background: linear-gradient(-45deg, #65b1e233, transparent);
-            }
-        }
-
-        &--selected {
-            border: 1px solid var(--tert);
-        }
-
-        &--selected.timeline__life--red {
-                background: linear-gradient(-45deg, var(--red), transparent);
-        }
-
-        &--selected.timeline__life--blue {
-                background: linear-gradient(-45deg, var(--blu), transparent);
-        }
-
-        &__data-tooltip {
-            width: 100%;
-            position: relative;
-        }
-
-        &__data {
-            width: 100%;
-            display: grid;
-            gap: 1rem;
-            grid-template-columns: min-content min-content min-content;
-            overflow: hidden;
-            z-index: 10000;
-        }
-
-        &__marker {
-            position: absolute;
-            top: -1px;
-            left: calc(-.4rem + var(--position));
-            height: 37px;
-            width: .8rem;
-            background-color: transparent;
-            cursor: pointer;
-            overflow: visible;
-
-            &::before {
-                z-index: 1001;
-                content: attr(data-tooltip);
-                position: absolute;
-                top: calc(-2.2rem - (1.72rem * var(--kills)));
-                left: -.4rem;
-                display: none;
-                background-color: var(--bg);
-                color: var(--bg-text);
-                border: var(--outline) 1px solid;
-                padding: .2rem .5rem;
-                border-radius: .5rem;
-                width: max-content;
-                max-width: 500px;
-                overflow: hidden;
-                white-space: pre;
-                font-size: 12px;
-            }
-
-            &::after {
-                z-index: 999;
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                height: 35px;
-                width: .8rem;
-                background-color: var(--tert-con);
-                clip-path: polygon(40% 100%, 60% 100%, 60% 25%, 100% 0, 0 0, 40% 25%);
-            }
-
-            &--lower {
-                &::before {
-                    top: 34px;
-                    background-color: var(--bg);
-                    z-index: 1000;
-                }
-
-                &::after {
-                    z-index: 999;
-                    clip-path: polygon(40% 0, 60% 0, 60% 75%, 100% 100%, 0 100%, 40% 75%);
-                }
-            }
-
-            &--left {
-                &::before {
-                    left: auto;
-                    right: -.4rem;
-                }
-
-                &::after {
-                    left: auto;
-                    right: 0;
-                }
-            }
-
-            &:hover, &:active, &:focus {
-                color: var(--sec);
-
-                &::before {
-                    display: block;
-                }
-
-                &::after {
-                    display: block;
-                    background-color: var(--outline);
-                }
-            }
-        }
-
-        &__ks {
-            position: absolute;
-            top: -1px;
-            left: var(--position);
-            height: 3px;
-            width: var(--length);
-            background-color: transparent;
-            cursor: pointer;
-            overflow: visible;
-
-            &::before {
-                z-index: 1001;
-                content: attr(data-tooltip);
-                position: absolute;
-                top: calc(-2.2rem - (1.72rem * var(--kills)));
-                left: 50%;
-                display: none;
-                background-color: var(--bg);
-                color: var(--bg-text);
-                border: var(--outline) 1px solid;
-                padding: .2rem .5rem;
-                border-radius: .5rem;
-                width: max-content;
-                max-width: 500px;
-                overflow: hidden;
-                white-space: pre;
-                font-size: 12px;
-                transform: translateX(-50%);
-            }
-
-            &::after {
-                z-index: 998;
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                height: 3px;
-                width: var(--length);
-                background-color: var(--tert-con);
-            }
-
-            &--lower {
-                top: 30px;
-
-                &::before {
-                    top: 3px;
-                    background-color: var(--bg);
-                    z-index: 1000;
-                }
-            }
-
-            &--left {
-                &::before {
-                    left: auto;
-                    right: -.4rem;
-                }
-
-                &::after {
-                    left: auto;
-                    right: 0;
-                }
-            }
-
-            &:hover, &:active, &:focus {
-                color: var(--sec);
-
-                &::before {
-                    display: block;
-                }
-
-                &::after {
-                    display: block;
-                    background-color: var(--outline);
-                }
-            }
-        }
     }
     
     img {
