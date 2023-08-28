@@ -483,3 +483,11 @@ input:checked + .slider--tert:before {
 .tooltip:hover::after, .tooltip:active::after, .tooltip:focus::after {
   display: block;
 }
+
+.red {
+  color: var(--red);
+}
+
+.blue {
+  color: var(--blu);
+}

@@ -6,7 +6,8 @@
     let index = 0,
         total = 0;
 
-    import Timeline from "./timeline.svelte";
+    import Timeline from "./timeline/timeline.svelte";
+    import ClassLogo from "../classlogo.svelte";
 
     export let enabled;
     export let toggle;
@@ -18,6 +19,8 @@
     let displayLives = false;
     let displayAssists = false;
     let displayPlayers = false;
+    let is_shift_down = false;
+    let last_selected = 0;
     
     let current_demo = "";
     
@@ -65,8 +68,20 @@
         return str.substring(0, len - 3) + '...'
     }
 
-    function toggleSelected(demo, isKillstreak = null) {
+    function toggleSelected(demo, isKillstreak = null, i = null) {
         demo.selected = !demo.selected;
+
+        if (i !== null) {
+            if (is_shift_down) {
+                for (let index in resp.demos) {
+                    if (index > Math.min(i, last_selected) && index < Math.max(i, last_selected)) {
+                        resp.demos[index].selected = !resp.demos[index].selected;
+                    }
+                }
+            }
+
+            last_selected = i;
+        }
 
         if (demo.selected_as_bookmark) {
             demo.selected_as_bookmark = false;
@@ -314,31 +329,6 @@
         }
     }
 
-    function getImgUrl(player_class) {
-        switch (classConverter(player_class)) {
-            case "scout":
-                return "https://wiki.teamfortress.com/w/images/a/ad/Leaderboard_class_scout.png";
-            case "soldier":
-                return "https://wiki.teamfortress.com/w/images/9/96/Leaderboard_class_soldier.png"
-            case "pyro":
-                return "https://wiki.teamfortress.com/w/images/8/80/Leaderboard_class_pyro.png";
-            case "demoman":
-                return "https://wiki.teamfortress.com/w/images/4/47/Leaderboard_class_demoman.png"
-            case "heavy":
-                return "https://wiki.teamfortress.com/w/images/5/5a/Leaderboard_class_heavy.png";
-            case "engineer":
-                return "https://wiki.teamfortress.com/w/images/1/12/Leaderboard_class_engineer.png"
-            case "medic":
-                return "https://wiki.teamfortress.com/w/images/e/e5/Leaderboard_class_medic.png";
-            case "sniper":
-                return "https://wiki.teamfortress.com/w/images/f/fe/Leaderboard_class_sniper.png"
-            case "spy":
-                return "https://wiki.teamfortress.com/w/images/3/33/Leaderboard_class_spy.png";
-            default:
-                return false;
-        }
-    }
-
     function getLifeFromKillstreak(ks) {
         for (let life of parsed_demo.data.player_lives[ks.kills[0].killer]) {
             if (life.killstreaks.length === 0) {
@@ -430,7 +420,34 @@
                 ) % 60
             }s`
     }
+
+    function on_key_down(event) {
+        if (event.repeat) return;
+
+        switch (event.key) {
+            case "Shift":
+                is_shift_down = true;
+
+                event.preventDefault();
+                break;
+        }
+    }
+
+    function on_key_up(event) {
+        switch (event.key) {
+            case "Shift":
+                is_shift_down = false;
+
+                event.preventDefault();
+                break;
+        }
+    }
 </script>
+
+<svelte:window
+    on:keydown={on_key_down}
+    on:keyup={on_key_up}
+/>
 
 {#if enabled}
     <div class="modal">
@@ -439,14 +456,14 @@
             {#if resp.loaded}
                 {#if current_demo === ""}
                     <h1>Demos</h1>
-                    {#each resp.demos as demo}
+                    {#each resp.demos as demo, i}
                         <div  class={"demo " + (demo.selected && "demo--selected")}>
                             <p>{demo.name}</p>
                             <div class="add_demo">
                                 {#if demo.selected}
-                                    <button class="cancel-btn" on:click={toggleSelected(demo)}>-</button>
+                                    <button class="cancel-btn" on:click={toggleSelected(demo, null, i)}>-</button>
                                 {:else}
-                                    <button on:click={toggleSelected(demo)}>+</button>
+                                    <button on:click={toggleSelected(demo, null, i)}>+</button>
                                 {/if}
                             </div>
                         </div>
@@ -507,17 +524,12 @@
                                                         id={`player-${parsed_demo.data.users[player].name}`}
                                                     >{parsed_demo.data.users[player].name}</a>
                                                     {#each Object.keys(parsed_demo.data.users[player]["classes"]) as player_class}
-                                                        {#if getImgUrl(player_class)}
-                                                            <div 
-                                                                class="tooltip" 
-                                                                data-tooltip={`Lives: ${parsed_demo.data.users[player]["classes"][player_class]}`} 
-                                                                style="--kills: 0"
-                                                                on:click={toggleClass(player, player_class)}
-                                                                on:keydown={toggleClass(player, player_class)}
-                                                            >
-                                                                <img src={getImgUrl(player_class)} alt="icon"/>
-                                                            </div>
-                                                        {/if}
+                                                        <ClassLogo 
+                                                            player_class={classConverter(player_class)}
+                                                            tooltip={`Lives: ${parsed_demo.data.users[player]["classes"][player_class]}`}
+                                                            click={toggleClass}
+                                                            args={[player, player_class]}
+                                                        />
                                                     {/each}
                                                 </h3>
                                             </div>
@@ -528,15 +540,10 @@
                                                             <div class={"demo demo__life " + (life.selected && "demo--selected")}>
                                                                 <div>
                                                                     {#each life.classes as player_class}
-                                                                        {#if getImgUrl(player_class)}
-                                                                            <div 
-                                                                                class="tooltip demo__icon" 
-                                                                                data-tooltip={`Kills: ${life.kills.filter((kill) => kill.killer_class === classConverter(player_class)).length}`} 
-                                                                                style={`--kills: 0;`}
-                                                                            >
-                                                                                <img src={getImgUrl(player_class)} alt={`${classConverter(player_class)} icon`} />
-                                                                            </div>
-                                                                        {/if}
+                                                                        <ClassLogo 
+                                                                            player_class={classConverter(player_class)} 
+                                                                            tooltip={`Kills: ${life.kills.filter((kill) => kill.killer_class === classConverter(player_class)).length}`}
+                                                                        />
                                                                     {/each}
                                                                 </div>
                                                                 <div 
@@ -554,26 +561,18 @@
                                                                 <div class="demo__kills">
                                                                     {#each life.kills as kill}
                                                                         <div class="demo__kill">
-                                                                            {#if getImgUrl(kill.killer_class)}
-                                                                                <div 
-                                                                                    class="demo__icon"
-                                                                                >
-                                                                                    <img src={getImgUrl(kill.killer_class)} alt={`${classConverter(kill.killer_class)} icon`} />
-                                                                                </div>
-                                                                            {/if} killed
+                                                                            <ClassLogo 
+                                                                                player_class={classConverter(kill.killer_class)} 
+                                                                            /> killed
                                                                             <a 
                                                                                 href={`#player-${parsed_demo.data.users[kill.victim].name}`} 
                                                                                 class={parsed_demo.data.users[kill.victim]["team"] + " tooltip"} 
                                                                                 style="--kills: 0;"
                                                                                 data-tooltip="Jump To Player"
                                                                             >
-                                                                                {#if getImgUrl(kill.victim_class)}
-                                                                                    <div 
-                                                                                        class="demo__icon"
-                                                                                    >
-                                                                                        <img src={getImgUrl(kill.victim_class)} alt={`${classConverter(kill.victim_class)} icon`} />
-                                                                                    </div>
-                                                                                {/if}
+                                                                                <ClassLogo 
+                                                                                    player_class={classConverter(kill.victim_class)} 
+                                                                                /> 
                                                                                 {parsed_demo.data.users[kill.victim].name}
                                                                             </a>
                                                                             with {kill.weapon}
@@ -636,15 +635,10 @@
                                                             <div class={"demo demo__killstreak " + ((killstreak.selected || killstreak.selected_as_bookmark || life.selected) && "demo--selected")}>
                                                                 <div>
                                                                     {#each life.classes as player_class}
-                                                                        {#if getImgUrl(player_class)}
-                                                                            <div 
-                                                                                class="tooltip demo__icon" 
-                                                                                data-tooltip={`Kills: ${killstreak.kills.filter((kill) => kill.killer_class === classConverter(player_class)).length}`}
-                                                                                style={`--kills: 0;`}
-                                                                            >
-                                                                                <img src={getImgUrl(player_class)} alt={`${classConverter(player_class)} icon`} />
-                                                                            </div>
-                                                                        {/if}
+                                                                        <ClassLogo 
+                                                                            player_class={classConverter(player_class)} 
+                                                                            tooltip={`Kills: ${killstreak.kills.filter((kill) => kill.killer_class === classConverter(player_class)).length}`}
+                                                                        /> 
                                                                     {/each}
                                                                 </div>
                                                                 <div
@@ -662,13 +656,9 @@
                                                                 <div class="demo__kills">
                                                                     {#each killstreak.kills as kill}
                                                                         <div class="demo__kill">
-                                                                            {#if getImgUrl(kill.killer_class)}
-                                                                                <div 
-                                                                                    class="demo__icon"
-                                                                                >
-                                                                                    <img src={getImgUrl(kill.killer_class)} alt={`${classConverter(kill.killer_class)} icon`} />
-                                                                                </div>
-                                                                            {/if}
+                                                                            <ClassLogo 
+                                                                                player_class={classConverter(kill.killer_class)} 
+                                                                            /> 
                                                                             killed
                                                                             <a 
                                                                                 href={`#player-${parsed_demo.data.users[kill.victim].name}`} 
@@ -676,13 +666,9 @@
                                                                                 style="--kills: 0;"
                                                                                 data-tooltip="Jump To Player"
                                                                             >
-                                                                                {#if getImgUrl(kill.victim_class)}
-                                                                                    <div 
-                                                                                        class="demo__icon"
-                                                                                    >
-                                                                                        <img src={getImgUrl(kill.victim_class)} alt={`${classConverter(kill.victim_class)} icon`} />
-                                                                                    </div>
-                                                                                {/if}
+                                                                                <ClassLogo 
+                                                                                    player_class={classConverter(kill.victim_class)} 
+                                                                                />
                                                                                 {parsed_demo.data.users[kill.victim].name}
                                                                             </a> with {kill.weapon}
                                                                             {#if kill.crit_type}
@@ -766,15 +752,10 @@
                                     <div class={"demo demo__life " + ((killstreak.selected || killstreak.selected_as_bookmark || getLifeFromKillstreak(killstreak)?.selected) && "demo--selected")}>
                                         <div>
                                             {#each killstreak.classes as player_class}
-                                                {#if getImgUrl(player_class)}
-                                                    <div 
-                                                        class="tooltip demo__icon" 
-                                                        data-tooltip={`Kills: ${killstreak.kills.filter((kill) => kill.killer_class === classConverter(player_class)).length}`} 
-                                                        style={`--kills: 0;`}
-                                                    >
-                                                        <img src={getImgUrl(player_class)} alt={`${classConverter(player_class)} icon`} />
-                                                    </div>
-                                                {/if}
+                                                <ClassLogo 
+                                                    player_class={classConverter(player_class)} 
+                                                    tooltip={`Kills: ${killstreak.kills.filter((kill) => kill.killer_class === classConverter(player_class)).length}`} 
+                                                />
                                             {/each}
                                         </div>
                                         <a 
@@ -800,13 +781,9 @@
                                         <div class="demo__kills">
                                             {#each killstreak.kills as kill}
                                                 <div class="demo__kill">
-                                                    {#if getImgUrl(kill.killer_class)}
-                                                        <div 
-                                                            class="demo__icon"
-                                                        >
-                                                            <img src={getImgUrl(kill.killer_class)} alt={`${classConverter(kill.killer_class)} icon`} />
-                                                        </div>
-                                                    {/if}
+                                                    <ClassLogo 
+                                                        player_class={classConverter(kill.killer_class)} 
+                                                    />
                                                     killed
                                                     <a 
                                                         href={`#player-${parsed_demo.data.users[kill.victim].name}`} 
@@ -814,13 +791,9 @@
                                                         style="--kills: 0;"
                                                         data-tooltip="Jump To Player"
                                                     >
-                                                        {#if getImgUrl(kill.victim_class)}
-                                                            <div 
-                                                                class="demo__icon"
-                                                            >
-                                                                <img src={getImgUrl(kill.victim_class)} alt={`${classConverter(kill.victim_class)} icon`} />
-                                                            </div>
-                                                        {/if}
+                                                        <ClassLogo 
+                                                            player_class={classConverter(kill.victim_class)} 
+                                                        />
                                                         {parsed_demo.data.users[kill.victim].name}
                                                     </a> with {kill.weapon}
                                                     {#if kill.crit_type}
@@ -898,7 +871,6 @@
                             toggleSelected={toggleSelected}
                             displayLives={displayLives}
                             displayAssists={displayAssists}
-                            getImgUrl={getImgUrl}
                         />
                         {#if parsed_demo.data.chat.length > 0}
                             <h2 class="centered chat__title">Chat</h2>
@@ -913,16 +885,17 @@
                                         {chat.tick - parsed_demo.data.start_tick}
                                     </div>
                                     <div class="chat__text">
-                                        <span class={`chat__name ${parsed_demo.data?.users[chat.from]?.team}`}>{chat.name}{getMessageType(chat.message.kind)}:</span>
+                                        <a 
+                                            href={`#player-${chat.name}`} 
+                                            class={`chat__name ${parsed_demo.data?.users[chat.from]?.team}`}
+                                        >
+                                            {chat.name}{getMessageType(chat.message.kind)}:
+                                        </a>
                                         {chat.text}
                                     </div>
                                 {/each}
                             </div>
                         {/if}
-                        <!-- <div class="settings__input-group">
-                            <label for="tf_folder" class="settings__label">scale</label>
-                            <input bind:value={scale} id="tf_folder" class="settings__input input--tert" type="number"/>
-                        </div> -->
                         <div class="buttons">
                             <button class="cancel-btn" on:click={closeModal}>Cancel</button>
                             <button on:click={nextDemo}>Save</button>
@@ -1029,10 +1002,6 @@
 
     .flex-wrap {
         flex-wrap: wrap;
-    }
-    
-    img {
-        height: 1.5rem;
     }
 
     .flex-start {

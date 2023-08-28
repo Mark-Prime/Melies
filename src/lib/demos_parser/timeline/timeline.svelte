@@ -2,6 +2,7 @@
     // @ts-nocheck
     import { useMousePosition } from '@svelteuidev/composables';
     import Slider2 from "./timeline_slider.svelte";
+    import ClassLogo from '$lib/classlogo.svelte';
     import { onMount } from 'svelte';
     import { median } from 'mathjs';
 
@@ -11,7 +12,6 @@
     export let toggleSelected;
     export let displayLives;
     export let displayAssists;
-    export let getImgUrl;
 
     let scale = 1.0;
     let scalePerc = 1.0;
@@ -49,8 +49,6 @@
     let dragTarget = '';
     let startingPos = 0;
     let relativePos = 0;
-    let startingSleft = 0;
-    let startingScale = 1;
 
     let startingLeft = 0;
     let startingRight = 1;
@@ -197,9 +195,7 @@
                     <div class="timeline__lives">
                         {#each parsed_demo.data?.player_lives[player] as life}
                             {#if life.start != 0 && 
-                                (displayLives || life.kills.length > 0 || (displayAssists && life.assists.length > 0)) &&
-                                life.end - startTick > leftPos &&
-                                life.start - startTick < rightPos
+                                (displayLives || life.kills.length > 0 || (displayAssists && life.assists.length > 0))
                             }
                                 <div class={`timeline__life timeline__life--${team} ${(life.selected ? "timeline--selected" : "")}`} on:click={toggleSelected(life)} on:keydown={toggleSelected(life)} style={`
                                         --length: ${(life.end - life.start) / scale}px;
@@ -227,11 +223,11 @@
                                         `}
                                     >
                                         <div class="timeline__data">
-                                            <div>
+                                            <div class="timeline__icons">
                                                 {#each life.classes as player_class}
-                                                    {#if getImgUrl(player_class)}
-                                                        <img src={getImgUrl(player_class)} alt="icon" />
-                                                    {/if}
+                                                    <ClassLogo 
+                                                        player_class={player_class} 
+                                                    />
                                                 {/each}
                                             </div>
                                             <div
@@ -339,18 +335,6 @@
 </div>
 
 <style lang="scss">
-    img {
-        height: 1.5rem;
-    }
-    
-    .red {
-        color: var(--red);
-    }
-
-    .blue {
-        color: var(--blu);
-    }
-
     .timeline {
         display: grid;
         grid-template-columns: min-content 1fr;
@@ -468,6 +452,12 @@
             grid-template-columns: min-content min-content min-content;
             overflow: hidden;
             z-index: 10000;
+        }
+
+        &__icons {
+            display: flex;
+            align-items: center;
+            justify-content: baseline;
         }
 
         &__marker {
