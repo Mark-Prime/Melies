@@ -5,7 +5,7 @@ description = "A TF2 Recording Tool and more!"
 authors = ["Maven"]
 license = ""
 repository = ""
-edition = "2023"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
