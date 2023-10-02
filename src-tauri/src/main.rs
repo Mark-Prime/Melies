@@ -214,7 +214,7 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
             "h264" | "jpeg" => {
                 commands = format!(
                     "{}host_framerate {}; startmovie {} {}; clear;",
-                    ifelse!(setting_as_bool(&settings["output"]["snd_fix"]), "snd_restart; ", ""),
+                    ifelse!(setting_as_bool(&settings["output"]["snd_fix"]), "snd_restart; snd_soundmixer Default_mix; ", ""),
                     settings["output"]["framerate"],
                     clip_name,
                     settings["output"]["method"].as_str().unwrap()
@@ -223,7 +223,7 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
             "tga" => {
                 commands = format!(
                     "{}host_framerate {}; startmovie {}; clear;",
-                    ifelse!(setting_as_bool(&settings["output"]["snd_fix"]), "snd_restart; ", ""),
+                    ifelse!(setting_as_bool(&settings["output"]["snd_fix"]), "snd_restart; snd_soundmixer Default_mix; ", ""),
                     settings["output"]["framerate"],
                     clip_name
                 );
@@ -231,7 +231,7 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
             "lawena" => {
                 commands = format!(
                     "{}startrecording",
-                    ifelse!(setting_as_bool(&settings["output"]["snd_fix"]), "snd_restart; ", ""),
+                    ifelse!(setting_as_bool(&settings["output"]["snd_fix"]), "snd_restart; snd_soundmixer Default_mix; ", ""),
                 );
             }
             _ => {}

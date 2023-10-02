@@ -1,6 +1,7 @@
 use std::fs;
 use std::cmp::Ordering;
 use std::collections::HashMap;
+use std::vec;
 use serde::Serialize;
 use serde_json::json;
 use serde_json::Value;
@@ -281,12 +282,12 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
         let mut current_life: Life = Life::new(0, vec!["".to_string()]);
 
         for event in &events {
-            let streak_count = current_life.killstreaks.len();
-            let mut kill_count = 0;
+            // let streak_count = current_life.killstreaks.len();
+            // let mut kill_count = 0;
 
-            if streak_count > 0 {
-                kill_count = current_life.killstreaks[streak_count - 1].kills.len();
-            }
+            // if streak_count > 0 {
+            //     kill_count = current_life.killstreaks[streak_count - 1].kills.len();
+            // }
 
             match event {
                 Event::Spawn(spawn) => {
@@ -301,58 +302,139 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
                         continue;
                     }
 
-                    if kill_count == 0 {
-                        current_life.killstreaks.push(Killstreak::new(kill.to_owned()));
-                    } else if
-                        kill.tick.as_i64() <
-                        current_life.last_kill_tick.as_i64() +
-                            settings["recording"]["before_killstreak_per_kill"].as_i64().unwrap()
-                    {
-                        current_life.killstreaks[streak_count - 1].kills.push(kill.to_owned());
-                    } else if kill_count < 3 {
-                        current_life.killstreaks[streak_count - 1].kills = vec![kill.to_owned()];
+                    if current_life.start == 0 {
+                        current_life = match current_player.pop() {
+                            Some(val) => {
+                                val
+                            }
+                            None => {
+                                continue;
+                            }
+                        };
                     }
+
+                    // if kill_count == 0 {
+                    //     current_life.killstreaks.push(Killstreak::new(kill.to_owned()));
+                    // } else if
+                    //     kill.tick.as_i64() <
+                    //     current_life.last_kill_tick.as_i64() +
+                    //         settings["recording"]["before_killstreak_per_kill"].as_i64().unwrap()
+                    // {
+                    //     current_life.killstreaks[streak_count - 1].kills.push(kill.to_owned());
+                    // } else if kill_count < 3 && current_life.killstreaks.len() > 0 {
+                    //     current_life.killstreaks[streak_count - 1].kills = vec![kill.to_owned()];
+                    // } else if current_life.killstreaks.len() == 0 {
+                    //     current_life.killstreaks = vec![Killstreak::new(kill.to_owned())]
+                    // }
 
                     current_life.last_kill_tick = kill.tick;
 
                     current_life.kills.push(kill.to_owned());
                 }
                 Event::Assist(assist) => {
+                    if current_life.start == 0 {
+                        current_life = match current_player.pop() {
+                            Some(val) => {
+                                val
+                            }
+                            None => {
+                                continue;
+                            }
+                        };
+                    }
+
                     current_life.assists.push(assist.to_owned());
                 }
                 Event::Death(death) => {
-                    if current_life.start != 0 {
-                        if kill_count > 0 && kill_count < 3 {
-                            current_life.killstreaks.remove(streak_count - 1);
-                        }
-
-                        for mut ks in current_life.killstreaks.to_owned() {
-                            ks.classes = current_life.classes.clone();
-                            killstreaks.push(ks);
-                        }
-
-                        current_life.end = death.tick.into();
-
-                        current_player.push(current_life);
-
-                        current_life = Life::new(0, vec!["".to_string()]);
+                    if death.killer == 0 {
+                        continue;
                     }
+
+                    if current_life.start == 0 {
+                        current_life = match current_player.pop() {
+                            Some(val) => {
+                                val
+                            }
+                            None => {
+                                continue;
+                            }
+                        };
+                    }
+
+                    // if kill_count > 0 && kill_count < 3 && current_life.killstreaks.len() > 0 {
+                    //     current_life.killstreaks.remove(streak_count - 1);
+                    // }
+
+                    // for mut ks in current_life.killstreaks.to_owned() {
+                    //     ks.classes = current_life.classes.clone();
+                    //     killstreaks.push(ks);
+
+                    //     // if ks.kills.len() >= 3 {
+                    //     //     killstreaks.push(ks);
+                    //     // }
+                    // }
+
+                    current_life.end = death.tick.into();
+
+                    current_player.push(current_life);
+
+                    current_life = Life::new(0, vec!["".to_string()]);
                 }
                 Event::RoundEnd(tick) => {
-                    if kill_count > 0 && kill_count < 3 {
-                        current_life.killstreaks.remove(streak_count - 1);
-                    }
+                    // if kill_count > 0 && kill_count < 3 {
+                    //     current_life.killstreaks.remove(streak_count - 1);
+                    // }
 
-                    for mut ks in current_life.killstreaks.to_owned() {
-                        ks.classes = current_life.classes.clone();
-                        killstreaks.push(ks);
-                    }
+                    // for mut ks in current_life.killstreaks.to_owned() {
+                    //     ks.classes = current_life.classes.clone();
+                    //     killstreaks.push(ks);
+
+                    //     // if ks.kills.len() >= 3 {
+                    //     //     killstreaks.push(ks);
+                    //     // }
+                    // }
 
                     current_life.end = tick.to_owned();
                     current_player.push(current_life);
 
                     current_life = Life::new(0, vec!["".to_string()]);
                 }
+            }
+        }
+
+        for life in &mut current_player {
+            if life.kills.len() < 3 {
+                continue;
+            }
+
+            let mut kill_count = 0;
+            let mut streak_count = 0;
+            let mut last_kill_tick: i64 = 0;
+
+            for kill in &life.kills {
+                if kill_count == 0 {
+                    life.killstreaks.push(Killstreak::new(kill.to_owned()));
+                    last_kill_tick = kill.tick.0.into();
+                    kill_count += 1;
+                    streak_count += 1;
+                } else if
+                    kill.tick.as_i64() <
+                    last_kill_tick +
+                        settings["recording"]["before_killstreak_per_kill"].as_i64().unwrap()
+                {
+                    life.killstreaks[streak_count - 1].kills.push(kill.to_owned());
+                    kill_count += 1;
+                } else if kill_count < 3 {
+                    kill_count = 1;
+                    last_kill_tick = kill.tick.0.into();
+                    life.killstreaks[streak_count - 1] = Killstreak::new(kill.to_owned());
+                }
+            }
+
+            life.killstreaks = life.killstreaks.iter().map(|v| v.clone()).filter(|sen| sen.kills.len() >= 3).collect::<Vec<Killstreak>>();
+            
+            for ks in &life.killstreaks {
+                killstreaks.push(ks.clone());
             }
         }
 

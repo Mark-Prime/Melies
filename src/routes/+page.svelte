@@ -202,14 +202,17 @@
     modified = true;
   }
 
+  function enable_modified() {
+    modified = true;
+  }
   loadEvents();
 </script>
 
 <div class="home-page">
   <h1 class="header">Méliès</h1>
   <div class="events">
-    <Logstf enabled={logstfModal} toggle={toggleLogModal} parseLogEvents={parseLogEvents}/>
-    <Demo enabled={demoModal} toggle={toggleDemoModal} parseDemoEvents={parseDemoEvents}/>
+    <Logstf enabled={logstfModal} toggle={toggleLogModal} parseLogEvents={parseLogEvents} modified={enable_modified}/>
+    <Demo enabled={demoModal} toggle={toggleDemoModal} parseDemoEvents={parseDemoEvents} modified={enable_modified}/>
     {#if !resp.code}
       {#each demos as demo, demo_i}
         {#each demo as event, i (`${demo_i}__${i}`)}

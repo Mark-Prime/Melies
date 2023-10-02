@@ -3,6 +3,7 @@
 export let enabled;
 export let toggle;
 export let parseLogEvents;
+export let modified;
 
 import { invoke } from "@tauri-apps/api/tauri"
 
@@ -144,6 +145,8 @@ function saveSelected() {
             }
         }
     }
+
+    modified();
 
     parseLogEvents(demo_name, events.sort((a, b) => a.time - b.time));
 
