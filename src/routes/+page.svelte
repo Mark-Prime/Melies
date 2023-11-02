@@ -5,6 +5,19 @@
   import Demo from "../lib/demos_parser/demos.svelte";
   import DemoEdit from "$lib/home/demoEdit.svelte";
   import DemoDisplay from "$lib/home/demoDisplay.svelte";
+  import { onMount } from 'svelte';
+
+  let recording_settings = {};
+
+  async function loadSettings() {
+    let settings = await invoke("load_settings");
+    recording_settings = settings.recording;
+    console.log(settings);
+  }
+
+  onMount(async () => {
+    loadSettings();
+  });
 
   let demos = [];
   
@@ -70,16 +83,18 @@
 
   function parseLogEvents(demo_name, events) {
     let new_demo = []
+
+    let spec_mode = recording_settings['third_person'] ? 'spec_third' : 'spec';
     
     for (let event of events) {
       new_demo.push(
         {
           value: {
-            Bookmark: `spec ${event.steamid64}`
+            Bookmark: `${spec_mode} ${event.steamid64}`
           },
           tick: event.time * 66,
           demo_name: demo_name,
-          event: `[logs.tf_${event.label}] spec ${event.steamid64} (\"${demo_name}\" at ${event.time * 66})`,
+          event: `[logs.tf_${event.label}] ${spec_mode}  ${event.steamid64} (\"${demo_name}\" at ${event.time * 66})`,
           isKillstreak: false
         }
       )
@@ -92,17 +107,19 @@
 
   function parseDemoEvents(demo_name, events) {
     let new_demo = []
+
+    let spec_mode = recording_settings['third_person'] ? 'spec_third' : 'spec';
     
     for (let event of events) {
       if (event.start) {
         new_demo.push(
           {
             value: {
-              Bookmark: `clip_start spec ${event.steamid64}`
+              Bookmark: `clip_start ${spec_mode} ${event.steamid64}`
             },
             tick: event.time,
             demo_name: demo_name,
-            event: `[demo_${event.label}] clip_start spec ${event.steamid64} (\"${demo_name}\" at ${event.time})`,
+            event: `[demo_${event.label}] clip_start ${spec_mode} ${event.steamid64} (\"${demo_name}\" at ${event.time})`,
             isKillstreak: false
           }
         )
@@ -114,11 +131,11 @@
         new_demo.push(
           {
             value: {
-              Bookmark: `spec ${event.steamid64}`
+              Bookmark: `${spec_mode} ${event.steamid64}`
             },
             tick: event.time,
             demo_name: demo_name,
-            event: `[demo_${event.label}] spec ${event.steamid64} (\"${demo_name}\" at ${event.time})`,
+            event: `[demo_${event.label}] ${spec_mode} ${event.steamid64} (\"${demo_name}\" at ${event.time})`,
             isKillstreak: false
           }
         )

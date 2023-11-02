@@ -111,6 +111,21 @@
         parsed_demo = parsed_demo;
     }
 
+    function toggleKillsSelected(kills, isKillstreak = null, i = null) {
+        console.log(kills)
+        for (let kill of kills) {
+            if (kill.selected) {
+                kill.selected = false;
+                continue;
+            }
+
+            kill.selected = true
+        }
+
+        resp = resp;
+        parsed_demo = parsed_demo;
+    }
+
     function toggleBookmarkSelected(demo, isKillstreak = null) {
         demo.selected_as_bookmark = !demo.selected_as_bookmark;
 
@@ -177,6 +192,17 @@
                             time: (life.end + 132) - parsed_demo.data.start_tick,
                             label: `${life.kills.length}k-${life.assists.length}a_end`
                         })
+                    }
+
+                    for (let kill of life.kills) {
+                        if (kill.selected) {
+                            events.push({
+                                time: (kill.tick + 20) - parsed_demo.data.start_tick,
+                                label: `k-${kill.killer_class}_v-${kill.victim_class}`,
+                                steamid64: parsed_demo.data.users[i].steamId64,
+                                bookmark: true,
+                            })
+                        }
                     }
 
                     for (let killstreak of life.killstreaks) {
@@ -445,6 +471,16 @@
                 break;
         }
     }
+
+    function allKillsSelected(life) {
+        for (let kill of life.kills) {
+            if (!kill.selected) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 </script>
 
 <svelte:window
@@ -564,34 +600,44 @@
                                                                 <div class="demo__kills">
                                                                     {#each life.kills as kill}
                                                                         <div class="demo__kill">
-                                                                            <ClassLogo 
-                                                                                player_class={classConverter(kill.killer_class)} 
-                                                                            /> killed
-                                                                            <a 
-                                                                                href={`#player-${parsed_demo.data.users[kill.victim].name}`} 
-                                                                                class={parsed_demo.data.users[kill.victim]["team"] + " tooltip"} 
-                                                                                style="--kills: 0;"
-                                                                                data-tooltip="Jump To Player"
-                                                                            >
+                                                                            <div class="demo__kill-text"> 
                                                                                 <ClassLogo 
-                                                                                    player_class={classConverter(kill.victim_class)} 
-                                                                                /> 
-                                                                                {parsed_demo.data.users[kill.victim].name}
-                                                                            </a>
-                                                                            with {kill.weapon}
-                                                                            {#if kill.crit_type}
-                                                                                <span class={["", "killstreak", "killstreak--large"][kill.crit_type]}>
-                                                                                    {["", " (Mini-Crit) ", " (CRITICAL HIT!) "][kill.crit_type]}
+                                                                                    player_class={classConverter(kill.killer_class)} 
+                                                                                /> killed
+                                                                                <a 
+                                                                                    href={`#player-${parsed_demo.data.users[kill.victim].name}`} 
+                                                                                    class={parsed_demo.data.users[kill.victim]["team"] + " tooltip"} 
+                                                                                    style="--kills: 0;"
+                                                                                    data-tooltip="Jump To Player"
+                                                                                >
+                                                                                    <ClassLogo 
+                                                                                        player_class={classConverter(kill.victim_class)} 
+                                                                                    /> 
+                                                                                    {parsed_demo.data.users[kill.victim].name}
+                                                                                </a>
+                                                                                with {kill.weapon}
+                                                                                {#if kill.crit_type}
+                                                                                    <span class={["", "killstreak", "killstreak--large"][kill.crit_type]}>
+                                                                                        {["", " (Mini-Crit) ", " (CRITICAL HIT!) "][kill.crit_type]}
+                                                                                    </span>
+                                                                                {/if}
+                                                                                at
+                                                                                <span 
+                                                                                    class="tooltip"
+                                                                                    style={`--kills: 0;`}
+                                                                                    data-tooltip={`Timecode: ${tickToTime(kill.tick - parsed_demo.data.start_tick)}`}
+                                                                                >
+                                                                                    {kill.tick - parsed_demo.data.start_tick}
                                                                                 </span>
+                                                                            </div>
+                                                                            
+                                                                            {#if kill.selected}
+                                                                                <button class="cancel-btn" on:click={toggleKillsSelected([kill])}>-</button>
+                                                                            {:else}
+                                                                                <div class="add_demo tooltip tooltip--left" data-tooltip="As Bookmark" style={`--kills: 0;`}>
+                                                                                    <button on:click={toggleKillsSelected([kill])}>+</button>
+                                                                                </div>
                                                                             {/if}
-                                                                            at
-                                                                            <span 
-                                                                                class="tooltip"
-                                                                                style={`--kills: 0;`}
-                                                                                data-tooltip={`Timecode: ${tickToTime(kill.tick - parsed_demo.data.start_tick)}`}
-                                                                            >
-                                                                                {kill.tick - parsed_demo.data.start_tick}
-                                                                            </span>
                                                                         </div>
                                                                     {/each}
                                                                 </div>
@@ -618,12 +664,27 @@
                                                                 >
                                                                     End: {life.end - parsed_demo.data.start_tick}
                                                                 </div>
-                                                                <div class="add_demo">
-                                                                    {#if life.selected}
-                                                                        <button class="cancel-btn" on:click={toggleSelected(life)}>-</button>
-                                                                    {:else}
-                                                                        <button on:click={toggleSelected(life)}>+</button>
-                                                                    {/if}
+                                                                <div class="killstreak__buttons"> 
+                                                                    <div class="add_demo">
+                                                                        {#if life.selected}
+                                                                            <button class="cancel-btn" on:click={toggleSelected(life)}>-</button>
+                                                                        {:else}
+                                                                            <div class="add_demo tooltip tooltip--left" data-tooltip="Entire Life" style={`--kills: 0;`}>
+                                                                                <button on:click={toggleSelected(life)}>+</button>
+                                                                            </div>
+                                                                        {/if}
+                                                                    </div>
+                                                                    <div class="add_demo">
+                                                                        {#if allKillsSelected(life)}
+                                                                            <div class="tooltip tooltip--left" data-tooltip="Toggle Kills as Bookmarks" style={`--kills: 0;`}>
+                                                                                <button class="auto-height cancel-btn" on:click={toggleKillsSelected(life.kills)}>-</button>
+                                                                            </div>
+                                                                        {:else}
+                                                                            <div class="add_demo tooltip tooltip--left" data-tooltip="Toggle Kills as Bookmarks" style={`--kills: 0;`}>
+                                                                                <button on:click={toggleKillsSelected(life.kills)}>+</button>
+                                                                            </div>
+                                                                        {/if}
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         {/if}
@@ -1156,6 +1217,11 @@
         }
     }
 
+    .auto-height {
+        height: 25.38px;
+        line-height: 0;
+    }
+
     .demo {
         font-size: small;
         padding: .3rem .5rem;
@@ -1195,6 +1261,19 @@
                     display: flex;
                     gap: .5rem;
                     height: 100%;
+                        
+                    & button {
+                        width: fit-content;
+                        height: 100%;
+                        line-height: 0;
+                    }
+
+                    &-text {
+                        display: flex;
+                        gap: .5rem;
+                        width: 100%;
+                        flex-grow: 1;
+                    }
                 }
             }
         }
@@ -1250,6 +1329,19 @@
                         display: flex;
                         gap: .5rem;
                         height: 100%;
+                        
+                        & button {
+                            width: fit-content;
+                            height: 100%;
+                            line-height: 0;
+                        }
+
+                        &-text {
+                            display: flex;
+                            gap: .5rem;
+                            width: 100%;
+                            flex-grow: 1;
+                        }
                     }
                 }
             }

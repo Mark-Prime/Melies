@@ -2,9 +2,10 @@
 
 use std::fs::{ File, DirEntry };
 use std::io::Write;
+use std::str::FromStr;
 use std::{ fs, env };
 use std::path::Path;
-use serde_json::{ self, Value, json };
+use serde_json::{ self, Value, json, Map };
 use regex::Regex;
 use tauri::command;
 use vdm::VDM;
@@ -76,13 +77,63 @@ fn write_cfg(settings: &Value) {
     );
     extend!(cfg, "sv_cheats {};\r\n", "1");
     extend!(cfg, "voice_enable {};\r\n", setting_as_bin(&settings["output"]["voice_chat"]));
-    extend!(cfg, "hud_saytext_time {};\r\n", setting_as_bin(&settings["output"]["text_chat"]));
+    extend!(cfg, "hud_saytext_time {};\r\n", setting_as_bin(&settings["output"]["text_chat"]) * 12);
     extend!(cfg, "crosshair {};\r\n", setting_as_bin(&settings["output"]["crosshair"]));
-    extend!(cfg, "viewmodel_fov {};\r\n", setting_as_bin(&settings["recording"]["viewmodel_fov"]));
+    extend!(cfg, "r_drawviewmodel {};\r\n", setting_as_bin(&settings["output"]["viewmodel"]));
+    extend!(cfg, "viewmodel_fov_demo {};\r\n", setting_as_bin(&settings["recording"]["viewmodel_fov"]));
     extend!(cfg, "fov_desired {};\r\n", setting_as_bin(&settings["recording"]["fov"]));
-    extend!(cfg, "{};\r\n", settings["recording"]["commands"].as_str().unwrap());
 
-    if settings["output"]["lock"].as_i64().is_some() {
+    if setting_as_bin(&settings["recording"]["third_person"]) == 1 {
+        extend!(cfg, "thirdperson{};\r\n", "");
+    } else {
+        extend!(cfg, "firstperson{};\r\n", "");
+    }
+
+    extend!(cfg, "{};\r\n", settings["recording"]["commands"].as_str().unwrap());
+    extend!(cfg, "{};\r\n", "alias \"snd_fix\" \"snd_restart; snd_soundmixer Default_mix;\"");
+
+    let map: &Map<String, Value> = &settings["addons"].as_object().unwrap();
+
+    for (k, v) in map {
+        extend!(
+            cfg,
+            "\r\necho \"Running {} addon\";\r\n",
+            k
+        );
+
+        let v_map = v.as_object().unwrap();
+
+        for (_ki, vi) in v_map {
+
+            match &vi["type"] {
+                Value::String(vi_type) => {
+                    match vi_type.as_str() {
+                        "toggle" => {
+                            if vi["value"] == true {
+                                extend!(
+                                    cfg, "{};\r\n", vi["command"]
+                                );
+                            }
+                        },
+                        "bool" => {
+                            extend!(cfg, "{};\r\n", format!("{} {}", vi["command"].to_string().replace("\"", ""), setting_as_bin(&vi["value"])));
+                        },
+                        "string" | "int" => {
+                            extend!(cfg, "{};\r\n", format!("{} {}", vi["command"].to_string().replace("\"", ""), vi["value"]));
+                        },
+                        _ => {
+                            continue;
+                        }
+                    }
+                },
+                _ => {
+                    continue;
+                }
+            }
+        }
+    }
+
+    if setting_as_bin(&settings["output"]["lock"]) == 1 {
         extend!(
             cfg,
             "\r\necho \"Preventing settings from changing\";\r\nalias cl_drawhud \"{}\";\r\n",
@@ -91,7 +142,8 @@ fn write_cfg(settings: &Value) {
         extend!(cfg, "alias voice_enable \"{}\";\r\n", "");
         extend!(cfg, "alias hud_saytext_time \"{}\";\r\n", "");
         extend!(cfg, "alias crosshair \"{}\";\r\n", "");
-        extend!(cfg, "alias viewmodel_fov \"{}\";\r\n", "");
+        extend!(cfg, "alias r_drawviewmodel \"{}\";\r\n", "");
+        extend!(cfg, "alias viewmodel_fov_demo \"{}\";\r\n", "");
         extend!(cfg, "alias fov_desired \"{}\";\r\n", "");
     }
 
@@ -213,8 +265,8 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
         match settings["output"]["method"].as_str().unwrap() {
             "h264" | "jpeg" => {
                 commands = format!(
-                    "{}host_framerate {}; startmovie {} {}; clear;",
-                    ifelse!(setting_as_bool(&settings["output"]["snd_fix"]), "snd_restart; snd_soundmixer Default_mix; ", ""),
+                    "{}host_framerate {}; startmovie {} {}; clear",
+                    ifelse!(setting_as_bool(&settings["output"]["snd_fix"]), "snd_fix; ", ""),
                     settings["output"]["framerate"],
                     clip_name,
                     settings["output"]["method"].as_str().unwrap()
@@ -222,8 +274,8 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
             }
             "tga" => {
                 commands = format!(
-                    "{}host_framerate {}; startmovie {}; clear;",
-                    ifelse!(setting_as_bool(&settings["output"]["snd_fix"]), "snd_restart; snd_soundmixer Default_mix; ", ""),
+                    "{}host_framerate {}; startmovie {}; clear",
+                    ifelse!(setting_as_bool(&settings["output"]["snd_fix"]), "snd_fix; ", ""),
                     settings["output"]["framerate"],
                     clip_name
                 );
@@ -231,7 +283,7 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
             "lawena" => {
                 commands = format!(
                     "{}startrecording",
-                    ifelse!(setting_as_bool(&settings["output"]["snd_fix"]), "snd_restart; snd_soundmixer Default_mix; ", ""),
+                    ifelse!(setting_as_bool(&settings["output"]["snd_fix"]), "snd_fix; ", ""),
                 );
             }
             _ => {}
@@ -277,9 +329,7 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
     }
 }
 
-fn find_dir(settings: &Value) -> Result<String, String> {
-    let files = fs::read_dir(format!("{}\\demos", settings["tf_folder"].as_str().unwrap()));
-
+fn check_dir(files: Result<fs::ReadDir, std::io::Error>) -> Result<String, String> {
     let entries;
 
     match files {
@@ -316,22 +366,35 @@ fn find_dir(settings: &Value) -> Result<String, String> {
         }
     }
 
-    for entry in fs::read_dir(format!("{}", settings["tf_folder"].as_str().unwrap())).unwrap() {
-        let dir = entry.unwrap();
-        let dir_str = dir.path().to_string_lossy().to_string();
+    Err(
+        format!(
+            "File Not Found",
+        )
+    )
+}
 
-        if dir_str.ends_with("\\_events.txt") {
-            return Ok(dir_str);
-        }
+fn find_dir(settings: &Value) -> Result<String, String> {
+    let files: Result<fs::ReadDir, std::io::Error> = fs::read_dir(format!("{}\\demos", settings["tf_folder"].as_str().unwrap()));
 
-        if dir_str.ends_with("\\KillStreaks.txt") {
-            return Ok(dir_str);
-        }
+    match check_dir(files) {
+        Ok(res) => {
+            return Ok(res);
+        },
+        Err(_) => {}
+    }
+
+    let files: Result<fs::ReadDir, std::io::Error> = fs::read_dir(format!("{}", settings["tf_folder"].as_str().unwrap()));
+
+    match check_dir(files) {
+        Ok(res) => {
+            return Ok(res);
+        },
+        Err(_) => {}
     }
 
     Err(
         format!(
-            "File Not Found: Please ensure the setting tf_folder is correct: ({})",
+            "Could not find the _events.txt or KillStreaks.txt files.\r\nPlease check your settings to ensure the tf folder is correctly linked.\r\nIf you do not have either file, please make one in the \\tf or \\tf\\demos folder. \r\n\r\ntf_folder setting: ({})",
             settings["tf_folder"].as_str().unwrap()
         )
     )
@@ -340,10 +403,7 @@ fn find_dir(settings: &Value) -> Result<String, String> {
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[command]
 fn ryukbot() -> Value {
-    let settings_path = env::var("USERPROFILE").unwrap() + "\\Documents\\Melies\\settings.json";
-
-    let file = fs::read_to_string(settings_path).unwrap();
-    let settings = serde_json::from_str(&file).unwrap();
+    let settings = load_settings();
 
     let dir;
 
@@ -481,16 +541,37 @@ fn ryukbot() -> Value {
     })
 }
 
-fn build_settings() -> Value {
-    let binding = env::var("USERPROFILE").unwrap() + "\\Documents\\Melies\\settings.json";
-    let settings_path = Path::new(&binding);
-    let settings_prefix = settings_path.parent().unwrap();
-    std::fs::create_dir_all(settings_prefix).unwrap();
+fn load_addons() -> Value {
+    fs::create_dir_all(
+        format!("{}\\Documents\\Melies\\addons", env::var("USERPROFILE").unwrap())
+    ).unwrap();
 
-    File::create(settings_path).unwrap();
+    let mut addons = Value::from_str("{}").unwrap();
 
-    let settings =
-        json!({
+    let files = fs::read_dir(format!("{}\\Documents\\Melies\\addons", env::var("USERPROFILE").unwrap())).unwrap();
+
+    for file in files {
+        let filename_os = file.as_ref().unwrap().file_name();
+        let filename = filename_os.to_str().unwrap().to_string();
+
+        if !filename.contains(".json") && !filename.contains(".JSON") {
+            continue;
+        }
+
+        let mut name = filename.replace(".json", "");
+        name = name.replace(".JSON", "");
+        
+        let data = fs::read_to_string(file.unwrap().path()).expect("Unable to read file");
+        let res: serde_json::Value = serde_json::from_str(&data).expect("Unable to parse");
+
+        addons[name] = res;
+    }
+
+    addons
+}
+
+fn default_settings() -> Value {
+    let defaults = json!({
         "tf_folder": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Team Fortress 2\\tf",
         "clear_events": true,
         "save_backups": true,
@@ -499,6 +580,7 @@ fn build_settings() -> Value {
             "method": "h264",
             "framerate": 60,
             "crosshair": false,
+            "viewmodel": true,
             "hud": true,
             "text_chat": false,
             "voice_chat": false,
@@ -520,12 +602,52 @@ fn build_settings() -> Value {
             "viewmodel_fov": 90,
             "record_continuous": true,
             "auto_close": true,
-            "auto_suffix": true
+            "auto_suffix": true,
+            "third_person": false
         }
     });
 
+    defaults
+}
+
+fn build_settings() -> Value {
+    let binding = env::var("USERPROFILE").unwrap() + "\\Documents\\Melies\\settings.json";
+    let settings_path = Path::new(&binding);
+    let settings_prefix = settings_path.parent().unwrap();
+    std::fs::create_dir_all(settings_prefix).unwrap();
+
+    File::create(settings_path).unwrap();
+
+    let mut settings = default_settings();
+
     fs::write(settings_path, settings.to_string()).unwrap();
+
+    settings["addons"] = load_addons();
+
     settings
+}
+
+fn merge(a: &mut Value, b: Value) {
+    if let Value::Object(a) = a {
+        if let Value::Object(b) = b {
+            for (k, v) in b {
+                if k == "addons" {
+                    continue;
+                }
+
+                if v.is_null() {
+                    a.remove(&k);
+                    continue;
+                }
+                
+                merge(a.entry(k).or_insert(Value::Null), v);
+            } 
+
+            return;
+        }
+    }
+
+    *a = b;
 }
 
 #[command]
@@ -536,10 +658,25 @@ fn load_settings() -> Value {
         let file = fs::read_to_string(settings_path).unwrap();
         let settings: Value = serde_json::from_str(&file).unwrap();
 
-        return settings;
+        let mut defaults = default_settings();
+
+        merge(&mut defaults, settings);
+
+        defaults["addons"] = load_addons();
+
+        return defaults;
     }
 
     build_settings()
+}
+
+fn save_addons(addons: &Value) {
+    let map: &Map<String, Value> = addons.as_object().unwrap();
+
+    for (k, v) in map {
+        let addon_path = env::var("USERPROFILE").unwrap() + "\\Documents\\Melies\\addons\\" + k + ".json";
+        fs::write(addon_path, v.to_string()).unwrap();
+    }
 }
 
 #[command]
@@ -548,8 +685,15 @@ fn save_settings(new_settings: String) -> Value {
     let settings_path = env::var("USERPROFILE").unwrap() + "\\Documents\\Melies\\settings.json";
 
     if Path::new(&settings_path).exists() {
-        fs::write(settings_path, settings.to_string()).unwrap();
-        return settings;
+        let mut defaults = default_settings();
+
+        save_addons(&settings["addons"]);
+
+        merge(&mut defaults, settings);
+
+        fs::write(settings_path, defaults.to_string()).unwrap();
+
+        return defaults;
     }
 
     build_settings()
