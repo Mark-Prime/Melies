@@ -158,7 +158,7 @@ fn end_vdm(vdm: &mut VDM, settings: &Value, next_demoname: String) -> VDM {
     let last_tick = vdm.last().props().start_tick.unwrap();
 
     {
-        let mut exec_commands = vdm.create_action(ActionType::PlayCommands).props_mut();
+        let exec_commands = vdm.create_action(ActionType::PlayCommands).props_mut();
 
         exec_commands.start_tick = Some(last_tick + 66);
 
@@ -193,7 +193,7 @@ fn check_spec(clip: &Clip, commands: String) -> String {
 
 fn start_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
     if clip.start_tick > settings["recording"]["start_delay"].as_i64().unwrap() + 66 {
-        let mut skip_props = vdm.create_action(ActionType::SkipAhead).props_mut();
+        let skip_props = vdm.create_action(ActionType::SkipAhead).props_mut();
 
         skip_props.start_tick = Some(settings["recording"]["start_delay"].as_i64().unwrap());
         skip_props.skip_to_tick = Some(clip.start_tick - 66);
@@ -206,7 +206,7 @@ fn add_clip_to_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
     let last_tick = vdm.last().props().start_tick.unwrap();
 
     if clip.start_tick > last_tick + 300 {
-        let mut skip_props = vdm.create_action(ActionType::SkipAhead).props_mut();
+        let skip_props = vdm.create_action(ActionType::SkipAhead).props_mut();
 
         skip_props.start_tick = Some(last_tick + 66);
         skip_props.skip_to_tick = Some(clip.start_tick - 66);
@@ -229,7 +229,7 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
     }
 
     {
-        let mut exec_commands = vdm.create_action(ActionType::PlayCommands).props_mut();
+        let exec_commands = vdm.create_action(ActionType::PlayCommands).props_mut();
 
         exec_commands.start_tick = Some(clip.start_tick - 33);
         exec_commands.name = "Exec Melies Commands".to_string();
@@ -237,7 +237,7 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
     }
 
     {
-        let mut start_record = vdm.create_action(ActionType::PlayCommands).props_mut();
+        let start_record = vdm.create_action(ActionType::PlayCommands).props_mut();
 
         let mut clip_name = format!(
             "{}_{}-{}_{}",
@@ -297,7 +297,7 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
     }
 
     {
-        let mut end_record = vdm.create_action(ActionType::PlayCommands).props_mut();
+        let end_record = vdm.create_action(ActionType::PlayCommands).props_mut();
         let mut commands = String::new();
 
         match settings["output"]["method"].as_str().unwrap() {

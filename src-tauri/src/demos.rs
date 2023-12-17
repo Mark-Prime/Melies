@@ -409,10 +409,22 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
 
     killstreaks.sort_by_key(|ks| ks.average());
 
-    let mut start_tick = state.end_tick - header.ticks;
+    let start_tick = state.start_tick;
 
-    if header.ticks == 0 {
-        start_tick = state.start_tick;
+    let mut pause_length = 0;
+
+    println!("{:?}", header.ticks);
+    println!("{:?}", state.end_tick.0 - state.start_tick.0);
+
+    if header.ticks >= state.end_tick.0 - state.start_tick.0 {
+        println!("IF {:?}", header.ticks - (state.end_tick.0 - state.start_tick.0));
+        pause_length = header.ticks - (state.end_tick.0 - state.start_tick.0)
+    }
+
+    let mut ticks = header.ticks;
+
+    if ticks == 0 {
+        ticks = state.end_tick.0 - state.start_tick.0
     }
 
     let resp =
@@ -426,7 +438,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
             "map": header.map,
             "game": header.game,
             "duration": header.duration,
-            "ticks": ifelse!(header.ticks != 0, header.ticks, state.end_tick.0 - state.start_tick.0),
+            "ticks": ticks,
             "frames": header.frames,
             "signon": header.signon,
         },
@@ -441,6 +453,8 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
             "user_events": sorted_events,
             "player_lives": player_lives,
             "killstreaks": killstreaks,
+            "pause_length": pause_length,
+            "pause_tick": state.pause_tick
         },
         "loaded": true,
         "loading": false

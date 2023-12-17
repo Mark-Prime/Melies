@@ -536,7 +536,8 @@ impl MessageHandler for Analyser {
             MessageType::GameEvent |
                 MessageType::UserMessage |
                 MessageType::ServerInfo |
-                MessageType::NetTick
+                MessageType::NetTick | 
+                MessageType::SetPause
         )
     }
 
@@ -569,7 +570,13 @@ impl MessageHandler for Analyser {
                         }
                     }
                     _ => {}
+                },
+            Message::SetPause(message) => {
+                println!("PAUSE: {} - {}", message.pause, tick);
+                if message.pause {
+                    self.state.pause_tick = tick;
                 }
+            }
             _ => {}
         }
     }
@@ -669,6 +676,7 @@ pub struct MatchState {
     pub end_tick: ServerTick,
     pub start_tick: ServerTick,
     pub interval_per_tick: f32,
+    pub pause_tick: u32
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]

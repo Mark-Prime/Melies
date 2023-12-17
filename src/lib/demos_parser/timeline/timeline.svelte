@@ -90,6 +90,26 @@
         scale = scale < 1 ? 1 : (scale > totalTicks / divWidth ? totalTicks / divWidth : scale) 
     };
 
+    function pauseAdjust(tick) {
+        if (!parsed_demo.data.pause_tick) {
+            return tick
+        }
+
+        if (tick < parsed_demo.data.pause_tick) {
+            return tick
+        }
+
+        return tick + parsed_demo.data.pause_length
+    }
+
+    function calcTick(tick) {
+        return pauseAdjust(tick) - startTick
+    }
+
+    function calcTimelineLength(life) {
+        return (pauseAdjust(life.end) - pauseAdjust(life.start)) / scale
+    }
+
     function on_mouse_down(e) {
         if (!["range", "left", "right"].includes(e.target.classList[0])) {
             return;
@@ -198,16 +218,16 @@
                                 (displayLives || life.kills.length > 0 || (displayAssists && life.assists.length > 0))
                             }
                                 <div class={`timeline__life timeline__life--${team} ${(life.selected ? "timeline--selected" : "")}`} on:click={toggleSelected(life)} on:keydown={toggleSelected(life)} style={`
-                                        --length: ${(life.end - life.start) / scale}px;
-                                        --start: ${((life.start - startTick - leftPos) / scale)}px
+                                        --length: ${calcTimelineLength(life)}px;
+                                        --start: ${((calcTick(life.start) - leftPos) / scale)}px
                                     `}
                                 >
                                     <div
                                         class={`
                                             timeline__data-tooltip tooltip 
                                             ${parsed_demo.data?.users[player]?.team == "blue" ? "tooltip__lower" : ""}
-                                            ${life.start - startTick > leftPos + ((divWidth * scale) * .7) && "tooltip--left"}
-                                            ${life.start - startTick < leftPos && "tooltip--custom"}
+                                            ${calcTick(life.start) > leftPos + ((divWidth * scale) * .7) && "tooltip--left"}
+                                            ${calcTick(life.start) < leftPos && "tooltip--custom"}
                                         ` }
                                         data-tooltip={`Length: ${tickToTime(life.end - life.start)}\n${
                                             life.kills.length ? 
@@ -215,7 +235,7 @@
                                             `No Kills`
                                         }\n\r${life.kills.map((kill) => {
                                             let crit_types = ["", " Mini-Crit", " CRITICAL HIT!"]
-                                            return `${parsed_demo.data?.users[kill.victim].name} (tick: ${kill.tick - startTick})${crit_types[kill.crit_type]}`
+                                            return `${parsed_demo.data?.users[kill.victim].name} (tick: ${calcTick(kill.tick)})${crit_types[kill.crit_type]}`
                                         }).join(", \n\r")}`}
                                         style={`
                                             --kills: ${life.kills.length + 1};
@@ -256,7 +276,7 @@
                                             ${parsed_demo.data?.users[player]?.team == "blue" ? "timeline__marker--lower" : ""}
                                             ${(x > divWidth * .7) && "timeline__marker--left"}
                                         `}
-                                        data-tooltip={`Start: ${life.start - startTick}`}
+                                        data-tooltip={`Start: ${calcTick(life.start)}`}
                                         style={`
                                             --position: -1px;
                                             --kills: 0;
@@ -268,7 +288,7 @@
                                             ${parsed_demo.data?.users[player]?.team == "blue" ? "timeline__marker--lower" : ""}
                                             ${(x > divWidth * .7) && "timeline__marker--left"}
                                         `}
-                                        data-tooltip={`End: ${life.end - startTick}`}
+                                        data-tooltip={`End: ${calcTick(life.end)}`}
                                         style={`
                                             --position: ${((life.end - life.start) / scale) - 2}px;
                                             --kills: 0;
@@ -280,7 +300,7 @@
                                                 ${parsed_demo.data?.users[player]?.team == "blue" ? "timeline__marker--lower" : ""}
                                                 ${(x > divWidth * .7) && "timeline__marker--left"}
                                             `}
-                                            data-tooltip={`Killed: ${parsed_demo.data?.users[kill.victim].name}\r\nTick: ${kill.tick - startTick}`}
+                                            data-tooltip={`Killed: ${parsed_demo.data?.users[kill.victim].name}\r\nTick: ${calcTick(kill.tick)}`}
                                             style={`
                                                 --position: ${((kill.tick - life.start) / scale) - 2}px;
                                                 --kills: 1;
@@ -297,7 +317,7 @@
                                                 `Players Killed in Killstreak: ` 
                                             }\n\r${ks.kills.map((kill) => {
                                                 let crit_types = ["", " Mini-Crit", " CRITICAL HIT!"]
-                                                return `${parsed_demo.data?.users[kill.victim].name} (tick: ${kill.tick - startTick})${crit_types[kill.crit_type]}`
+                                                return `${parsed_demo.data?.users[kill.victim].name} (tick: ${calcTick(kill.tick)})${crit_types[kill.crit_type]}`
                                             }).join(", \n\r")}`}
                                             style={`
                                                 --position: ${((ks.kills[0].tick - life.start) / scale) - 2}px;

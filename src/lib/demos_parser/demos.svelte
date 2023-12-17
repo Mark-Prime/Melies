@@ -37,6 +37,18 @@
         resp = await invoke("load_demos");
     };
 
+    function calcTick(tick) {
+        if (!parsed_demo.data.pause_tick) {
+            return tick - parsed_demo.data.start_tick
+        }
+
+        if (tick < parsed_demo.data.pause_tick) {
+            return tick - parsed_demo.data.start_tick
+        }
+
+        return tick - parsed_demo.data.start_tick + parsed_demo.data.pause_length
+    }
+
     function closeModal() {
         selected = [];
         current_demo = "";
@@ -181,7 +193,7 @@
                 for (let life of player) {
                     if (life.selected) {
                         events.push({
-                            time: (life.start + 20) - parsed_demo.data.start_tick,
+                            time: calcTick((life.start + 20)),
                             label: `${life.kills.length}k-${life.assists.length}a_start`,
                             steamid64: parsed_demo.data.users[i].steamId64,
                             kills: life.kills.length,
@@ -189,7 +201,7 @@
                         })
 
                         events.push({
-                            time: (life.end + 132) - parsed_demo.data.start_tick,
+                            time: calcTick((life.end + 132)),
                             label: `${life.kills.length}k-${life.assists.length}a_end`
                         })
                     }
@@ -197,7 +209,7 @@
                     for (let kill of life.kills) {
                         if (kill.selected) {
                             events.push({
-                                time: (kill.tick + 20) - parsed_demo.data.start_tick,
+                                time: calcTick((kill.tick + 20)),
                                 label: `k-${kill.killer_class}_v-${kill.victim_class}`,
                                 steamid64: parsed_demo.data.users[i].steamId64,
                                 bookmark: true,
@@ -208,7 +220,7 @@
                     for (let killstreak of life.killstreaks) {
                         if (killstreak.selected) {
                             events.push({
-                                time: killstreak.kills[killstreak.kills.length - 1].tick - parsed_demo.data.start_tick,
+                                time: calcTick(killstreak.kills[killstreak.kills.length - 1].tick),
                                 label: `${killstreak.kills.length}ks`,
                                 steamid64: parsed_demo.data.users[i].steamId64,
                                 kills: killstreak.kills.length,
@@ -231,7 +243,7 @@
                             }
 
                             events.push({
-                                time: start_time - parsed_demo.data.start_tick,
+                                time: calcTick(start_time),
                                 label: `${killstreak.kills.length}ks_start`,
                                 steamid64: parsed_demo.data.users[i].steamId64,
                                 kills: killstreak.kills.length,
@@ -239,7 +251,7 @@
                             })
 
                             events.push({
-                                time: end_time - parsed_demo.data.start_tick,
+                                time: calcTick(end_time),
                                 label: `${killstreak.kills.length}ks_end`
                             })
                         }
@@ -252,7 +264,7 @@
 
                 if (message.selected) {
                     events.push({
-                        time: message.tick - parsed_demo.data.start_tick,
+                        time: calcTick(message.tick),
                         label: `message-sent`,
                         steamid64: parsed_demo.data.users[message.from].steamId64,
                         bookmark: true,
@@ -625,9 +637,9 @@
                                                                                 <span 
                                                                                     class="tooltip"
                                                                                     style={`--kills: 0;`}
-                                                                                    data-tooltip={`Timecode: ${tickToTime(kill.tick - parsed_demo.data.start_tick)}`}
+                                                                                    data-tooltip={`Timecode: ${tickToTime(calcTick(kill.tick))}`}
                                                                                 >
-                                                                                    {kill.tick - parsed_demo.data.start_tick}
+                                                                                    {calcTick(kill.tick)}
                                                                                 </span>
                                                                             </div>
                                                                             
@@ -653,16 +665,16 @@
                                                                 <div
                                                                     class="tooltip"
                                                                     style={`--kills: 0;`}
-                                                                    data-tooltip={`Timecode: ${tickToTime(life.start - parsed_demo.data.start_tick)}`}
+                                                                    data-tooltip={`Timecode: ${tickToTime(calcTick(life.start))}`}
                                                                 >
-                                                                    Start: {life.start - parsed_demo.data.start_tick}
+                                                                    Start: {calcTick(life.start)}
                                                                 </div>
                                                                 <div
                                                                     class="tooltip"
                                                                     style={`--kills: 0;`}
                                                                     data-tooltip={`Length: ${tickToTime(life.end - life.start)}`}
                                                                 >
-                                                                    End: {life.end - parsed_demo.data.start_tick}
+                                                                    End: {calcTick(life.end)}
                                                                 </div>
                                                                 <div class="killstreak__buttons"> 
                                                                     <div class="add_demo">
@@ -675,7 +687,11 @@
                                                                         {/if}
                                                                     </div>
                                                                     <div class="add_demo">
-                                                                        {#if allKillsSelected(life)}
+                                                                        {#if life.kills.length == 0}
+                                                                            <div class="add_demo add_demo--disabled tooltip tooltip--left" data-tooltip="Toggle Kills as Bookmarks" style={`--kills: 0;`}>
+                                                                                <button disabled>+</button>
+                                                                            </div>
+                                                                        {:else if allKillsSelected(life)}
                                                                             <div class="tooltip tooltip--left" data-tooltip="Toggle Kills as Bookmarks" style={`--kills: 0;`}>
                                                                                 <button class="auto-height cancel-btn" on:click={toggleKillsSelected(life.kills)}>-</button>
                                                                             </div>
@@ -744,9 +760,9 @@
                                                                             <span 
                                                                                 class="tooltip"
                                                                                 style={`--kills: 0;`}
-                                                                                data-tooltip={`Timecode: ${tickToTime(kill.tick - parsed_demo.data.start_tick)}`}
+                                                                                data-tooltip={`Timecode: ${tickToTime(calcTick(kill.tick))}`}
                                                                             >
-                                                                                {kill.tick - parsed_demo.data.start_tick}
+                                                                                {calcTick(kill.tick)}
                                                                             </span>
                                                                         </div>
                                                                     {/each}
@@ -758,23 +774,23 @@
                                                                     `Timecode: ${
                                                                         Math.floor(
                                                                             Math.round(
-                                                                                (killstreak.kills[0].tick - parsed_demo.data.start_tick) / 66) / 60
+                                                                                (calcTick(killstreak.kills[0].tick)) / 66) / 60
                                                                             )
                                                                         }m ${
                                                                             Math.round(
-                                                                                (killstreak.kills[0].tick - parsed_demo.data.start_tick) / 66
+                                                                                (calcTick(killstreak.kills[0].tick)) / 66
                                                                             ) % 60
                                                                         }s`
                                                                     }
                                                                 >
-                                                                    First: {killstreak.kills[0].tick - parsed_demo.data.start_tick}
+                                                                    First: {calcTick(killstreak.kills[0].tick)}
                                                                 </div>
                                                                 <div
                                                                     class="tooltip"
                                                                     style={`--kills: 0;`}
                                                                     data-tooltip={`Length: ${tickToTime(killstreak.kills[killstreak.kills.length - 1].tick - killstreak.kills[0].tick)}`}
                                                                 >
-                                                                    Last: {killstreak.kills[killstreak.kills.length - 1].tick - parsed_demo.data.start_tick}
+                                                                    Last: {calcTick(killstreak.kills[killstreak.kills.length - 1].tick)}
                                                                 </div>
                                                                 <div class="killstreak__buttons">
                                                                     <div class="add_demo tooltip tooltip--left" data-tooltip="Entire Life" style={`--kills: 0;`}>
@@ -870,9 +886,9 @@
                                                         <span 
                                                             class="tooltip"
                                                             style={`--kills: 0;`}
-                                                            data-tooltip={`Timecode: ${tickToTime(kill.tick - parsed_demo.data.start_tick)}`}
+                                                            data-tooltip={`Timecode: ${tickToTime(calcTick(kill.tick))}`}
                                                         >
-                                                            {kill.tick - parsed_demo.data.start_tick}
+                                                            {calcTick(kill.tick)}
                                                         </span>
                                                     </div>
                                                 {/each}
@@ -884,23 +900,23 @@
                                                 `Timecode: ${
                                                     Math.floor(
                                                         Math.round(
-                                                            (killstreak.kills[0].tick - parsed_demo.data.start_tick) / 66) / 60
+                                                            (calcTick(killstreak.kills[0].tick)) / 66) / 60
                                                         )
                                                     }m ${
                                                         Math.round(
-                                                            (killstreak.kills[0].tick - parsed_demo.data.start_tick) / 66
+                                                            (calcTick(killstreak.kills[0].tick)) / 66
                                                         ) % 60
                                                     }s`
                                                 }
                                             >
-                                                First: {killstreak.kills[0].tick - parsed_demo.data.start_tick}
+                                                First: {calcTick(killstreak.kills[0].tick)}
                                             </div>
                                             <div
                                                 class="tooltip"
                                                 style={`--kills: 0;`}
                                                 data-tooltip={`Length: ${tickToTime(killstreak.kills[killstreak.kills.length - 1].tick - killstreak.kills[0].tick)}`}
                                             >
-                                                Last: {killstreak.kills[killstreak.kills.length - 1].tick - parsed_demo.data.start_tick}
+                                                Last: {calcTick(killstreak.kills[killstreak.kills.length - 1].tick)}
                                             </div>
                                             <div class="killstreak__buttons">
                                                 <div class="add_demo tooltip tooltip--left" data-tooltip="Entire Life" style={`--kills: 0;`}>
@@ -948,7 +964,7 @@
                                         <button on:click={toggleSelected(chat)}>+</button>
                                     {/if}
                                     <div class="chat__tick">
-                                        {chat.tick - parsed_demo.data.start_tick}
+                                        {calcTick(chat.tick)}
                                     </div>
                                     <div class="chat__text">
                                         <a 
@@ -1411,6 +1427,10 @@
             // height: 100%;
             border-radius: 5px;
             width: fit-content;
+        }
+        
+        &--disabled {
+            opacity: .75;
         }
     }
 
