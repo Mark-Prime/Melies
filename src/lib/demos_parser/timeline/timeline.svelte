@@ -278,10 +278,10 @@
                                             ${parsed_demo.data?.users[player]?.team == "blue" ? "timeline__marker--lower" : ""}
                                             ${(x > divWidth * .7) && "timeline__marker--left"}
                                         `}
-                                        data-tooltip={`Start: ${calcTick(life.start)}`}
+                                        data-tooltip={`Start: ${calcTick(life.start)}\r\nTimecode: ${tickToTime(calcTick(life.start))}`}
                                         style={`
                                             --position: -1px;
-                                            --kills: 0;
+                                            --kills: 1;
                                         `}
                                     ></div>
                                     <div 
@@ -290,10 +290,10 @@
                                             ${parsed_demo.data?.users[player]?.team == "blue" ? "timeline__marker--lower" : ""}
                                             ${(x > divWidth * .7) && "timeline__marker--left"}
                                         `}
-                                        data-tooltip={`End: ${calcTick(life.end)}`}
+                                        data-tooltip={`End: ${calcTick(life.end)}\r\nTimecode: ${tickToTime(calcTick(life.end))}`}
                                         style={`
                                             --position: ${((life.end - life.start) / scale) - 2}px;
-                                            --kills: 0;
+                                            --kills: 1;
                                         `}
                                     ></div>
                                     {#each life.kills as kill} 
@@ -302,10 +302,10 @@
                                                 ${parsed_demo.data?.users[player]?.team == "blue" ? "timeline__marker--lower" : ""}
                                                 ${(x > divWidth * .7) && "timeline__marker--left"}
                                             `}
-                                            data-tooltip={`Killed: ${parsed_demo.data?.users[kill.victim].name}\r\nTick: ${calcTick(kill.tick)}`}
+                                            data-tooltip={`Killed: ${parsed_demo.data?.users[kill.victim].name}\r\nTick: ${calcTick(kill.tick)}\r\nTimecode: ${tickToTime(calcTick(kill.tick))}`}
                                             style={`
                                                 --position: ${((kill.tick - life.start) / scale) - 2}px;
-                                                --kills: 1;
+                                                --kills: 2;
                                             `}
                                         ></div>
                                     {/each}

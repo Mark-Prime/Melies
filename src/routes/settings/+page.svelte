@@ -90,10 +90,11 @@
       h264 - QuickTime encoding to .mp4
       jpeg - generates .jpeg image sequence
       tga - generates .tga image sequence
+      SVR - uses Source Video Render to record .mp4
       Lawena - uses commands for Lawena (settings will be overwritten by Lawena)
       Do Not Record - ignores recording commands but still skips
 `}
-      style={`--kills: 5;`}
+      style={`--kills: 6;`}
     >
     Recording Method
     </label>
@@ -101,6 +102,7 @@
       <option value="h264">h264</option>
       <option value="jpeg">jpeg</option>
       <option value="tga">tga</option>
+      <option value="svr">SVR</option>
       <option value="lawena">Lawena</option>
       <option value="none">Do Not Record</option>
     </select>

@@ -257,7 +257,7 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
             setting_as_bool(&settings["recording"]["auto_suffix"]) &&
             bm_value != "General".to_string()
         {
-            clip_name = format!("{}_{}", clip_name, bm_value.replace(" ", "-"));
+            clip_name = format!("{}_{}", clip_name, bm_value.replace("spec", "").trim().replace(" ", "-"));
         }
 
         let mut commands = "".to_string();
@@ -277,6 +277,13 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
                     "{}host_framerate {}; startmovie {}; clear",
                     ifelse!(setting_as_bool(&settings["output"]["snd_fix"]), "snd_fix; ", ""),
                     settings["output"]["framerate"],
+                    clip_name
+                );
+            }
+            "svr" => {
+                commands = format!(
+                    "{}; startmovie {}.mp4; clear",
+                    ifelse!(setting_as_bool(&settings["output"]["snd_fix"]), "snd_fix; ", ""),
                     clip_name
                 );
             }
@@ -301,7 +308,7 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
         let mut commands = String::new();
 
         match settings["output"]["method"].as_str().unwrap() {
-            "h264" | "jpeg" | "tga" => {
+            "h264" | "jpeg" | "tga" | "svr" => {
                 commands = format!(
                     "{}; endmovie; host_framerate 0;",
                     settings["recording"]["end_commands"].as_str().unwrap()
