@@ -8,19 +8,19 @@ use serde_json::Value;
 use tf_demo_parser::{ Demo, DemoParser };
 use std::path::Path;
 
-use crate::demos::custom_analyser::Class;
+use crate::demos::new_analyser::Class;
 
-use self::custom_analyser::Death;
-use self::custom_analyser::DemoTick;
-use self::custom_analyser::Spawn;
+use self::new_analyser::Death;
+use tf_demo_parser::demo::data::DemoTick;
+use self::new_analyser::Spawn;
 
-macro_rules! ifelse {
-    ($c:expr, $v:expr, $v1:expr) => {
-        if $c {$v} else {$v1}
-    };
-}
+// macro_rules! ifelse {
+//     ($c:expr, $v:expr, $v1:expr) => {
+//         if $c {$v} else {$v1}
+//     };
+// }
 
-mod custom_analyser;
+mod new_analyser;
 
 #[derive(Debug, Serialize, Clone)]
 enum Event {
@@ -205,7 +205,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
 
     let parser = DemoParser::new_all_with_analyser(
         demo.get_stream(),
-        custom_analyser::Analyser::new()
+        new_analyser::Analyser::new()
     );
     let (header, mut state) = match parser.parse() {
         Ok(val) => {
@@ -237,16 +237,16 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
 
     for death in &mut state.deaths {
 
-        let killer = user_events.entry(death.killer.0.into()).or_insert(vec![]);
+        let killer = user_events.entry(death.killer.into()).or_insert(vec![]);
 
         {
             let user_classes_clone = user_classes.clone();
-            death.killer_class = get_player_class(user_classes_clone, death.killer.0.into(), death.tick);
+            death.killer_class = get_player_class(user_classes_clone, death.killer.into(), death.tick);
         }
 
         {
             let user_classes_clone = user_classes.clone();
-            death.victim_class = get_player_class(user_classes_clone, death.victim.0.into(), death.tick);
+            death.victim_class = get_player_class(user_classes_clone, death.victim.into(), death.tick);
         }
 
 
@@ -255,12 +255,12 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
         let assist_id = death.assister;
 
         if assist_id.is_some() {
-            let assister = user_events.entry(assist_id.unwrap().0.into()).or_insert(vec![]);
+            let assister = user_events.entry(assist_id.unwrap().into()).or_insert(vec![]);
 
             assister.push(Event::Assist(death.clone()));
         }
 
-        let victim = user_events.entry(death.victim.0.into()).or_insert(vec![]);
+        let victim = user_events.entry(death.victim.into()).or_insert(vec![]);
 
         victim.push(Event::Death(death.clone()));
     }
@@ -383,7 +383,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
                     kill_count += 1;
                     streak_count += 1;
                 } else if
-                    kill.tick.as_i64() <
+                    (kill.tick.0 as i64) <
                     last_kill_tick +
                         settings["recording"]["before_killstreak_per_kill"].as_i64().unwrap()
                 {
@@ -411,21 +411,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
 
     let start_tick = state.start_tick;
 
-    let mut pause_length = 0;
-
-    println!("{:?}", header.ticks);
-    println!("{:?}", state.end_tick.0 - state.start_tick.0);
-
-    if header.ticks >= state.end_tick.0 - state.start_tick.0 {
-        println!("IF {:?}", header.ticks - (state.end_tick.0 - state.start_tick.0));
-        pause_length = header.ticks - (state.end_tick.0 - state.start_tick.0)
-    }
-
-    let mut ticks = header.ticks;
-
-    if ticks == 0 {
-        ticks = state.end_tick.0 - state.start_tick.0
-    }
+    let ticks = header.ticks;
 
     let resp =
         json!({
@@ -443,8 +429,8 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
             "signon": header.signon,
         },
         "data": {
-            // "deaths": state.deaths,
-            // "spawns": state.spawns,
+            "deaths": state.deaths,
+            "spawns": state.spawns,
             "rounds": state.rounds,
             "users": state.users,
             "chat": state.chat,
@@ -453,8 +439,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
             "user_events": sorted_events,
             "player_lives": player_lives,
             "killstreaks": killstreaks,
-            "pause_length": pause_length,
-            "pause_tick": state.pause_tick
+            "pauses": state.pauses
         },
         "loaded": true,
         "loading": false

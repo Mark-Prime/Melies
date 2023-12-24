@@ -38,15 +38,17 @@
     };
 
     function calcTick(tick) {
-        if (!parsed_demo.data.pause_tick) {
-            return tick - parsed_demo.data.start_tick
-        }
+        // if (!parsed_demo.data.pause_tick) {
+        //     return tick - parsed_demo.data.start_tick
+        // }
 
-        if (tick < parsed_demo.data.pause_tick) {
-            return tick - parsed_demo.data.start_tick
-        }
+        // if (tick < parsed_demo.data.pause_tick) {
+        //     return tick - parsed_demo.data.start_tick
+        // }
 
-        return tick - parsed_demo.data.start_tick + parsed_demo.data.pause_length
+        // return tick - parsed_demo.data.start_tick + parsed_demo.data.pause_length
+        
+        return tick
     }
 
     function closeModal() {
@@ -79,6 +81,18 @@
         }
 
         return str.substring(0, len - 3) + '...'
+    }
+
+    function getMessageName(chat) {
+        if (chat.from === 1 || chat.from === 0) {
+            return "Spectator";
+        }
+
+        if (chat.name) {
+            return chat.name;
+        }
+
+        return parsed_demo.data?.users[chat.from]?.name;
     }
 
     function toggleSelected(demo, isKillstreak = null, i = null) {
@@ -437,7 +451,8 @@
             return;
         }
 
-        parsed_demo.header.ticks = parsed_demo.data.end_tick - parsed_demo.data.start_tick;
+        // parsed_demo.header.ticks = parsed_demo.data.end_tick - parsed_demo.data.start_tick;
+        parsed_demo.header.ticks = parsed_demo.data.start_tick;
     }
 
     function refreshList() {
@@ -971,7 +986,7 @@
                                             href={`#player-${chat.name}`} 
                                             class={`chat__name ${parsed_demo.data?.users[chat.from]?.team}`}
                                         >
-                                            {chat.name}{getMessageType(chat.message.kind)}:
+                                            {getMessageName(chat)}{getMessageType(chat.kind)}:
                                         </a>
                                         {chat.text}
                                     </div>

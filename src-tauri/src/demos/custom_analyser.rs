@@ -436,7 +436,7 @@ impl From<tf_demo_parser::demo::data::UserInfo> for UserInfo {
         UserInfo {
             classes: ClassList::default(),
             name: info.player_info.name,
-            user_id: info.player_info.user_id.into(),
+            user_id: info.player_info.user_id,
             steam_id64: steam_id64.to_string(),
             steam_id: info.player_info.steam_id,
             entity_id: info.entity_id,

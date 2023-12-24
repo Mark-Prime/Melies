@@ -22,6 +22,7 @@ function parseUrls() {
     logs = url.split(',')
 
     total = logs.length;
+    index = 0;
 
     parseLog();
 }

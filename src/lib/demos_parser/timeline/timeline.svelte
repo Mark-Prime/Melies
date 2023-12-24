@@ -32,6 +32,7 @@
         right = Math.max(1, (divWidth / totalTicks) * 100);
         minimum = right;
         maxScale = totalTicks / divWidth;
+        right = 100;
     })
 
     $: {
@@ -103,7 +104,8 @@
     }
 
     function calcTick(tick) {
-        return pauseAdjust(tick) - startTick
+        // return pauseAdjust(tick) - startTick
+        return tick;
     }
 
     function calcTimelineLength(life) {
