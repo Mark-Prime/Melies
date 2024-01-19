@@ -8,11 +8,19 @@
   },
   "package": {
     "productName": "Méliès",
-    "version": "0.9.12"
+    "version": "0.9.13"
   },
   "tauri": {
     "allowlist": {
       "all": false,
+      "dialog": {
+        "all": false,
+        "ask": false,
+        "confirm": false,
+        "message": true,
+        "open": false,
+        "save": false
+      },
       "shell": {
         "all": false,
         "open": true

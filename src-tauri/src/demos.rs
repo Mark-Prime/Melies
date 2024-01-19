@@ -125,6 +125,13 @@ impl Life {
     }
 }
 
+pub(crate) fn validate_demos_folder(settings: &Value) -> bool {
+    match fs::read_dir(settings["tf_folder"].as_str().unwrap()) {
+        Ok(_) => return true,
+        Err(_) => return false,
+    }
+}
+
 pub(crate) fn scan_for_demos(settings: Value) -> Value {
     let mut demos: Vec<Value> = vec![];
     let paths = fs::read_dir(settings["tf_folder"].as_str().unwrap()).unwrap();

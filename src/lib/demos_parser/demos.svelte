@@ -17,10 +17,14 @@
     let resp = {loaded: false, loading: false};
     let parsed_demo = {loaded: false, loading: false};
     let selected = [];
+    let bluTeam = [];
+    let redTeam = [];
     let displayLives = false;
     let displayAssists = false;
     let displayPlayers = false;
-    let is_shift_down = false;
+    let isShiftDown = false;
+    let isPovDemo = false;
+    let povId = 0;
     let last_selected = 0;
     
     let current_demo = "";
@@ -34,7 +38,11 @@
     }
 
     async function loadDemos() {
-        resp = await invoke("load_demos");
+        try {
+            resp = await invoke("load_demos");
+        } catch (error) {
+            alert(error);
+        }
     };
 
     function calcTick(tick) {
@@ -99,7 +107,7 @@
         demo.selected = !demo.selected;
 
         if (i !== null) {
-            if (is_shift_down) {
+            if (isShiftDown) {
                 for (let index in resp.demos) {
                     if (index > Math.min(i, last_selected) && index < Math.max(i, last_selected)) {
                         resp.demos[index].selected = !resp.demos[index].selected;
@@ -299,6 +307,16 @@
             parsed_demo = await invoke("parse_demo", { path: current_demo });
 
             verifyTicks();
+            isPovDemo = isDemoPov();
+
+            console.log("isPovDemo", isPovDemo)
+            console.log("povId", povId)
+
+            // Sort the team order by class
+            bluTeam.sort(sortByClass)
+            redTeam.sort(sortByClass)
+            
+            console.log(bluTeam, redTeam)
 
             console.log(parsed_demo);
         } else {
@@ -306,13 +324,56 @@
         }
     }
 
-    function displayPlayer(player) {
+    function sortByClass(a, b) {
+        let a1 = classNumConverter(getClasses(a)[0]);
+        let b1 = classNumConverter(getClasses(b)[0]);
+
+        return a1 - b1;
+    }
+
+    function isDemoPov() {
+        let nick = parsed_demo.header.nick;
+
+        bluTeam = [];
+        redTeam = [];
+        povId = 0;
+
+        for (let user in parsed_demo.data.users) {
+            let username = parsed_demo.data.users[user].name;
+
+            if (username === nick) {
+                povId = user;
+                return true;
+            }
+
+            let team = parsed_demo.data.users[user].team;
+
+            if (team === "other") {
+                continue;
+            }
+
+            if (team === "blue") {
+                bluTeam.push(user);
+                continue;
+            }
+
+            redTeam.push(user);
+        }
+
+        return false;
+    }
+
+    function displayPlayer(player, team) {
         if (player == 0) {
             return false;
         }
 
         if (displayPlayers) {
             return true;
+        }
+
+        if (parsed_demo.data?.users[player]?.team !== team) {
+            return false;
         }
 
         if (parsed_demo.data.player_lives[player].length == 0) {
@@ -338,18 +399,18 @@
         return false;
     }
 
-    function recordEntireDemo(steamId) {
+    function recordEntireDemo(userId) {
         let events = [
             {
                 time: settings.recording.start_delay,
-                label: parsed_demo.data.users[steamId].steamId64,
-                steamid64: parsed_demo.data.users[steamId].steamId64,
+                label: parsed_demo.data?.users[userId].steamId64,
+                steamid64: parsed_demo.data?.users[userId].steamId64,
                 kills: 0,
                 start: true
             },{
-                time: Math.max(parsed_demo.header.ticks - 99, settings.recording.start_delay + 66),
-                label: parsed_demo.data.users[steamId].steamId64,
-                steamid64: parsed_demo.data.users[steamId].steamId64
+                time: Math.max(parsed_demo.header?.ticks - 99, settings.recording.start_delay + 66),
+                label: parsed_demo.data?.users[userId].steamId64,
+                steamid64: parsed_demo.data?.users[userId].steamId64
             }
         ];
         
@@ -357,6 +418,50 @@
 
         parseDemoEvents(name_split[name_split.length - 1], events.sort((a, b) => a.time - b.time));
         nextDemo();
+    }
+
+    function getClasses(playerId) {
+        let player = parsed_demo.data.users[playerId]
+        let playerClasses
+        try {
+            playerClasses = Object.keys(player.classes);
+        } catch (TypeError) {
+            console.log(player)
+        }
+
+        playerClasses.sort((a, b) => {
+            let a1 = player.classes[a];
+            let a2 = classNumConverter(player.classes[a]);
+
+            let b1 = player.classes[b];
+            let b2 = classNumConverter(player.classes[b]);
+
+            return b1 - a1 || b2 - a2;
+        })
+
+        return playerClasses;
+    }
+
+    function getTeam(team) {
+        if (isPovDemo) {
+            return [povId];
+        }
+
+        if (team === "blue") {
+            return bluTeam;
+        }
+
+        return redTeam;
+    }
+
+    function getKillstreaks() {
+        if (!isDemoPov) {
+            return parsed_demo.data.killstreaks;
+        }
+
+        return parsed_demo.data.killstreaks.filter((e) => {
+            return e.kills[0].killer === povId
+        })
     }
 
     function classConverter(player_class) {
@@ -379,6 +484,31 @@
                 return "sniper"
             case "8":
                 return "spy";
+            default:
+                return player_class;
+        }
+    }
+
+    function classNumConverter(player_class) {
+        switch (player_class) {
+            case "1":
+                return 1;
+            case "3":
+                return 2;
+            case "7":
+                return 3;
+            case "4":
+                return 4;
+            case "6":
+                return 5;
+            case "9":
+                return 6;
+            case "5":
+                return 7;
+            case "2":
+                return 8;
+            case "8":
+                return 9;
             default:
                 return player_class;
         }
@@ -482,7 +612,7 @@
 
         switch (event.key) {
             case "Shift":
-                is_shift_down = true;
+                isShiftDown = true;
 
                 event.preventDefault();
                 break;
@@ -492,7 +622,7 @@
     function on_key_up(event) {
         switch (event.key) {
             case "Shift":
-                is_shift_down = false;
+                isShiftDown = false;
 
                 event.preventDefault();
                 break;
@@ -569,8 +699,8 @@
                             {#each ["blue", "red"] as team}
                                 <div class="team">
                                     <h2 class={"team__label " + team}>{team[0].toUpperCase() + team.slice(1)}</h2>
-                                    {#each Object.keys(parsed_demo.data.player_lives) as player}
-                                        {#if displayPlayer(player) & parsed_demo.data?.users[player]?.team === team}
+                                    {#each getTeam(team) as player}
+                                        {#if displayPlayer(player, team)}
                                             <div class="flex-start align-center">
                                                 {#if parsed_demo.data.users[player].hide}
                                                     <button on:click={() => parsed_demo.data.users[player].hide = false} class="hide-toggle">
@@ -589,7 +719,7 @@
                                                         target="_blank" rel="noopener noreferrer"
                                                         id={`player-${parsed_demo.data.users[player].name}`}
                                                     >{parsed_demo.data.users[player].name}</a>
-                                                    {#each Object.keys(parsed_demo.data.users[player]["classes"]) as player_class}
+                                                    {#each getClasses(player) as player_class}
                                                         <ClassLogo 
                                                             player_class={classConverter(player_class)}
                                                             tooltip={`Lives: ${parsed_demo.data.users[player]["classes"][player_class]}`}
@@ -721,7 +851,7 @@
                                                         {/if}
                                                     {/if}
                                                 {/each}
-                                                <button class="full_demo" on:click={recordEntireDemo(player)}>Record entire demo</button>
+                                                <button class="full_demo" on:click={() => recordEntireDemo(player)}>Record entire demo</button>
 
                                                 {#if parsed_demo.data.player_lives[player].filter(life => life.killstreaks.length > 0).length > 0}
                                                     <h4 class="centered">Killstreaks</h4>
@@ -815,13 +945,15 @@
                                                                             <button on:click={toggleSelected(life)}>+</button>
                                                                         {/if}
                                                                     </div>
-                                                                    <div class="add_demo tooltip tooltip--left" data-tooltip="As Killstreak" style={`--kills: 0;`}>
-                                                                        {#if killstreak.selected}
-                                                                            <button class="cancel-btn" on:click={toggleSelected(killstreak, false)}>-</button>
-                                                                        {:else}
-                                                                            <button on:click={toggleSelected(killstreak, false)}>+</button>
-                                                                        {/if}
-                                                                    </div>
+                                                                    {#if isDemoPov}
+                                                                        <div class="add_demo tooltip tooltip--left" data-tooltip="As Killstreak" style={`--kills: 0;`}>
+                                                                            {#if killstreak.selected}
+                                                                                <button class="cancel-btn" on:click={toggleSelected(killstreak, false)}>-</button>
+                                                                            {:else}
+                                                                                <button on:click={toggleSelected(killstreak, false)}>+</button>
+                                                                            {/if}
+                                                                        </div>
+                                                                    {/if}
                                                                     <div class="add_demo tooltip tooltip--left" data-tooltip="As Bookmarks" style={`--kills: 0;`}>
                                                                         {#if killstreak.selected_as_bookmark}
                                                                             <button class="cancel-btn" on:click={toggleBookmarkSelected(killstreak, false)}>-</button>
@@ -840,10 +972,10 @@
                                 </div>
                             {/each}
                         </div>
-                        {#if parsed_demo.data.killstreaks.length != 0}
+                        {#if getKillstreaks().length != 0}
                             <h2 class="centered chat__title">All Killstreaks</h2>
                             <div class="killstreaks">
-                                {#each parsed_demo.data.killstreaks as killstreak}
+                                {#each getKillstreaks() as killstreak}
                                     {#if parsed_demo.data.users[killstreak.kills[0].killer]}
                                         <div class={"demo demo__life " + ((killstreak.selected || killstreak.selected_as_bookmark || getLifeFromKillstreak(killstreak)?.selected) && "demo--selected")}>
                                             <div>
@@ -941,13 +1073,15 @@
                                                         <button on:click={toggleSelected(getLifeFromKillstreak(killstreak))}>+</button>
                                                     {/if}
                                                 </div>
-                                                <div class="add_demo tooltip tooltip--left" data-tooltip="As Killstreak" style={`--kills: 0;`}>
-                                                    {#if killstreak.selected}
-                                                        <button class="cancel-btn" on:click={toggleSelected(killstreak, true)}>-</button>
-                                                    {:else}
-                                                        <button on:click={toggleSelected(killstreak, true)}>+</button>
-                                                    {/if}
-                                                </div>
+                                                {#if isDemoPov}
+                                                    <div class="add_demo tooltip tooltip--left" data-tooltip="As Killstreak" style={`--kills: 0;`}>
+                                                        {#if killstreak.selected}
+                                                            <button class="cancel-btn" on:click={toggleSelected(killstreak, true)}>-</button>
+                                                        {:else}
+                                                            <button on:click={toggleSelected(killstreak, true)}>+</button>
+                                                        {/if}
+                                                    </div>
+                                                {/if}
                                                 <div class="add_demo tooltip tooltip--left" data-tooltip="As Bookmarks" style={`--kills: 0;`}>
                                                     {#if killstreak.selected_as_bookmark}
                                                         <button class="cancel-btn" on:click={toggleBookmarkSelected(killstreak, true)}>-</button>
@@ -968,6 +1102,7 @@
                             toggleSelected={toggleSelected}
                             displayLives={displayLives}
                             displayAssists={displayAssists}
+                            getTeam={getTeam}
                         />
                         {#if parsed_demo.data.chat.length > 0}
                             <h2 class="centered chat__title">Chat</h2>
@@ -1459,6 +1594,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
+        overflow: hidden;
 
         &__card {
             height: fit-content;
@@ -1479,6 +1615,24 @@
             &--large {
                 max-width: min(calc(100vw - 2rem), 1680px);
                 max-height: min(calc(100vh - 2rem), 900px);
+            }
+
+            /* width */
+            &::-webkit-scrollbar {
+                width: 12px;
+            }
+
+            /* Track */
+            &::-webkit-scrollbar-track {
+                background: var(--tert);
+                border-radius: 0 8px 8px 0;
+                overflow: hidden;
+            }
+
+            /* Handle */
+            &::-webkit-scrollbar-thumb {
+                background: var(--tert-con);
+                border-radius: 0 8px 8px 0;
             }
         }
 

@@ -1,6 +1,6 @@
 [package]
 name = "melies"
-version = "0.9.12"
+version = "0.9.13"
 description = "A TF2 Recording Tool and more!"
 authors = ["Maven (famous)"]
 license = ""
@@ -17,7 +17,7 @@ serde_json = "1.0"
 chrono = "0.4.24"
 regex = "1"
 serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "1.2", features = ["shell-open"] }
+tauri = { version = "1.2", features = [ "dialog-message", "shell-open"] }
 vdm = "1.0.7"
 reqwest = { version = "0.11", features = ["blocking", "json"] }
 steamid-ng = "1.0.0"

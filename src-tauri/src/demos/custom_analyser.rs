@@ -9,6 +9,7 @@ use std::convert::TryFrom;
 use std::ops::{ Add, Index, IndexMut, Sub };
 use steamid_ng::SteamID;
 use tf_demo_parser::demo::gameevent_gen::{
+    PlayerChargeDeployedEvent,
     GameEvent,
     PlayerDeathEvent,
     PlayerSpawnEvent,
@@ -547,6 +548,9 @@ impl MessageHandler for Analyser {
             self.state.start_tick = ServerTick(tick);
         }
         match message {
+            Message::PlayerChargeDeployedEvent(message) => {
+                println!("{:?}", message)
+            }
             Message::ServerInfo(message) => {
                 self.state.interval_per_tick = message.interval_per_tick;
             }
@@ -615,6 +619,8 @@ impl Analyser {
     fn handle_event(&mut self, event: &GameEvent, tick: DemoTick) {
         const WIN_REASON_TIME_LIMIT: u8 = 6;
 
+        println!("{:?}", GameEvent);
+
         match event {
             GameEvent::PlayerDeath(event) => {
                 self.state.deaths.push(Death::from_event(event, tick));
@@ -631,6 +637,12 @@ impl Analyser {
                 if event.win_reason != WIN_REASON_TIME_LIMIT {
                     self.state.rounds.push(Round::from_event(event, tick))
                 }
+            }
+            GameEvent::MedicDeath(event) => {
+                println!("{:?}", event);
+            }
+            GameEvent::PlayerBuiltObject(event) => {
+                println!("{:?}", event);
             }
             _ => {}
         }

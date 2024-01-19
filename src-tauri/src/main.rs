@@ -16,7 +16,7 @@ use crate::event::EventStyle::{ Bookmark, Killstreak };
 use crate::event::Event;
 use crate::clip::Clip;
 use crate::logstf::parse;
-use crate::demos::{ scan_for_demos, scan_demo };
+use crate::demos::{ scan_for_demos, scan_demo, validate_demos_folder };
 
 mod event;
 mod clip;
@@ -965,8 +965,13 @@ fn parse_log(url: Value) -> Value {
 }
 
 #[command]
-fn load_demos() -> Value {
-    scan_for_demos(load_settings())
+fn load_demos() -> Result<Value, String> {
+    let settings = load_settings();
+    if validate_demos_folder(&settings) {
+        return Ok(scan_for_demos(settings));
+    }
+
+    return Err(String::from("Can't find \\tf folder. Please fix the \"\\tf Folder\" setting in settings."));
 }
 
 #[command]

@@ -463,6 +463,12 @@ impl Analyser {
                     self.state.rounds.push(Round::from_event(event, tick))
                 }
             }
+            // GameEvent::PlayerChargeDeployed(event) => {
+            //     println!("{:?}", event);
+            // }
+            // GameEvent::MedicDeath(event) => {
+            //     println!("{:?} at TICK: {}", event, tick);
+            // }
             _ => {}
         }
     }

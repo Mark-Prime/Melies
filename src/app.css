@@ -410,6 +410,7 @@ input:checked + .slider--tert:before {
   position: relative;
   cursor: pointer;
 }
+
 .tooltip::before {
   z-index: 1000;
   content: attr(data-tooltip);
@@ -482,6 +483,26 @@ input:checked + .slider--tert:before {
 }
 .tooltip:hover::after, .tooltip:active::after, .tooltip:focus::after {
   display: block;
+}
+
+/* Tooltip text */
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 120px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+ 
+  /* Position the tooltip text - see examples below! */
+  position: absolute;
+  z-index: 1;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+  visibility: visible;
 }
 
 .red {
