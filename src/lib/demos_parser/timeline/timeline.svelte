@@ -410,11 +410,15 @@
 </div>
 
 <style lang="scss">
+    .chat__title {
+        margin-top: 3rem;
+    }
+
     .timeline {
         display: grid;
         grid-template-columns: min-content 1fr;
         text-align: right;
-        margin-top: 3rem;
+        margin-top: 1rem;
         overflow-y: visible;
         padding: .5rem;
         border-radius: 5px;

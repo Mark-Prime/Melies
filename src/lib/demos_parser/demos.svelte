@@ -8,6 +8,9 @@
 
     import Timeline from "./timeline/timeline.svelte";
     import ClassLogo from "../classlogo.svelte";
+    import Life from "./demo_life.svelte";
+    import Killstreak from "./demo_ks.svelte";
+    import AllKillstreaks from "./demo_all_ks.svelte";
 
     export let enabled;
     export let toggle;
@@ -24,6 +27,7 @@
     let displayPlayers = false;
     let isShiftDown = false;
     let isPovDemo = false;
+    let displayChat = false;
     let povId = 0;
     let last_selected = 0;
     
@@ -45,7 +49,7 @@
         }
     };
 
-    function calcTick(tick) {
+    // function calcTick(tick) {
         // if (!parsed_demo.data.pause_tick) {
         //     return tick - parsed_demo.data.start_tick
         // }
@@ -56,8 +60,8 @@
 
         // return tick - parsed_demo.data.start_tick + parsed_demo.data.pause_length
         
-        return tick
-    }
+    //     return tick
+    // }
 
     function closeModal() {
         selected = [];
@@ -146,7 +150,6 @@
     }
 
     function toggleKillsSelected(kills, isKillstreak = null, i = null) {
-        console.log(kills)
         for (let kill of kills) {
             if (kill.selected) {
                 kill.selected = false;
@@ -215,7 +218,7 @@
                 for (let life of player) {
                     if (life.selected) {
                         events.push({
-                            time: calcTick((life.start + 20)),
+                            time: (life.start + 20),
                             label: `${life.kills.length}k-${life.assists.length}a_start`,
                             steamid64: parsed_demo.data.users[i].steamId64,
                             kills: life.kills.length,
@@ -223,7 +226,7 @@
                         })
 
                         events.push({
-                            time: calcTick((life.end + 132)),
+                            time: (life.end + 132),
                             label: `${life.kills.length}k-${life.assists.length}a_end`
                         })
                     }
@@ -231,7 +234,7 @@
                     for (let kill of life.kills) {
                         if (kill.selected) {
                             events.push({
-                                time: calcTick((kill.tick + 20)),
+                                time: (kill.tick + 20),
                                 label: `k-${kill.killer_class}_v-${kill.victim_class}`,
                                 steamid64: parsed_demo.data.users[i].steamId64,
                                 bookmark: true,
@@ -242,7 +245,7 @@
                     for (let killstreak of life.killstreaks) {
                         if (killstreak.selected) {
                             events.push({
-                                time: calcTick(killstreak.kills[killstreak.kills.length - 1].tick),
+                                time: killstreak.kills[killstreak.kills.length - 1].tick,
                                 label: `${killstreak.kills.length}ks`,
                                 steamid64: parsed_demo.data.users[i].steamId64,
                                 kills: killstreak.kills.length,
@@ -265,7 +268,7 @@
                             }
 
                             events.push({
-                                time: calcTick(start_time),
+                                time: start_time,
                                 label: `${killstreak.kills.length}ks_start`,
                                 steamid64: parsed_demo.data.users[i].steamId64,
                                 kills: killstreak.kills.length,
@@ -273,7 +276,7 @@
                             })
 
                             events.push({
-                                time: calcTick(end_time),
+                                time: end_time,
                                 label: `${killstreak.kills.length}ks_end`
                             })
                         }
@@ -286,7 +289,7 @@
 
                 if (message.selected) {
                     events.push({
-                        time: calcTick(message.tick),
+                        time: message.tick,
                         label: `message-sent`,
                         steamid64: parsed_demo.data.users[message.from].steamId64,
                         bookmark: true,
@@ -315,8 +318,6 @@
             // Sort the team order by class
             bluTeam.sort(sortByClass)
             redTeam.sort(sortByClass)
-            
-            console.log(bluTeam, redTeam)
 
             console.log(parsed_demo);
         } else {
@@ -455,13 +456,11 @@
     }
 
     function getKillstreaks() {
-        if (!isDemoPov) {
+        if (!isPovDemo) {
             return parsed_demo.data.killstreaks;
         }
 
-        return parsed_demo.data.killstreaks.filter((e) => {
-            return e.kills[0].killer === povId
-        })
+        return []
     }
 
     function classConverter(player_class) {
@@ -653,7 +652,7 @@
                 {#if current_demo === ""}
                     <h1>Demos</h1>
                     {#each resp.demos as demo, i}
-                        <div  class={"demo " + (demo.selected && "demo--selected")}>
+                        <div class={"demo " + (demo.selected && "demo--selected")}>
                             <p>{demo.name}</p>
                             <div class="add_demo">
                                 {#if demo.selected}
@@ -733,121 +732,15 @@
                                                 {#each parsed_demo.data.player_lives[player] as life}
                                                     {#if life.start != 0}
                                                         {#if displayLives || life.kills.length > 0 || (displayAssists && life.assists.length > 0)}
-                                                            <div class={"demo demo__life " + (life.selected && "demo--selected")}>
-                                                                <div>
-                                                                    {#each life.classes as player_class}
-                                                                        <ClassLogo 
-                                                                            player_class={classConverter(player_class)} 
-                                                                            tooltip={`Kills: ${life.kills.filter((kill) => kill.killer_class === classConverter(player_class)).length}`}
-                                                                        />
-                                                                    {/each}
-                                                                </div>
-                                                                <div 
-                                                                    on:click={toggleSelected(life)}
-                                                                    on:keydown={toggleSelected(life)}
-                                                                    class={
-                                                                        "demo__kill-count " +
-                                                                        (life.kills.length >= 3 && " killstreak ") +
-                                                                        (life.kills.length >= 5 && " killstreak--large ") +
-                                                                        (life.kills.length >= 10 && " killstreak--massive ")
-                                                                    }
-                                                                >
-                                                                    Kills: {life.kills.length}
-                                                                </div>
-                                                                <div class="demo__kills">
-                                                                    {#each life.kills as kill}
-                                                                        <div class="demo__kill">
-                                                                            <div class="demo__kill-text"> 
-                                                                                <ClassLogo 
-                                                                                    player_class={classConverter(kill.killer_class)} 
-                                                                                /> killed
-                                                                                <a 
-                                                                                    href={`#player-${parsed_demo.data.users[kill.victim].name}`} 
-                                                                                    class={parsed_demo.data.users[kill.victim]["team"] + " tooltip"} 
-                                                                                    style="--kills: 0;"
-                                                                                    data-tooltip="Jump To Player"
-                                                                                >
-                                                                                    <ClassLogo 
-                                                                                        player_class={classConverter(kill.victim_class)} 
-                                                                                    /> 
-                                                                                    {parsed_demo.data.users[kill.victim].name}
-                                                                                </a>
-                                                                                with {kill.weapon}
-                                                                                {#if kill.crit_type}
-                                                                                    <span class={["", "killstreak", "killstreak--large"][kill.crit_type]}>
-                                                                                        {["", " (Mini-Crit) ", " (CRITICAL HIT!) "][kill.crit_type]}
-                                                                                    </span>
-                                                                                {/if}
-                                                                                at
-                                                                                <span 
-                                                                                    class="tooltip"
-                                                                                    style={`--kills: 0;`}
-                                                                                    data-tooltip={`Timecode: ${tickToTime(calcTick(kill.tick))}`}
-                                                                                >
-                                                                                    {calcTick(kill.tick)}
-                                                                                </span>
-                                                                            </div>
-                                                                            
-                                                                            {#if kill.selected}
-                                                                                <button class="cancel-btn" on:click={toggleKillsSelected([kill])}>-</button>
-                                                                            {:else}
-                                                                                <div class="add_demo tooltip tooltip--left" data-tooltip="As Bookmark" style={`--kills: 0;`}>
-                                                                                    <button on:click={toggleKillsSelected([kill])}>+</button>
-                                                                                </div>
-                                                                            {/if}
-                                                                        </div>
-                                                                    {/each}
-                                                                </div>
-                                                                <div 
-                                                                    class={
-                                                                        (life.assists.length >= 3 && "killstreak ") +
-                                                                        (life.assists.length >= 5 && " killstreak--large ") +
-                                                                        (life.assists.length >= 10 && " killstreak--massive ")
-                                                                    }
-                                                                >
-                                                                    Assists: {life.assists.length}
-                                                                </div>
-                                                                <div
-                                                                    class="tooltip"
-                                                                    style={`--kills: 0;`}
-                                                                    data-tooltip={`Timecode: ${tickToTime(calcTick(life.start))}`}
-                                                                >
-                                                                    Start: {calcTick(life.start)}
-                                                                </div>
-                                                                <div
-                                                                    class="tooltip"
-                                                                    style={`--kills: 0;`}
-                                                                    data-tooltip={`Length: ${tickToTime(life.end - life.start)}`}
-                                                                >
-                                                                    End: {calcTick(life.end)}
-                                                                </div>
-                                                                <div class="killstreak__buttons"> 
-                                                                    <div class="add_demo">
-                                                                        {#if life.selected}
-                                                                            <button class="cancel-btn" on:click={toggleSelected(life)}>-</button>
-                                                                        {:else}
-                                                                            <div class="add_demo tooltip tooltip--left" data-tooltip="Entire Life" style={`--kills: 0;`}>
-                                                                                <button on:click={toggleSelected(life)}>+</button>
-                                                                            </div>
-                                                                        {/if}
-                                                                    </div>
-                                                                    <div class="add_demo">
-                                                                        {#if life.kills.length == 0}
-                                                                            <div class="add_demo add_demo--disabled tooltip tooltip--left" data-tooltip="Toggle Kills as Bookmarks" style={`--kills: 0;`}>
-                                                                                <button disabled>+</button>
-                                                                            </div>
-                                                                        {:else if allKillsSelected(life)}
-                                                                            <div class="tooltip tooltip--left" data-tooltip="Toggle Kills as Bookmarks" style={`--kills: 0;`}>
-                                                                                <button class="auto-height cancel-btn" on:click={toggleKillsSelected(life.kills)}>-</button>
-                                                                            </div>
-                                                                        {:else}
-                                                                            <div class="add_demo tooltip tooltip--left" data-tooltip="Toggle Kills as Bookmarks" style={`--kills: 0;`}>
-                                                                                <button on:click={toggleKillsSelected(life.kills)}>+</button>
-                                                                            </div>
-                                                                        {/if}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
+                                                            <Life 
+                                                                life={life}
+                                                                classConverter={classConverter}
+                                                                toggleSelected={toggleSelected}
+                                                                parsed_demo={parsed_demo}
+                                                                tickToTime={tickToTime}
+                                                                toggleKillsSelected={toggleKillsSelected}
+                                                                allKillsSelected={allKillsSelected}
+                                                            />
                                                         {/if}
                                                     {/if}
                                                 {/each}
@@ -857,112 +750,16 @@
                                                     <h4 class="centered">Killstreaks</h4>
                                                     {#each parsed_demo.data.player_lives[player].filter(life => life.killstreaks.length > 0) as life}
                                                         {#each life.killstreaks as killstreak}
-                                                            <div class={"demo demo__killstreak " + ((killstreak.selected || killstreak.selected_as_bookmark || life.selected) && "demo--selected")}>
-                                                                <div>
-                                                                    {#each life.classes as player_class}
-                                                                        <ClassLogo 
-                                                                            player_class={classConverter(player_class)} 
-                                                                            tooltip={`Kills: ${killstreak.kills.filter((kill) => kill.killer_class === classConverter(player_class)).length}`}
-                                                                        /> 
-                                                                    {/each}
-                                                                </div>
-                                                                <div
-                                                                    on:click={toggleBookmarkSelected(killstreak)}
-                                                                    on:keydown={toggleBookmarkSelected(killstreak)}
-                                                                    class={
-                                                                        `demo__kill-count ` +
-                                                                        (killstreak.kills.length >= 3 && " killstreak ") +
-                                                                        (killstreak.kills.length >= 5 && " killstreak--large ") +
-                                                                        (killstreak.kills.length >= 10 && " killstreak--massive ")
-                                                                    }
-                                                                >
-                                                                    Kills: {killstreak.kills.length}
-                                                                </div>
-                                                                <div class="demo__kills">
-                                                                    {#each killstreak.kills as kill}
-                                                                        <div class="demo__kill">
-                                                                            <ClassLogo 
-                                                                                player_class={classConverter(kill.killer_class)} 
-                                                                            /> 
-                                                                            killed
-                                                                            <a 
-                                                                                href={`#player-${parsed_demo.data.users[kill.victim].name}`} 
-                                                                                class={parsed_demo.data.users[kill.victim]["team"] + " tooltip"} 
-                                                                                style="--kills: 0;"
-                                                                                data-tooltip="Jump To Player"
-                                                                            >
-                                                                                <ClassLogo 
-                                                                                    player_class={classConverter(kill.victim_class)} 
-                                                                                />
-                                                                                {parsed_demo.data.users[kill.victim].name}
-                                                                            </a> with {kill.weapon}
-                                                                            {#if kill.crit_type}
-                                                                                <span class={["", "killstreak", "killstreak--large"][kill.crit_type]}>
-                                                                                    {["", " (Mini-Crit) ", " (CRITICAL HIT!) "][kill.crit_type]}
-                                                                                </span>
-                                                                            {/if}
-                                                                            at 
-                                                                            <span 
-                                                                                class="tooltip"
-                                                                                style={`--kills: 0;`}
-                                                                                data-tooltip={`Timecode: ${tickToTime(calcTick(kill.tick))}`}
-                                                                            >
-                                                                                {calcTick(kill.tick)}
-                                                                            </span>
-                                                                        </div>
-                                                                    {/each}
-                                                                </div>
-                                                                <div
-                                                                    class="tooltip"
-                                                                    style={`--kills: 0;`}
-                                                                    data-tooltip={
-                                                                    `Timecode: ${
-                                                                        Math.floor(
-                                                                            Math.round(
-                                                                                (calcTick(killstreak.kills[0].tick)) / 66) / 60
-                                                                            )
-                                                                        }m ${
-                                                                            Math.round(
-                                                                                (calcTick(killstreak.kills[0].tick)) / 66
-                                                                            ) % 60
-                                                                        }s`
-                                                                    }
-                                                                >
-                                                                    First: {calcTick(killstreak.kills[0].tick)}
-                                                                </div>
-                                                                <div
-                                                                    class="tooltip"
-                                                                    style={`--kills: 0;`}
-                                                                    data-tooltip={`Length: ${tickToTime(killstreak.kills[killstreak.kills.length - 1].tick - killstreak.kills[0].tick)}`}
-                                                                >
-                                                                    Last: {calcTick(killstreak.kills[killstreak.kills.length - 1].tick)}
-                                                                </div>
-                                                                <div class="killstreak__buttons">
-                                                                    <div class="add_demo tooltip tooltip--left" data-tooltip="Entire Life" style={`--kills: 0;`}>
-                                                                        {#if life.selected}
-                                                                            <button class="cancel-btn" on:click={toggleSelected(life)}>-</button>
-                                                                        {:else}
-                                                                            <button on:click={toggleSelected(life)}>+</button>
-                                                                        {/if}
-                                                                    </div>
-                                                                    {#if isDemoPov}
-                                                                        <div class="add_demo tooltip tooltip--left" data-tooltip="As Killstreak" style={`--kills: 0;`}>
-                                                                            {#if killstreak.selected}
-                                                                                <button class="cancel-btn" on:click={toggleSelected(killstreak, false)}>-</button>
-                                                                            {:else}
-                                                                                <button on:click={toggleSelected(killstreak, false)}>+</button>
-                                                                            {/if}
-                                                                        </div>
-                                                                    {/if}
-                                                                    <div class="add_demo tooltip tooltip--left" data-tooltip="As Bookmarks" style={`--kills: 0;`}>
-                                                                        {#if killstreak.selected_as_bookmark}
-                                                                            <button class="cancel-btn" on:click={toggleBookmarkSelected(killstreak, false)}>-</button>
-                                                                        {:else}
-                                                                            <button on:click={toggleBookmarkSelected(killstreak, false)}>+</button>
-                                                                        {/if}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
+                                                            <Killstreak 
+                                                                life={life}
+                                                                classConverter={classConverter}
+                                                                toggleSelected={toggleSelected}
+                                                                parsed_demo={parsed_demo}
+                                                                tickToTime={tickToTime}
+                                                                killstreak={killstreak}
+                                                                toggleBookmarkSelected={toggleBookmarkSelected}
+                                                                isDemoPov={isDemoPov}
+                                                            />
                                                         {/each}
                                                     {/each}
                                                 {/if}
@@ -972,128 +769,53 @@
                                 </div>
                             {/each}
                         </div>
-                        {#if getKillstreaks().length != 0}
-                            <h2 class="centered chat__title">All Killstreaks</h2>
-                            <div class="killstreaks">
-                                {#each getKillstreaks() as killstreak}
-                                    {#if parsed_demo.data.users[killstreak.kills[0].killer]}
-                                        <div class={"demo demo__life " + ((killstreak.selected || killstreak.selected_as_bookmark || getLifeFromKillstreak(killstreak)?.selected) && "demo--selected")}>
-                                            <div>
-                                                {#each killstreak.classes as player_class}
-                                                    <ClassLogo 
-                                                        player_class={classConverter(player_class)} 
-                                                        tooltip={`Kills: ${killstreak.kills.filter((kill) => kill.killer_class === classConverter(player_class)).length}`} 
-                                                    />
-                                                {/each}
-                                            </div>
-                                            <a 
-                                                href={`#player-${parsed_demo.data.users[killstreak.kills[0].killer]?.name}`} 
-                                                data-tooltip="Jump To Player"
-                                                style="width: 100%; --kills: 0;" 
-                                                class={parsed_demo.data.users[killstreak.kills[0].killer]["team"] + " tooltip"}
-                                            >
-                                                {limitStringLength(parsed_demo.data.users[killstreak.kills[0].killer]?.name || "Name Error", 16)}
-                                            </a>
-                                            <div 
-                                                on:click={toggleBookmarkSelected(killstreak, true)}
-                                                on:keydown={toggleBookmarkSelected(killstreak, true)}
-                                                class={
-                                                    `demo__kill-count ` +
-                                                    (killstreak.kills.length >= 3 && " killstreak ") +
-                                                    (killstreak.kills.length >= 5 && " killstreak--large ") +
-                                                    (killstreak.kills.length >= 10 && " killstreak--massive ")
-                                                }
-                                            >
-                                                Kills: {killstreak.kills.length}
-                                            </div>
-                                            <div class="demo__kills">
-                                                {#each killstreak.kills as kill}
-                                                    <div class="demo__kill">
-                                                        <ClassLogo 
-                                                            player_class={classConverter(kill.killer_class)} 
-                                                        />
-                                                        killed
-                                                        <a 
-                                                            href={`#player-${parsed_demo.data.users[kill.victim].name}`} 
-                                                            class={parsed_demo.data.users[kill.victim]["team"] + " tooltip"} 
-                                                            style="--kills: 0;"
-                                                            data-tooltip="Jump To Player"
-                                                        >
-                                                            <ClassLogo 
-                                                                player_class={classConverter(kill.victim_class)} 
-                                                            />
-                                                            {parsed_demo.data.users[kill.victim].name}
-                                                        </a> with {kill.weapon}
-                                                        {#if kill.crit_type}
-                                                            <span class={["", "killstreak", "killstreak--large"][kill.crit_type]}>
-                                                                {["", " (Mini-Crit) ", " (CRITICAL HIT!) "][kill.crit_type]}
-                                                            </span>
-                                                        {/if}
-                                                        at 
-                                                        <span 
-                                                            class="tooltip"
-                                                            style={`--kills: 0;`}
-                                                            data-tooltip={`Timecode: ${tickToTime(calcTick(kill.tick))}`}
-                                                        >
-                                                            {calcTick(kill.tick)}
-                                                        </span>
-                                                    </div>
-                                                {/each}
-                                            </div>
-                                            <div
-                                                class="tooltip"
-                                                style={`--kills: 0;`}
-                                                data-tooltip={
-                                                `Timecode: ${
-                                                    Math.floor(
-                                                        Math.round(
-                                                            (calcTick(killstreak.kills[0].tick)) / 66) / 60
-                                                        )
-                                                    }m ${
-                                                        Math.round(
-                                                            (calcTick(killstreak.kills[0].tick)) / 66
-                                                        ) % 60
-                                                    }s`
-                                                }
-                                            >
-                                                First: {calcTick(killstreak.kills[0].tick)}
-                                            </div>
-                                            <div
-                                                class="tooltip"
-                                                style={`--kills: 0;`}
-                                                data-tooltip={`Length: ${tickToTime(killstreak.kills[killstreak.kills.length - 1].tick - killstreak.kills[0].tick)}`}
-                                            >
-                                                Last: {calcTick(killstreak.kills[killstreak.kills.length - 1].tick)}
-                                            </div>
-                                            <div class="killstreak__buttons">
-                                                <div class="add_demo tooltip tooltip--left" data-tooltip="Entire Life" style={`--kills: 0;`}>
-                                                    {#if getLifeFromKillstreak(killstreak).selected}
-                                                        <button class="cancel-btn" on:click={toggleSelected(getLifeFromKillstreak(killstreak))}>-</button>
-                                                    {:else}
-                                                        <button on:click={toggleSelected(getLifeFromKillstreak(killstreak))}>+</button>
-                                                    {/if}
-                                                </div>
-                                                {#if isDemoPov}
-                                                    <div class="add_demo tooltip tooltip--left" data-tooltip="As Killstreak" style={`--kills: 0;`}>
-                                                        {#if killstreak.selected}
-                                                            <button class="cancel-btn" on:click={toggleSelected(killstreak, true)}>-</button>
-                                                        {:else}
-                                                            <button on:click={toggleSelected(killstreak, true)}>+</button>
-                                                        {/if}
-                                                    </div>
-                                                {/if}
-                                                <div class="add_demo tooltip tooltip--left" data-tooltip="As Bookmarks" style={`--kills: 0;`}>
-                                                    {#if killstreak.selected_as_bookmark}
-                                                        <button class="cancel-btn" on:click={toggleBookmarkSelected(killstreak, true)}>-</button>
-                                                    {:else}
-                                                        <button on:click={toggleBookmarkSelected(killstreak, true)}>+</button>
-                                                    {/if}
-                                                </div>
-                                            </div>
+                        <AllKillstreaks 
+                            killstreaks={getKillstreaks()}
+                            parsed_demo={parsed_demo}
+                            limitStringLength={limitStringLength}
+                            classConverter={classConverter}
+                            toggleBookmarkSelected={toggleBookmarkSelected}
+                            getLifeFromKillstreak={getLifeFromKillstreak}
+                            tickToTime={tickToTime}
+                            toggleSelected={toggleSelected}
+                            isDemoPov={isDemoPov}
+                        />
+                        {#if parsed_demo.data.chat.length > 0}
+                            <div class="section-title-toggle chat__title">
+                                {#if displayChat}
+                                    <button on:click={() => displayChat = false} class="cancel-btn hide-toggle">
+                                        -
+                                    </button>
+                                {:else}
+                                    <button on:click={() => displayChat = true} class="hide-toggle">
+                                        +
+                                    </button>
+                                {/if}
+                                <h2 class="centered">Chat</h2>
+                            </div> 
+                            {#if displayChat}
+                                <div class="chat"> 
+                                    {#each parsed_demo.data.chat as chat}
+                                        {#if chat.selected}
+                                            <button class="cancel-btn" on:click={toggleSelected(chat)}>-</button>
+                                        {:else}
+                                            <button on:click={toggleSelected(chat)}>+</button>
+                                        {/if}
+                                        <div class="chat__tick">
+                                            {chat.tick}
                                         </div>
-                                    {/if}
-                                {/each}
-                            </div>
+                                        <div class="chat__text">
+                                            <a 
+                                                href={`#player-${chat.name}`} 
+                                                class={`chat__name ${parsed_demo.data?.users[chat.from]?.team}`}
+                                            >
+                                                {getMessageName(chat)}{getMessageType(chat.kind)}:
+                                            </a>
+                                            {chat.text}
+                                        </div>
+                                    {/each}
+                                </div>
+                            {/if}
                         {/if}
                         <Timeline 
                             parsed_demo={parsed_demo} 
@@ -1104,30 +826,6 @@
                             displayAssists={displayAssists}
                             getTeam={getTeam}
                         />
-                        {#if parsed_demo.data.chat.length > 0}
-                            <h2 class="centered chat__title">Chat</h2>
-                            <div class="chat">
-                                {#each parsed_demo.data.chat as chat}
-                                    {#if chat.selected}
-                                        <button class="cancel-btn" on:click={toggleSelected(chat)}>-</button>
-                                    {:else}
-                                        <button on:click={toggleSelected(chat)}>+</button>
-                                    {/if}
-                                    <div class="chat__tick">
-                                        {calcTick(chat.tick)}
-                                    </div>
-                                    <div class="chat__text">
-                                        <a 
-                                            href={`#player-${chat.name}`} 
-                                            class={`chat__name ${parsed_demo.data?.users[chat.from]?.team}`}
-                                        >
-                                            {getMessageName(chat)}{getMessageType(chat.kind)}:
-                                        </a>
-                                        {chat.text}
-                                    </div>
-                                {/each}
-                            </div>
-                        {/if}
                         <div class="buttons">
                             <button class="cancel-btn" on:click={closeModal}>Cancel</button>
                             <button on:click={nextDemo}>Save</button>
@@ -1158,6 +856,12 @@
 {/if}
 
 <style lang="scss">
+    .section-title-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
     .killstreak__buttons {
         display: flex;
         gap: 1rem;
@@ -1409,6 +1113,17 @@
             align-items: center;
         }
 
+        &__life {
+            grid-template-columns: .5fr 1fr 1fr 1fr 1fr min-content;
+            height: auto;
+            max-height: 35.75px;
+            transition: all 0.2s;
+
+            &:hover {
+                max-height: 100%;
+            }
+        }
+
         &__kills {
             grid-row: 2;
             grid-column: 1 / 7;
@@ -1418,30 +1133,10 @@
             transition: all 0.2s;
             border-radius: 3px;
             padding: .5rem;
+        }
 
-            &:hover {
-                background-color: rgba(256, 256, 256, 0.03);
-
-                & .demo__kill {
-                    opacity: 1;
-                    display: flex;
-                    gap: .5rem;
-                    height: 100%;
-                        
-                    & button {
-                        width: fit-content;
-                        height: 100%;
-                        line-height: 0;
-                    }
-
-                    &-text {
-                        display: flex;
-                        gap: .5rem;
-                        width: 100%;
-                        flex-grow: 1;
-                    }
-                }
-            }
+        &--selected {
+            border: 1px solid var(--tert);
         }
 
         &__kill {
@@ -1459,22 +1154,6 @@
             &:last-of-type {
                 margin-bottom: .5rem;
             }
-
-            a {
-                display: flex;
-                justify-content: start;
-                align-items: center;
-                gap: .5rem;
-                margin: 0;
-
-                &:first-of-type {
-                    margin-left: 0;
-                }
-            }
-
-            span {
-                margin: 0;
-            }
         }
 
         &__kill-count {
@@ -1482,51 +1161,6 @@
             transition: all 0.2s;
             background-color: transparent;
             border-radius: 3px 3px 0 0;
-
-            &:hover {
-                color: var(--sec);
-                background-color: rgba(256, 256, 256, 0.03);
-
-                & + .demo__kills {
-                    background-color: rgba(256, 256, 256, 0.03);
-                
-                    & .demo__kill {
-                        opacity: 1;
-                        display: flex;
-                        gap: .5rem;
-                        height: 100%;
-                        
-                        & button {
-                            width: fit-content;
-                            height: 100%;
-                            line-height: 0;
-                        }
-
-                        &-text {
-                            display: flex;
-                            gap: .5rem;
-                            width: 100%;
-                            flex-grow: 1;
-                        }
-                    }
-                }
-            }
-        }
-
-        & .demo__kill-count {
-            padding-left: .5rem;
-            margin-right: .5rem;
-        }
-
-        &__life {
-            grid-template-columns: .5fr 1fr 1fr 1fr 1fr min-content;
-            height: auto;
-            max-height: 35.75px;
-            transition: all 0.2s;
-
-            &:hover {
-                max-height: 100%;
-            }
         }
 
         &__killstreak {

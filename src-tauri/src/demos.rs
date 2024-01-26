@@ -82,8 +82,8 @@ struct Killstreak {
 impl Killstreak {
     fn new(death: Death) -> Self {
         Killstreak {
-            kills: vec![death],
-            classes: vec![]
+            classes: vec![death.clone().killer_class.to_string()],
+            kills: vec![death]
         }
     }
 
@@ -394,6 +394,11 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
                     last_kill_tick +
                         settings["recording"]["before_killstreak_per_kill"].as_i64().unwrap()
                 {
+
+                    if !life.killstreaks[streak_count - 1].classes.contains(&kill.killer_class.to_string()) {
+                        life.killstreaks[streak_count - 1].classes.push(kill.killer_class.clone().to_string())
+                    }
+
                     life.killstreaks[streak_count - 1].kills.push(kill.to_owned());
                     kill_count += 1;
                 } else if kill_count < 3 {
