@@ -1,7 +1,5 @@
 <script>
   // @ts-ignore
-  
-  import { json } from "@sveltejs/kit";
   import { invoke } from "@tauri-apps/api/tauri"
   let settings = {};
   let output_settings = {};
