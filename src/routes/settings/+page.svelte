@@ -1,6 +1,7 @@
 <script>
-  // @ts-nocheck
-
+  // @ts-ignore
+  
+  import { json } from "@sveltejs/kit";
   import { invoke } from "@tauri-apps/api/tauri"
   let settings = {};
   let output_settings = {};
@@ -18,6 +19,7 @@
   async function saveSettings(){
     let answer = await invoke("save_settings", {newSettings: JSON.stringify(settings)});
     console.log(answer);
+    // @ts-ignore
     window.location = "/"
   }
   

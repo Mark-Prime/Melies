@@ -92,7 +92,6 @@ fn write_cfg(settings: &Value) {
     extend!(cfg, "{};\r\n", settings["recording"]["commands"].as_str().unwrap());
     extend!(cfg, "{};\r\n", "alias \"snd_fix\" \"snd_restart; snd_soundmixer Default_mix;\"");
 
-    // let map: &Map<String, Value> = &settings["addons"].as_object().unwrap();
     let addons = settings["addons"].as_object();
 
     match addons {
@@ -693,7 +692,7 @@ fn save_addons(addons: &Value) {
 
     for (k, v) in map {
         let addon_path = env::var("USERPROFILE").unwrap() + "\\Documents\\Melies\\addons\\" + k + ".json";
-        fs::write(addon_path, v.to_string()).unwrap();
+        fs::write(addon_path, serde_json::to_string_pretty(v).unwrap()).unwrap();
     }
 }
 
@@ -709,7 +708,7 @@ fn save_settings(new_settings: String) -> Value {
 
         merge(&mut defaults, settings);
 
-        fs::write(settings_path, defaults.to_string()).unwrap();
+        fs::write(settings_path, serde_json::to_string_pretty(&defaults).unwrap()).unwrap();
 
         return defaults;
     }
