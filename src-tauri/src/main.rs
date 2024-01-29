@@ -92,45 +92,51 @@ fn write_cfg(settings: &Value) {
     extend!(cfg, "{};\r\n", settings["recording"]["commands"].as_str().unwrap());
     extend!(cfg, "{};\r\n", "alias \"snd_fix\" \"snd_restart; snd_soundmixer Default_mix;\"");
 
-    let map: &Map<String, Value> = &settings["addons"].as_object().unwrap();
+    // let map: &Map<String, Value> = &settings["addons"].as_object().unwrap();
+    let addons = settings["addons"].as_object();
 
-    for (k, v) in map {
-        extend!(
-            cfg,
-            "\r\necho \"Running {} addon\";\r\n",
-            k
-        );
-
-        let v_map = v.as_object().unwrap();
-
-        for (_ki, vi) in v_map {
-
-            match &vi["type"] {
-                Value::String(vi_type) => {
-                    match vi_type.as_str() {
-                        "toggle" => {
-                            if vi["value"] == true {
-                                extend!(
-                                    cfg, "{};\r\n", vi["command"]
-                                );
+    match addons {
+        Some(map) => {
+            for (k, v) in map {
+                extend!(
+                    cfg,
+                    "\r\necho \"Running {} addon\";\r\n",
+                    k
+                );
+        
+                let v_map = v.as_object().unwrap();
+        
+                for (_ki, vi) in v_map {
+        
+                    match &vi["type"] {
+                        Value::String(vi_type) => {
+                            match vi_type.as_str() {
+                                "toggle" => {
+                                    if vi["value"] == true {
+                                        extend!(
+                                            cfg, "{};\r\n", vi["command"]
+                                        );
+                                    }
+                                },
+                                "bool" => {
+                                    extend!(cfg, "{};\r\n", format!("{} {}", vi["command"].to_string().replace("\"", ""), setting_as_bin(&vi["value"])));
+                                },
+                                "string" | "int" => {
+                                    extend!(cfg, "{};\r\n", format!("{} {}", vi["command"].to_string().replace("\"", ""), vi["value"]));
+                                },
+                                _ => {
+                                    continue;
+                                }
                             }
-                        },
-                        "bool" => {
-                            extend!(cfg, "{};\r\n", format!("{} {}", vi["command"].to_string().replace("\"", ""), setting_as_bin(&vi["value"])));
-                        },
-                        "string" | "int" => {
-                            extend!(cfg, "{};\r\n", format!("{} {}", vi["command"].to_string().replace("\"", ""), vi["value"]));
                         },
                         _ => {
                             continue;
                         }
                     }
-                },
-                _ => {
-                    continue;
                 }
             }
-        }
+        },
+        None => {},
     }
 
     if setting_as_bin(&settings["output"]["lock"]) == 1 {
@@ -553,7 +559,7 @@ fn load_addons() -> Value {
         format!("{}\\Documents\\Melies\\addons", env::var("USERPROFILE").unwrap())
     ).unwrap();
 
-    let mut addons = Value::from_str("{}").unwrap();
+    let mut addons = json!({});
 
     let files = fs::read_dir(format!("{}\\Documents\\Melies\\addons", env::var("USERPROFILE").unwrap())).unwrap();
 
@@ -569,7 +575,12 @@ fn load_addons() -> Value {
         name = name.replace(".JSON", "");
         
         let data = fs::read_to_string(file.unwrap().path()).expect("Unable to read file");
-        let res: serde_json::Value = serde_json::from_str(&data).expect("Unable to parse");
+        let res = match serde_json::from_str(&data) {
+            Ok(val) => val,
+            Err(_) => {
+                continue;
+            },
+        };
 
         addons[name] = res;
     }
