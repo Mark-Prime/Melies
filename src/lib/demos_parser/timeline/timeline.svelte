@@ -357,9 +357,19 @@
                                                 data-tooltip={`Killed: ${parsed_demo.data?.users[kill.victim].name}\r\nTick: ${calcTick(kill.tick)}\r\nTimecode: ${tickToTime(calcTick(kill.tick))}`}
                                                 style={`
                                                     --position: ${calcTimelineMarker(kill.tick, life, leftPos, rightPos)}px;
-                                                    --kills: 2;
                                                 `}
-                                            ></div>
+                                            >
+                                                <div class="timeline__marker__text">
+                                                    <div>
+                                                        Killed: 
+                                                        <ClassLogo 
+                                                            player_class={parsed_demo.data?.users[kill.victim_class]} 
+                                                        /> {parsed_demo.data?.users[kill.victim].name}
+                                                    </div>
+                                                    Tick: {calcTick(kill.tick)} <br/>
+                                                    Timecode: {tickToTime(calcTick(kill.tick))}
+                                                </div>
+                                            </div>
                                         {/if}
                                     {/each}
                                     {#each life.killstreaks as ks} 
@@ -539,12 +549,12 @@
             cursor: pointer;
             overflow: visible;
             transform: scale(1);
-            z-index: 998;
+            z-index: 999;
 
             &__text {
-                z-index: 2001;
-                position: fixed;
-                top: 34px;
+                z-index: 1002;
+                position: absolute;
+                top: calc(-2.2rem - (1.72rem * var(--kills)));
                 left: -.4rem;
                 display: none;
                 background-color: var(--bg);
@@ -555,13 +565,13 @@
                 width: max-content;
                 max-width: 500px;
                 overflow: hidden;
-                white-space: pre;
+                // white-space: pre;
                 font-size: 12px;
                 pointer-events: none;
             }
 
             &::before {
-                z-index: 1001;
+                z-index: 1002;
                 content: attr(data-tooltip);
                 position: absolute;
                 top: calc(-2.2rem - (1.72rem * var(--kills)));
@@ -596,12 +606,16 @@
                 &::before {
                     top: 34px;
                     background-color: var(--bg);
-                    z-index: 1000;
                 }
 
                 &::after {
-                    z-index: 999;
+                    // z-index: 999;
                     clip-path: polygon(40% 0, 60% 0, 60% 75%, 100% 100%, 0 100%, 40% 75%);
+                }
+
+                & > .timeline__marker__text {
+                    top: 34px;
+                    background-color: var(--bg);
                 }
             }
 
@@ -615,14 +629,20 @@
                     left: auto;
                     right: 0;
                 }
+
+                & > .timeline__marker__text {
+                    left: auto;
+                    right: -.4rem;
+                }
             }
 
             &:hover, &:active, &:focus {
                 color: var(--sec);
+                z-index: 1003;
 
-                &::before {
-                    display: block;
-                }
+                // &::before {
+                //     display: block;
+                // }
 
                 &::after {
                     display: block;
@@ -631,6 +651,7 @@
 
                 & .timeline__marker__text {
                     display: block;
+                    z-index: 1003;
                 }
             }
         }
@@ -646,7 +667,7 @@
             overflow: visible;
 
             &::before {
-                z-index: 1001;
+                z-index: 1000;
                 content: attr(data-tooltip);
                 position: absolute;
                 top: calc(-2.2rem - (1.72rem * var(--kills)));
