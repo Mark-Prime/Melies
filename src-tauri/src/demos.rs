@@ -1,18 +1,18 @@
-use std::fs;
-use std::cmp::Ordering;
-use std::collections::HashMap;
-use std::vec;
 use serde::Serialize;
 use serde_json::json;
 use serde_json::Value;
-use tf_demo_parser::{ Demo, DemoParser };
+use std::cmp::Ordering;
+use std::collections::HashMap;
+use std::fs;
 use std::path::Path;
+use std::vec;
+use tf_demo_parser::{Demo, DemoParser};
 
 use crate::demos::new_analyser::Class;
 
 use self::new_analyser::Death;
-use tf_demo_parser::demo::data::DemoTick;
 use self::new_analyser::Spawn;
+use tf_demo_parser::demo::data::DemoTick;
 
 // macro_rules! ifelse {
 //     ($c:expr, $v:expr, $v1:expr) => {
@@ -83,7 +83,7 @@ impl Killstreak {
     fn new(death: Death) -> Self {
         Killstreak {
             classes: vec![death.clone().killer_class.to_string()],
-            kills: vec![death]
+            kills: vec![death],
         }
     }
 
@@ -120,15 +120,19 @@ impl Life {
             kills: vec![],
             assists: vec![],
             classes,
-            finalized: false
+            finalized: false,
         }
     }
 }
 
 pub(crate) fn validate_demos_folder(settings: &Value) -> bool {
     match fs::read_dir(settings["tf_folder"].as_str().unwrap()) {
-        Ok(_) => return true,
-        Err(_) => return false,
+        Ok(_) => {
+            return true;
+        }
+        Err(_) => {
+            return false;
+        }
     }
 }
 
@@ -149,19 +153,24 @@ pub(crate) fn scan_for_demos(settings: Value) -> Value {
         }
     }
 
-    if Path::new(&format!("{}\\demos", settings["tf_folder"].as_str().unwrap())).exists() {
-        let paths = fs
-            ::read_dir(format!("{}\\demos", settings["tf_folder"].as_str().unwrap()))
-            .unwrap();
+    if Path::new(&format!(
+        "{}\\demos",
+        settings["tf_folder"].as_str().unwrap()
+    ))
+    .exists()
+    {
+        let paths = fs::read_dir(format!(
+            "{}\\demos",
+            settings["tf_folder"].as_str().unwrap()
+        ))
+        .unwrap();
 
         for path in paths {
             let file_name = path.unwrap().path().display().to_string();
 
             if file_name.ends_with(".dem") {
-                let parsed_file_name = file_name.replace(
-                    settings["tf_folder"].as_str().unwrap(),
-                    ""
-                );
+                let parsed_file_name =
+                    file_name.replace(settings["tf_folder"].as_str().unwrap(), "");
 
                 let mut demo = Value::from({});
                 demo["name"] = Value::from(parsed_file_name);
@@ -182,10 +191,14 @@ pub(crate) fn scan_for_demos(settings: Value) -> Value {
 #[derive(Clone, Copy, Debug)]
 struct ClassSpawn {
     pub class: Class,
-    pub tick: DemoTick
+    pub tick: DemoTick,
 }
 
-fn get_player_class(mut user_classes: HashMap<u16, Vec<ClassSpawn>>, user_id: u16, tick: DemoTick) -> Class {
+fn get_player_class(
+    mut user_classes: HashMap<u16, Vec<ClassSpawn>>,
+    user_id: u16,
+    tick: DemoTick,
+) -> Class {
     let player = user_classes.entry(user_id).or_insert(vec![]);
 
     for (i, class) in player.iter().enumerate() {
@@ -210,14 +223,10 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
 
     let demo = Demo::new(&file);
 
-    let parser = DemoParser::new_all_with_analyser(
-        demo.get_stream(),
-        new_analyser::Analyser::new()
-    );
+    let parser =
+        DemoParser::new_all_with_analyser(demo.get_stream(), new_analyser::Analyser::new());
     let (header, mut state) = match parser.parse() {
-        Ok(val) => {
-            val
-        }
+        Ok(val) => val,
         Err(err) => {
             println!("{}", err);
             return json!({
@@ -233,36 +242,38 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
     for spawn in &state.spawns {
         let user = user_events.entry(spawn.user.0.into()).or_insert(vec![]);
         let user_class = user_classes.entry(spawn.user.0.into()).or_insert(vec![]);
-        
+
         user_class.push(ClassSpawn {
             class: spawn.class.clone(),
-            tick: spawn.tick
+            tick: spawn.tick,
         });
 
         user.push(Event::Spawn(spawn.clone()));
     }
 
     for death in &mut state.deaths {
-
         let killer = user_events.entry(death.killer.into()).or_insert(vec![]);
 
         {
             let user_classes_clone = user_classes.clone();
-            death.killer_class = get_player_class(user_classes_clone, death.killer.into(), death.tick);
+            death.killer_class =
+                get_player_class(user_classes_clone, death.killer.into(), death.tick);
         }
 
         {
             let user_classes_clone = user_classes.clone();
-            death.victim_class = get_player_class(user_classes_clone, death.victim.into(), death.tick);
+            death.victim_class =
+                get_player_class(user_classes_clone, death.victim.into(), death.tick);
         }
-
 
         killer.push(Event::Kill(death.clone()));
 
         let assist_id = death.assister;
 
         if assist_id.is_some() {
-            let assister = user_events.entry(assist_id.unwrap().into()).or_insert(vec![]);
+            let assister = user_events
+                .entry(assist_id.unwrap().into())
+                .or_insert(vec![]);
 
             assister.push(Event::Assist(death.clone()));
         }
@@ -305,7 +316,6 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
                     }
 
                     if current_life.start == 0 {
-
                         if current_player.last().is_some() {
                             let previous_life: &Life = current_player.last().unwrap();
 
@@ -315,9 +325,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
                         }
 
                         current_life = match current_player.pop() {
-                            Some(val) => {
-                                val
-                            }
+                            Some(val) => val,
                             None => {
                                 continue;
                             }
@@ -331,9 +339,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
                 Event::Assist(assist) => {
                     if current_life.start == 0 {
                         current_life = match current_player.pop() {
-                            Some(val) => {
-                                val
-                            }
+                            Some(val) => val,
                             None => {
                                 continue;
                             }
@@ -349,9 +355,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
 
                     if current_life.start == 0 {
                         current_life = match current_player.pop() {
-                            Some(val) => {
-                                val
-                            }
+                            Some(val) => val,
                             None => {
                                 continue;
                             }
@@ -389,17 +393,24 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
                     last_kill_tick = kill.tick.0.into();
                     kill_count += 1;
                     streak_count += 1;
-                } else if
-                    (kill.tick.0 as i64) <
-                    last_kill_tick +
-                        settings["recording"]["before_killstreak_per_kill"].as_i64().unwrap()
+                } else if (kill.tick.0 as i64)
+                    < last_kill_tick
+                        + settings["recording"]["before_killstreak_per_kill"]
+                            .as_i64()
+                            .unwrap()
                 {
-
-                    if !life.killstreaks[streak_count - 1].classes.contains(&kill.killer_class.to_string()) {
-                        life.killstreaks[streak_count - 1].classes.push(kill.killer_class.clone().to_string())
+                    if !life.killstreaks[streak_count - 1]
+                        .classes
+                        .contains(&kill.killer_class.to_string())
+                    {
+                        life.killstreaks[streak_count - 1]
+                            .classes
+                            .push(kill.killer_class.clone().to_string());
                     }
 
-                    life.killstreaks[streak_count - 1].kills.push(kill.to_owned());
+                    life.killstreaks[streak_count - 1]
+                        .kills
+                        .push(kill.to_owned());
                     kill_count += 1;
                 } else if kill_count < 3 {
                     kill_count = 1;
@@ -408,8 +419,13 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
                 }
             }
 
-            life.killstreaks = life.killstreaks.iter().map(|v| v.clone()).filter(|sen| sen.kills.len() >= 3).collect::<Vec<Killstreak>>();
-            
+            life.killstreaks = life
+                .killstreaks
+                .iter()
+                .map(|v| v.clone())
+                .filter(|sen| sen.kills.len() >= 3)
+                .collect::<Vec<Killstreak>>();
+
             for ks in &life.killstreaks {
                 killstreaks.push(ks.clone());
             }
@@ -425,8 +441,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
 
     let ticks = header.ticks;
 
-    let resp =
-        json!({
+    let resp = json!({
         "header": {
             "demo_type": header.demo_type,
             "version": header.version,

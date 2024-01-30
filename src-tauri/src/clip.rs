@@ -30,11 +30,13 @@ impl Clip {
                     has_bookmark: false,
                     ks_value: killstreak_value.to_owned(),
                     bm_value: "".to_string(),
-                    start_tick: &event.tick -
-                    settings["recording"]["before_killstreak_per_kill"].as_i64().unwrap() *
-                        killstreak_value,
-                    end_tick: &event.tick +
-                    settings["recording"]["after_killstreak"].as_i64().unwrap(),
+                    start_tick: &event.tick
+                        - settings["recording"]["before_killstreak_per_kill"]
+                            .as_i64()
+                            .unwrap()
+                            * killstreak_value,
+                    end_tick: &event.tick
+                        + settings["recording"]["after_killstreak"].as_i64().unwrap(),
                     spec_type: 0,
                     spec_player: "".to_string(),
                     long_clip: false,
@@ -48,10 +50,10 @@ impl Clip {
                     has_bookmark: true,
                     ks_value: 0,
                     bm_value: bookmark_value.to_string(),
-                    start_tick: &event.tick -
-                    settings["recording"]["before_bookmark"].as_i64().unwrap(),
-                    end_tick: &event.tick +
-                    settings["recording"]["after_bookmark"].as_i64().unwrap(),
+                    start_tick: &event.tick
+                        - settings["recording"]["before_bookmark"].as_i64().unwrap(),
+                    end_tick: &event.tick
+                        + settings["recording"]["after_bookmark"].as_i64().unwrap(),
                     spec_type: 0,
                     spec_player: "".to_string(),
                     long_clip: false,
@@ -120,10 +122,11 @@ impl Clip {
                     return true;
                 }
 
-                let new_start =
-                    &event.tick -
-                    settings["recording"]["before_killstreak_per_kill"].as_i64().unwrap() *
-                        killstreak_value;
+                let new_start = &event.tick
+                    - settings["recording"]["before_killstreak_per_kill"]
+                        .as_i64()
+                        .unwrap()
+                        * killstreak_value;
 
                 let min_tick_between = settings["recording"]["minimum_ticks_between_clips"]
                     .as_i64()

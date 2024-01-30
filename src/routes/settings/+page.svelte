@@ -1,26 +1,28 @@
 <script>
   // @ts-ignore
-  import { invoke } from "@tauri-apps/api/tauri"
+  import { invoke } from "@tauri-apps/api/tauri";
   let settings = {};
   let output_settings = {};
   let recording_settings = {};
   let addons = {};
 
-  async function loadSettings(){
+  async function loadSettings() {
     settings = await invoke("load_settings");
-    output_settings = settings.output
-    recording_settings = settings.recording
-    addons = settings.addons
-    console.log(addons)
+    output_settings = settings.output;
+    recording_settings = settings.recording;
+    addons = settings.addons;
+    console.log(addons);
   }
 
-  async function saveSettings(){
-    let answer = await invoke("save_settings", {newSettings: JSON.stringify(settings)});
+  async function saveSettings() {
+    let answer = await invoke("save_settings", {
+      newSettings: JSON.stringify(settings),
+    });
     console.log(answer);
     // @ts-ignore
-    window.location = "/"
+    window.location = "/";
   }
-  
+
   loadSettings();
 </script>
 
@@ -36,11 +38,15 @@
     >
       \tf Folder
     </label>
-    <input bind:value={settings.tf_folder} id="tf_folder" class="settings__input input"/>
+    <input
+      bind:value={settings.tf_folder}
+      id="tf_folder"
+      class="settings__input input"
+    />
   </div>
   <div class="settings__switch">
     <label class="switch">
-      <input type="checkbox" bind:checked={settings.safe_mode}>
+      <input type="checkbox" bind:checked={settings.safe_mode} />
       <span class="slider round"></span>
     </label>
     <div
@@ -53,7 +59,7 @@
   </div>
   <div class="settings__switch">
     <label class="switch">
-      <input type="checkbox" bind:checked={settings.clear_events}>
+      <input type="checkbox" bind:checked={settings.clear_events} />
       <span class="slider round"></span>
     </label>
     <div
@@ -66,7 +72,7 @@
   </div>
   <div class="settings__switch">
     <label class="switch">
-      <input type="checkbox" bind:checked={settings.save_backups}>
+      <input type="checkbox" bind:checked={settings.save_backups} />
       <span class="slider round"></span>
     </label>
     <div
@@ -96,9 +102,13 @@
 `}
       style={`--kills: 6;`}
     >
-    Recording Method
+      Recording Method
     </label>
-    <select bind:value={output_settings.method} id="method" class="settings__input input--sec">
+    <select
+      bind:value={output_settings.method}
+      id="method"
+      class="settings__input input--sec"
+    >
       <option value="h264">h264</option>
       <option value="jpeg">jpeg</option>
       <option value="tga">tga</option>
@@ -109,39 +119,44 @@
   </div>
   <div class="settings__input-group">
     <label for="framerate" class="settings__label">Framerate</label>
-    <input bind:value={output_settings.framerate} id="framerate" class="settings__input input--sec" type="number"/>
+    <input
+      bind:value={output_settings.framerate}
+      id="framerate"
+      class="settings__input input--sec"
+      type="number"
+    />
   </div>
   <div class="settings__switch">
     <label class="switch">
-      <input type="checkbox" bind:checked={output_settings.text_chat}>
+      <input type="checkbox" bind:checked={output_settings.text_chat} />
       <span class="slider round slider--sec"></span>
     </label>
     Enable Text Chat
   </div>
   <div class="settings__switch">
     <label class="switch">
-      <input type="checkbox" bind:checked={output_settings.crosshair}>
+      <input type="checkbox" bind:checked={output_settings.crosshair} />
       <span class="slider round slider--sec"></span>
     </label>
     Display Crosshair
   </div>
   <div class="settings__switch">
     <label class="switch">
-      <input type="checkbox" bind:checked={output_settings.voice_chat}>
+      <input type="checkbox" bind:checked={output_settings.voice_chat} />
       <span class="slider round slider--sec"></span>
     </label>
     Enable Voice Chat
   </div>
   <div class="settings__switch">
     <label class="switch">
-      <input type="checkbox" bind:checked={output_settings.hud}>
+      <input type="checkbox" bind:checked={output_settings.hud} />
       <span class="slider round slider--sec"></span>
     </label>
     Display HUD
   </div>
   <div class="settings__switch">
     <label class="switch">
-      <input type="checkbox" bind:checked={output_settings.snd_fix}>
+      <input type="checkbox" bind:checked={output_settings.snd_fix} />
       <span class="slider round slider--sec"></span>
     </label>
     <div
@@ -154,14 +169,14 @@
   </div>
   <div class="settings__switch">
     <label class="switch">
-      <input type="checkbox" bind:checked={output_settings.viewmodel}>
+      <input type="checkbox" bind:checked={output_settings.viewmodel} />
       <span class="slider round slider--sec"></span>
     </label>
     Display Viewmodel
   </div>
   <div class="settings__switch">
     <label class="switch">
-      <input type="checkbox" bind:checked={output_settings.lock}>
+      <input type="checkbox" bind:checked={output_settings.lock} />
       <span class="slider round slider--sec"></span>
     </label>
     <div
@@ -178,7 +193,7 @@
 
 <div class="setting">
   <div class="settings__input-group">
-    <label 
+    <label
       for="commands"
       class="settings__label tooltip"
       data-tooltip="Commands to run before every clip is recorded."
@@ -186,10 +201,14 @@
     >
       Commands
     </label>
-    <input bind:value={recording_settings.commands} id="commands" class="settings__input input--tert"/>
+    <input
+      bind:value={recording_settings.commands}
+      id="commands"
+      class="settings__input input--tert"
+    />
   </div>
   <div class="settings__input-group">
-    <label 
+    <label
       for="end_commands"
       class="settings__label tooltip"
       data-tooltip={"Commands to run after every clip is done recording.\n\rUseful for resetting configs to in game settings."}
@@ -197,10 +216,14 @@
     >
       End Commands
     </label>
-    <input bind:value={recording_settings.end_commands} id="end_commands" class="settings__input input--tert"/>
+    <input
+      bind:value={recording_settings.end_commands}
+      id="end_commands"
+      class="settings__input input--tert"
+    />
   </div>
   <div class="settings__input-group">
-    <label 
+    <label
       for="start_delay"
       class="settings__label tooltip"
       data-tooltip={"How long to wait at the start of the demo before skipping ahead.\n\r1 second = 66 ticks"}
@@ -208,7 +231,12 @@
     >
       Delay before initial skip
     </label>
-    <input bind:value={recording_settings.start_delay} id="start_delay" class="settings__input input--tert" type="number"/>
+    <input
+      bind:value={recording_settings.start_delay}
+      id="start_delay"
+      class="settings__input input--tert"
+      type="number"
+    />
   </div>
   <div class="settings__input-group">
     <label
@@ -219,7 +247,12 @@
     >
       Minimum ticks between clips
     </label>
-    <input bind:value={recording_settings.minimum_ticks_between_clips} id="minimum_ticks_between_clips" class="settings__input input--tert" type="number"/>
+    <input
+      bind:value={recording_settings.minimum_ticks_between_clips}
+      id="minimum_ticks_between_clips"
+      class="settings__input input--tert"
+      type="number"
+    />
   </div>
   <div class="settings__input-group">
     <label
@@ -230,10 +263,15 @@
     >
       Ticks before bookmarks
     </label>
-    <input bind:value={recording_settings.before_bookmark} id="before_bookmark" class="settings__input input--tert" type="number"/>
+    <input
+      bind:value={recording_settings.before_bookmark}
+      id="before_bookmark"
+      class="settings__input input--tert"
+      type="number"
+    />
   </div>
   <div class="settings__input-group">
-    <label 
+    <label
       for="after_bookmark"
       class="settings__label tooltip"
       data-tooltip={"How far after each bookmark to record.\n\r1 second = 66 ticks"}
@@ -241,7 +279,12 @@
     >
       Ticks after bookmarks
     </label>
-    <input bind:value={recording_settings.after_bookmark} id="after_bookmark" class="settings__input input--tert" type="number"/>
+    <input
+      bind:value={recording_settings.after_bookmark}
+      id="after_bookmark"
+      class="settings__input input--tert"
+      type="number"
+    />
   </div>
   <div class="settings__input-group">
     <label
@@ -252,10 +295,15 @@
     >
       Ticks before killstreak per kill in streak
     </label>
-    <input bind:value={recording_settings.before_killstreak_per_kill} id="before_killstreak_per_kill" class="settings__input input--tert" type="number"/>
+    <input
+      bind:value={recording_settings.before_killstreak_per_kill}
+      id="before_killstreak_per_kill"
+      class="settings__input input--tert"
+      type="number"
+    />
   </div>
   <div class="settings__input-group">
-    <label 
+    <label
       for="after_killstreak"
       class="settings__label tooltip"
       data-tooltip={"How far after each killstreak to record.\n\r1 second = 66 ticks"}
@@ -263,7 +311,12 @@
     >
       Ticks after killstreak
     </label>
-    <input bind:value={recording_settings.after_killstreak} id="after_killstreak" class="settings__input input--tert" type="number"/>
+    <input
+      bind:value={recording_settings.after_killstreak}
+      id="after_killstreak"
+      class="settings__input input--tert"
+      type="number"
+    />
   </div>
   <div class="settings__input-group">
     <label
@@ -274,7 +327,12 @@
     >
       Interval for rewind double taps
     </label>
-    <input bind:value={recording_settings.interval_for_rewind_double_taps} id="interval_for_rewind_double_taps" class="settings__input input--tert" type="number"/>
+    <input
+      bind:value={recording_settings.interval_for_rewind_double_taps}
+      id="interval_for_rewind_double_taps"
+      class="settings__input input--tert"
+      type="number"
+    />
   </div>
   <div class="settings__input-group">
     <label
@@ -285,26 +343,44 @@
     >
       Rewind amount upon double tap
     </label>
-    <input bind:value={recording_settings.rewind_amount} id="rewind_amount" class="settings__input input--tert" type="number"/>
+    <input
+      bind:value={recording_settings.rewind_amount}
+      id="rewind_amount"
+      class="settings__input input--tert"
+      type="number"
+    />
   </div>
   <div class="settings__input-group">
     <label for="FOV" class="settings__label">FOV</label>
-    <input bind:value={recording_settings.fov} id="FOV" class="settings__input input--tert" type="number"/>
+    <input
+      bind:value={recording_settings.fov}
+      id="FOV"
+      class="settings__input input--tert"
+      type="number"
+    />
   </div>
   <div class="settings__input-group">
     <label for="viewodel_fov" class="settings__label">Viewmodel FOV</label>
-    <input bind:value={recording_settings.viewmodel_fov} id="viewodel_fov" class="settings__input input--tert" type="number"/>
+    <input
+      bind:value={recording_settings.viewmodel_fov}
+      id="viewodel_fov"
+      class="settings__input input--tert"
+      type="number"
+    />
   </div>
   <div class="settings__switch">
     <label class="switch">
-      <input type="checkbox" bind:checked={recording_settings.record_continuous}>
+      <input
+        type="checkbox"
+        bind:checked={recording_settings.record_continuous}
+      />
       <span class="slider round slider--tert"></span>
     </label>
     Automatically record next demo when current demo completes
   </div>
   <div class="settings__switch">
     <label class="switch">
-      <input type="checkbox" bind:checked={recording_settings.auto_close}>
+      <input type="checkbox" bind:checked={recording_settings.auto_close} />
       <span class="slider round slider--tert"></span>
     </label>
     <div
@@ -317,7 +393,7 @@
   </div>
   <div class="settings__switch">
     <label class="switch">
-      <input type="checkbox" bind:checked={recording_settings.auto_suffix}>
+      <input type="checkbox" bind:checked={recording_settings.auto_suffix} />
       <span class="slider round slider--tert"></span>
     </label>
     <div
@@ -330,7 +406,7 @@
   </div>
   <div class="settings__switch">
     <label class="switch">
-      <input type="checkbox" bind:checked={recording_settings.third_person}>
+      <input type="checkbox" bind:checked={recording_settings.third_person} />
       <span class="slider round slider--tert"></span>
     </label>
     <div
@@ -347,9 +423,7 @@
 
 {#if Object.keys(addons).length === 0}
   <div class="setting">
-    <div class="settings__span">
-      No Addons installed
-    </div>
+    <div class="settings__span">No Addons installed</div>
   </div>
 {/if}
 
@@ -357,38 +431,54 @@
   <h3>{addon}</h3>
   <div class="setting">
     {#each Object.keys(addons[addon]) as addonSetting}
-      {#if addons[addon][addonSetting].type === 'string'}
+      {#if addons[addon][addonSetting].type === "string"}
         <div class="settings__input-group">
           <label
             for={`${addon}-${addonSetting}`}
-            class={`settings__label ${addons[addon][addonSetting].tooltip ? 'tooltip' : ''}`}
+            class={`settings__label ${
+              addons[addon][addonSetting].tooltip ? "tooltip" : ""
+            }`}
             data-tooltip={addons[addon][addonSetting].tooltip}
             style={`--kills: 0;`}
           >
             {addons[addon][addonSetting].title || addonSetting}
           </label>
-          <input bind:value={addons[addon][addonSetting].value} id={`${addon}-${addonSetting}`} class="settings__input input"/>
+          <input
+            bind:value={addons[addon][addonSetting].value}
+            id={`${addon}-${addonSetting}`}
+            class="settings__input input"
+          />
         </div>
-      {:else if addons[addon][addonSetting].type === 'int'}
+      {:else if addons[addon][addonSetting].type === "int"}
         <div class="settings__input-group">
           <label
             for={`${addon}-${addonSetting}`}
-            class={`settings__label ${addons[addon][addonSetting].tooltip ? 'tooltip' : ''}`}
+            class={`settings__label ${
+              addons[addon][addonSetting].tooltip ? "tooltip" : ""
+            }`}
             data-tooltip={addons[addon][addonSetting].tooltip}
             style={`--kills: 0;`}
           >
             {addons[addon][addonSetting].title || addonSetting}
           </label>
-          <input bind:value={addons[addon][addonSetting].value} id={`${addon}-${addonSetting}`} class="settings__input input" type="number"/>
+          <input
+            bind:value={addons[addon][addonSetting].value}
+            id={`${addon}-${addonSetting}`}
+            class="settings__input input"
+            type="number"
+          />
         </div>
-      {:else if addons[addon][addonSetting].type === 'bool' || addons[addon][addonSetting].type === 'toggle'}
+      {:else if addons[addon][addonSetting].type === "bool" || addons[addon][addonSetting].type === "toggle"}
         <div class="settings__switch">
           <label class="switch">
-            <input type="checkbox" bind:checked={addons[addon][addonSetting].value}>
+            <input
+              type="checkbox"
+              bind:checked={addons[addon][addonSetting].value}
+            />
             <span class="slider round"></span>
           </label>
           <div
-            class={`${addons[addon][addonSetting].tooltip ? 'tooltip' : ''}`}
+            class={`${addons[addon][addonSetting].tooltip ? "tooltip" : ""}`}
             data-tooltip={addons[addon][addonSetting].tooltip}
             style={`--kills: 0;`}
           >
@@ -402,9 +492,7 @@
 
 <div class="setting">
   <a href="/" class="cancel-btn">Cancel</a>
-  <button on:click={saveSettings} class="Save">
-    Save
-  </button>
+  <button on:click={saveSettings} class="Save"> Save </button>
 </div>
 
 <style lang="scss">
@@ -427,7 +515,8 @@
       align-items: flex-start;
       width: 100%;
 
-      & > input, & > select {
+      & > input,
+      & > select {
         width: 100%;
       }
     }
@@ -451,4 +540,3 @@
     text-align: left;
   }
 </style>
-  

@@ -50,7 +50,7 @@
 }
 
 .container {
-  font-family: 'Atkinson Hyperlegible', sans-serif;
+  font-family: "Atkinson Hyperlegible", sans-serif;
   margin: 0;
   display: flex;
   flex-direction: column;
@@ -100,7 +100,7 @@ button,
 select {
   border-radius: 8px;
   border: 1px solid var(--pri-con);
-  padding: 0.5rem .7rem;
+  padding: 0.5rem 0.7rem;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
@@ -113,7 +113,7 @@ select {
 
 input::placeholder {
   color: var(--pri-con);
-  opacity: .7;
+  opacity: 0.7;
 }
 
 .input {
@@ -128,7 +128,7 @@ input::placeholder {
 
 .input--sec::placeholder {
   color: var(--sec-con);
-  opacity: .7;
+  opacity: 0.7;
 }
 
 .input--tert {
@@ -138,7 +138,7 @@ input::placeholder {
 
 .input--tert::placeholder {
   color: var(--tert-con);
-  opacity: .7;
+  opacity: 0.7;
 }
 
 button {
@@ -147,7 +147,7 @@ button {
 
 button:disabled {
   cursor: not-allowed;
-  opacity: .3;
+  opacity: 0.3;
 }
 
 button:not(:disabled):hover {
@@ -168,14 +168,13 @@ button:not(:disabled):hover {
 .input--tert:not(:disabled):hover {
   border-color: var(--tert-con-text);
   filter: drop-shadow(0px 0px 2px var(--tert-con-text));
-
 }
 
 .cancel-btn {
   width: 100%;
   border-radius: 8px;
   border: 1px solid transparent;
-  padding: 0.5rem .7rem;
+  padding: 0.5rem 0.7rem;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
@@ -213,8 +212,8 @@ button:not(:disabled):hover {
   right: 0;
   bottom: 0;
   background-color: var(--pri-con);
-  -webkit-transition: .4s;
-  transition: .4s;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
 }
 
 .slider:before {
@@ -225,8 +224,8 @@ button:not(:disabled):hover {
   left: 2px;
   bottom: 2px;
   background-color: var(--pri-con-text);
-  -webkit-transition: .4s;
-  transition: .4s;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
 }
 
 input:checked + .slider {
@@ -348,7 +347,7 @@ input:checked + .slider--tert:before {
   .slider {
     background-color: var(--pri-con-text);
   }
-  
+
   .slider:before {
     background-color: var(--pri-con);
   }
@@ -356,7 +355,7 @@ input:checked + .slider--tert:before {
   .slider--sec {
     background-color: var(--sec-con-text);
   }
-  
+
   .slider--sec:before {
     background-color: var(--sec-con);
   }
@@ -364,19 +363,19 @@ input:checked + .slider--tert:before {
   .slider--tert {
     background-color: var(--tert-con-text);
   }
-  
+
   .slider--tert:before {
     background-color: var(--tert-con);
   }
-  
+
   input:checked + .slider {
     background-color: var(--pri-con);
   }
-  
+
   input:focus + .slider {
     box-shadow: 0 0 1px var(--pri-con);
   }
-  
+
   input:checked + .slider:before {
     background-color: var(--pri-con-text);
   }
@@ -384,11 +383,11 @@ input:checked + .slider--tert:before {
   input:checked + .slider--sec {
     background-color: var(--sec-con);
   }
-  
+
   input:focus + .slider--tert {
     box-shadow: 0 0 1px var(--sec-con);
   }
-  
+
   input:checked + .slider--tert:before {
     background-color: var(--sec-con-text);
   }
@@ -396,11 +395,11 @@ input:checked + .slider--tert:before {
   input:checked + .slider--tert {
     background-color: var(--tert-con);
   }
-  
+
   input:focus + .slider--tert {
     box-shadow: 0 0 1px var(--tert-con);
   }
-  
+
   input:checked + .slider--tert:before {
     background-color: var(--tert-con-text);
   }
@@ -432,7 +431,7 @@ input:checked + .slider--tert:before {
 }
 .tooltip::after {
   z-index: 1000;
-  content: '';
+  content: "";
   display: none;
   position: absolute;
   top: -0.2rem;
@@ -470,18 +469,24 @@ input:checked + .slider--tert:before {
   right: 2.5rem;
 }
 .tooltip--custom::before {
-  left: calc(var(--pos) + .5rem);
+  left: calc(var(--pos) + 0.5rem);
 }
 .tooltip--custom::after {
   left: calc(var(--pos) + 1rem);
 }
-.tooltip:hover, .tooltip:active, .tooltip:focus {
+.tooltip:hover,
+.tooltip:active,
+.tooltip:focus {
   color: var(--sec);
 }
-.tooltip:hover::before, .tooltip:active::before, .tooltip:focus::before {
+.tooltip:hover::before,
+.tooltip:active::before,
+.tooltip:focus::before {
   display: block;
 }
-.tooltip:hover::after, .tooltip:active::after, .tooltip:focus::after {
+.tooltip:hover::after,
+.tooltip:active::after,
+.tooltip:focus::after {
   display: block;
 }
 
@@ -494,7 +499,7 @@ input:checked + .slider--tert:before {
   text-align: center;
   padding: 5px 0;
   border-radius: 6px;
- 
+
   /* Position the tooltip text - see examples below! */
   position: absolute;
   z-index: 1;

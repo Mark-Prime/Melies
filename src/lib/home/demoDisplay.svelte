@@ -1,12 +1,12 @@
 <script>
-    // @ts-nocheck
+  // @ts-nocheck
 
-    export let i;
-    export let event;
+  export let i;
+  export let event;
 </script>
 
 {#if !i}
-    <div class="carrot">></div>
+  <div class="carrot">></div>
 {/if}
 <div class="event" class:bookmark={!event.isKillstreak}>{event.event}</div>
 
@@ -20,6 +20,6 @@
   }
 
   .bookmark {
-    color: var(--sec)
+    color: var(--sec);
   }
 </style>

@@ -1,17 +1,15 @@
 <script>
-  import { invoke } from "@tauri-apps/api/tauri"
+  import { invoke } from "@tauri-apps/api/tauri";
 
-  let resp = ""
+  let resp = "";
 
-  async function greet(){
+  async function greet() {
     // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-    resp = await invoke("ryukbot")
+    resp = await invoke("ryukbot");
   }
 </script>
 
-<button on:click={greet}>
-  Run
-</button>
+<button on:click={greet}> Run </button>
 
 <style>
   button {

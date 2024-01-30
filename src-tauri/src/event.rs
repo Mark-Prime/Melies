@@ -1,6 +1,6 @@
 use regex::Captures;
-use serde::{ Serialize, Deserialize };
-use std::fmt::{ self, Display, Formatter };
+use serde::{Deserialize, Serialize};
+use std::fmt::{self, Display, Formatter};
 
 #[derive(Debug)]
 pub enum EventError {

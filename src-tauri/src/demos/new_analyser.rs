@@ -11,7 +11,6 @@ use tf_demo_parser::demo::parser::handler::{BorrowMessageHandler, MessageHandler
 use tf_demo_parser::demo::vector::Vector;
 use tf_demo_parser::{ParserState, ReadResult, Stream};
 // use bitbuffer::{BitWrite, BitWriteStream, Endianness};
-use steamid_ng::SteamID;
 use num_enum::TryFromPrimitive;
 use parse_display::{Display, FromStr};
 use serde::de::Error;
@@ -19,6 +18,7 @@ use serde::{ser::SerializeMap, Deserialize, Deserializer, Serialize, Serializer}
 use std::collections::{BTreeMap, HashMap};
 use std::convert::TryFrom;
 use std::ops::{Index, IndexMut};
+use steamid_ng::SteamID;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ChatMessage {
@@ -26,7 +26,7 @@ pub struct ChatMessage {
     pub from: EntityId,
     pub name: String,
     pub text: String,
-    pub tick: DemoTick, 
+    pub tick: DemoTick,
     // pub message: SayText2Message,
 }
 
@@ -161,7 +161,7 @@ fn test_classlist_sorted() {
     let list = ClassList([0, 1, 5, 0, 0, 3, 0, 0, 0, 0]);
     assert_eq!(
         list.sorted().collect::<Vec<_>>(),
-        &[(Class::Sniper, 5), (Class::Medic, 3), (Class::Scout, 1)]
+        &[(Class::Sniper, 5), (Class::Medic, 3), (Class::Scout, 1),]
     )
 }
 
@@ -310,7 +310,7 @@ impl Death {
             rocket_jump: event.rocket_jump,
             penetration,
             killer_class: Class::Other,
-            victim_class: Class::Other
+            victim_class: Class::Other,
         }
     }
 }
@@ -374,7 +374,7 @@ impl MessageHandler for Analyser {
                 }
             }
             Message::ServerInfo(message) => {
-                self.state.interval_per_tick = message.interval_per_tick
+                self.state.interval_per_tick = message.interval_per_tick;
             }
             Message::GameEvent(message) => self.handle_event(&message.event, tick),
             Message::UserMessage(message) => self.handle_user_message(message, tick),
@@ -507,5 +507,5 @@ pub struct MatchState {
     pub end_tick: u32,
     pub start_tick: ServerTick,
     pub interval_per_tick: f32,
-    pub pauses: Vec<Pause>
+    pub pauses: Vec<Pause>,
 }

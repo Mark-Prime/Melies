@@ -1,11 +1,11 @@
 <script>
   // @ts-nocheck
-  import { invoke } from "@tauri-apps/api/tauri"
+  import { invoke } from "@tauri-apps/api/tauri";
   import Logstf from "../lib/logstf.svelte";
   import Demo from "../lib/demos_parser/demos.svelte";
   import DemoEdit from "$lib/home/demoEdit.svelte";
   import DemoDisplay from "$lib/home/demoDisplay.svelte";
-  import { onMount } from 'svelte';
+  import { onMount } from "svelte";
 
   let recording_settings = {};
 
@@ -20,7 +20,7 @@
   });
 
   let demos = [];
-  
+
   let editting = false;
   let modified = false;
   let logstfModal = false;
@@ -29,23 +29,28 @@
   let resp = { vdms: 0, clips: 0, events: 0, code: 0 };
 
   function setEvents(event_list = []) {
-    demos = []
+    demos = [];
 
     if (event_list.code === 200) {
-      event_list.events.forEach((/** @type {{ demo_name: any; }} */ event, /** @type {number} */ i) => {
-        event.isKillstreak = false;
-        
-        if (event.value.Killstreak) {
-          event.isKillstreak = true;
-        }
+      event_list.events.forEach(
+        (/** @type {{ demo_name: any; }} */ event, /** @type {number} */ i) => {
+          event.isKillstreak = false;
 
-        if (i === 0 || event_list.events[i - 1].demo_name != event.demo_name) {
-          demos.push([event]);
-          return;
-        }
+          if (event.value.Killstreak) {
+            event.isKillstreak = true;
+          }
 
-        demos[demos.length - 1].push(event);
-      });
+          if (
+            i === 0 ||
+            event_list.events[i - 1].demo_name != event.demo_name
+          ) {
+            demos.push([event]);
+            return;
+          }
+
+          demos[demos.length - 1].push(event);
+        }
+      );
 
       demos = demos;
 
@@ -55,13 +60,13 @@
 
   async function loadEvents() {
     let event_list = await invoke("load_events");
-    
+
     setEvents(event_list);
   }
 
   async function runMelies() {
     resp = await invoke("ryukbot");
-    
+
     setEvents();
   }
 
@@ -69,35 +74,35 @@
     demos.push([
       {
         value: {
-          Bookmark: "General"
+          Bookmark: "General",
         },
         tick: 0,
         demo_name: "new_demo",
         event: `[_] Bookmark _ (\"_\" at 0)`,
-        isKillstreak: false
-      }
-    ])
+        isKillstreak: false,
+      },
+    ]);
 
     demos = demos;
   }
 
   function parseLogEvents(demo_name, events) {
-    let new_demo = []
+    let new_demo = [];
 
-    let spec_mode = recording_settings['third_person'] ? 'spec_third' : 'spec';
-    
+    let spec_mode = recording_settings["third_person"] ? "spec_third" : "spec";
+
     for (let event of events) {
-      new_demo.push(
-        {
-          value: {
-            Bookmark: `${spec_mode} ${event.steamid64}`
-          },
-          tick: event.time * 66,
-          demo_name: demo_name,
-          event: `[logs.tf_${event.label}] ${spec_mode}  ${event.steamid64} (\"${demo_name}\" at ${event.time * 66})`,
-          isKillstreak: false
-        }
-      )
+      new_demo.push({
+        value: {
+          Bookmark: `${spec_mode} ${event.steamid64}`,
+        },
+        tick: event.time * 66,
+        demo_name: demo_name,
+        event: `[logs.tf_${event.label}] ${spec_mode}  ${
+          event.steamid64
+        } (\"${demo_name}\" at ${event.time * 66})`,
+        isKillstreak: false,
+      });
     }
 
     demos.push(new_demo);
@@ -106,70 +111,62 @@
   }
 
   function parseDemoEvents(demo_name, events) {
-    let new_demo = []
+    let new_demo = [];
 
-    let spec_mode = recording_settings['third_person'] ? 'spec_third' : 'spec';
-    
+    let spec_mode = recording_settings["third_person"] ? "spec_third" : "spec";
+
     for (let event of events) {
       if (event.start) {
-        new_demo.push(
-          {
-            value: {
-              Bookmark: `clip_start ${spec_mode} ${event.steamid64}`
-            },
-            tick: event.time,
-            demo_name: demo_name,
-            event: `[demo_${event.label}] clip_start ${spec_mode} ${event.steamid64} (\"${demo_name}\" at ${event.time})`,
-            isKillstreak: false
-          }
-        )
+        new_demo.push({
+          value: {
+            Bookmark: `clip_start ${spec_mode} ${event.steamid64}`,
+          },
+          tick: event.time,
+          demo_name: demo_name,
+          event: `[demo_${event.label}] clip_start ${spec_mode} ${event.steamid64} (\"${demo_name}\" at ${event.time})`,
+          isKillstreak: false,
+        });
 
         continue;
       }
 
       if (event.bookmark) {
-        new_demo.push(
-          {
-            value: {
-              Bookmark: `${spec_mode} ${event.steamid64}`
-            },
-            tick: event.time,
-            demo_name: demo_name,
-            event: `[demo_${event.label}] ${spec_mode} ${event.steamid64} (\"${demo_name}\" at ${event.time})`,
-            isKillstreak: false
-          }
-        )
+        new_demo.push({
+          value: {
+            Bookmark: `${spec_mode} ${event.steamid64}`,
+          },
+          tick: event.time,
+          demo_name: demo_name,
+          event: `[demo_${event.label}] ${spec_mode} ${event.steamid64} (\"${demo_name}\" at ${event.time})`,
+          isKillstreak: false,
+        });
 
         continue;
       }
 
       if (event.killstreak) {
-        new_demo.push(
-          {
-            value: {
-              Killstreak: event.kills
-            },
-            tick: event.time,
-            demo_name: demo_name,
-            event: `[demo_${event.label}] Killstreak ${event.kills} (\"${demo_name}\" at ${event.time})`,
-            isKillstreak: true
-          }
-        )
+        new_demo.push({
+          value: {
+            Killstreak: event.kills,
+          },
+          tick: event.time,
+          demo_name: demo_name,
+          event: `[demo_${event.label}] Killstreak ${event.kills} (\"${demo_name}\" at ${event.time})`,
+          isKillstreak: true,
+        });
 
         continue;
       }
 
-      new_demo.push(
-        {
-          value: {
-            Bookmark: `clip_end`
-          },
-          tick: event.time,
-          demo_name: demo_name,
-          event: `[demo_${event.label}] clip_end (\"${demo_name}\" at ${event.time})`,
-          isKillstreak: false
-        }
-      )
+      new_demo.push({
+        value: {
+          Bookmark: `clip_end`,
+        },
+        tick: event.time,
+        demo_name: demo_name,
+        event: `[demo_${event.label}] clip_end (\"${demo_name}\" at ${event.time})`,
+        isKillstreak: false,
+      });
     }
 
     demos.push(new_demo);
@@ -196,7 +193,7 @@
     }
 
     for (let demo of demos) {
-      demo.sort((a, b) =>  a.tick - b.tick)
+      demo.sort((a, b) => a.tick - b.tick);
     }
 
     let new_demos = await invoke("save_events", { newEvents: demos });
@@ -228,23 +225,37 @@
 <div class="home-page">
   <h1 class="header">Méliès</h1>
   <div class="events">
-    <Logstf enabled={logstfModal} toggle={toggleLogModal} parseLogEvents={parseLogEvents} modified={enable_modified}/>
-    <Demo enabled={demoModal} toggle={toggleDemoModal} parseDemoEvents={parseDemoEvents} modified={enable_modified}/>
+    <Logstf
+      enabled={logstfModal}
+      toggle={toggleLogModal}
+      {parseLogEvents}
+      modified={enable_modified}
+    />
+    <Demo
+      enabled={demoModal}
+      toggle={toggleDemoModal}
+      {parseDemoEvents}
+      modified={enable_modified}
+    />
     {#if !resp.code}
       {#each demos as demo, demo_i}
         {#each demo as event, i (`${demo_i}__${i}`)}
           {#if editting}
-            <DemoEdit demo_i={demo_i} i={i} demo={demo} demos={demos} event={event} refresh={refresh}/>
+            <DemoEdit {demo_i} {i} {demo} {demos} {event} {refresh} />
           {:else}
-            <DemoDisplay i={i} event={event} />
+            <DemoDisplay {i} {event} />
           {/if}
         {/each}
       {/each}
       {#if editting}
         <div class="new-demo">
-          <a href="/" class="new-demo__1" on:click={addDemo}>Add Manual Events</a>
+          <a href="/" class="new-demo__1" on:click={addDemo}
+            >Add Manual Events</a
+          >
           <a href="/" class="new-demo__2" on:click={toggleLogModal}>Logs.tf</a>
-          <a href="/" class="new-demo__3" on:click={toggleDemoModal}>Scan Demo</a>
+          <a href="/" class="new-demo__3" on:click={toggleDemoModal}
+            >Scan Demo</a
+          >
         </div>
       {/if}
     {:else if resp.code === 200}
@@ -252,9 +263,9 @@
         {`Created ${resp.vdms} VDMs containing ${resp.clips} containing ${resp.events} events.`}
       </p>
       {#if resp.output_path != ""}
-      <p>
-        Backup saved to: {resp.backup_location}
-      </p>
+        <p>
+          Backup saved to: {resp.backup_location}
+        </p>
       {/if}
     {:else}
       <p>Error {resp.code}</p>
@@ -298,10 +309,10 @@
 
     & > a {
       width: 100%;
-      padding: 1px .5rem;
+      padding: 1px 0.5rem;
       border-radius: 3px;
 
-      transition: all .2s;
+      transition: all 0.2s;
     }
 
     &__1 {
@@ -336,7 +347,7 @@
   }
 
   .events {
-    font-family: 'Source Code Pro', monospace;
+    font-family: "Source Code Pro", monospace;
     grid-column-start: 1;
     grid-column-end: 6;
     grid-row-start: 2;
@@ -351,6 +362,6 @@
     overflow-y: auto;
     overflow-x: hidden;
 
-    border-radius: .7rem;
+    border-radius: 0.7rem;
   }
 </style>

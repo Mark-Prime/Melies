@@ -1,12 +1,11 @@
-use serde_json::{ self, Value };
-use steamid_ng::SteamID;
 use reqwest;
+use serde_json::{self, Value};
+use steamid_ng::SteamID;
 
 pub(crate) fn parse(url: Value) -> Value {
     let log_id = url.as_str().unwrap();
     println!("Logs.tf url: https://logs.tf/json/{}", log_id);
-    let binding = reqwest::blocking
-        ::get(format!("https://logs.tf/json/{}", log_id))
+    let binding = reqwest::blocking::get(format!("https://logs.tf/json/{}", log_id))
         .unwrap()
         .text()
         .unwrap();
@@ -43,9 +42,8 @@ pub(crate) fn parse(url: Value) -> Value {
         println!("Demos.tf url: https://demos.tf/{}", demo_info[0]["id"]);
         println!("Download: {}", demo_info[0]["url"].as_str().unwrap());
 
-        important_info["demo_url"] = Value::from(
-            format!("https://demos.tf/{}", demo_info[0]["id"])
-        );
+        important_info["demo_url"] =
+            Value::from(format!("https://demos.tf/{}", demo_info[0]["id"]));
         important_info["demo_download"] = Value::from(demo_info[0]["url"].as_str().unwrap());
     }
 
