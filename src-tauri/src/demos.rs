@@ -138,6 +138,11 @@ pub(crate) fn validate_demos_folder(settings: &Value) -> bool {
 
 pub(crate) fn scan_for_demos(settings: Value) -> Value {
     let mut demos: Vec<Value> = vec![];
+
+    if !Path::new(settings["tf_folder"].as_str().unwrap()).exists() {
+        return Value::from({});
+    }
+
     let paths = fs::read_dir(settings["tf_folder"].as_str().unwrap()).unwrap();
 
     for path in paths {

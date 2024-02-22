@@ -9,7 +9,6 @@ use serde_json::{self, json, Map, Value};
 use std::fs::{DirEntry, File};
 use std::io::Write;
 use std::path::Path;
-use std::str::FromStr;
 use std::{env, fs};
 use tauri::command;
 use vdm::action::ActionType;
@@ -570,9 +569,21 @@ fn ryukbot() -> Value {
     let vdm_count = &vdms.len();
 
     for (i, vdm) in vdms.iter().enumerate() {
+        let mut folder = format!(
+            "{}\\demos",
+            &settings["tf_folder"].as_str().unwrap()
+        );
+
+        if !Path::new(&folder).exists() {
+            folder = format!(
+                "{}",
+                &settings["tf_folder"].as_str().unwrap()
+            );
+        }
+
         let file_location = format!(
-            "{}\\demos\\{}.vdm",
-            &settings["tf_folder"].as_str().unwrap(),
+            "{}\\{}.vdm",
+            folder,
             &vdm.name
         );
 

@@ -152,6 +152,10 @@
 
     transition: all 0.2s;
 
+    &--selected {
+      border: 1px solid var(--tert);
+    }
+
     & > div {
       display: flex;
       align-items: center;

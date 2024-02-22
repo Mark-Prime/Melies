@@ -11,6 +11,11 @@
   export let tickToTime;
   export let toggleSelected;
   export let isDemoPov;
+
+  function toggleLifeSelected(killstreak) {
+    killstreaks = killstreaks;
+    return toggleSelected(getLifeFromKillstreak(killstreak));
+  }
 </script>
 
 {#if killstreaks.length != 0}
@@ -22,7 +27,7 @@
           class={"demo demo__killstreaks " +
             ((killstreak.selected ||
               killstreak.selected_as_bookmark ||
-              getLifeFromKillstreak(killstreak)?.selected) &&
+              getLifeFromKillstreak(killstreak).selected) &&
               "demo--selected")}
         >
           <div class="player_classes">
@@ -126,12 +131,12 @@
               {#if getLifeFromKillstreak(killstreak).selected}
                 <button
                   class="cancel-btn"
-                  on:click={toggleSelected(getLifeFromKillstreak(killstreak))}
+                  on:click={toggleLifeSelected(killstreak)}
                   >-</button
                 >
               {:else}
                 <button
-                  on:click={toggleSelected(getLifeFromKillstreak(killstreak))}
+                  on:click={toggleLifeSelected(killstreak)}
                   >+</button
                 >
               {/if}
@@ -190,6 +195,10 @@
     white-space: nowrap;
 
     transition: all 0.2s;
+
+    &--selected {
+      border: 1px solid var(--tert);
+    }
 
     & > div {
       display: flex;
