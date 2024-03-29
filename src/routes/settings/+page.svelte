@@ -96,11 +96,13 @@
       h264 - QuickTime encoding to .mp4
       jpeg - generates .jpeg image sequence
       tga - generates .tga image sequence
-      SVR - uses Source Video Render to record .mp4
+      SVR - uses Source Video Render to record .mkv
+      SVR.mov - uses Source Video Render to record .mov
+      SVR.mp4 - uses Source Video Render to record .mp4 (Requires SVR encoder to be updated)
       Lawena - uses commands for Lawena (settings will be overwritten by Lawena)
       Do Not Record - ignores recording commands but still skips
 `}
-      style={`--kills: 6;`}
+      style={`--kills: 8;`}
     >
       Recording Method
     </label>
@@ -113,6 +115,8 @@
       <option value="jpeg">jpeg</option>
       <option value="tga">tga</option>
       <option value="svr">SVR</option>
+      <option value="svr.mov">SVR.mov</option>
+      <option value="svr.mp4">SVR.mp4</option>
       <option value="lawena">Lawena</option>
       <option value="none">Do Not Record</option>
     </select>

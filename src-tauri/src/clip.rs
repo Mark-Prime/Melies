@@ -106,11 +106,12 @@ impl Clip {
                 let mut min_tick_between = 0;
 
                 if !bm.contains("clip_start") {
-                    new_start =
-                        event.tick - settings["recording"]["before_bookmark"].as_i64().unwrap();
-                    min_tick_between = settings["recording"]["minimum_ticks_between_clips"]
-                        .as_i64()
-                        .unwrap();
+                    if let Some(before_bookmark) = settings["recording"]["before_bookmark"].as_i64() {
+                        new_start = event.tick - before_bookmark;
+                    }
+                    if let Some(min_tick_between_clips) = settings["recording"]["minimum_ticks_between_clips"].as_i64() {
+                        min_tick_between = min_tick_between_clips;
+                    }
                 }
 
                 if new_start - min_tick_between < self.end_tick {

@@ -43,7 +43,9 @@ macro_rules! extend {
 
 fn setting_as_bin(setting: &Value) -> i64 {
     if !setting.is_boolean() {
-        return setting.as_i64().unwrap();
+        if let Some(setting_i64) = setting.as_i64() {
+            return setting_i64;
+        }
     }
 
     match setting.as_bool() {
@@ -57,7 +59,10 @@ fn setting_as_bin(setting: &Value) -> i64 {
 
 fn setting_as_bool(setting: &Value) -> bool {
     if setting.is_boolean() {
-        return setting.as_bool().unwrap();
+        return match setting.as_bool() {
+            Some(val) => val,
+            None => false,
+        }
     }
 
     match setting.as_i64() {
@@ -115,11 +120,10 @@ fn write_cfg(settings: &Value) {
         extend!(cfg, "firstperson{};\r\n", "");
     }
 
-    extend!(
-        cfg,
-        "{};\r\n",
-        settings["recording"]["commands"].as_str().unwrap()
-    );
+    if let Some(commands) = settings["recording"]["commands"].as_str() {
+        extend!(cfg, "{}\r\n", commands);
+    }
+
     extend!(
         cfg,
         "{};\r\n",
@@ -133,7 +137,10 @@ fn write_cfg(settings: &Value) {
             for (k, v) in map {
                 extend!(cfg, "\r\necho \"Running {} addon\";\r\n", k);
 
-                let v_map = v.as_object().unwrap();
+                let v_map = match v.as_object() {
+                    Some(v_map) => v_map,
+                    None => continue,
+                };
 
                 for (_ki, vi) in v_map {
                     match &vi["type"] {
@@ -193,17 +200,29 @@ fn write_cfg(settings: &Value) {
         extend!(cfg, "alias fov_desired \"{}\";\r\n", "");
     }
 
-    let mut file = File::create(format!(
-        "{}\\cfg\\melies.cfg",
-        settings["tf_folder"].as_str().unwrap()
-    ))
-    .unwrap();
+    let tf_folder = match settings["tf_folder"].as_str() {
+        Some(folder) => folder,
+        None => panic!("tf_folder setting is not a string"),
+    };
+    
+    let mut file = match File::create(format!("{}\\cfg\\melies.cfg", tf_folder)) {
+        Ok(file) => file,
+        Err(why) => {
+            panic!("Couldn't create melies.cfg: {}", why)
+        }
+    };
 
-    file.write_all(cfg.as_bytes()).unwrap();
+    match file.write_all(cfg.as_bytes()) {
+        Ok(_) => {},
+        Err(why) => panic!("Couldn't write melies.cfg: {}", why),
+    };
 }
 
 fn end_vdm(vdm: &mut VDM, settings: &Value, next_demoname: String) -> VDM {
-    let last_tick = vdm.last().props().start_tick.unwrap();
+    let last_tick = match vdm.last().props().start_tick {
+        Some(tick) => tick,
+        None => return vdm.to_owned(),
+    };
 
     {
         let exec_commands = vdm.create_action(ActionType::PlayCommands).props_mut();
@@ -243,18 +262,27 @@ fn check_spec(clip: &Clip, commands: String) -> String {
 }
 
 fn start_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
-    if clip.start_tick > settings["recording"]["start_delay"].as_i64().unwrap() + 66 {
-        let skip_props = vdm.create_action(ActionType::SkipAhead).props_mut();
+    if let Some(start_delay) = settings["recording"]["start_delay"].as_i64() {
+        if clip.start_tick > start_delay + 66 {
+            let skip_props = vdm.create_action(ActionType::SkipAhead).props_mut();
 
-        skip_props.start_tick = Some(settings["recording"]["start_delay"].as_i64().unwrap());
-        skip_props.skip_to_tick = Some(clip.start_tick - 66);
+            if let Some(start_delay) = settings["recording"]["start_delay"].as_i64() {
+                skip_props.start_tick = Some(start_delay);
+            }
+            if let Some(skip_to_tick) = clip.start_tick.checked_sub(66) {
+                skip_props.skip_to_tick = Some(skip_to_tick);
+            }
+        }
     }
 
     record_clip(vdm, clip, settings);
 }
 
 fn add_clip_to_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
-    let last_tick = vdm.last().props().start_tick.unwrap();
+    let last_tick = match vdm.last().props().start_tick {
+        Some(action) => action,
+        None => return,
+    };
 
     if clip.start_tick > last_tick + 300 {
         let skip_props = vdm.create_action(ActionType::SkipAhead).props_mut();
@@ -339,9 +367,31 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
                     clip_name
                 );
             }
-            "svr" => {
+            "svr.mp4" => {
                 commands = format!(
                     "{}; startmovie {}.mp4; clear",
+                    ifelse!(
+                        setting_as_bool(&settings["output"]["snd_fix"]),
+                        "snd_fix; ",
+                        ""
+                    ),
+                    clip_name
+                );
+            }
+            "svr" => {
+                commands = format!(
+                    "{}; startmovie {}.mkv; clear",
+                    ifelse!(
+                        setting_as_bool(&settings["output"]["snd_fix"]),
+                        "snd_fix; ",
+                        ""
+                    ),
+                    clip_name
+                );
+            }
+            "svr.mov" => {
+                commands = format!(
+                    "{}; startmovie {}.mov; clear",
                     ifelse!(
                         setting_as_bool(&settings["output"]["snd_fix"]),
                         "snd_fix; ",
@@ -442,10 +492,31 @@ fn check_dir(files: Result<fs::ReadDir, std::io::Error>) -> Result<String, Strin
 }
 
 fn find_dir(settings: &Value) -> Result<String, String> {
-    let files: Result<fs::ReadDir, std::io::Error> = fs::read_dir(format!(
-        "{}\\demos",
-        settings["tf_folder"].as_str().unwrap()
-    ));
+    let tf_folder = settings["tf_folder"].as_str();
+
+    let files = match tf_folder {
+        Some(tf_folder) => fs::read_dir(format!("{}\\demos", tf_folder)),
+        None => Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "tf_folder not set",
+        )),
+    };
+
+    match check_dir(files) {
+        Ok(res) => {
+            return Ok(res);
+        }
+        Err(_) => {}
+    }
+    
+    let tf_folder = settings["tf_folder"].as_str();
+    let files = match tf_folder {
+        Some(tf_folder) => fs::read_dir(format!("{}", tf_folder)),
+        None => Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "tf_folder not set",
+        )),
+    };
 
     match check_dir(files) {
         Ok(res) => {
@@ -454,22 +525,18 @@ fn find_dir(settings: &Value) -> Result<String, String> {
         Err(_) => {}
     }
 
-    let files: Result<fs::ReadDir, std::io::Error> =
-        fs::read_dir(format!("{}", settings["tf_folder"].as_str().unwrap()));
-
-    match check_dir(files) {
-        Ok(res) => {
-            return Ok(res);
-        }
-        Err(_) => {}
+    match settings["tf_folder"].as_str() {
+        Some(tf_folder) => Err(
+            format!(
+                "Could not find the _events.txt or KillStreaks.txt files.\r\nPlease check your settings to ensure the tf folder is correctly linked.\r\nIf you do not have either file, please make one in the \\tf or \\tf\\demos folder. \r\n\r\ntf_folder setting: ({})",
+                tf_folder
+            )
+        ),
+        None => Err(
+            "tf_folder setting not set".to_string()
+        ),
     }
 
-    Err(
-        format!(
-            "Could not find the _events.txt or KillStreaks.txt files.\r\nPlease check your settings to ensure the tf folder is correctly linked.\r\nIf you do not have either file, please make one in the \\tf or \\tf\\demos folder. \r\n\r\ntf_folder setting: ({})",
-            settings["tf_folder"].as_str().unwrap()
-        )
-    )
 }
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
@@ -483,10 +550,10 @@ fn ryukbot() -> Value {
         Ok(directory) => {
             dir = directory;
         }
-        Err(_) => {
+        Err(err) => {
             return json!({
                 "code": 404,
-                "err_text": format!("Could not find _events.txt or KillStreaks.txt\r\nPlease check your settings to ensure the tf folder is correctly linked.\r\n\r\n tf folder setting: {}", settings["tf_folder"].as_str().unwrap())
+                "err_text": err
             });
         }
     }
@@ -514,15 +581,13 @@ fn ryukbot() -> Value {
         });
     }
 
-    let re = Regex::new("\\[(.*)\\] (.*) \\(\"(.*)\" at (\\d*)\\)").unwrap();
-
-    let events = re.captures_iter(&file_text);
-
     write_cfg(&settings);
 
     let mut clips: Vec<Clip> = vec![];
 
     let mut event_count = 0;
+
+    let events = re.captures_iter(&file_text);
 
     for event_capture in events {
         event_count = event_count + 1;
@@ -1086,9 +1151,9 @@ fn load_demos() -> Result<Value, String> {
         return Ok(scan_for_demos(settings));
     }
 
-    return Err(String::from(
+    Err(String::from(
         "Can't find \\tf folder. Please fix the \"\\tf Folder\" setting in settings.",
-    ));
+    ))
 }
 
 #[command]
