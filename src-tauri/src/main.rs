@@ -105,6 +105,11 @@ fn write_cfg(settings: &Value) {
     );
     extend!(
         cfg,
+        "tf_use_min_viewmodels {};\r\n",
+        setting_as_bin(&settings["output"]["minmode"])
+    );
+    extend!(
+        cfg,
         "viewmodel_fov_demo {};\r\n",
         setting_as_bin(&settings["recording"]["viewmodel_fov"])
     );
@@ -122,6 +127,10 @@ fn write_cfg(settings: &Value) {
 
     if let Some(commands) = settings["recording"]["commands"].as_str() {
         extend!(cfg, "{}\r\n", commands);
+    }
+
+    if setting_as_bin(&settings["recording"]["prevent_taunt"]) == 1 {
+        extend!(cfg, "{}\r\n", "alias +taunt \"\"; alias -taunt \"\";");
     }
 
     extend!(
@@ -197,6 +206,7 @@ fn write_cfg(settings: &Value) {
         extend!(cfg, "alias crosshair \"{}\";\r\n", "");
         extend!(cfg, "alias r_drawviewmodel \"{}\";\r\n", "");
         extend!(cfg, "alias viewmodel_fov_demo \"{}\";\r\n", "");
+        extend!(cfg, "alias tf_use_min_viewmodels \"{}\";\r\n", "");
         extend!(cfg, "alias fov_desired \"{}\";\r\n", "");
     }
 
@@ -748,6 +758,7 @@ fn default_settings() -> Value {
             "hud": true,
             "text_chat": false,
             "voice_chat": false,
+            "minmode": false,
             "snd_fix": true,
             "lock": true
         },
@@ -767,7 +778,8 @@ fn default_settings() -> Value {
             "record_continuous": true,
             "auto_close": true,
             "auto_suffix": true,
-            "third_person": false
+            "third_person": false,
+            "prevent_taunt": false
         }
     });
 

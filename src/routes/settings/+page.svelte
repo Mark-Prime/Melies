@@ -191,6 +191,13 @@
       Prevent in-game settings from changing.
     </div>
   </div>
+  <div class="settings__switch">
+    <label class="switch">
+      <input type="checkbox" bind:checked={output_settings.minmode} />
+      <span class="slider round slider--sec"></span>
+    </label>
+    Enable Minmode Viewmodels
+  </div>
 </div>
 
 <h2>Recording</h2>
@@ -419,6 +426,19 @@
       style={`--kills: 1;`}
     >
       Default to Third Person
+    </div>
+  </div>
+  <div class="settings__switch">
+    <label class="switch">
+      <input type="checkbox" bind:checked={recording_settings.prevent_taunt} />
+      <span class="slider round slider--tert"></span>
+    </label>
+    <div
+      class="tooltip"
+      data-tooltip={`Disabled the taunt command and prevents the menu from opening.`}
+      style={`--kills: 0;`}
+    >
+      Prevent Taunt Menu Bug
     </div>
   </div>
 </div>
