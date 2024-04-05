@@ -85,7 +85,7 @@
         on:change={(e) => editDemoName(demo_i, e.target.value)}
       />
       <a class="demo-delete" href="/" on:click={() => deleteDemo(demo_i)}>
-        Delete Demo
+        Remove Demo
       </a>
     </div>
   {/if}
