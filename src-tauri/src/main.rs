@@ -1,23 +1,20 @@
-#![cfg_attr(
-    all(not(debug_assertions), target_os = "windows"),
-    windows_subsystem = "windows"
-)]
+#![cfg_attr(all(not(debug_assertions), target_os = "windows"), windows_subsystem = "windows")]
 
 use chrono::prelude::*;
 use regex::Regex;
-use serde_json::{self, json, Map, Value};
-use std::fs::{DirEntry, File};
+use serde_json::{ self, json, Map, Value };
+use std::fs::{ DirEntry, File };
 use std::io::Write;
 use std::path::Path;
-use std::{env, fs};
+use std::{ env, fs };
 use tauri::command;
 use vdm::action::ActionType;
 use vdm::VDM;
 
 use crate::clip::Clip;
-use crate::demos::{scan_demo, scan_for_demos, validate_demos_folder};
+use crate::demos::{ scan_demo, scan_for_demos, validate_demos_folder };
 use crate::event::Event;
-use crate::event::EventStyle::{Bookmark, Killstreak};
+use crate::event::EventStyle::{ Bookmark, Killstreak };
 use crate::logstf::parse;
 
 mod clip;
@@ -49,10 +46,11 @@ fn setting_as_bin(setting: &Value) -> i64 {
     }
 
     match setting.as_bool() {
-        Some(val) => match val {
-            true => 1,
-            false => 0,
-        },
+        Some(val) =>
+            match val {
+                true => 1,
+                false => 0,
+            }
         _ => 0,
     }
 }
@@ -62,14 +60,15 @@ fn setting_as_bool(setting: &Value) -> bool {
         return match setting.as_bool() {
             Some(val) => val,
             None => false,
-        }
+        };
     }
 
     match setting.as_i64() {
-        Some(val) => match val {
-            1 => true,
-            _ => false,
-        },
+        Some(val) =>
+            match val {
+                1 => true,
+                _ => false,
+            }
         _ => false,
     }
 }
@@ -83,41 +82,17 @@ fn write_cfg(settings: &Value) {
         setting_as_bin(&settings["output"]["hud"])
     );
     extend!(cfg, "sv_cheats {};\r\n", "1");
-    extend!(
-        cfg,
-        "voice_enable {};\r\n",
-        setting_as_bin(&settings["output"]["voice_chat"])
-    );
-    extend!(
-        cfg,
-        "hud_saytext_time {};\r\n",
-        setting_as_bin(&settings["output"]["text_chat"]) * 12
-    );
-    extend!(
-        cfg,
-        "crosshair {};\r\n",
-        setting_as_bin(&settings["output"]["crosshair"])
-    );
-    extend!(
-        cfg,
-        "r_drawviewmodel {};\r\n",
-        setting_as_bin(&settings["output"]["viewmodel"])
-    );
-    extend!(
-        cfg,
-        "tf_use_min_viewmodels {};\r\n",
-        setting_as_bin(&settings["output"]["minmode"])
-    );
+    extend!(cfg, "voice_enable {};\r\n", setting_as_bin(&settings["output"]["voice_chat"]));
+    extend!(cfg, "hud_saytext_time {};\r\n", setting_as_bin(&settings["output"]["text_chat"]) * 12);
+    extend!(cfg, "crosshair {};\r\n", setting_as_bin(&settings["output"]["crosshair"]));
+    extend!(cfg, "r_drawviewmodel {};\r\n", setting_as_bin(&settings["output"]["viewmodel"]));
+    extend!(cfg, "tf_use_min_viewmodels {};\r\n", setting_as_bin(&settings["output"]["minmode"]));
     extend!(
         cfg,
         "viewmodel_fov_demo {};\r\n",
         setting_as_bin(&settings["recording"]["viewmodel_fov"])
     );
-    extend!(
-        cfg,
-        "fov_desired {};\r\n",
-        setting_as_bin(&settings["recording"]["fov"])
-    );
+    extend!(cfg, "fov_desired {};\r\n", setting_as_bin(&settings["recording"]["fov"]));
 
     if setting_as_bin(&settings["recording"]["third_person"]) == 1 {
         extend!(cfg, "thirdperson{};\r\n", "");
@@ -133,11 +108,7 @@ fn write_cfg(settings: &Value) {
         extend!(cfg, "{}\r\n", "alias +taunt \"\"; alias -taunt \"\";");
     }
 
-    extend!(
-        cfg,
-        "{};\r\n",
-        "alias \"snd_fix\" \"snd_restart; snd_soundmixer Default_mix;\""
-    );
+    extend!(cfg, "{};\r\n", "alias \"snd_fix\" \"snd_restart; snd_soundmixer Default_mix;\"");
 
     let addons = settings["addons"].as_object();
 
@@ -148,43 +119,46 @@ fn write_cfg(settings: &Value) {
 
                 let v_map = match v.as_object() {
                     Some(v_map) => v_map,
-                    None => continue,
+                    None => {
+                        continue;
+                    }
                 };
 
                 for (_ki, vi) in v_map {
                     match &vi["type"] {
-                        Value::String(vi_type) => match vi_type.as_str() {
-                            "toggle" => {
-                                if vi["value"] == true {
-                                    extend!(cfg, "{};\r\n", vi["command"]);
+                        Value::String(vi_type) =>
+                            match vi_type.as_str() {
+                                "toggle" => {
+                                    if vi["value"] == true {
+                                        extend!(cfg, "{};\r\n", vi["command"]);
+                                    }
+                                }
+                                "bool" => {
+                                    extend!(
+                                        cfg,
+                                        "{};\r\n",
+                                        format!(
+                                            "{} {}",
+                                            vi["command"].to_string().replace("\"", ""),
+                                            setting_as_bin(&vi["value"])
+                                        )
+                                    );
+                                }
+                                "string" | "int" => {
+                                    extend!(
+                                        cfg,
+                                        "{};\r\n",
+                                        format!(
+                                            "{} {}",
+                                            vi["command"].to_string().replace("\"", ""),
+                                            vi["value"]
+                                        )
+                                    );
+                                }
+                                _ => {
+                                    continue;
                                 }
                             }
-                            "bool" => {
-                                extend!(
-                                    cfg,
-                                    "{};\r\n",
-                                    format!(
-                                        "{} {}",
-                                        vi["command"].to_string().replace("\"", ""),
-                                        setting_as_bin(&vi["value"])
-                                    )
-                                );
-                            }
-                            "string" | "int" => {
-                                extend!(
-                                    cfg,
-                                    "{};\r\n",
-                                    format!(
-                                        "{} {}",
-                                        vi["command"].to_string().replace("\"", ""),
-                                        vi["value"]
-                                    )
-                                );
-                            }
-                            _ => {
-                                continue;
-                            }
-                        },
                         _ => {
                             continue;
                         }
@@ -214,16 +188,14 @@ fn write_cfg(settings: &Value) {
         Some(folder) => folder,
         None => panic!("tf_folder setting is not a string"),
     };
-    
+
     let mut file = match File::create(format!("{}\\cfg\\melies.cfg", tf_folder)) {
         Ok(file) => file,
-        Err(why) => {
-            panic!("Couldn't create melies.cfg: {}", why)
-        }
+        Err(why) => { panic!("Couldn't create melies.cfg: {}", why) }
     };
 
     match file.write_all(cfg.as_bytes()) {
-        Ok(_) => {},
+        Ok(_) => {}
         Err(why) => panic!("Couldn't write melies.cfg: {}", why),
     };
 }
@@ -231,7 +203,9 @@ fn write_cfg(settings: &Value) {
 fn end_vdm(vdm: &mut VDM, settings: &Value, next_demoname: String) -> VDM {
     let last_tick = match vdm.last().props().start_tick {
         Some(tick) => tick,
-        None => return vdm.to_owned(),
+        None => {
+            return vdm.to_owned();
+        }
     };
 
     {
@@ -259,10 +233,7 @@ fn check_spec(clip: &Clip, commands: String) -> String {
 
     let mut new_commands = commands;
 
-    new_commands = format!(
-        "{}; spec_player {}; spec_mode;",
-        new_commands, clip.spec_player
-    );
+    new_commands = format!("{}; spec_player {}; spec_mode;", new_commands, clip.spec_player);
 
     if clip.spec_type == 3 {
         new_commands = format!("{} spec_mode;", new_commands);
@@ -291,7 +262,9 @@ fn start_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
 fn add_clip_to_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
     let last_tick = match vdm.last().props().start_tick {
         Some(action) => action,
-        None => return,
+        None => {
+            return;
+        }
     };
 
     if clip.start_tick > last_tick + 300 {
@@ -322,7 +295,10 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
 
         exec_commands.start_tick = Some(clip.start_tick - 33);
         exec_commands.name = "Exec Melies Commands".to_string();
-        exec_commands.commands = "exec melies;".to_string();
+        exec_commands.commands = format!(
+            "exec melies;{}",
+            ifelse!(setting_as_bool(&settings["output"]["snd_fix"]), " snd_fix;", "")
+        );
     }
 
     {
@@ -330,7 +306,10 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
 
         let mut clip_name = format!(
             "{}_{}-{}_{}",
-            vdm_name, clip.start_tick, clip.end_tick, suffix
+            vdm_name,
+            clip.start_tick,
+            clip.end_tick,
+            suffix
         );
 
         let mut bm_value = clip.bm_value.to_owned();
@@ -338,9 +317,10 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
         bm_value = bm_value.replace("clip_start", "");
         bm_value = bm_value.replace("clip_end", "");
 
-        if bm_value != "".to_string()
-            && setting_as_bool(&settings["recording"]["auto_suffix"])
-            && bm_value != "General".to_string()
+        if
+            bm_value != "".to_string() &&
+            setting_as_bool(&settings["recording"]["auto_suffix"]) &&
+            bm_value != "General".to_string()
         {
             clip_name = format!(
                 "{}_{}",
@@ -354,12 +334,7 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
         match settings["output"]["method"].as_str().unwrap() {
             "h264" | "jpeg" => {
                 commands = format!(
-                    "{}host_framerate {}; startmovie {} {}; clear",
-                    ifelse!(
-                        setting_as_bool(&settings["output"]["snd_fix"]),
-                        "snd_fix; ",
-                        ""
-                    ),
+                    "host_framerate {}; startmovie {} {}; clear",
                     settings["output"]["framerate"],
                     clip_name,
                     settings["output"]["method"].as_str().unwrap()
@@ -367,58 +342,22 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
             }
             "tga" => {
                 commands = format!(
-                    "{}host_framerate {}; startmovie {}; clear",
-                    ifelse!(
-                        setting_as_bool(&settings["output"]["snd_fix"]),
-                        "snd_fix; ",
-                        ""
-                    ),
+                    "host_framerate {}; startmovie {}; clear",
                     settings["output"]["framerate"],
                     clip_name
                 );
             }
-            "svr.mp4" => {
-                commands = format!(
-                    "{}; startmovie {}.mp4; clear",
-                    ifelse!(
-                        setting_as_bool(&settings["output"]["snd_fix"]),
-                        "snd_fix; ",
-                        ""
-                    ),
-                    clip_name
-                );
-            }
             "svr" => {
-                commands = format!(
-                    "{}; startmovie {}.mkv; clear",
-                    ifelse!(
-                        setting_as_bool(&settings["output"]["snd_fix"]),
-                        "snd_fix; ",
-                        ""
-                    ),
-                    clip_name
-                );
+                commands = format!("startmovie {}.mkv", clip_name);
+            }
+            "svr.mp4" => {
+                commands = format!("startmovie {}.mp4", clip_name);
             }
             "svr.mov" => {
-                commands = format!(
-                    "{}; startmovie {}.mov; clear",
-                    ifelse!(
-                        setting_as_bool(&settings["output"]["snd_fix"]),
-                        "snd_fix; ",
-                        ""
-                    ),
-                    clip_name
-                );
+                commands = format!("startmovie {}.mov", clip_name);
             }
             "lawena" => {
-                commands = format!(
-                    "{}startrecording",
-                    ifelse!(
-                        setting_as_bool(&settings["output"]["snd_fix"]),
-                        "snd_fix; ",
-                        ""
-                    ),
-                );
+                commands = format!("startrecording");
             }
             _ => {}
         }
@@ -498,7 +437,7 @@ fn check_dir(files: Result<fs::ReadDir, std::io::Error>) -> Result<String, Strin
         }
     }
 
-    Err(format!("File Not Found",))
+    Err(format!("File Not Found"))
 }
 
 fn find_dir(settings: &Value) -> Result<String, String> {
@@ -506,10 +445,7 @@ fn find_dir(settings: &Value) -> Result<String, String> {
 
     let files = match tf_folder {
         Some(tf_folder) => fs::read_dir(format!("{}\\demos", tf_folder)),
-        None => Err(std::io::Error::new(
-            std::io::ErrorKind::InvalidInput,
-            "tf_folder not set",
-        )),
+        None => Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "tf_folder not set")),
     };
 
     match check_dir(files) {
@@ -518,14 +454,11 @@ fn find_dir(settings: &Value) -> Result<String, String> {
         }
         Err(_) => {}
     }
-    
+
     let tf_folder = settings["tf_folder"].as_str();
     let files = match tf_folder {
         Some(tf_folder) => fs::read_dir(format!("{}", tf_folder)),
-        None => Err(std::io::Error::new(
-            std::io::ErrorKind::InvalidInput,
-            "tf_folder not set",
-        )),
+        None => Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "tf_folder not set")),
     };
 
     match check_dir(files) {
@@ -536,17 +469,12 @@ fn find_dir(settings: &Value) -> Result<String, String> {
     }
 
     match settings["tf_folder"].as_str() {
-        Some(tf_folder) => Err(
-            format!(
-                "Could not find the _events.txt or KillStreaks.txt files.\r\nPlease check your settings to ensure the tf folder is correctly linked.\r\nIf you do not have either file, please make one in the \\tf or \\tf\\demos folder. \r\n\r\ntf_folder setting: ({})",
-                tf_folder
-            )
-        ),
-        None => Err(
-            "tf_folder setting not set".to_string()
-        ),
+        Some(tf_folder) =>
+            Err(
+                format!("Could not find the _events.txt or KillStreaks.txt files.\r\nPlease check your settings to ensure the tf folder is correctly linked.\r\nIf you do not have either file, please make one in the \\tf or \\tf\\demos folder. \r\n\r\ntf_folder setting: ({})", tf_folder)
+            ),
+        None => Err("tf_folder setting not set".to_string()),
     }
-
 }
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
@@ -644,23 +572,13 @@ fn ryukbot() -> Value {
     let vdm_count = &vdms.len();
 
     for (i, vdm) in vdms.iter().enumerate() {
-        let mut folder = format!(
-            "{}\\demos",
-            &settings["tf_folder"].as_str().unwrap()
-        );
+        let mut folder = format!("{}\\demos", &settings["tf_folder"].as_str().unwrap());
 
         if !Path::new(&folder).exists() {
-            folder = format!(
-                "{}",
-                &settings["tf_folder"].as_str().unwrap()
-            );
+            folder = format!("{}", &settings["tf_folder"].as_str().unwrap());
         }
 
-        let file_location = format!(
-            "{}\\{}.vdm",
-            folder,
-            &vdm.name
-        );
+        let file_location = format!("{}\\{}.vdm", folder, &vdm.name);
 
         if settings["safe_mode"].as_i64().is_some() {
             if setting_as_bool(&settings["safe_mode"]) {
@@ -674,11 +592,7 @@ fn ryukbot() -> Value {
         let vdm = end_vdm(
             &mut vdm.clone(),
             &settings,
-            ifelse!(
-                vdms.len() > i + 1,
-                String::from(&vdms[i + 1].name),
-                String::new()
-            ),
+            ifelse!(vdms.len() > i + 1, String::from(&vdms[i + 1].name), String::new())
         );
         vdm.export(&file_location);
     }
@@ -705,19 +619,15 @@ fn ryukbot() -> Value {
 }
 
 fn load_addons() -> Value {
-    fs::create_dir_all(format!(
-        "{}\\Documents\\Melies\\addons",
-        env::var("USERPROFILE").unwrap()
-    ))
-    .unwrap();
+    fs::create_dir_all(
+        format!("{}\\Documents\\Melies\\addons", env::var("USERPROFILE").unwrap())
+    ).unwrap();
 
     let mut addons = json!({});
 
-    let files = fs::read_dir(format!(
-        "{}\\Documents\\Melies\\addons",
-        env::var("USERPROFILE").unwrap()
-    ))
-    .unwrap();
+    let files = fs
+        ::read_dir(format!("{}\\Documents\\Melies\\addons", env::var("USERPROFILE").unwrap()))
+        .unwrap();
 
     for file in files {
         let filename_os = file.as_ref().unwrap().file_name();
@@ -745,7 +655,8 @@ fn load_addons() -> Value {
 }
 
 fn default_settings() -> Value {
-    let defaults = json!({
+    let defaults =
+        json!({
         "tf_folder": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Team Fortress 2\\tf",
         "clear_events": true,
         "save_backups": true,
@@ -868,11 +779,7 @@ fn save_settings(new_settings: String) -> Value {
 
         merge(&mut defaults, settings);
 
-        fs::write(
-            settings_path,
-            serde_json::to_string_pretty(&defaults).unwrap(),
-        )
-        .unwrap();
+        fs::write(settings_path, serde_json::to_string_pretty(&defaults).unwrap()).unwrap();
 
         return defaults;
     }
@@ -1032,10 +939,7 @@ fn build_event_from_json(event_json: &Value) -> Event {
             return Event {
                 event: format!(
                     "[{}] Killstreak {} (\"{}\" at {})",
-                    sys_time
-                        .format("%Y/%m/%d %H:%M")
-                        .to_string()
-                        .replace("\"", ""),
+                    sys_time.format("%Y/%m/%d %H:%M").to_string().replace("\"", ""),
                     event_json["value"]["Killstreak"],
                     event_json["demo_name"].as_str().unwrap(),
                     event_json["tick"].as_i64().unwrap()
@@ -1057,12 +961,7 @@ fn build_event_from_json(event_json: &Value) -> Event {
                     ),
                     demo_name: event_json["demo_name"].as_str().unwrap().to_string(),
                     tick: event_json["tick"].as_i64().unwrap(),
-                    value: Bookmark(
-                        event_json["value"]["Bookmark"]
-                            .as_str()
-                            .unwrap()
-                            .to_string(),
-                    ),
+                    value: Bookmark(event_json["value"]["Bookmark"].as_str().unwrap().to_string()),
                 };
             }
 
@@ -1076,12 +975,7 @@ fn build_event_from_json(event_json: &Value) -> Event {
                 ),
                 demo_name: event_json["demo_name"].as_str().unwrap().to_string(),
                 tick: event_json["tick"].as_i64().unwrap(),
-                value: Bookmark(
-                    event_json["value"]["Bookmark"]
-                        .as_str()
-                        .unwrap()
-                        .to_string(),
-                ),
+                value: Bookmark(event_json["value"]["Bookmark"].as_str().unwrap().to_string()),
             };
         }
     }
@@ -1126,10 +1020,7 @@ fn save_backup(settings: &Value) -> Value {
     }
 
     let sys_time: DateTime<Local> = Local::now();
-    let date = sys_time
-        .format("%Y-%m-%d_%H-%M-%S")
-        .to_string()
-        .replace("\"", "");
+    let date = sys_time.format("%Y-%m-%d_%H-%M-%S").to_string().replace("\"", "");
 
     let output_path = format!(
         "{}\\Documents\\Melies\\backups\\{}.txt",
@@ -1137,11 +1028,9 @@ fn save_backup(settings: &Value) -> Value {
         date
     );
 
-    fs::create_dir_all(format!(
-        "{}\\Documents\\Melies\\backups",
-        env::var("USERPROFILE").unwrap()
-    ))
-    .unwrap();
+    fs::create_dir_all(
+        format!("{}\\Documents\\Melies\\backups", env::var("USERPROFILE").unwrap())
+    ).unwrap();
 
     fs::copy(dir, &output_path).unwrap();
 
@@ -1163,9 +1052,7 @@ fn load_demos() -> Result<Value, String> {
         return Ok(scan_for_demos(settings));
     }
 
-    Err(String::from(
-        "Can't find \\tf folder. Please fix the \"\\tf Folder\" setting in settings.",
-    ))
+    Err(String::from("Can't find \\tf folder. Please fix the \"\\tf Folder\" setting in settings."))
 }
 
 #[command]
@@ -1174,17 +1061,20 @@ fn parse_demo(path: String) -> Value {
 }
 
 fn main() {
-    tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![
-            ryukbot,
-            load_settings,
-            save_settings,
-            load_events,
-            save_events,
-            parse_log,
-            load_demos,
-            parse_demo
-        ])
+    tauri::Builder
+        ::default()
+        .invoke_handler(
+            tauri::generate_handler![
+                ryukbot,
+                load_settings,
+                save_settings,
+                load_events,
+                save_events,
+                parse_log,
+                load_demos,
+                parse_demo
+            ]
+        )
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
