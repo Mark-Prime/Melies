@@ -26,6 +26,7 @@
   let minimum = 1;
 
   let divWidth;
+  let divHeight;
   let oldDivWidth;
   let startTick = parsed_demo.data?.start_tick;
   let totalTicks = parsed_demo?.header?.ticks;
@@ -120,7 +121,6 @@
 
   $: if (divWidth != oldDivWidth) {
     oldDivWidth = divWidth;
-    console.log(divWidth);
     calcMaxScale();
   }
 
@@ -161,6 +161,10 @@
     let start = Math.max(life.start, leftPos);
 
     return (calcTick(start) - leftPos) / scale;
+  }
+
+  function calcRoundEnd(round) {
+    return (calcTick(round.end_tick) - leftPos) * scalePerc;
   }
 
   function calcTimelineLength(life) {
@@ -274,6 +278,7 @@
   <div
     class="timeline__lives-container"
     bind:clientWidth={divWidth}
+    bind:clientHeight={divHeight}
     bind:this={timeline}
     use:ref
     on:wheel={timelineMousewheel}
@@ -291,38 +296,28 @@
                   on:click={toggleSelected(life)}
                   on:keydown={toggleSelected(life)}
                   style={`
-                                        --length: ${calcTimelineLength(
-                                          life,
-                                          leftPos,
-                                          rightPos
-                                        )}px;
-                                        --start: ${calcTimelineStart(
-                                          life,
-                                          leftPos,
-                                          rightPos
-                                        )}px
-                                    `}
+                      --length: ${calcTimelineLength(
+                        life,
+                        leftPos,
+                        rightPos
+                      )}px;
+                      --start: ${calcTimelineStart(life)}px
+                  `}
                 >
                   <div
                     class={`
-                                            timeline__data-tooltip tooltip 
-                                            ${
-                                              parsed_demo.data?.users[player]
-                                                ?.team == "blue"
-                                                ? "tooltip__lower"
-                                                : ""
-                                            }
-                                            ${
-                                              calcTick(life.start) >
-                                                leftPos +
-                                                  divWidth * scale * 0.7 &&
-                                              "tooltip--left"
-                                            }
-                                            ${
-                                              calcTick(life.start) < leftPos &&
-                                              "tooltip--custom"
-                                            }
-                                        `}
+                        timeline__data-tooltip tooltip 
+                        ${
+                          parsed_demo.data?.users[player]?.team == "blue"
+                            ? "tooltip__lower"
+                            : ""
+                        }
+                        ${
+                          calcTick(life.start) >
+                            leftPos + divWidth * scale * 0.7 && "tooltip--left"
+                        }
+                        ${calcTick(life.start) < leftPos && "tooltip--custom"}
+                    `}
                     data-tooltip={`Length: ${tickToTime(
                       life.end - life.start
                     )}\n${
@@ -340,14 +335,9 @@
                       })
                       .join(", \n\r")}`}
                     style={`
-                                            --kills: ${life.kills.length + 1};
-                                            --pos: ${
-                                              (leftPos +
-                                                startTick -
-                                                life.start) /
-                                              scale
-                                            }px;
-                                        `}
+                      --kills: ${life.kills.length + 1};
+                      --pos: ${(leftPos + startTick - life.start) / scale}px;
+                  `}
                   >
                     <div class="timeline__life--container">
                       <div class="timeline__data">
@@ -379,87 +369,80 @@
                   {#if isMarkerVisible(life.start, leftPos, rightPos)}
                     <div
                       class={`
-                                                timeline__marker 
-                                                ${
-                                                  parsed_demo.data?.users[
-                                                    player
-                                                  ]?.team == "blue"
-                                                    ? "timeline__marker--lower"
-                                                    : ""
-                                                }
-                                                ${
-                                                  x > divWidth * 0.7 &&
-                                                  "timeline__marker--left"
-                                                }
-                                            `}
+                          timeline__marker 
+                          ${
+                            parsed_demo.data?.users[player]?.team == "blue"
+                              ? "timeline__marker--lower"
+                              : ""
+                          }
+                          ${x > divWidth * 0.7 && "timeline__marker--left"}
+                      `}
                       data-tooltip={`Start: ${calcTick(
                         life.start
                       )}\r\nTimecode: ${tickToTime(calcTick(life.start))}`}
                       style={`
-                                                --position: -1px;
-                                                --kills: 1;
-                                            `}
-                    ></div>
+                          --position: -1px;
+                          --kills: 1;
+                      `}
+                    >
+                      <div class="timeline__marker__text">
+                        Start: {calcTick(life.start)} <br />
+                        Timecode: {tickToTime(calcTick(life.start))}
+                      </div>
+                    </div>
                   {/if}
                   {#if isMarkerVisible(life.end, leftPos, rightPos)}
                     <div
-                      class={`
-                                                timeline__marker 
-                                                ${
-                                                  parsed_demo.data?.users[
-                                                    player
-                                                  ]?.team == "blue"
-                                                    ? "timeline__marker--lower"
-                                                    : ""
-                                                }
-                                                ${
-                                                  x > divWidth * 0.7 &&
-                                                  "timeline__marker--left"
-                                                }
-                                            `}
+                      class={`timeline__marker 
+                        ${
+                          parsed_demo.data?.users[player]?.team == "blue"
+                            ? "timeline__marker--lower"
+                            : ""
+                        }
+                        ${x > divWidth * 0.7 && "timeline__marker--left"}
+                      `}
                       data-tooltip={`End: ${calcTick(
                         life.end
                       )}\r\nTimecode: ${tickToTime(calcTick(life.end))}`}
                       style={`
-                                                --position: ${calcTimelineMarker(
-                                                  life.end,
-                                                  life,
-                                                  leftPos,
-                                                  rightPos
-                                                )}px;
-                                                --kills: 1;
-                                            `}
-                    ></div>
+                        --position: ${calcTimelineMarker(
+                          life.end,
+                          life,
+                          leftPos,
+                          rightPos
+                        )}px;
+                    `}
+                    >
+                      <div class="timeline__marker__text">
+                        End: {calcTick(life.end)} <br />
+                        Timecode: {tickToTime(calcTick(life.end))}
+                      </div>
+                    </div>
                   {/if}
                   {#each life.kills as kill}
                     {#if isMarkerVisible(kill.tick, leftPos, rightPos)}
                       <div
                         class={`timeline__marker 
-                                                    ${
-                                                      parsed_demo.data?.users[
-                                                        player
-                                                      ]?.team == "blue"
-                                                        ? "timeline__marker--lower"
-                                                        : ""
-                                                    }
-                                                    ${
-                                                      x > divWidth * 0.7 &&
-                                                      "timeline__marker--left"
-                                                    }
-                                                `}
+                            ${
+                              parsed_demo.data?.users[player]?.team == "blue"
+                                ? "timeline__marker--lower"
+                                : ""
+                            }
+                            ${x > divWidth * 0.7 && "timeline__marker--left"}
+                        `}
                         data-tooltip={`Killed: ${
                           parsed_demo.data?.users[kill.victim].name
                         }\r\nTick: ${calcTick(
                           kill.tick
                         )}\r\nTimecode: ${tickToTime(calcTick(kill.tick))}`}
                         style={`
-                                                    --position: ${calcTimelineMarker(
-                                                      kill.tick,
-                                                      life,
-                                                      leftPos,
-                                                      rightPos
-                                                    )}px;
-                                                `}
+                            --position: ${calcTimelineMarker(
+                              kill.tick,
+                              life,
+                              leftPos,
+                              rightPos
+                            )}px;
+                        `}
                       >
                         <div class="timeline__marker__text">
                           <div>
@@ -469,8 +452,9 @@
                                 kill.victim_class
                               ]}
                             />
-                            {parsed_demo.data?.users[kill.victim].name}
+                            {parsed_demo.data?.users[kill.victim].name} ({kill.victim_class})
                           </div>
+                          Weapon: {kill.weapon} <br />
                           Tick: {calcTick(kill.tick)} <br />
                           Timecode: {tickToTime(calcTick(kill.tick))}
                         </div>
@@ -480,18 +464,13 @@
                   {#each life.killstreaks as ks}
                     <div
                       class={`timeline__ks
-                                                ${
-                                                  parsed_demo.data?.users[
-                                                    player
-                                                  ]?.team == "blue"
-                                                    ? "timeline__ks--lower"
-                                                    : ""
-                                                }
-                                                ${
-                                                  x > divWidth * 0.7 &&
-                                                  "timeline__ks--left"
-                                                }
-                                            `}
+                          ${
+                            parsed_demo.data?.users[player]?.team == "blue"
+                              ? "timeline__ks--lower"
+                              : ""
+                          }
+                          ${x > divWidth * 0.7 && "timeline__ks--left"}
+                      `}
                       data-tooltip={`${`Players Killed in Killstreak: `}\n\r${ks.kills
                         .map((kill) => {
                           let crit_types = ["", " Mini-Crit", " CRITICAL HIT!"];
@@ -503,23 +482,16 @@
                         })
                         .join(", \n\r")}`}
                       style={`
-                                                --position: ${
-                                                  (ks.kills[0].tick -
-                                                    life.start) /
-                                                    scale -
-                                                  2
-                                                }px;
-                                                --kills: ${ks.kills.length};
-                                                --length: ${
-                                                  (ks.kills[ks.kills.length - 1]
-                                                    .tick -
-                                                    life.start) /
-                                                    scale -
-                                                  (ks.kills[0].tick -
-                                                    life.start) /
-                                                    scale
-                                                }px;
-                                            `}
+                        --position: ${
+                          (ks.kills[0].tick - life.start) / scale - 2
+                        }px;
+                        --kills: ${ks.kills.length};
+                        --length: ${
+                          (ks.kills[ks.kills.length - 1].tick - life.start) /
+                            scale -
+                          (ks.kills[0].tick - life.start) / scale
+                        }px;
+                    `}
                     ></div>
                   {/each}
                 </div>
@@ -529,6 +501,25 @@
         {/if}
       {/each}
     {/each}
+    <div
+      class="timeline__rounds"
+      style={`width: ${divWidth + "px"}; height: ${divHeight + "px"}`}
+    >
+      {#each parsed_demo.data?.rounds as round, index}
+        <div
+          class="timeline__round"
+          style={`
+          --start: ${(Math.max(parsed_demo.data?.rounds[index - 1]?.end_tick || 0, leftPos) - leftPos) / scale}px;
+          --end: ${(Math.max(round.end_tick, leftPos) - leftPos) / scale}px;
+          height: ${divHeight}px;
+        `}
+        >
+          <p class="timeline__round--text">
+            Round {index + 1}
+          </p>
+        </div>
+      {/each}
+    </div>
   </div>
   <div></div>
   <Slider2 {left} {right} />
@@ -547,6 +538,42 @@
 </div>
 
 <style lang="scss">
+  .timeline__rounds {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -10;
+  }
+
+  .timeline__round {
+    position: absolute;
+    top: 0;
+    left: var(--start);
+    width: calc(var(--end) - var(--start));
+    border: var(--tert-con) 1px dashed;
+    border-left: 0;
+    border-top: 0;
+    border-bottom: 0;
+    opacity: 1;
+    text-align: center;
+
+    &:nth-of-type(2n) {
+      background: color-mix(in srgb, var(--bg) 60%, transparent);
+    }
+
+    &--text {
+      font-size: smaller;
+      margin-top: -0.4rem;
+      color: var(--tert-con-text);
+      opacity: 0;
+      transition: all 0.2s;
+    }
+
+    &:hover &--text {
+      opacity: 1;
+    }
+  }
+
   .chat__title {
     margin-top: 3rem;
   }
