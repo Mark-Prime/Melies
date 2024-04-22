@@ -347,6 +347,20 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
                     clip_name
                 );
             }
+            "sparklyfx" => {
+                println!("{}", settings["output"]["folder"].as_str().unwrap().len());
+                if settings["output"]["folder"].as_str().unwrap().len() > 0 {
+                    commands = format!(
+                        "sf_recorder_start {}\\{}",
+                        settings["output"]["folder"].as_str().unwrap(),
+                        clip_name
+                    );
+                } else {
+                    commands = format!(
+                        "sf_recorder_start; clear"
+                    );
+                }
+            }
             "svr" => {
                 commands = format!("startmovie {}.mkv", clip_name);
             }
@@ -379,6 +393,9 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
                     "{}; endmovie; host_framerate 0;",
                     settings["recording"]["end_commands"].as_str().unwrap()
                 );
+            }
+            "sparklyfx" => {
+                commands = format!("sf_recorder_stop;");
             }
             "lawena" => {
                 commands = format!("stoprecording;");
@@ -662,7 +679,8 @@ fn default_settings() -> Value {
         "save_backups": true,
         "safe_mode": true,
         "output": {
-            "method": "h264",
+            "folder": "",
+            "method": "tga",
             "framerate": 60,
             "crosshair": false,
             "viewmodel": true,
