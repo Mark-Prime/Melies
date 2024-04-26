@@ -16,6 +16,11 @@ If you are familiar with Ryukbot or Ryukbot v2, a large amount of the program wi
 
 A more detailed guide will be made in the future.
 
+## Todo/Known Issues
+
+- Possible issue with "Prevent overwriting previously made VDMs" setting
+- Add setting for demo location (such as "\demos")
+
 ## License
 
 This project uses the [MIT License](https://mit-license.org/).
