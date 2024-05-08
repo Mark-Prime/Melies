@@ -2,47 +2,69 @@
   // @ts-nocheck
   import ClassLogo from "../classlogo.svelte";
 
-  export let life;
   export let classConverter;
   export let toggleSelected;
   export let parsed_demo;
   export let tickToTime;
-  export let killstreak;
+  export let ks_pointer;
   export let toggleBookmarkSelected;
-  export let isDemoPov;
+  export let isPovDemo;
+
+  function getLife() {
+    return parsed_demo.data.player_lives[ks_pointer.owner_id][
+      ks_pointer.life_index
+    ];
+  }
+
+  function getKills() {
+    if (!ks_pointer.kills) {
+      return [];
+    }
+
+    let kills = [];
+
+    ks_pointer.kills?.forEach((element) => {
+      kills.push(getLife().kills[element]);
+    });
+
+    return kills;
+  }
 </script>
 
 <div
   class={"demo demo__killstreak " +
-    ((killstreak.selected ||
-      killstreak.selected_as_bookmark ||
-      life.selected) &&
+    ((ks_pointer.selected ||
+      ks_pointer.selected_as_bookmark ||
+      getLife().selected) &&
       "demo--selected")}
 >
   <div class="player_classes">
-    {#each life.classes as player_class}
+    {#each getLife().classes as player_class}
       <ClassLogo
         player_class={classConverter(player_class)}
         tooltip={`Kills: ${
-          killstreak.kills.filter(
+          getKills().filter(
             (kill) => kill.killer_class === classConverter(player_class)
           ).length
         }`}
       />
     {/each}
   </div>
-  <div
-    on:click={toggleBookmarkSelected(killstreak)}
-    on:keydown={toggleBookmarkSelected(killstreak)}
+  <button
+    on:click={toggleBookmarkSelected(ks_pointer)}
+    on:keydown={toggleBookmarkSelected(ks_pointer)}
+    on:keyup={() => {}}
+    tabindex="-1"
+    aria-disabled="true"
     class={`demo__kill-count ` +
-      (killstreak.kills.length >= 3 && " killstreak ") +
-      (killstreak.kills.length >= 5 && " killstreak--large ") +
-      (killstreak.kills.length >= 10 && " killstreak--massive ")}
+      (getKills().length >= 3 && " killstreak ") +
+      (getKills().length >= 5 && " killstreak--large ") +
+      (getKills().length >= 10 && " killstreak--massive ")}
   >
-    Kills: {killstreak.kills.length}
-  </div>
+    Kills: {getKills().length}
+  </button>
   <div class="demo__kills">
-    {#each killstreak.kills as kill}
+    {#each getKills() as kill}
       <div class="demo__kill">
         <ClassLogo player_class={classConverter(kill.killer_class)} />
         killed
@@ -76,20 +98,19 @@
     class="tooltip"
     style={`--kills: 0;`}
     data-tooltip={`Timecode: ${Math.floor(
-      Math.round(killstreak.kills[0].tick / 66) / 60
-    )}m ${Math.round(killstreak.kills[0].tick / 66) % 60}s`}
+      Math.round(getKills()[0].tick / 66) / 60
+    )}m ${Math.round(getKills()[0].tick / 66) % 60}s`}
   >
-    First: {killstreak.kills[0].tick}
+    First: {getKills()[0].tick}
   </div>
   <div
     class="tooltip"
     style={`--kills: 0;`}
     data-tooltip={`Length: ${tickToTime(
-      killstreak.kills[killstreak.kills.length - 1].tick -
-        killstreak.kills[0].tick
+      getKills()[getKills().length - 1].tick - getKills()[0].tick
     )}`}
   >
-    Last: {killstreak.kills[killstreak.kills.length - 1].tick}
+    Last: {getKills()[getKills().length - 1].tick}
   </div>
   <div class="killstreak__buttons">
     <div
@@ -97,25 +118,27 @@
       data-tooltip="Entire Life"
       style={`--kills: 0;`}
     >
-      {#if life.selected}
-        <button class="cancel-btn" on:click={toggleSelected(life)}>-</button>
+      {#if parsed_demo.data.player_lives[ks_pointer.owner_id][ks_pointer.life_index].selected}
+        <button class="cancel-btn" on:click={toggleSelected(getLife())}
+          >-</button
+        >
       {:else}
-        <button on:click={toggleSelected(life)}>+</button>
+        <button on:click={toggleSelected(getLife())}>+</button>
       {/if}
     </div>
-    {#if isDemoPov}
+    {#if isPovDemo}
       <div
         class="add_demo tooltip tooltip--left"
         data-tooltip="As Killstreak"
         style={`--kills: 0;`}
       >
-        {#if killstreak.selected}
+        {#if ks_pointer.selected}
           <button
             class="cancel-btn"
-            on:click={toggleSelected(killstreak, false)}>-</button
+            on:click={toggleSelected(ks_pointer, false)}>-</button
           >
         {:else}
-          <button on:click={toggleSelected(killstreak, false)}>+</button>
+          <button on:click={toggleSelected(ks_pointer, false)}>+</button>
         {/if}
       </div>
     {/if}
@@ -124,13 +147,13 @@
       data-tooltip="As Bookmarks"
       style={`--kills: 0;`}
     >
-      {#if killstreak.selected_as_bookmark}
+      {#if ks_pointer.selected_as_bookmark}
         <button
           class="cancel-btn"
-          on:click={toggleBookmarkSelected(killstreak, false)}>-</button
+          on:click={toggleBookmarkSelected(ks_pointer, false)}>-</button
         >
       {:else}
-        <button on:click={toggleBookmarkSelected(killstreak, false)}>+</button>
+        <button on:click={toggleBookmarkSelected(ks_pointer, false)}>+</button>
       {/if}
     </div>
   </div>
@@ -240,8 +263,16 @@
     }
 
     & .demo__kill-count {
+      border: unset;
+      text-align: left;
+      color: inherit;
+      filter: unset;
       padding-left: 0.5rem;
       margin-right: 0.5rem;
+
+      &:hover {
+        color: var(--sec);
+      }
     }
 
     &__kill {

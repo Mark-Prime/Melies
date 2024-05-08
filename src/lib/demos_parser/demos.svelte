@@ -9,8 +9,8 @@
   import Timeline from "./timeline/timeline.svelte";
   import ClassLogo from "../classlogo.svelte";
   import Life from "./demo_life.svelte";
-  import Killstreak from "./demo_ks.svelte";
-  import AllKillstreaks from "./demo_all_ks.svelte";
+  import KillstreakPointer from "./demo_ks_pointer.svelte";
+  import AllKillstreaksPointer from "./demo_all_ks_pointer.svelte";
 
   export let enabled;
   export let toggle;
@@ -178,29 +178,29 @@
       demo.selected = false;
     }
 
-    if (isKillstreak) {
-      let player = parsed_demo.data.player_lives[demo.kills[0].killer];
-      for (let life of player) {
-        for (let killstreak of life.killstreaks) {
-          if (
-            JSON.stringify(killstreak.kills[0]) ===
-            JSON.stringify(demo.kills[0])
-          ) {
-            toggleBookmarkSelected(killstreak);
-            break;
-          }
-        }
-      }
-    } else if (isKillstreak === false) {
-      for (let killstreak of parsed_demo.data.killstreaks) {
-        if (
-          JSON.stringify(killstreak.kills[0]) === JSON.stringify(demo.kills[0])
-        ) {
-          toggleBookmarkSelected(killstreak);
-          break;
-        }
-      }
-    }
+    // if (isKillstreak) {
+    //   let player = parsed_demo.data.player_lives[demo.kills[0].killer];
+    //   for (let life of player) {
+    //     for (let killstreak of life.killstreaks) {
+    //       if (
+    //         JSON.stringify(killstreak.kills[0]) ===
+    //         JSON.stringify(demo.kills[0])
+    //       ) {
+    //         toggleBookmarkSelected(killstreak);
+    //         break;
+    //       }
+    //     }
+    //   }
+    // } else if (isKillstreak === false) {
+    //   for (let killstreak of parsed_demo.data.killstreaks) {
+    //     if (
+    //       JSON.stringify(killstreak.kills[0]) === JSON.stringify(demo.kills[0])
+    //     ) {
+    //       toggleBookmarkSelected(killstreak);
+    //       break;
+    //     }
+    //   }
+    // }
 
     resp = resp;
     parsed_demo = parsed_demo;
@@ -255,25 +255,25 @@
             }
           }
 
-          for (let killstreak of life.killstreaks) {
-            if (killstreak.selected) {
+          for (let ks_pointer of life.killstreak_pointers) {
+            if (ks_pointer.selected) {
               events.push({
-                time: killstreak.kills[killstreak.kills.length - 1].tick,
-                label: `${killstreak.kills.length}ks`,
+                time: life.kills[ks_pointer.kills[ks_pointer.kills.length - 1]].tick,
+                label: `${ks_pointer.kills.length}ks`,
                 steamid64: parsed_demo.data.users[i].steamId64,
-                kills: killstreak.kills.length,
+                kills: ks_pointer.kills.length,
                 killstreak: true,
               });
 
               continue;
             }
 
-            if (killstreak.selected_as_bookmark) {
+            if (ks_pointer.selected_as_bookmark) {
               let start_time =
-                killstreak.kills[0].tick -
+              life.kills[ks_pointer.kills[0]].tick -
                 recording_settings.before_killstreak_per_kill;
               let end_time =
-                killstreak.kills[killstreak.kills.length - 1].tick +
+              life.kills[ks_pointer.kills[ks_pointer.kills.length - 1]].tick +
                 recording_settings.after_killstreak;
 
               if (life.start + 20 > start_time) {
@@ -286,15 +286,15 @@
 
               events.push({
                 time: start_time,
-                label: `${killstreak.kills.length}ks_start`,
+                label: `${ks_pointer.kills.length}ks_start`,
                 steamid64: parsed_demo.data.users[i].steamId64,
-                kills: killstreak.kills.length,
+                kills: ks_pointer.kills.length,
                 start: true,
               });
 
               events.push({
                 time: end_time,
-                label: `${killstreak.kills.length}ks_end`,
+                label: `${ks_pointer.kills.length}ks_end`,
               });
             }
           }
@@ -772,8 +772,9 @@
                             target="_blank"
                             rel="noopener noreferrer"
                             id={`player-${parsed_demo.data.users[player].name}`}
-                            >{parsed_demo.data.users[player].name}</a
                           >
+                            {parsed_demo.data.users[player].name}
+                          </a>
                           {#each getClasses(player) as player_class}
                             <ClassLogo
                               player_class={classConverter(player_class)}
@@ -803,22 +804,22 @@
                         <button
                           class="full_demo"
                           on:click={() => recordEntireDemo(player)}
-                          >Record entire demo</button
                         >
+                          Record entire demo
+                        </button>
 
                         {#if parsed_demo.data.player_lives[player].filter((life) => life.killstreaks.length > 0).length > 0}
                           <h4 class="centered">Killstreaks</h4>
                           {#each parsed_demo.data.player_lives[player].filter((life) => life.killstreaks.length > 0) as life}
-                            {#each life.killstreaks as killstreak}
-                              <Killstreak
-                                {life}
+                            {#each life.killstreak_pointers as ks_pointer}
+                              <KillstreakPointer
                                 {classConverter}
                                 {toggleSelected}
                                 {parsed_demo}
                                 {tickToTime}
-                                {killstreak}
+                                {ks_pointer}
                                 {toggleBookmarkSelected}
-                                {isDemoPov}
+                                {isPovDemo}
                               />
                             {/each}
                           {/each}
@@ -829,16 +830,15 @@
                 </div>
               {/each}
             </div>
-            <AllKillstreaks
-              killstreaks={getKillstreaks()}
+            <AllKillstreaksPointer
+              killstreaks={parsed_demo.data.killstreak_pointers}
               {parsed_demo}
               {limitStringLength}
               {classConverter}
               {toggleBookmarkSelected}
-              {getLifeFromKillstreak}
               {tickToTime}
               {toggleSelected}
-              {isDemoPov}
+              {isPovDemo}
             />
             {#if parsed_demo.data.chat.length > 0}
               <div class="section-title-toggle chat__title">

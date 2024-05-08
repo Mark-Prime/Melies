@@ -4,7 +4,6 @@
   let resp = "";
 
   async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
     resp = await invoke("ryukbot");
   }
 </script>

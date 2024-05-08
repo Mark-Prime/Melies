@@ -74,6 +74,27 @@ impl PartialEq for Event {
 }
 
 #[derive(Debug, Serialize, Clone)]
+struct KillstreakPointer {
+    pub owner_id: u16,
+    pub life_index: usize,
+    pub kills: Vec<usize>,
+    pub index: usize,
+    pub average: u32,
+}
+
+impl KillstreakPointer {
+    fn new(owner_id: u16, life_index: usize, kill_index: usize, index: usize) -> Self {
+        KillstreakPointer {
+            owner_id,
+            life_index,
+            index,
+            kills: vec![kill_index],
+            average: 0,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Clone)]
 struct Killstreak {
     pub kills: Vec<Death>,
     pub classes: Vec<String>,
@@ -104,6 +125,7 @@ struct Life {
     pub end: u32,
     pub last_kill_tick: DemoTick,
     pub killstreaks: Vec<Killstreak>,
+    pub killstreak_pointers: Vec<KillstreakPointer>,
     pub kills: Vec<Death>,
     pub assists: Vec<Death>,
     pub classes: Vec<String>,
@@ -117,6 +139,7 @@ impl Life {
             end: 0,
             last_kill_tick: DemoTick::from(0),
             killstreaks: vec![],
+            killstreak_pointers: vec![],
             kills: vec![],
             assists: vec![],
             classes,
@@ -298,6 +321,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
     let mut sorted_events: HashMap<u16, Vec<Event>> = HashMap::new();
     let mut player_lives: HashMap<u16, Vec<Life>> = HashMap::new();
     let mut killstreaks: Vec<Killstreak> = vec![];
+    let mut killstreak_pointers: Vec<KillstreakPointer> = vec![];
 
     for (key, events) in &user_events {
         let mut current_player = vec![];
@@ -396,7 +420,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
             }
         }
 
-        for life in &mut current_player {
+        for (life_index, life) in current_player.iter_mut().enumerate() {
             if life.kills.len() < 3 {
                 continue;
             }
@@ -405,9 +429,10 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
             let mut streak_count = 0;
             let mut last_kill_tick: i64 = 0;
 
-            for kill in &life.kills {
+            for (kill_index, kill) in life.kills.iter().enumerate() {
                 if kill_count == 0 {
                     life.killstreaks.push(Killstreak::new(kill.to_owned()));
+                    life.killstreak_pointers.push(KillstreakPointer::new(key.to_owned(), life_index, kill_index, life.killstreak_pointers.len()));
                     last_kill_tick = kill.tick.0.into();
                     kill_count += 1;
                     streak_count += 1;
@@ -427,11 +452,13 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
                     }
 
                     life.killstreaks[streak_count - 1].kills.push(kill.to_owned());
+                    life.killstreak_pointers[streak_count - 1].kills.push(kill_index);
                     kill_count += 1;
                 } else if kill_count < 3 {
                     kill_count = 1;
                     last_kill_tick = kill.tick.0.into();
                     life.killstreaks[streak_count - 1] = Killstreak::new(kill.to_owned());
+                    life.killstreak_pointers[streak_count - 1] = KillstreakPointer::new(key.to_owned(), life_index, kill_index, life.killstreak_pointers.len() - 1);
                 }
             }
 
@@ -441,8 +468,18 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
                 .filter(|sen| sen.kills.len() >= 3)
                 .collect::<Vec<Killstreak>>();
 
+            life.killstreak_pointers = life.killstreak_pointers
+                .iter()
+                .map(|v| v.clone())
+                .filter(|sen| sen.kills.len() >= 3)
+                .collect::<Vec<KillstreakPointer>>();
+
             for ks in &life.killstreaks {
                 killstreaks.push(ks.clone());
+            }
+
+            for ks in &life.killstreak_pointers {
+                killstreak_pointers.push(ks.clone());
             }
         }
 
@@ -481,7 +518,8 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
             "end_tick": state.end_tick,
             "user_events": sorted_events,
             "player_lives": player_lives,
-            "killstreaks": killstreaks,
+            // "killstreaks": killstreaks,
+            "killstreak_pointers": killstreak_pointers,
             "pauses": state.pauses
         },
         "loaded": true,
