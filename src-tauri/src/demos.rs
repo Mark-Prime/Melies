@@ -95,27 +95,19 @@ impl KillstreakPointer {
 }
 
 #[derive(Debug, Serialize, Clone)]
-struct Killstreak {
-    pub kills: Vec<Death>,
-    pub classes: Vec<String>,
+struct MedPick {
+    pub owner_id: u16,
+    pub life_index: usize,
+    pub kill_index: usize,
 }
 
-impl Killstreak {
-    fn new(death: Death) -> Self {
-        Killstreak {
-            classes: vec![death.clone().killer_class.to_string()],
-            kills: vec![death],
+impl MedPick {
+    fn new(owner_id: u16, life_index: usize, kill_index: usize) -> Self {
+        MedPick {
+            owner_id,
+            life_index,
+            kill_index
         }
-    }
-
-    fn average(&self) -> u32 {
-        let mut total = 0;
-
-        for kill in &self.kills {
-            total = total + u32::from(kill.tick);
-        }
-
-        return total / (self.kills.len() as u32);
     }
 }
 
@@ -124,8 +116,8 @@ struct Life {
     pub start: u32,
     pub end: u32,
     pub last_kill_tick: DemoTick,
-    pub killstreaks: Vec<Killstreak>,
     pub killstreak_pointers: Vec<KillstreakPointer>,
+    pub med_picks: Vec<MedPick>,
     pub kills: Vec<Death>,
     pub assists: Vec<Death>,
     pub classes: Vec<String>,
@@ -138,8 +130,8 @@ impl Life {
             start,
             end: 0,
             last_kill_tick: DemoTick::from(0),
-            killstreaks: vec![],
             killstreak_pointers: vec![],
+            med_picks: vec![],
             kills: vec![],
             assists: vec![],
             classes,
@@ -320,8 +312,8 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
 
     let mut sorted_events: HashMap<u16, Vec<Event>> = HashMap::new();
     let mut player_lives: HashMap<u16, Vec<Life>> = HashMap::new();
-    let mut killstreaks: Vec<Killstreak> = vec![];
     let mut killstreak_pointers: Vec<KillstreakPointer> = vec![];
+    let mut med_picks: Vec<MedPick> = vec![];
 
     for (key, events) in &user_events {
         let mut current_player = vec![];
@@ -360,6 +352,12 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
                                 continue;
                             }
                         };
+                    }
+
+                    // println!("{:?}", kill);
+                    if kill.victim_class == Class::Medic {
+                        current_life.med_picks.push(MedPick::new(*key, current_player.len(), current_life.kills.len()));
+                        med_picks.push(MedPick::new(*key, current_player.len(), current_life.kills.len()));
                     }
 
                     current_life.last_kill_tick = kill.tick;
@@ -431,7 +429,6 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
 
             for (kill_index, kill) in life.kills.iter().enumerate() {
                 if kill_count == 0 {
-                    life.killstreaks.push(Killstreak::new(kill.to_owned()));
                     life.killstreak_pointers.push(KillstreakPointer::new(key.to_owned(), life_index, kill_index, life.killstreak_pointers.len()));
                     last_kill_tick = kill.tick.0.into();
                     kill_count += 1;
@@ -441,42 +438,20 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
                     last_kill_tick +
                         settings["recording"]["before_killstreak_per_kill"].as_i64().unwrap()
                 {
-                    if
-                        !life.killstreaks[streak_count - 1].classes.contains(
-                            &kill.killer_class.to_string()
-                        )
-                    {
-                        life.killstreaks[streak_count - 1].classes.push(
-                            kill.killer_class.clone().to_string()
-                        );
-                    }
-
-                    life.killstreaks[streak_count - 1].kills.push(kill.to_owned());
                     life.killstreak_pointers[streak_count - 1].kills.push(kill_index);
                     kill_count += 1;
                 } else if kill_count < 3 {
                     kill_count = 1;
                     last_kill_tick = kill.tick.0.into();
-                    life.killstreaks[streak_count - 1] = Killstreak::new(kill.to_owned());
                     life.killstreak_pointers[streak_count - 1] = KillstreakPointer::new(key.to_owned(), life_index, kill_index, life.killstreak_pointers.len() - 1);
                 }
             }
-
-            life.killstreaks = life.killstreaks
-                .iter()
-                .map(|v| v.clone())
-                .filter(|sen| sen.kills.len() >= 3)
-                .collect::<Vec<Killstreak>>();
 
             life.killstreak_pointers = life.killstreak_pointers
                 .iter()
                 .map(|v| v.clone())
                 .filter(|sen| sen.kills.len() >= 3)
                 .collect::<Vec<KillstreakPointer>>();
-
-            for ks in &life.killstreaks {
-                killstreaks.push(ks.clone());
-            }
 
             for ks in &life.killstreak_pointers {
                 killstreak_pointers.push(ks.clone());
@@ -487,7 +462,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
         sorted_events.insert(key.to_owned(), events.to_vec());
     }
 
-    killstreaks.sort_by_key(|ks| ks.average());
+    killstreak_pointers.sort_by_key(|ks| ks.average);
 
     let start_tick = state.start_tick;
 
@@ -518,7 +493,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
             "end_tick": state.end_tick,
             "user_events": sorted_events,
             "player_lives": player_lives,
-            // "killstreaks": killstreaks,
+            "med_picks": med_picks,
             "killstreak_pointers": killstreak_pointers,
             "pauses": state.pauses
         },

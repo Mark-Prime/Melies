@@ -31,6 +31,26 @@
   let startTick = parsed_demo.data?.start_tick;
   let totalTicks = parsed_demo?.header?.ticks;
 
+  function getLife(ks_pointer) {
+    return parsed_demo.data.player_lives[ks_pointer.owner_id][
+      ks_pointer.life_index
+    ];
+  }
+
+  function getKills(ks_pointer, index) {
+    if (!ks_pointer.kills) {
+      return [];
+    }
+
+    let kills = [];
+
+    ks_pointer.kills?.forEach((element) => {
+      kills.push(getLife(ks_pointer).kills[element]);
+    });
+
+    return kills;
+  }
+
   function calcMaxScale() {
     maxScale = totalTicks / divWidth;
   }
@@ -289,7 +309,7 @@
           <div class="timeline__lives">
             {#each parsed_demo.data?.player_lives[player] as life}
               {#if life.start != 0 && (displayLives || life.kills.length > 0 || (displayAssists && life.assists.length > 0)) && isLifeVisible(life, leftPos, rightPos)}
-                <div
+                <button
                   class={`timeline__life timeline__life--${team} ${
                     life.selected ? "timeline--selected" : ""
                   }`}
@@ -461,7 +481,7 @@
                       </div>
                     {/if}
                   {/each}
-                  {#each life.killstreaks as ks}
+                  {#each life.killstreak_pointers as ks_pointer, index}
                     <div
                       class={`timeline__ks
                           ${
@@ -471,7 +491,10 @@
                           }
                           ${x > divWidth * 0.7 && "timeline__ks--left"}
                       `}
-                      data-tooltip={`${`Players Killed in Killstreak: `}\n\r${ks.kills
+                      data-tooltip={`${`Players Killed in Killstreak: `}\n\r${getKills(
+                        ks_pointer,
+                        index
+                      )
                         .map((kill) => {
                           let crit_types = ["", " Mini-Crit", " CRITICAL HIT!"];
                           return `${
@@ -482,19 +505,42 @@
                         })
                         .join(", \n\r")}`}
                       style={`
-                        --position: ${
-                          (ks.kills[0].tick - life.start) / scale - 2
-                        }px;
-                        --kills: ${ks.kills.length};
+                        --position: ${Math.max(
+                          calcTimelineMarker(
+                            getKills(ks_pointer, index)[0].tick,
+                            life,
+                            leftPos,
+                            rightPos
+                          ),
+                          0
+                        )}px;
+                        --kills: ${getKills(ks_pointer, index).length};
                         --length: ${
-                          (ks.kills[ks.kills.length - 1].tick - life.start) /
+                          (getKills(ks_pointer, index)[
+                            getKills(ks_pointer, index).length - 1
+                          ].tick -
+                            life.start) /
                             scale -
-                          (ks.kills[0].tick - life.start) / scale
+                          (getKills(ks_pointer, index)[0].tick - life.start) /
+                            scale +
+                          (calcTimelineMarker(
+                            getKills(ks_pointer, index)[0].tick,
+                            life,
+                            leftPos,
+                            rightPos
+                          ) < 0
+                            ? calcTimelineMarker(
+                                getKills(ks_pointer, index)[0].tick,
+                                life,
+                                leftPos,
+                                rightPos
+                              )
+                            : 0)
                         }px;
                     `}
                     ></div>
                   {/each}
-                </div>
+                </button>
               {/if}
             {/each}
           </div>
@@ -632,6 +678,7 @@
     }
 
     &__life {
+      all: unset;
       height: 100%;
       border: 1px solid var(--tert-con);
       text-align: left;

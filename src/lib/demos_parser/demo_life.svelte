@@ -24,7 +24,7 @@
       />
     {/each}
   </div>
-  <div
+  <button
     on:click={toggleSelected(life)}
     on:keydown={toggleSelected(life)}
     class={"demo__kill-count " +
@@ -33,7 +33,7 @@
       (life.kills.length >= 10 && " killstreak--massive ")}
   >
     Kills: {life.kills.length}
-  </div>
+  </button>
   <div class="demo__kills">
     {#each life.kills as kill}
       <div class="demo__kill">
@@ -67,8 +67,9 @@
         </div>
 
         {#if kill.selected}
-          <button class="cancel-btn" on:click={toggleKillsSelected([kill])}
-            >-</button
+          <button
+            class="add_demo cancel-btn"
+            on:click={toggleKillsSelected([kill])}>-</button
           >
         {:else}
           <div
@@ -104,15 +105,17 @@
     End: {life.end}
   </div>
   <div class="killstreak__buttons">
-    <div class="add_demo">
+    <div
+      class="add_demo tooltip tooltip--left"
+      data-tooltip="Entire Life"
+      style={`--kills: 0;`}
+    >
       {#if life.selected}
-        <button class="cancel-btn" on:click={toggleSelected(life)}>-</button>
-      {:else}
-        <div
-          class="add_demo tooltip tooltip--left"
-          data-tooltip="Entire Life"
-          style={`--kills: 0;`}
+        <button class="cancel-btn add_demo" on:click={toggleSelected(life)}
+          >-</button
         >
+      {:else}
+        <div class="add_demo">
           <button on:click={toggleSelected(life)}>+</button>
         </div>
       {/if}
@@ -128,7 +131,7 @@
         </div>
       {:else if allKillsSelected(life)}
         <div
-          class="tooltip tooltip--left"
+          class="add_demo tooltip tooltip--left"
           data-tooltip="Toggle Kills as Bookmarks"
           style={`--kills: 0;`}
         >
@@ -299,8 +302,17 @@
     }
 
     & .demo__kill-count {
+      border: unset;
+      text-align: left;
+      color: inherit;
+      filter: unset;
       padding-left: 0.5rem;
+      padding-top: 0;
       margin-right: 0.5rem;
+
+      &:hover {
+        color: var(--sec);
+      }
     }
 
     &--selected {

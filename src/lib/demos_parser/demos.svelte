@@ -11,6 +11,8 @@
   import Life from "./demo_life.svelte";
   import KillstreakPointer from "./demo_ks_pointer.svelte";
   import AllKillstreaksPointer from "./demo_all_ks_pointer.svelte";
+  import MedPicks from "./demo_med_picks.svelte";
+  import AllMedPicks from "./demo_all_med_picks.svelte";
 
   export let enabled;
   export let toggle;
@@ -132,7 +134,7 @@
     if (isKillstreak) {
       let player = parsed_demo.data.player_lives[demo.kills[0].killer];
       for (let life of player) {
-        for (let killstreak of life.killstreaks) {
+        for (let killstreak of life.killstreak_pointers) {
           if (
             JSON.stringify(killstreak.kills[0]) ===
             JSON.stringify(demo.kills[0])
@@ -143,7 +145,7 @@
         }
       }
     } else if (isKillstreak === false) {
-      for (let killstreak of parsed_demo.data.killstreaks) {
+      for (let killstreak of parsed_demo.data.killstreak_pointers) {
         if (
           JSON.stringify(killstreak.kills[0]) === JSON.stringify(demo.kills[0])
         ) {
@@ -484,7 +486,7 @@
 
   function getKillstreaks() {
     if (!isPovDemo) {
-      return parsed_demo.data.killstreaks;
+      return parsed_demo.data.killstreak_pointers;
     }
 
     return [];
@@ -542,11 +544,11 @@
 
   function getLifeFromKillstreak(ks) {
     for (let life of parsed_demo.data.player_lives[ks.kills[0].killer]) {
-      if (life.killstreaks.length === 0) {
+      if (life.killstreak_pointers.length === 0) {
         continue;
       }
 
-      for (let killstreak of life.killstreaks) {
+      for (let killstreak of life.killstreak_pointers) {
         if (
           JSON.stringify(killstreak.kills[0]) === JSON.stringify(ks.kills[0])
         ) {
@@ -808,9 +810,18 @@
                           Record entire demo
                         </button>
 
-                        {#if parsed_demo.data.player_lives[player].filter((life) => life.killstreaks.length > 0).length > 0}
+                        {#if parsed_demo.data.player_lives[player].filter((life) => life.med_picks.length > 0).length > 0}
+                          <MedPicks
+                            {classConverter}
+                            {parsed_demo}
+                            {tickToTime}
+                            {toggleKillsSelected}
+                            lives={parsed_demo.data.player_lives[player].filter((life) => life.med_picks.length > 0)}
+                          />
+                        {/if}
+                        {#if parsed_demo.data.player_lives[player].filter((life) => life.killstreak_pointers.length > 0).length > 0}
                           <h4 class="centered">Killstreaks</h4>
-                          {#each parsed_demo.data.player_lives[player].filter((life) => life.killstreaks.length > 0) as life}
+                          {#each parsed_demo.data.player_lives[player].filter((life) => life.killstreak_pointers.length > 0) as life}
                             {#each life.killstreak_pointers as ks_pointer}
                               <KillstreakPointer
                                 {classConverter}
@@ -830,6 +841,13 @@
                 </div>
               {/each}
             </div>
+            <AllMedPicks 
+              {classConverter}
+              {parsed_demo}
+              {tickToTime}
+              {toggleKillsSelected}
+              med_picks={parsed_demo.data.med_picks}
+            />
             <AllKillstreaksPointer
               killstreaks={parsed_demo.data.killstreak_pointers}
               {parsed_demo}

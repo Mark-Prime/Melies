@@ -212,7 +212,7 @@
 <style lang="scss">
   .demo {
     font-size: small;
-    padding: 0.3rem 0.5rem;
+    padding: 0rem 0.5rem;
     margin: 2px 0;
     font-family: "Source Code Pro", monospace;
     color: var(--tert-con-text);
