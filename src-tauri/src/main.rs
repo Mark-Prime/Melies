@@ -3,9 +3,12 @@
 use chrono::prelude::*;
 use regex::Regex;
 use serde_json::{ self, json, Map, Value };
+use tauri::api::file;
 use std::fs::{ DirEntry, File };
 use std::io::Write;
+use std::os::windows::fs::MetadataExt;
 use std::path::Path;
+use std::time::UNIX_EPOCH;
 use std::{ env, fs };
 use tauri::command;
 use vdm::action::ActionType;
@@ -348,7 +351,6 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
                 );
             }
             "sparklyfx" => {
-                println!("{}", settings["output"]["folder"].as_str().unwrap().len());
                 if settings["output"]["folder"].as_str().unwrap().len() > 0 {
                     commands = format!(
                         "sf_recorder_start {}\\{}",
@@ -356,9 +358,7 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
                         clip_name
                     );
                 } else {
-                    commands = format!(
-                        "sf_recorder_start; clear"
-                    );
+                    commands = format!("sf_recorder_start; clear");
                 }
             }
             "svr" => {
@@ -862,8 +862,6 @@ fn save_events(new_events: Value) -> Value {
         for event in demo.as_array().unwrap() {
             let re = Regex::new("\\[(.*)\\] (.*) \\(\"(.*)\" at (\\d*)\\)").unwrap();
 
-            println!("{}", event["event"]);
-
             let events_regex = match re.captures(event["event"].as_str().unwrap()) {
                 Some(val) => val,
                 None => {
@@ -1073,6 +1071,82 @@ fn load_demos() -> Result<Value, String> {
     Err(String::from("Can't find \\tf folder. Please fix the \"\\tf Folder\" setting in settings."))
 }
 
+pub(crate) fn validate_backups_folder() -> bool {
+    match fs::read_dir(format!("{}\\Documents\\Melies\\backups", env::var("USERPROFILE").unwrap())) {
+        Ok(_) => {
+            return true;
+        }
+        Err(_) => {
+            return false;
+        }
+    }
+}
+
+pub(crate) fn scan_for_backups() -> Value {
+    let mut events: Vec<Value> = vec![];
+
+    for entry in fs
+        ::read_dir(format!("{}\\Documents\\Melies\\backups", env::var("USERPROFILE").unwrap()))
+        .unwrap() {
+        let entry = entry.unwrap();
+        let path = entry.path();
+
+        if path.is_file() && path.file_name().unwrap().to_str().unwrap().ends_with(".txt") {
+            events.push(
+                json!({
+                    "file_name": path.file_name().unwrap().to_str().unwrap().to_string(),
+                })
+            );
+        }
+    }
+
+    json!(events)
+}
+
+#[command]
+fn load_backups() -> Result<Value, String> {
+    if validate_backups_folder() {
+        return Ok(scan_for_backups());
+    }
+
+    Err(String::from("Can't find backups folder. You may not have backups yet."))
+}
+
+#[command]
+fn reload_backup(file_name: Value) -> Result<Value, String> {
+    let file_path = format!(
+        "{}\\Documents\\Melies\\backups\\{}",
+        env::var("USERPROFILE").unwrap(),
+        file_name.as_str().unwrap()
+    );
+    let backup_file = Path::new(&file_path);
+
+    let settings = load_settings();
+
+    let dir;
+
+    match find_dir(&settings) {
+        Ok(directory) => {
+            dir = directory;
+        }
+        Err(_) => {
+            return Err(String::from("Failed to reload backup."));
+        }
+    }
+
+    if backup_file.exists() {
+        let copy = fs::copy(file_path, dir);
+
+        if copy.is_ok() {
+            return Ok(json!("Successfully loaded backup."));
+        }
+
+        return Err(String::from("Failed to reload backup."));
+    }
+
+    Err(String::from("Failed to find backup file."))
+}
+
 #[command]
 fn parse_demo(path: String) -> Value {
     scan_demo(load_settings(), path)
@@ -1090,6 +1164,8 @@ fn main() {
                 save_events,
                 parse_log,
                 load_demos,
+                load_backups,
+                reload_backup,
                 parse_demo
             ]
         )

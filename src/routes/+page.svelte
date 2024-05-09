@@ -3,6 +3,7 @@
   import { invoke } from "@tauri-apps/api/tauri";
   import Logstf from "../lib/logstf.svelte";
   import Demo from "../lib/demos_parser/demos.svelte";
+  import Backups from "../lib/backups.svelte";
   import DemoEdit from "$lib/home/demoEdit.svelte";
   import DemoDisplay from "$lib/home/demoDisplay.svelte";
   import { onMount } from "svelte";
@@ -25,6 +26,7 @@
   let modified = false;
   let logstfModal = false;
   let demoModal = false;
+  let backupModal = false;
 
   let resp = { vdms: 0, clips: 0, events: 0, code: 0 };
 
@@ -211,6 +213,14 @@
     demoModal = !demoModal;
   }
 
+  function toggleBackupModal(update = false) {
+    backupModal = !backupModal;
+
+    if (update) {
+      loadEvents();
+    }
+  }
+
   function refresh() {
     demos = demos;
     modified = true;
@@ -237,6 +247,10 @@
       {parseDemoEvents}
       modified={enable_modified}
     />
+    <Backups
+      enabled={backupModal}
+      toggle={toggleBackupModal}
+    />
     {#if !resp.code}
       {#each demos as demo, demo_i}
         {#each demo as event, i (`${demo_i}__${i}`)}
@@ -249,13 +263,13 @@
       {/each}
       {#if editting}
         <div class="new-demo">
-          <a href="/" class="new-demo__1" on:click={addDemo}
-            >Add Manual Events</a
-          >
+          <a href="/" class="new-demo__1" on:click={addDemo}>
+            Add Manual Events
+          </a>
           <a href="/" class="new-demo__2" on:click={toggleLogModal}>Logs.tf</a>
-          <a href="/" class="new-demo__3" on:click={toggleDemoModal}
-            >Scan Demo</a
-          >
+          <a href="/" class="new-demo__3" on:click={toggleDemoModal}>
+            Scan Demo
+          </a>
         </div>
       {/if}
     {:else if resp.code === 200}
@@ -275,6 +289,7 @@
 
   {#if editting}
     <button class="cancel-btn" on:click={cancelEditing}>Cancel</button>
+    <button class="input--sec" on:click={() => toggleBackupModal(false)}>Load Backup</button>
     <button on:click={disableEditing}>Save Events</button>
   {:else}
     <button class="input--tert" on:click={loadEvents}>Refresh</button>
@@ -282,6 +297,7 @@
     <button on:click={runMelies}>Run</button>
 
     <a href="/settings">Settings</a>
+    <!-- <a href="/newhome">TEST</a> -->
   {/if}
 </div>
 
