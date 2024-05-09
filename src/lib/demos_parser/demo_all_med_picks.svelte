@@ -8,8 +8,6 @@
   export let parsed_demo;
   export let tickToTime;
   export let toggleKillsSelected;
-  export let isPovDemo;
-  export let povId;
 
   function getKill(pointer) {
     return parsed_demo.data.player_lives[pointer.owner_id][pointer.life_index]

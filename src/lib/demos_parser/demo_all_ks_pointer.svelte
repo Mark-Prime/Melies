@@ -9,7 +9,6 @@
   export let toggleBookmarkSelected;
   export let tickToTime;
   export let toggleSelected;
-  export let isPovDemo;
 
   function getLife(index) {
     let ks_pointer = killstreaks[index];
@@ -174,24 +173,6 @@
                   <button on:click={toggleSelected(getLife(index))}>+</button>
                 {/if}
               </div>
-              {#if isPovDemo}
-                <div
-                  class="add_demo tooltip tooltip--left"
-                  data-tooltip="As Killstreak"
-                  style={`--kills: 0;`}
-                >
-                  {#if parsed_demo.data.player_lives[ks_pointer.owner_id][ks_pointer.life_index].killstreak_pointers[ks_pointer.index].selected}
-                    <button
-                      class="cancel-btn"
-                      on:click={toggleSelected(getKs(index), true)}>-</button
-                    >
-                  {:else}
-                    <button on:click={toggleSelected(getKs(index), true)}
-                      >+</button
-                    >
-                  {/if}
-                </div>
-              {/if}
               <div
                 class="add_demo tooltip tooltip--left"
                 data-tooltip="As Bookmarks"
