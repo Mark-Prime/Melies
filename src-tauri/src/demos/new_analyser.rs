@@ -75,10 +75,6 @@ impl Team {
     pub fn new<U>(number: U) -> Self where u8: TryFrom<U> {
         Team::try_from(u8::try_from(number).unwrap_or_default()).unwrap_or_default()
     }
-
-    pub fn is_player(&self) -> bool {
-        *self == Team::Red || *self == Team::Blue
-    }
 }
 
 #[derive(
@@ -149,38 +145,6 @@ impl Class {
 #[derive(Default, Debug, Eq, PartialEq, Deserialize, Clone)]
 #[serde(from = "HashMap<Class, u8>")]
 pub struct ClassList([u8; 10]);
-
-impl ClassList {
-    /// Get an iterator for all classes played and the number of spawn on the class
-    pub fn iter(&self) -> impl Iterator<Item = (Class, u8)> + '_ {
-        self.0
-            .iter()
-            .copied()
-            .enumerate()
-            .map(|(class, count)| (Class::new(class), count))
-            .filter(|(_, count)| *count > 0)
-    }
-
-    /// Get an iterator for all classes played and the number of spawn on the class, sorted by the number of spawns
-    pub fn sorted(&self) -> impl Iterator<Item = (Class, u8)> {
-        let mut classes = self.iter().collect::<Vec<(Class, u8)>>();
-        classes.sort_by(|a, b| a.1.cmp(&b.1).reverse());
-        classes.into_iter()
-    }
-}
-
-#[test]
-fn test_classlist_sorted() {
-    let list = ClassList([0, 1, 5, 0, 0, 3, 0, 0, 0, 0]);
-    assert_eq!(
-        list.sorted().collect::<Vec<_>>(),
-        &[
-            (Class::Sniper, 5),
-            (Class::Medic, 3),
-            (Class::Scout, 1),
-        ]
-    )
-}
 
 impl Index<Class> for ClassList {
     type Output = u8;

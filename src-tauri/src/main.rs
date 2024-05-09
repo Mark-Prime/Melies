@@ -3,12 +3,9 @@
 use chrono::prelude::*;
 use regex::Regex;
 use serde_json::{ self, json, Map, Value };
-use tauri::api::file;
 use std::fs::{ DirEntry, File };
 use std::io::Write;
-use std::os::windows::fs::MetadataExt;
 use std::path::Path;
-use std::time::UNIX_EPOCH;
 use std::{ env, fs };
 use tauri::command;
 use vdm::action::ActionType;
