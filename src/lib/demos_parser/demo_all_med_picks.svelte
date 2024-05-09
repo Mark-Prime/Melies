@@ -1,94 +1,139 @@
 <script>
-  import { sort } from "mathjs";
   import ClassLogo from "../classlogo.svelte";
 
-  export let med_picks;
+  export let label;
+  export let kills;
+  export let toggleSelected;
   export let classConverter;
   export let parsed_demo;
   export let tickToTime;
   export let toggleKillsSelected;
+  export let isPovDemo;
+  export let povId;
 
-  function getKill(med_pick) {
-    return parsed_demo.data.player_lives[med_pick.owner_id][med_pick.life_index]
-      .kills[med_pick.kill_index];
+  function getKill(pointer) {
+    return parsed_demo.data.player_lives[pointer.owner_id][pointer.life_index]
+      .kills[pointer.kill_index];
+  }
+
+  function getLife(pointer) {
+    return parsed_demo.data.player_lives[pointer.owner_id][pointer.life_index];
   }
 </script>
 
-{#if med_picks.length > 0}
-  <h2 class="centered chat__title">All Med Picks</h2>
-  <div class="killstreaks card demo__kills">
-    {#each med_picks.sort((a, b) => getKill(a).tick - getKill(b).tick) as med_pick}
-      <div class="demo__kill">
-        <div class="demo__kill-text">
-          <a
-            href={`#player-${parsed_demo.data.users[getKill(med_pick).killer].name}`}
-            class={parsed_demo.data.users[getKill(med_pick).killer]["team"] +
-              " tooltip"}
-            style="--kills: 0;"
-            data-tooltip="Jump To Player"
-          >
-            <ClassLogo
-              player_class={classConverter(getKill(med_pick).killer_class)}
-            />
-            {parsed_demo.data.users[getKill(med_pick).killer].name}
-          </a> killed
-          <a
-            href={`#player-${parsed_demo.data.users[getKill(med_pick).victim].name}`}
-            class={parsed_demo.data.users[getKill(med_pick).victim]["team"] +
-              " tooltip"}
-            style="--kills: 0;"
-            data-tooltip="Jump To Player"
-          >
-            <ClassLogo
-              player_class={classConverter(getKill(med_pick).victim_class)}
-            />
-            {parsed_demo.data.users[getKill(med_pick).victim].name}
-          </a>
-          with {getKill(med_pick).weapon}
-          {#if getKill(med_pick).crit_type}
+{#if kills.length > 0}
+  <div class="kill_container">
+    <h2 class="centered chat__title">All {label}</h2>
+    <div class="killstreaks card demo__kills">
+      {#each kills.sort((a, b) => getKill(a).tick - getKill(b).tick) as pointer}
+        <div class="demo__kill">
+          <div class="demo__kill-text">
+            <a
+              href={`#player-${parsed_demo.data.users[getKill(pointer).killer].name}`}
+              class={parsed_demo.data.users[getKill(pointer).killer]["team"] +
+                " tooltip"}
+              style="--kills: 0;"
+              data-tooltip="Jump To Player"
+            >
+              <ClassLogo
+                player_class={classConverter(getKill(pointer).killer_class)}
+              />
+              {parsed_demo.data.users[getKill(pointer).killer].name}
+            </a>
+            killed
+            <a
+              href={`#player-${parsed_demo.data.users[getKill(pointer).victim].name}`}
+              class={parsed_demo.data.users[getKill(pointer).victim]["team"] +
+                " tooltip"}
+              style="--kills: 0;"
+              data-tooltip="Jump To Player"
+            >
+              <ClassLogo
+                player_class={classConverter(getKill(pointer).victim_class)}
+              />
+              {parsed_demo.data.users[getKill(pointer).victim].name}
+            </a>
+            with {getKill(pointer).weapon}
+            {#if getKill(pointer).crit_type}
+              <span
+                class={["", "killstreak", "killstreak--large"][
+                  getKill(pointer).crit_type
+                ]}
+              >
+                {["", " (Mini-Crit) ", " (CRITICAL HIT!) "][
+                  getKill(pointer).crit_type
+                ]}
+              </span>
+            {/if}
+            at
             <span
-              class={["", "killstreak", "killstreak--large"][
-                getKill(med_pick).crit_type
-              ]}
+              class="tooltip"
+              style={`--kills: 0;`}
+              data-tooltip={`Timecode: ${tickToTime(getKill(pointer).tick)}`}
             >
-              {["", " (Mini-Crit) ", " (CRITICAL HIT!) "][
-                getKill(med_pick).crit_type
-              ]}
+              {getKill(pointer).tick}
             </span>
-          {/if}
-          at
-          <span
-            class="tooltip"
-            style={`--kills: 0;`}
-            data-tooltip={`Timecode: ${tickToTime(getKill(med_pick).tick)}`}
-          >
-            {getKill(med_pick).tick}
-          </span>
-        </div>
-
-        <div class="add_demo">
-          {#if getKill(med_pick).selected}
-            <button
-              class="add_demo cancel-btn"
-              on:click={toggleKillsSelected([getKill(med_pick)])}>-</button
+          </div>
+          <div class="buttons">
+            <div
+              class="add_demo tooltip tooltip--left"
+              data-tooltip="Entire Life"
+              style={`--kills: 0;`}
             >
-          {:else}
-            <div class="add_demo">
-              <button on:click={toggleKillsSelected([getKill(med_pick)])}>
-                +
-              </button>
+              {#if getLife(pointer).selected}
+                <button
+                  class="add_demo cancel-btn"
+                  on:click={toggleSelected(getLife(pointer))}>-</button
+                >
+              {:else}
+                <div class="add_demo">
+                  <button on:click={toggleSelected(getLife(pointer))}>
+                    +
+                  </button>
+                </div>
+              {/if}
             </div>
-          {/if}
+
+            <div
+              class="add_demo tooltip tooltip--left"
+              data-tooltip="As Bookmark"
+              style={`--kills: 0;`}
+            >
+              {#if getKill(pointer).selected}
+                <button
+                  class="add_demo cancel-btn"
+                  on:click={toggleKillsSelected([getKill(pointer)])}>-</button
+                >
+              {:else}
+                <div class="add_demo">
+                  <button on:click={toggleKillsSelected([getKill(pointer)])}>
+                    +
+                  </button>
+                </div>
+              {/if}
+            </div>
+          </div>
         </div>
-      </div>
-    {/each}
+      {/each}
+    </div>
   </div>
 {/if}
 
 <style lang="scss">
-  .killstreaks {
-    max-width: 800px;
-    margin: auto;
+  .buttons {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  @media (min-width: 1500px) {
+    .kill_container:nth-child(odd):last-child {
+      grid-column: span 2;
+    }
+
+    .killstreaks {
+      max-width: 800px;
+      margin: auto;
+    }
   }
 
   .add_demo {
@@ -101,6 +146,7 @@
     & > button {
       font-size: 12px;
       padding: 0.3rem 0.7rem;
+      border-radius: 5px;
     }
   }
 

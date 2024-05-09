@@ -95,15 +95,15 @@ impl KillstreakPointer {
 }
 
 #[derive(Debug, Serialize, Clone)]
-struct MedPick {
+struct KillPointer {
     pub owner_id: u16,
     pub life_index: usize,
     pub kill_index: usize,
 }
 
-impl MedPick {
+impl KillPointer {
     fn new(owner_id: u16, life_index: usize, kill_index: usize) -> Self {
-        MedPick {
+        KillPointer {
             owner_id,
             life_index,
             kill_index
@@ -117,7 +117,8 @@ struct Life {
     pub end: u32,
     pub last_kill_tick: DemoTick,
     pub killstreak_pointers: Vec<KillstreakPointer>,
-    pub med_picks: Vec<MedPick>,
+    pub med_picks: Vec<KillPointer>,
+    pub airshots: Vec<KillPointer>,
     pub kills: Vec<Death>,
     pub assists: Vec<Death>,
     pub classes: Vec<String>,
@@ -132,6 +133,7 @@ impl Life {
             last_kill_tick: DemoTick::from(0),
             killstreak_pointers: vec![],
             med_picks: vec![],
+            airshots: vec![],
             kills: vec![],
             assists: vec![],
             classes,
@@ -313,7 +315,8 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
     let mut sorted_events: HashMap<u16, Vec<Event>> = HashMap::new();
     let mut player_lives: HashMap<u16, Vec<Life>> = HashMap::new();
     let mut killstreak_pointers: Vec<KillstreakPointer> = vec![];
-    let mut med_picks: Vec<MedPick> = vec![];
+    let mut med_picks: Vec<KillPointer> = vec![];
+    let mut airshots: Vec<KillPointer> = vec![];
 
     for (key, events) in &user_events {
         let mut current_player = vec![];
@@ -356,8 +359,15 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
 
                     // println!("{:?}", kill);
                     if kill.victim_class == Class::Medic {
-                        current_life.med_picks.push(MedPick::new(*key, current_player.len(), current_life.kills.len()));
-                        med_picks.push(MedPick::new(*key, current_player.len(), current_life.kills.len()));
+                        let med_pick = KillPointer::new(*key, current_player.len(), current_life.kills.len());
+                        current_life.med_picks.push(med_pick.clone());
+                        med_picks.push(med_pick);
+                    }
+
+                    if kill.rocket_jump {
+                        let airshot = KillPointer::new(*key, current_player.len(), current_life.kills.len());
+                        current_life.airshots.push(airshot.clone());
+                        airshots.push(airshot);
                     }
 
                     current_life.last_kill_tick = kill.tick;
@@ -494,6 +504,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
             "user_events": sorted_events,
             "player_lives": player_lives,
             "med_picks": med_picks,
+            "airshots": airshots,
             "killstreak_pointers": killstreak_pointers,
             "pauses": state.pauses
         },

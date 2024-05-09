@@ -11,8 +11,8 @@
   import Life from "./demo_life.svelte";
   import KillstreakPointer from "./demo_ks_pointer.svelte";
   import AllKillstreaksPointer from "./demo_all_ks_pointer.svelte";
-  import MedPicks from "./demo_med_picks.svelte";
-  import AllMedPicks from "./demo_all_med_picks.svelte";
+  import KillPointerList from "./demo_med_picks.svelte";
+  import AllKillPointers from "./demo_all_med_picks.svelte";
 
   export let enabled;
   export let toggle;
@@ -260,7 +260,8 @@
           for (let ks_pointer of life.killstreak_pointers) {
             if (ks_pointer.selected) {
               events.push({
-                time: life.kills[ks_pointer.kills[ks_pointer.kills.length - 1]].tick,
+                time: life.kills[ks_pointer.kills[ks_pointer.kills.length - 1]]
+                  .tick,
                 label: `${ks_pointer.kills.length}ks`,
                 steamid64: parsed_demo.data.users[i].steamId64,
                 kills: ks_pointer.kills.length,
@@ -272,10 +273,10 @@
 
             if (ks_pointer.selected_as_bookmark) {
               let start_time =
-              life.kills[ks_pointer.kills[0]].tick -
+                life.kills[ks_pointer.kills[0]].tick -
                 recording_settings.before_killstreak_per_kill;
               let end_time =
-              life.kills[ks_pointer.kills[ks_pointer.kills.length - 1]].tick +
+                life.kills[ks_pointer.kills[ks_pointer.kills.length - 1]].tick +
                 recording_settings.after_killstreak;
 
               if (life.start + 20 > start_time) {
@@ -810,15 +811,31 @@
                           Record entire demo
                         </button>
 
-                        {#if parsed_demo.data.player_lives[player].filter((life) => life.med_picks.length > 0).length > 0}
-                          <MedPicks
-                            {classConverter}
-                            {parsed_demo}
-                            {tickToTime}
-                            {toggleKillsSelected}
-                            lives={parsed_demo.data.player_lives[player].filter((life) => life.med_picks.length > 0)}
-                          />
-                        {/if}
+                        <KillPointerList
+                          label="Med Picks"
+                          valKey="med_picks"
+                          {player}
+                          {classConverter}
+                          {parsed_demo}
+                          {tickToTime}
+                          {toggleSelected}
+                          {toggleKillsSelected}
+                          lives={parsed_demo.data.player_lives[player].filter(
+                            (life) => life.med_picks.length > 0
+                          )}
+                        />
+                        <!-- <KillPointerList
+                          label="Air Shots"
+                          valKey="airshots"
+                          {player}
+                          {classConverter}
+                          {parsed_demo}
+                          {tickToTime}
+                          {toggleKillsSelected}
+                          lives={parsed_demo.data.player_lives[player].filter(
+                            (life) => life.airshots.length > 0
+                          )}
+                        /> -->
                         {#if parsed_demo.data.player_lives[player].filter((life) => life.killstreak_pointers.length > 0).length > 0}
                           <h4 class="centered">Killstreaks</h4>
                           {#each parsed_demo.data.player_lives[player].filter((life) => life.killstreak_pointers.length > 0) as life}
@@ -841,23 +858,39 @@
                 </div>
               {/each}
             </div>
-            <AllMedPicks 
-              {classConverter}
-              {parsed_demo}
-              {tickToTime}
-              {toggleKillsSelected}
-              med_picks={parsed_demo.data.med_picks}
-            />
-            <AllKillstreaksPointer
-              killstreaks={parsed_demo.data.killstreak_pointers}
-              {parsed_demo}
-              {limitStringLength}
-              {classConverter}
-              {toggleBookmarkSelected}
-              {tickToTime}
-              {toggleSelected}
-              {isPovDemo}
-            />
+            {#if !isPovDemo}
+              <div class="kill_pointers">
+                <AllKillPointers
+                  label="Med Picks"
+                  {classConverter}
+                  {parsed_demo}
+                  {tickToTime}
+                  {toggleKillsSelected}
+                  {toggleSelected}
+                  {isPovDemo}
+                  {povId}
+                  kills={parsed_demo.data.med_picks}
+                />
+                <AllKillstreaksPointer
+                  killstreaks={parsed_demo.data.killstreak_pointers}
+                  {parsed_demo}
+                  {limitStringLength}
+                  {classConverter}
+                  {toggleBookmarkSelected}
+                  {tickToTime}
+                  {toggleSelected}
+                  {isPovDemo}
+                />
+                <!-- <AllKillPointers
+                  label="Air Shots"
+                  {classConverter}
+                  {parsed_demo}
+                  {tickToTime}
+                  {toggleKillsSelected}
+                  kills={parsed_demo.data.airshots}
+                /> -->
+              </div>
+            {/if}
             {#if parsed_demo.data.chat.length > 0}
               <div class="section-title-toggle chat__title">
                 {#if displayChat}
@@ -947,6 +980,13 @@
 {/if}
 
 <style lang="scss">
+  .kill_pointers {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(700px, 1fr));
+    width: 100%;
+    gap: 1rem;
+  }
+
   .section-title-toggle {
     display: flex;
     align-items: center;

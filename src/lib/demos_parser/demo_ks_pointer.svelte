@@ -328,7 +328,7 @@
 
     &__buttons {
       display: flex;
-      gap: 1rem;
+      gap: 0.5rem;
       justify-content: end;
       grid-column: 6;
     }

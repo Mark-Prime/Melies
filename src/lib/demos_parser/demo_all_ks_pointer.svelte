@@ -43,173 +43,192 @@
 </script>
 
 {#if killstreaks.length != 0}
-  <h2 class="centered chat__title">All Killstreaks</h2>
-  <div class="killstreaks">
-    {#each killstreaks as ks_pointer, index}
-      {#if parsed_demo.data.users[ks_pointer.owner_id]}
-        <div
-          class={"demo demo__killstreaks " +
-            ((parsed_demo.data.player_lives[ks_pointer.owner_id][
-              ks_pointer.life_index
-            ].killstreak_pointers[ks_pointer.index].selected ||
-              parsed_demo.data.player_lives[ks_pointer.owner_id][
-                ks_pointer.life_index
-              ].killstreak_pointers[ks_pointer.index].selected_as_bookmark ||
-              parsed_demo.data.player_lives[ks_pointer.owner_id][
-                ks_pointer.life_index
-              ].selected) &&
-              "demo--selected")}
-        >
-          <div class="player_classes">
-            {#each getLife(index).classes as player_class}
-              <ClassLogo
-                player_class={classConverter(player_class)}
-                tooltip={`Kills: ${
-                  getKills(index).filter(
-                    (kill) => kill.killer_class === classConverter(player_class)
-                  ).length
-                }`}
-              />
-            {/each}
-          </div>
-          <a
-            href={`#player-${
-              parsed_demo.data.users[ks_pointer.owner_id]?.name
-            }`}
-            data-tooltip="Jump To Player"
-            style="width: 100%; --kills: 0;"
-            class={parsed_demo.data.users[ks_pointer.owner_id]["team"] +
-              " tooltip"}
-          >
-            {limitStringLength(
-              parsed_demo.data.users[ks_pointer.owner_id]?.name || "Name Error",
-              16
-            )}
-          </a>
-          <button
-            on:click={toggleBookmarkSelected(getKs(index), true)}
-            on:keydown={toggleBookmarkSelected(getKs(index), true)}
-            on:keyup={() => {}}
-            class={`demo__kill-count ` +
-              (ks_pointer.kills.length >= 3 && " killstreak ") +
-              (ks_pointer.kills.length >= 5 && " killstreak--large ") +
-              (ks_pointer.kills.length >= 10 && " killstreak--massive ")}
-          >
-            Kills: {ks_pointer.kills.length}
-          </button>
-          <div class="demo__kills">
-            {#each getKills(index) as kill}
-              <div class="demo__kill">
-                <ClassLogo player_class={classConverter(kill.killer_class)} />
-                killed
-                <a
-                  href={`#player-${parsed_demo.data.users[kill.victim].name}`}
-                  class={parsed_demo.data.users[kill.victim]["team"] +
-                    " tooltip"}
-                  style="--kills: 0;"
-                  data-tooltip="Jump To Player"
-                >
-                  <ClassLogo player_class={classConverter(kill.victim_class)} />
-                  {parsed_demo.data.users[kill.victim].name}
-                </a>
-                with {kill.weapon}
-                {#if kill.crit_type}
-                  <span
-                    class={["", "killstreak", "killstreak--large"][
-                      kill.crit_type
-                    ]}
-                  >
-                    {["", " (Mini-Crit) ", " (CRITICAL HIT!) "][kill.crit_type]}
-                  </span>
-                {/if}
-                at
-                <span
-                  class="tooltip"
-                  style={`--kills: 0;`}
-                  data-tooltip={`Timecode: ${tickToTime(kill.tick)}`}
-                >
-                  {kill.tick}
-                </span>
-              </div>
-            {/each}
-          </div>
+  <div class="kill_container">
+    <h2 class="centered chat__title">All Killstreaks</h2>
+    <div class="killstreaks">
+      {#each killstreaks as ks_pointer, index}
+        {#if parsed_demo.data.users[ks_pointer.owner_id]}
           <div
-            class="tooltip"
-            style={`--kills: 0;`}
-            data-tooltip={`Timecode: ${Math.floor(
-              Math.round(getKills(index)[0].tick / 66) / 60
-            )}m ${Math.round(getKills(index)[0].tick / 66) % 60}s`}
+            class={"demo demo__killstreaks " +
+              ((parsed_demo.data.player_lives[ks_pointer.owner_id][
+                ks_pointer.life_index
+              ].killstreak_pointers[ks_pointer.index].selected ||
+                parsed_demo.data.player_lives[ks_pointer.owner_id][
+                  ks_pointer.life_index
+                ].killstreak_pointers[ks_pointer.index].selected_as_bookmark ||
+                parsed_demo.data.player_lives[ks_pointer.owner_id][
+                  ks_pointer.life_index
+                ].selected) &&
+                "demo--selected")}
           >
-            First: {getKills(index)[0].tick}
-          </div>
-          <div
-            class="tooltip"
-            style={`--kills: 0;`}
-            data-tooltip={`Length: ${tickToTime(
-              getKills(index)[getKills(index).length - 1].tick -
-                getKills(index)[0].tick
-            )}`}
-          >
-            Last: {getKills(index)[getKills(index).length - 1].tick}
-          </div>
-          <div class="killstreak__buttons">
-            <div
-              class="add_demo tooltip tooltip--left"
-              data-tooltip="Entire Life"
-              style={`--kills: 0;`}
-            >
-              {#if parsed_demo.data.player_lives[ks_pointer.owner_id][ks_pointer.life_index].selected}
-                <button
-                  class="cancel-btn"
-                  on:click={toggleSelected(getLife(index))}>-</button
-                >
-              {:else}
-                <button on:click={toggleSelected(getLife(index))}>+</button>
-              {/if}
+            <div class="player_classes">
+              {#each getLife(index).classes as player_class}
+                <ClassLogo
+                  player_class={classConverter(player_class)}
+                  tooltip={`Kills: ${
+                    getKills(index).filter(
+                      (kill) =>
+                        kill.killer_class === classConverter(player_class)
+                    ).length
+                  }`}
+                />
+              {/each}
             </div>
-            {#if isPovDemo}
+            <a
+              href={`#player-${
+                parsed_demo.data.users[ks_pointer.owner_id]?.name
+              }`}
+              data-tooltip="Jump To Player"
+              style="width: 100%; --kills: 0;"
+              class={parsed_demo.data.users[ks_pointer.owner_id]["team"] +
+                " tooltip"}
+            >
+              {limitStringLength(
+                parsed_demo.data.users[ks_pointer.owner_id]?.name ||
+                  "Name Error",
+                16
+              )}
+            </a>
+            <button
+              on:click={toggleBookmarkSelected(getKs(index), true)}
+              on:keydown={toggleBookmarkSelected(getKs(index), true)}
+              on:keyup={() => {}}
+              class={`demo__kill-count ` +
+                (ks_pointer.kills.length >= 3 && " killstreak ") +
+                (ks_pointer.kills.length >= 5 && " killstreak--large ") +
+                (ks_pointer.kills.length >= 10 && " killstreak--massive ")}
+            >
+              Kills: {ks_pointer.kills.length}
+            </button>
+            <div class="demo__kills">
+              {#each getKills(index) as kill}
+                <div class="demo__kill">
+                  <ClassLogo player_class={classConverter(kill.killer_class)} />
+                  killed
+                  <a
+                    href={`#player-${parsed_demo.data.users[kill.victim].name}`}
+                    class={parsed_demo.data.users[kill.victim]["team"] +
+                      " tooltip"}
+                    style="--kills: 0;"
+                    data-tooltip="Jump To Player"
+                  >
+                    <ClassLogo
+                      player_class={classConverter(kill.victim_class)}
+                    />
+                    {parsed_demo.data.users[kill.victim].name}
+                  </a>
+                  with {kill.weapon}
+                  {#if kill.crit_type}
+                    <span
+                      class={["", "killstreak", "killstreak--large"][
+                        kill.crit_type
+                      ]}
+                    >
+                      {["", " (Mini-Crit) ", " (CRITICAL HIT!) "][
+                        kill.crit_type
+                      ]}
+                    </span>
+                  {/if}
+                  at
+                  <span
+                    class="tooltip"
+                    style={`--kills: 0;`}
+                    data-tooltip={`Timecode: ${tickToTime(kill.tick)}`}
+                  >
+                    {kill.tick}
+                  </span>
+                </div>
+              {/each}
+            </div>
+            <div
+              class="tooltip"
+              style={`--kills: 0;`}
+              data-tooltip={`Timecode: ${Math.floor(
+                Math.round(getKills(index)[0].tick / 66) / 60
+              )}m ${Math.round(getKills(index)[0].tick / 66) % 60}s`}
+            >
+              First: {getKills(index)[0].tick}
+            </div>
+            <div
+              class="tooltip"
+              style={`--kills: 0;`}
+              data-tooltip={`Length: ${tickToTime(
+                getKills(index)[getKills(index).length - 1].tick -
+                  getKills(index)[0].tick
+              )}`}
+            >
+              Last: {getKills(index)[getKills(index).length - 1].tick}
+            </div>
+            <div class="killstreak__buttons">
               <div
                 class="add_demo tooltip tooltip--left"
-                data-tooltip="As Killstreak"
+                data-tooltip="Entire Life"
                 style={`--kills: 0;`}
               >
-                {#if parsed_demo.data.player_lives[ks_pointer.owner_id][ks_pointer.life_index].killstreak_pointers[ks_pointer.index].selected}
+                {#if parsed_demo.data.player_lives[ks_pointer.owner_id][ks_pointer.life_index].selected}
                   <button
                     class="cancel-btn"
-                    on:click={toggleSelected(getKs(index), true)}>-</button
+                    on:click={toggleSelected(getLife(index))}>-</button
                   >
                 {:else}
-                  <button on:click={toggleSelected(getKs(index), true)}
+                  <button on:click={toggleSelected(getLife(index))}>+</button>
+                {/if}
+              </div>
+              {#if isPovDemo}
+                <div
+                  class="add_demo tooltip tooltip--left"
+                  data-tooltip="As Killstreak"
+                  style={`--kills: 0;`}
+                >
+                  {#if parsed_demo.data.player_lives[ks_pointer.owner_id][ks_pointer.life_index].killstreak_pointers[ks_pointer.index].selected}
+                    <button
+                      class="cancel-btn"
+                      on:click={toggleSelected(getKs(index), true)}>-</button
+                    >
+                  {:else}
+                    <button on:click={toggleSelected(getKs(index), true)}
+                      >+</button
+                    >
+                  {/if}
+                </div>
+              {/if}
+              <div
+                class="add_demo tooltip tooltip--left"
+                data-tooltip="As Bookmarks"
+                style={`--kills: 0;`}
+              >
+                {#if parsed_demo.data.player_lives[ks_pointer.owner_id][ks_pointer.life_index].killstreak_pointers[ks_pointer.index].selected_as_bookmark}
+                  <button
+                    class="cancel-btn"
+                    on:click={toggleBookmarkSelected(getKs(index), true)}
+                    >-</button
+                  >
+                {:else}
+                  <button on:click={toggleBookmarkSelected(getKs(index), true)}
                     >+</button
                   >
                 {/if}
               </div>
-            {/if}
-            <div
-              class="add_demo tooltip tooltip--left"
-              data-tooltip="As Bookmarks"
-              style={`--kills: 0;`}
-            >
-              {#if parsed_demo.data.player_lives[ks_pointer.owner_id][ks_pointer.life_index].killstreak_pointers[ks_pointer.index].selected_as_bookmark}
-                <button
-                  class="cancel-btn"
-                  on:click={toggleBookmarkSelected(getKs(index), true)}
-                  >-</button
-                >
-              {:else}
-                <button on:click={toggleBookmarkSelected(getKs(index), true)}
-                  >+</button
-                >
-              {/if}
             </div>
           </div>
-        </div>
-      {/if}
-    {/each}
+        {/if}
+      {/each}
+    </div>
   </div>
 {/if}
 
 <style lang="scss">
+  @media (min-width: 1500px) {
+    .kill_container:nth-child(odd):last-child {
+      grid-column: span 2;
+    }
+
+    .killstreaks {
+      max-width: 800px;
+      margin: auto;
+    }
+  }
+
   .demo {
     font-size: small;
     padding: 0rem 0.5rem;
@@ -382,7 +401,7 @@
 
     &__buttons {
       display: flex;
-      gap: 1rem;
+      gap: 0.5rem;
       justify-content: end;
       grid-column: 6;
     }

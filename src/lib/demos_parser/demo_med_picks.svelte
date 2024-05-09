@@ -2,80 +2,125 @@
   import ClassLogo from "../classlogo.svelte";
 
   export let lives;
+  export let label;
+  export let player;
+  export let valKey;
   export let classConverter;
   export let parsed_demo;
   export let tickToTime;
   export let toggleKillsSelected;
+  export let toggleSelected;
 
-  function getKill(med_pick) {
-    return parsed_demo.data.player_lives[med_pick.owner_id][med_pick.life_index]
-      .kills[med_pick.kill_index];
+  function getKill(pointer) {
+    return parsed_demo.data.player_lives[pointer.owner_id][pointer.life_index]
+      .kills[pointer.kill_index];
+  }
+
+  function getLife(pointer) {
+    return parsed_demo.data.player_lives[pointer.owner_id][pointer.life_index];
   }
 </script>
 
-<h4 class="centered">Med Picks</h4>
-<div class="killstreaks card demo__kills">
-  {#each lives as life}
-    {#each life.med_picks as med_pick}
-      <div class="demo__kill">
-        <div class="demo__kill-text">
-          <ClassLogo
-            player_class={classConverter(getKill(med_pick).killer_class)}
-          /> killed
-          <a
-            href={`#player-${parsed_demo.data.users[getKill(med_pick).victim].name}`}
-            class={parsed_demo.data.users[getKill(med_pick).victim]["team"] +
-              " tooltip"}
-            style="--kills: 0;"
-            data-tooltip="Jump To Player"
-          >
+{#if parsed_demo.data.player_lives[player].filter((life) => life[valKey].length > 0).length > 0}
+  <h4 class="centered pointer__label">{label}</h4>
+  <div class="killstreaks card demo__kills">
+    {#each lives as life}
+      {#each life[valKey] as pointer}
+        <div class="demo__kill">
+          <div class="demo__kill-text">
             <ClassLogo
-              player_class={classConverter(getKill(med_pick).victim_class)}
-            />
-            {parsed_demo.data.users[getKill(med_pick).victim].name}
-          </a>
-          with {getKill(med_pick).weapon}
-          {#if getKill(med_pick).crit_type}
+              player_class={classConverter(getKill(pointer).killer_class)}
+            /> killed
+            <a
+              href={`#player-${parsed_demo.data.users[getKill(pointer).victim].name}`}
+              class={parsed_demo.data.users[getKill(pointer).victim]["team"] +
+                " tooltip"}
+              style="--kills: 0;"
+              data-tooltip="Jump To Player"
+            >
+              <ClassLogo
+                player_class={classConverter(getKill(pointer).victim_class)}
+              />
+              {parsed_demo.data.users[getKill(pointer).victim].name}
+            </a>
+            with {getKill(pointer).weapon}
+            {#if getKill(pointer).crit_type}
+              <span
+                class={["", "killstreak", "killstreak--large"][
+                  getKill(pointer).crit_type
+                ]}
+              >
+                {["", " (Mini-Crit) ", " (CRITICAL HIT!) "][
+                  getKill(pointer).crit_type
+                ]}
+              </span>
+            {/if}
+            at
             <span
-              class={["", "killstreak", "killstreak--large"][
-                getKill(med_pick).crit_type
-              ]}
+              class="tooltip"
+              style={`--kills: 0;`}
+              data-tooltip={`Timecode: ${tickToTime(getKill(pointer).tick)}`}
             >
-              {["", " (Mini-Crit) ", " (CRITICAL HIT!) "][
-                getKill(med_pick).crit_type
-              ]}
+              {getKill(pointer).tick}
             </span>
-          {/if}
-          at
-          <span
-            class="tooltip"
-            style={`--kills: 0;`}
-            data-tooltip={`Timecode: ${tickToTime(getKill(med_pick).tick)}`}
-          >
-            {getKill(med_pick).tick}
-          </span>
-        </div>
+          </div>
 
-        <div class="add_demo">
-          {#if getKill(med_pick).selected}
-            <button
-              class="add_demo cancel-btn"
-              on:click={toggleKillsSelected([getKill(med_pick)])}>-</button
+          <div class="buttons">
+            <div
+              class="add_demo tooltip tooltip--left"
+              data-tooltip="Entire Life"
+              style={`--kills: 0;`}
             >
-          {:else}
-            <div class="add_demo">
-              <button on:click={toggleKillsSelected([getKill(med_pick)])}>
-                +
-              </button>
+              {#if getLife(pointer).selected}
+                <button
+                  class="add_demo cancel-btn"
+                  on:click={toggleSelected(getLife(pointer))}>-</button
+                >
+              {:else}
+                <div class="add_demo">
+                  <button on:click={toggleSelected(getLife(pointer))}>
+                    +
+                  </button>
+                </div>
+              {/if}
             </div>
-          {/if}
+
+            <div
+              class="add_demo tooltip tooltip--left"
+              data-tooltip="As Bookmark"
+              style={`--kills: 0;`}
+            >
+              {#if getKill(pointer).selected}
+                <button
+                  class="add_demo cancel-btn"
+                  on:click={toggleKillsSelected([getKill(pointer)])}>-</button
+                >
+              {:else}
+                <div class="add_demo">
+                  <button on:click={toggleKillsSelected([getKill(pointer)])}>
+                    +
+                  </button>
+                </div>
+              {/if}
+            </div>
+          </div>
         </div>
-      </div>
+      {/each}
     {/each}
-  {/each}
-</div>
+  </div>
+{/if}
 
 <style lang="scss">
+  .pointer__label {
+    margin-top: 0.7rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .buttons {
+    display: flex;
+    gap: 0.5rem;
+  }
+
   .killstreaks {
     max-width: 800px;
     margin: auto;
@@ -91,6 +136,7 @@
     & > button {
       font-size: 12px;
       padding: 0.3rem 0.7rem;
+      border-radius: 5px;
     }
   }
 
@@ -99,7 +145,7 @@
     font-family: "Source Code Pro", monospace;
     color: var(--tert-con-text);
     border: 1px solid var(--tert-con);
-    border-radius: 5px;
+    border-radius: 8px;
   }
 
   .demo__kill {
