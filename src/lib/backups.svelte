@@ -61,8 +61,8 @@
     padding: 0.3rem 0.5rem;
     margin: 2px 0;
     font-family: "Source Code Pro", monospace;
-    color: var(--tert-con-text);
-    border: 1px solid var(--tert-con);
+    color: var(--sec-con-text);
+    border: 1px solid var(--sec-con);
     border-radius: 5px;
 
     display: grid;
@@ -81,7 +81,7 @@
     }
 
     &:hover {
-      border: 1px solid var(--tert-con-text);
+      border: 1px solid var(--sec-con-text);
       max-height: 100vh;
     }
   }
@@ -122,7 +122,7 @@
       max-height: min(calc(100vh - 2rem), 800px);
       background-color: var(--bg);
       border-radius: 8px;
-      border: 1px solid var(--tert-con);
+      border: 1px solid var(--sec-con);
       padding: 1rem;
       position: relative;
       z-index: 1000;
@@ -137,14 +137,14 @@
 
       /* Track */
       &::-webkit-scrollbar-track {
-        background: var(--tert);
+        background: var(--sec);
         border-radius: 0 8px 8px 0;
         overflow: hidden;
       }
 
       /* Handle */
       &::-webkit-scrollbar-thumb {
-        background: var(--tert-con);
+        background: var(--sec-con);
         border-radius: 0 8px 8px 0;
       }
     }
