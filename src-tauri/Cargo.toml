@@ -1,6 +1,6 @@
 [package]
 name = "melies"
-version = "1.0.3"
+version = "1.0.4"
 description = "A TF2 Recording Tool and more!"
 authors = ["Maven (famous)"]
 license = ""
