@@ -274,7 +274,7 @@
       {/if}
     {:else if resp.code === 200}
       <p>
-        {`Created ${resp.vdms} VDMs containing ${resp.clips} containing ${resp.events} events.`}
+        {`Created ${resp.vdms} VDMs containing ${resp.clips} events.`}
       </p>
       {#if resp.output_path != ""}
         <p>
