@@ -11,6 +11,7 @@
   let index = 0,
     total = 0;
 
+  import Modal from "$lib/Modal.svelte";
   import Timeline from "./timeline/timeline.svelte";
   import ClassLogo from "../classlogo.svelte";
   import Life from "./demo_life.svelte";
@@ -271,30 +272,6 @@
     if (demo.selected) {
       demo.selected = false;
     }
-
-    // if (isKillstreak) {
-    //   let player = parsed_demo.data.player_lives[demo.kills[0].killer];
-    //   for (let life of player) {
-    //     for (let killstreak of life.killstreaks) {
-    //       if (
-    //         JSON.stringify(killstreak.kills[0]) ===
-    //         JSON.stringify(demo.kills[0])
-    //       ) {
-    //         toggleBookmarkSelected(killstreak);
-    //         break;
-    //       }
-    //     }
-    //   }
-    // } else if (isKillstreak === false) {
-    //   for (let killstreak of parsed_demo.data.killstreaks) {
-    //     if (
-    //       JSON.stringify(killstreak.kills[0]) === JSON.stringify(demo.kills[0])
-    //     ) {
-    //       toggleBookmarkSelected(killstreak);
-    //       break;
-    //     }
-    //   }
-    // }
 
     resp = resp;
     parsed_demo = parsed_demo;
@@ -769,156 +746,153 @@
   <Fa icon={faWandMagicSparkles} color={`var(--tert)`} />
   Scan Demos
 </button>
-{#if enabled}
-  <div class="modal">
-    <a class="modal__background" on:click={closeModal} href="/"> </a>
-    <div class="modal__card" class:modal__card--large={current_demo}>
-      {#if resp.loaded}
-        {#if current_demo === ""}
-          <h1>Demos</h1>
-          {#each resp.demos as demo, i}
-            <div class={"demo " + (demo.selected && "demo--selected")}>
-              <p>{demo.name}</p>
-              <div class="add_demo">
-                {#if demo.selected}
-                  <button
-                    class="cancel-btn"
-                    on:click={toggleSelected(demo, null, i)}>-</button
-                  >
-                {:else}
-                  <button on:click={toggleSelected(demo, null, i)}>+</button>
-                {/if}
-              </div>
-            </div>
-          {/each}
-          <div class="buttons">
-            <button class="cancel-btn" on:click={closeModal}>Cancel</button>
-            <button on:click={parseDemos}>Parse</button>
+<Modal color="tert" {toggle} {enabled} large={(current_demo !== "" && resp.loaded && !parsed_demo.loading)}>
+  {#if resp.loaded}
+    {#if current_demo === ""}
+      <h1>Demos</h1>
+      {#each resp.demos as demo, i}
+        <div class={"demo " + (demo.selected && "demo--selected")}>
+          <p>{demo.name}</p>
+          <div class="add_demo">
+            {#if demo.selected}
+              <button
+                class="cancel-btn"
+                on:click={toggleSelected(demo, null, i)}>-</button
+              >
+            {:else}
+              <button on:click={toggleSelected(demo, null, i)}>+</button>
+            {/if}
           </div>
-        {:else if !parsed_demo.err_text}
-          <h1>{current_demo}</h1>
-          {#if !parsed_demo.loading}
-            <h4 class="centered">{parsed_demo.header.map}</h4>
-            <div class="flex-between flex-wrap">
-              <div class="settings__switch">
-                <label class="switch">
-                  <input
-                    type="checkbox"
-                    bind:checked={displayLives}
-                    on:changed={refreshList}
-                  />
-                  <span class="slider round slider--tert"></span>
-                </label>
-                <p>Display all lives</p>
-              </div>
-              <div class="settings__switch">
-                <label class="switch">
-                  <input
-                    type="checkbox"
-                    bind:checked={displayAssists}
-                    on:changed={refreshList}
-                  />
-                  <span class="slider round slider--tert"></span>
-                </label>
-                <p>Display lives with 0 Kills if they have an Assist</p>
-              </div>
-              <div class="settings__switch">
-                <label class="switch">
-                  <input
-                    type="checkbox"
-                    bind:checked={displayPlayers}
-                    on:changed={refreshList}
-                  />
-                  <span class="slider round slider--tert"></span>
-                </label>
-                <p>Display players with 0 displayed lives</p>
-              </div>
-            </div>
-            <div class="teams">
-              {#each ["blue", "red"] as team}
-                <div class="team">
-                  <h2 class={"team__label " + team}>
-                    {team[0].toUpperCase() + team.slice(1)}
-                  </h2>
-                  {#each getTeam(team) as player}
-                    {#if displayPlayer(player, team)}
-                      <div class="flex-start align-center">
-                        {#if parsed_demo.data.users[player].hide}
-                          <button
-                            on:click={() =>
-                              (parsed_demo.data.users[player].hide = false)}
-                            class="hide-toggle"
-                          >
-                            +
-                          </button>
-                        {:else}
-                          <button
-                            on:click={() =>
-                              (parsed_demo.data.users[player].hide = true)}
-                            class="cancel-btn hide-toggle"
-                          >
-                            -
-                          </button>
-                        {/if}
-                        <h3 class="player__header">
-                          <a
-                            href={`https://logs.tf/profile/${parsed_demo.data.users[player]["steamId64"]}`}
-                            class={parsed_demo.data.users[player]["team"] +
-                              " player"}
-                            data-tooltip="Open logs.tf profile"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            id={`player-${parsed_demo.data.users[player].name}`}
-                          >
-                            {parsed_demo.data.users[player].name}
-                          </a>
-                          {#each getClasses(player) as player_class}
-                            <ClassLogo
-                              player_class={classConverter(player_class)}
-                              tooltip={`Lives: ${parsed_demo.data.users[player]["classes"][player_class]}`}
-                              click={toggleClass}
-                              args={[player, player_class]}
-                            />
-                          {/each}
-                        </h3>
-                      </div>
-                      {#if !parsed_demo.data.users[player].hide}
-                        {#each parsed_demo.data.player_lives[player] as life}
-                          {#if life.start != 0}
-                            {#if displayLives || life.kills.length > 0 || (displayAssists && life.assists.length > 0)}
-                              <Life
-                                {life}
-                                {classConverter}
-                                {toggleSelected}
-                                {parsed_demo}
-                                {tickToTime}
-                                {toggleKillsSelected}
-                                {allKillsSelected}
-                              />
-                            {/if}
-                          {/if}
-                        {/each}
-                        <button
-                          class="full_demo"
-                          on:click={() => recordEntireDemo(player)}
-                        >
-                          Record entire demo
-                        </button>
-
-                        <KillPointerList
-                          label="Med Picks"
-                          valKey="med_picks"
-                          {player}
-                          {classConverter}
-                          {parsed_demo}
-                          {tickToTime}
-                          {toggleSelected}
-                          {toggleKillsSelected}
-                          lives={parsed_demo.data.player_lives[player].filter(
-                            (life) => life.med_picks.length > 0
-                          )}
+        </div>
+      {/each}
+      <div class="buttons">
+        <button class="cancel-btn" on:click={closeModal}>Cancel</button>
+        <button on:click={parseDemos}>Parse</button>
+      </div>
+    {:else if !parsed_demo.err_text}
+      <h1>{current_demo}</h1>
+      {#if !parsed_demo.loading}
+        <h4 class="centered">{parsed_demo.header.map}</h4>
+        <div class="flex-between flex-wrap">
+          <div class="settings__switch">
+            <label class="switch">
+              <input
+                type="checkbox"
+                bind:checked={displayLives}
+                on:changed={refreshList}
+              />
+              <span class="slider round slider--tert"></span>
+            </label>
+            <p>Display all lives</p>
+          </div>
+          <div class="settings__switch">
+            <label class="switch">
+              <input
+                type="checkbox"
+                bind:checked={displayAssists}
+                on:changed={refreshList}
+              />
+              <span class="slider round slider--tert"></span>
+            </label>
+            <p>Display lives with 0 Kills if they have an Assist</p>
+          </div>
+          <div class="settings__switch">
+            <label class="switch">
+              <input
+                type="checkbox"
+                bind:checked={displayPlayers}
+                on:changed={refreshList}
+              />
+              <span class="slider round slider--tert"></span>
+            </label>
+            <p>Display players with 0 displayed lives</p>
+          </div>
+        </div>
+        <div class="teams">
+          {#each ["blue", "red"] as team}
+            <div class="team">
+              <h2 class={"team__label " + team}>
+                {team[0].toUpperCase() + team.slice(1)}
+              </h2>
+              {#each getTeam(team) as player}
+                {#if displayPlayer(player, team)}
+                  <div class="flex-start align-center">
+                    {#if parsed_demo.data.users[player].hide}
+                      <button
+                        on:click={() =>
+                          (parsed_demo.data.users[player].hide = false)}
+                        class="hide-toggle"
+                      >
+                        +
+                      </button>
+                    {:else}
+                      <button
+                        on:click={() =>
+                          (parsed_demo.data.users[player].hide = true)}
+                        class="cancel-btn hide-toggle"
+                      >
+                        -
+                      </button>
+                    {/if}
+                    <h3 class="player__header">
+                      <a
+                        href={`https://logs.tf/profile/${parsed_demo.data.users[player]["steamId64"]}`}
+                        class={parsed_demo.data.users[player]["team"] +
+                          " player"}
+                        data-tooltip="Open logs.tf profile"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        id={`player-${parsed_demo.data.users[player].name}`}
+                      >
+                        {parsed_demo.data.users[player].name}
+                      </a>
+                      {#each getClasses(player) as player_class}
+                        <ClassLogo
+                          player_class={classConverter(player_class)}
+                          tooltip={`Lives: ${parsed_demo.data.users[player]["classes"][player_class]}`}
+                          click={toggleClass}
+                          args={[player, player_class]}
                         />
-                        <!-- <KillPointerList
+                      {/each}
+                    </h3>
+                  </div>
+                  {#if !parsed_demo.data.users[player].hide}
+                    {#each parsed_demo.data.player_lives[player] as life}
+                      {#if life.start != 0}
+                        {#if displayLives || life.kills.length > 0 || (displayAssists && life.assists.length > 0)}
+                          <Life
+                            {life}
+                            {classConverter}
+                            {toggleSelected}
+                            {parsed_demo}
+                            {tickToTime}
+                            {toggleKillsSelected}
+                            {allKillsSelected}
+                          />
+                        {/if}
+                      {/if}
+                    {/each}
+                    <button
+                      class="full_demo"
+                      on:click={() => recordEntireDemo(player)}
+                    >
+                      Record entire demo
+                    </button>
+
+                    <KillPointerList
+                      label="Med Picks"
+                      valKey="med_picks"
+                      {player}
+                      {classConverter}
+                      {parsed_demo}
+                      {tickToTime}
+                      {toggleSelected}
+                      {toggleKillsSelected}
+                      lives={parsed_demo.data.player_lives[player].filter(
+                        (life) => life.med_picks.length > 0
+                      )}
+                    />
+                    <!-- <KillPointerList
                           label="Air Shots"
                           valKey="airshots"
                           {player}
@@ -930,49 +904,49 @@
                             (life) => life.airshots.length > 0
                           )}
                         /> -->
-                        {#if parsed_demo.data.player_lives[player].filter((life) => life.killstreak_pointers.length > 0).length > 0}
-                          <h4 class="centered">Killstreaks</h4>
-                          {#each parsed_demo.data.player_lives[player].filter((life) => life.killstreak_pointers.length > 0) as life}
-                            {#each life.killstreak_pointers as ks_pointer}
-                              <KillstreakPointer
-                                {classConverter}
-                                {toggleSelected}
-                                {parsed_demo}
-                                {tickToTime}
-                                {ks_pointer}
-                                {toggleBookmarkSelected}
-                                {isPovDemo}
-                              />
-                            {/each}
-                          {/each}
-                        {/if}
-                      {/if}
+                    {#if parsed_demo.data.player_lives[player].filter((life) => life.killstreak_pointers.length > 0).length > 0}
+                      <h4 class="centered">Killstreaks</h4>
+                      {#each parsed_demo.data.player_lives[player].filter((life) => life.killstreak_pointers.length > 0) as life}
+                        {#each life.killstreak_pointers as ks_pointer}
+                          <KillstreakPointer
+                            {classConverter}
+                            {toggleSelected}
+                            {parsed_demo}
+                            {tickToTime}
+                            {ks_pointer}
+                            {toggleBookmarkSelected}
+                            {isPovDemo}
+                          />
+                        {/each}
+                      {/each}
                     {/if}
-                  {/each}
-                </div>
+                  {/if}
+                {/if}
               {/each}
             </div>
-            {#if !isPovDemo}
-              <div class="kill_pointers">
-                <AllKillPointers
-                  label="Med Picks"
-                  {classConverter}
-                  {parsed_demo}
-                  {tickToTime}
-                  {toggleKillsSelected}
-                  {toggleSelected}
-                  kills={parsed_demo.data.med_picks}
-                />
-                <AllKillstreaksPointer
-                  killstreaks={parsed_demo.data.killstreak_pointers}
-                  {parsed_demo}
-                  {limitStringLength}
-                  {classConverter}
-                  {toggleBookmarkSelected}
-                  {tickToTime}
-                  {toggleSelected}
-                />
-                <!-- <AllKillPointers
+          {/each}
+        </div>
+        {#if !isPovDemo}
+          <div class="kill_pointers">
+            <AllKillPointers
+              label="Med Picks"
+              {classConverter}
+              {parsed_demo}
+              {tickToTime}
+              {toggleKillsSelected}
+              {toggleSelected}
+              kills={parsed_demo.data.med_picks}
+            />
+            <AllKillstreaksPointer
+              killstreaks={parsed_demo.data.killstreak_pointers}
+              {parsed_demo}
+              {limitStringLength}
+              {classConverter}
+              {toggleBookmarkSelected}
+              {tickToTime}
+              {toggleSelected}
+            />
+            <!-- <AllKillPointers
                   label="Air Shots"
                   {classConverter}
                   {parsed_demo}
@@ -980,95 +954,90 @@
                   {toggleKillsSelected}
                   kills={parsed_demo.data.airshots}
                 /> -->
-              </div>
-            {/if}
-            {#if parsed_demo.data.chat.length > 0}
-              <div class="section-title-toggle chat__title">
-                {#if displayChat}
-                  <button
-                    on:click={() => (displayChat = false)}
-                    class="cancel-btn hide-toggle"
-                  >
-                    -
-                  </button>
-                {:else}
-                  <button
-                    on:click={() => (displayChat = true)}
-                    class="hide-toggle"
-                  >
-                    +
-                  </button>
-                {/if}
-                <h2 class="centered">Chat</h2>
-              </div>
-              {#if displayChat}
-                <div class="chat">
-                  {#each parsed_demo.data.chat as chat}
-                    {#if chat.selected}
-                      <button class="cancel-btn" on:click={toggleSelected(chat)}
-                        >-</button
-                      >
-                    {:else}
-                      <button on:click={toggleSelected(chat)}>+</button>
-                    {/if}
-                    <div class="chat__tick">
-                      {chat.tick}
-                    </div>
-                    <div class="chat__text">
-                      <a
-                        href={`#player-${chat.name}`}
-                        class={`chat__name ${
-                          parsed_demo.data?.users[chat.from]?.team
-                        }`}
-                      >
-                        {getMessageName(chat)}{getMessageType(chat.kind)}:
-                      </a>
-                      {chat.text}
-                    </div>
-                  {/each}
-                </div>
-              {/if}
-            {/if}
-            <Timeline
-              {parsed_demo}
-              {tickToTime}
-              {displayPlayer}
-              {toggleSelected}
-              {displayLives}
-              {displayAssists}
-              {getTeam}
-            />
-            <div class="buttons">
-              <button class="cancel-btn" on:click={closeModal}>Cancel</button>
-              <button on:click={nextDemo}>Save</button>
-            </div>
-          {:else}
-            <div class="loading">
-              <div class="loadingio-spinner-dual-ball-gstkvx2ybq5">
-                <div class="ldio-h6cxzkuee3g">
-                  <div></div>
-                  <div></div>
-                  <div></div>
-                </div>
-              </div>
-              <h4>Loading {index}/{total}...</h4>
-            </div>
-          {/if}
-        {:else if parsed_demo.err_text}
-          <h1>Error: {parsed_demo.code}</h1>
-          <h2 class="centered">{parsed_demo.err_text}</h2>
-
-          <div class="buttons">
-            <button class="cancel-btn" on:click={closeModal}>Cancel</button>
-            <button on:click={nextDemo}>Skip</button>
           </div>
         {/if}
+        {#if parsed_demo.data.chat.length > 0}
+          <div class="section-title-toggle chat__title">
+            {#if displayChat}
+              <button
+                on:click={() => (displayChat = false)}
+                class="cancel-btn hide-toggle"
+              >
+                -
+              </button>
+            {:else}
+              <button on:click={() => (displayChat = true)} class="hide-toggle">
+                +
+              </button>
+            {/if}
+            <h2 class="centered">Chat</h2>
+          </div>
+          {#if displayChat}
+            <div class="chat">
+              {#each parsed_demo.data.chat as chat}
+                {#if chat.selected}
+                  <button class="cancel-btn" on:click={toggleSelected(chat)}
+                    >-</button
+                  >
+                {:else}
+                  <button on:click={toggleSelected(chat)}>+</button>
+                {/if}
+                <div class="chat__tick">
+                  {chat.tick}
+                </div>
+                <div class="chat__text">
+                  <a
+                    href={`#player-${chat.name}`}
+                    class={`chat__name ${
+                      parsed_demo.data?.users[chat.from]?.team
+                    }`}
+                  >
+                    {getMessageName(chat)}{getMessageType(chat.kind)}:
+                  </a>
+                  {chat.text}
+                </div>
+              {/each}
+            </div>
+          {/if}
+        {/if}
+        <Timeline
+          {parsed_demo}
+          {tickToTime}
+          {displayPlayer}
+          {toggleSelected}
+          {displayLives}
+          {displayAssists}
+          {getTeam}
+        />
+        <div class="buttons">
+          <button class="cancel-btn" on:click={closeModal}>Cancel</button>
+          <button on:click={nextDemo}>Save</button>
+        </div>
       {:else}
-        <h1>LOADING DEMOS</h1>
+        <div class="loading">
+          <div class="loadingio-spinner-dual-ball-gstkvx2ybq5">
+            <div class="ldio-h6cxzkuee3g">
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>
+          </div>
+          <h4>Loading {index}/{total}...</h4>
+        </div>
       {/if}
-    </div>
-  </div>
-{/if}
+    {:else if parsed_demo.err_text}
+      <h1>Error: {parsed_demo.code}</h1>
+      <h2 class="centered">{parsed_demo.err_text}</h2>
+
+      <div class="buttons">
+        <button class="cancel-btn" on:click={closeModal}>Cancel</button>
+        <button on:click={nextDemo}>Skip</button>
+      </div>
+    {/if}
+  {:else}
+    <h1>LOADING DEMOS</h1>
+  {/if}
+</Modal>
 
 <style lang="scss">
   .btn {
@@ -1447,71 +1416,7 @@
       opacity: 0.75;
     }
   }
-
-  .modal {
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    left: 0;
-    top: 0;
-    z-index: 1000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-
-    &__card {
-      height: fit-content;
-      width: fit-content;
-      width: 100%;
-      max-width: min(calc(100vw - 2rem), 800px);
-      max-height: min(calc(100vh - 2rem), 800px);
-      background-color: var(--bg);
-      border-radius: 8px;
-      border: 1px solid var(--tert-con);
-      padding: 1rem;
-      position: relative;
-      z-index: 1000;
-      overflow-y: auto;
-      overflow-x: hidden;
-      margin: 1rem;
-
-      &--large {
-        max-width: min(calc(100vw - 2rem), 1680px);
-        max-height: min(calc(100vh - 2rem), 900px);
-      }
-
-      /* width */
-      &::-webkit-scrollbar {
-        width: 12px;
-      }
-
-      /* Track */
-      &::-webkit-scrollbar-track {
-        background: var(--tert);
-        border-radius: 0 8px 8px 0;
-        overflow: hidden;
-      }
-
-      /* Handle */
-      &::-webkit-scrollbar-thumb {
-        background: var(--tert-con);
-        border-radius: 0 8px 8px 0;
-      }
-    }
-
-    &__background {
-      position: fixed;
-      background-color: rgba(0, 0, 0, 0.6);
-      width: 100%;
-      height: 100%;
-      left: 0;
-      top: 0;
-      z-index: 999;
-      backdrop-filter: blur(5px);
-    }
-  }
-
+  
   .loading {
     display: flex;
     justify-content: center;
