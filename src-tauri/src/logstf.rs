@@ -1,14 +1,23 @@
 use reqwest;
-use serde_json::{self, Value};
+use serde_json::{self, json, Value};
 use steamid_ng::SteamID;
 
 pub(crate) fn parse(url: Value) -> Value {
     let log_id = url.as_str().unwrap();
     println!("Logs.tf url: https://logs.tf/json/{}", log_id);
-    let binding = reqwest::blocking::get(format!("https://logs.tf/json/{}", log_id))
-        .unwrap()
-        .text()
-        .unwrap();
+    let res = reqwest::blocking::get(format!("https://logs.tf/json/{}", log_id));
+
+    let binding;
+
+    if let Ok(resp) = res {
+        binding = resp.text().unwrap();
+    } else {
+        return json!({
+            "code": 404,
+            "err_text": "Unable to load logs.tf data"
+        });
+    }
+
     let resp = binding.as_str();
     let mut info: Value = serde_json::from_str(resp).unwrap();
     let players = &info["players"].as_object().unwrap().to_owned();

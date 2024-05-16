@@ -9,7 +9,7 @@
   line-height: 24px;
   font-weight: 400;
 
-  --bg: #fdfbff;
+  /* --bg: #fdfbff;
   --bg2: #ffffff;
   --bg-text: #1a1c1e;
 
@@ -33,10 +33,36 @@
   --err: #ba1a1a;
   --err-text: #ffffff;
   --err-con: #ffdad6;
-  --err-con-text: #410002;
+  --err-con-text: #410002; */
 
   --red: #f35355;
   --blu: #65b1e2;
+
+  --bg: #1a1c1e;
+    --bg2: #131516;
+    --bg-text: #e3e2e6;
+
+    --outline: #8e9199;
+
+    --pri: #a7c8ff;
+    --pri-text: #003061;
+    --pri-con: #004689;
+    --pri-con-text: #d5e3ff;
+
+    --sec: #d3bbff;
+    --sec-text: #3c1d70;
+    --sec-con: #533688;
+    --sec-con-text: #ebddff;
+
+    --tert: #ffb0cd;
+    --tert-text: #5d1137;
+    --tert-con: #7a294e;
+    --tert-con-text: #ffd9e4;
+
+    --err: #ffb4ab;
+    --err-text: #690005;
+    --err-con: #93000a;
+    --err-con-text: #ffdad6;
 
   color: var(--bg-text);
   background-color: var(--bg);
@@ -93,6 +119,10 @@ h1 {
 
 .align-left {
   text-align: left;
+}
+
+body {
+  margin: 0;
 }
 
 input,
@@ -168,6 +198,52 @@ button:not(:disabled):hover {
 .input--tert:not(:disabled):hover {
   border-color: var(--tert-con-text);
   filter: drop-shadow(0px 0px 2px var(--tert-con-text));
+}
+
+.btn {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.5rem 0.7rem;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--pri-con-text);
+  border-color: var(--pri-con);
+  background-color: var(--bg2);
+  transition: border-color 0.25s, filter 0.3s;
+  outline: none;
+  filter: drop-shadow(0px 0px -1px var(--pri));
+}
+
+.btn--sec {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.5rem 0.7rem;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--sec-con-text);
+  border-color: var(--sec-con);
+  background-color: var(--bg2);
+  transition: border-color 0.25s, filter 0.3s;
+  outline: none;
+  filter: drop-shadow(0px 0px -1px var(--sec));
+}
+
+.btn--tert {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.5rem 0.7rem;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--tert-con-text);
+  border-color: var(--tert-con);
+  background-color: var(--bg2);
+  transition: border-color 0.25s, filter 0.3s;
+  outline: none;
+  filter: drop-shadow(0px 0px -1px var(--tert));
 }
 
 .cancel-btn {

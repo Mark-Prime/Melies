@@ -2,6 +2,11 @@
   // @ts-nocheck
   import { invoke } from "@tauri-apps/api/tauri";
   import { onMount } from "svelte";
+  import { faWandMagicSparkles } from "@fortawesome/free-solid-svg-icons";
+  import Fa from "svelte-fa";
+  import { createEventDispatcher } from "svelte";
+
+  const dispatch = createEventDispatcher();
 
   let index = 0,
     total = 0;
@@ -14,10 +19,8 @@
   import KillPointerList from "./demo_med_picks.svelte";
   import AllKillPointers from "./demo_all_med_picks.svelte";
 
-  export let enabled;
-  export let toggle;
-  export let parseDemoEvents;
-  export let modified;
+  let enabled = false;
+  let toggle = () => (enabled = !enabled);
 
   let resp = { loaded: false, loading: false };
   let parsed_demo = { loaded: false, loading: false };
@@ -38,6 +41,110 @@
   let settings = {};
   let recording_settings = {};
 
+  async function loadEvents() {
+    let event_list = await invoke("load_events");
+    let demos = [];
+
+    if (event_list.code === 200) {
+      event_list.events.forEach(
+        (/** @type {{ demo_name: any; }} */ event, /** @type {number} */ i) => {
+          event.isKillstreak = false;
+
+          if (event.value.Killstreak) {
+            event.isKillstreak = true;
+          }
+
+          if (
+            i === 0 ||
+            event_list.events[i - 1].demo_name != event.demo_name
+          ) {
+            demos.push([event]);
+            return;
+          }
+
+          demos[demos.length - 1].push(event);
+        }
+      );
+
+      return demos;
+    }
+
+    return [];
+  }
+
+  async function parseDemoEvents(demo_name, events) {
+    let demos = await loadEvents();
+    let new_demo = [];
+
+    let settings = await invoke("load_settings");
+    let recording_settings = settings.recording;
+
+    let spec_mode = recording_settings["third_person"] ? "spec_third" : "spec";
+
+    for (let event of events) {
+      if (event.start) {
+        new_demo.push({
+          value: {
+            Bookmark: `clip_start ${spec_mode} ${event.steamid64}`,
+          },
+          tick: event.time,
+          demo_name: demo_name,
+          event: `[demo_${event.label}] clip_start ${spec_mode} ${event.steamid64} (\"${demo_name}\" at ${event.time})`,
+          isKillstreak: false,
+        });
+
+        continue;
+      }
+
+      if (event.bookmark) {
+        new_demo.push({
+          value: {
+            Bookmark: `${spec_mode} ${event.steamid64}`,
+          },
+          tick: event.time,
+          demo_name: demo_name,
+          event: `[demo_${event.label}] ${spec_mode} ${event.steamid64} (\"${demo_name}\" at ${event.time})`,
+          isKillstreak: false,
+        });
+
+        continue;
+      }
+
+      if (event.killstreak) {
+        new_demo.push({
+          value: {
+            Killstreak: event.kills,
+          },
+          tick: event.time,
+          demo_name: demo_name,
+          event: `[demo_${event.label}] Killstreak ${event.kills} (\"${demo_name}\" at ${event.time})`,
+          isKillstreak: true,
+        });
+
+        continue;
+      }
+
+      new_demo.push({
+        value: {
+          Bookmark: `clip_end`,
+        },
+        tick: event.time,
+        demo_name: demo_name,
+        event: `[demo_${event.label}] clip_end (\"${demo_name}\" at ${event.time})`,
+        isKillstreak: false,
+      });
+    }
+
+    demos.push(new_demo);
+
+    for (let demo of demos) {
+      demo.sort((a, b) => a.tick - b.tick);
+    }
+
+    await invoke("save_events", { newEvents: demos });
+    dispatch("reload");
+  }
+
   async function loadSettings() {
     settings = await invoke("load_settings");
     recording_settings = settings.recording;
@@ -51,31 +158,16 @@
     }
   }
 
-  // function calcTick(tick) {
-  // if (!parsed_demo.data.pause_tick) {
-  //     return tick - parsed_demo.data.start_tick
-  // }
-
-  // if (tick < parsed_demo.data.pause_tick) {
-  //     return tick - parsed_demo.data.start_tick
-  // }
-
-  // return tick - parsed_demo.data.start_tick + parsed_demo.data.pause_length
-
-  //     return tick
-  // }
-
   function closeModal() {
     selected = [];
     current_demo = "";
     parsed_demo = { loaded: false, loading: false };
-    // displayLives = false;
-    // displayPlayers = false;
 
     for (let demo of resp.demos) {
       demo.selected = false;
     }
 
+    dispatch("reload");
     toggle();
   }
 
@@ -324,8 +416,6 @@
         events.sort((a, b) => a.time - b.time)
       );
     }
-
-    modified();
 
     if (selected.length !== 0) {
       parsed_demo = { loaded: false, loading: true };
@@ -675,6 +765,10 @@
 
 <svelte:window on:keydown={on_key_down} on:keyup={on_key_up} />
 
+<button class="btn btn--tert" on:click={toggle}>
+  <Fa icon={faWandMagicSparkles} color={`var(--tert)`} />
+  Scan Demos
+</button>
 {#if enabled}
   <div class="modal">
     <a class="modal__background" on:click={closeModal} href="/"> </a>
@@ -867,8 +961,6 @@
                   {tickToTime}
                   {toggleKillsSelected}
                   {toggleSelected}
-                  {isPovDemo}
-                  {povId}
                   kills={parsed_demo.data.med_picks}
                 />
                 <AllKillstreaksPointer
@@ -879,7 +971,6 @@
                   {toggleBookmarkSelected}
                   {tickToTime}
                   {toggleSelected}
-                  {isPovDemo}
                 />
                 <!-- <AllKillPointers
                   label="Air Shots"
@@ -980,6 +1071,11 @@
 {/if}
 
 <style lang="scss">
+  .btn {
+    display: flex;
+    gap: 0.5rem;
+  }
+
   .kill_pointers {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(700px, 1fr));

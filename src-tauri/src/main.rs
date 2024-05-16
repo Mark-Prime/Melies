@@ -233,11 +233,7 @@ fn check_spec(clip: &Clip, commands: String) -> String {
 
     let mut new_commands = commands;
 
-    new_commands = format!("{}; spec_player {}; spec_mode;", new_commands, clip.spec_player);
-
-    if clip.spec_type == 3 {
-        new_commands = format!("{} spec_mode;", new_commands);
-    }
+    new_commands = format!("{}; spec_player {}; spec_mode {};", new_commands, clip.spec_player, ifelse!(clip.spec_type == 1, 4, 5));
 
     return new_commands;
 }
@@ -400,13 +396,7 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
             _ => {}
         }
 
-        if clip.spec_type == 1 {
-            commands = format!("{} spec_mode; spec_mode;", commands);
-        }
-
-        if clip.spec_type == 3 {
-            commands = format!("{} spec_mode;", commands);
-        }
+        commands = format!("{} spec_mode 7;", commands);
 
         end_record.start_tick = Some(clip.end_tick);
         end_record.name = "Stop Recording".to_string();
@@ -529,7 +519,7 @@ fn ryukbot() -> Value {
     if event_len == 0 {
         return json!({
             "code": 410,
-            "err_text": format!("_events.txt or KillStreaks.txt was found but found no valid events. Please add events before running again.\r\n\r\nFile Location: {}", dir)
+            "err_text": format!("_events.txt or KillStreaks.txt was found but had no valid events. Please add events before running again.\r\n\r\nFile Location: {}", dir)
         });
     }
 

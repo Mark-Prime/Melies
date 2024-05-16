@@ -1,12 +1,16 @@
 <script>
   // @ts-nocheck
-  export let enabled;
-  export let toggle;
-  export let parseLogEvents;
-  export let modified;
+  import {
+    faFlag
+  } from "@fortawesome/free-solid-svg-icons";
+  import Fa from "svelte-fa";
 
   import { invoke } from "@tauri-apps/api/tauri";
+  import { createEventDispatcher } from 'svelte';
 
+  const dispatch = createEventDispatcher();
+
+  let enabled = false;
   let url = "";
   let resp = { loading: false };
 
@@ -25,6 +29,70 @@
     index = 0;
 
     parseLog();
+  }
+
+  async function loadEvents() {
+    let event_list = await invoke("load_events");
+    let demos = [];
+
+    if (event_list.code === 200) {
+      event_list.events.forEach(
+        (/** @type {{ demo_name: any; }} */ event, /** @type {number} */ i) => {
+          event.isKillstreak = false;
+
+          if (event.value.Killstreak) {
+            event.isKillstreak = true;
+          }
+
+          if (
+            i === 0 ||
+            event_list.events[i - 1].demo_name != event.demo_name
+          ) {
+            demos.push([event]);
+            return;
+          }
+
+          demos[demos.length - 1].push(event);
+        }
+      );
+
+      return demos;
+    }
+
+    return [];
+  }
+
+  async function parseLogEvents(demo_name, events) {
+    let demos = await loadEvents()
+    let new_demo = [];
+
+    let settings = await invoke("load_settings");
+    let recording_settings = settings.recording;
+
+    let spec_mode = recording_settings["third_person"] ? "spec_third" : "spec";
+
+    for (let event of events) {
+      new_demo.push({
+        value: {
+          Bookmark: `${spec_mode} ${event.steamid64}`,
+        },
+        tick: event.time * 66,
+        demo_name: demo_name,
+        event: `[logs.tf_${event.label}] ${spec_mode}  ${
+          event.steamid64
+        } (\"${demo_name}\" at ${event.time * 66})`,
+        isKillstreak: false,
+      });
+    }
+
+    demos.push(new_demo);
+
+    for (let demo of demos) {
+      demo.sort((a, b) => a.tick - b.tick);
+    }
+
+    await invoke("save_events", { newEvents: demos });
+    dispatch('reload');
   }
 
   async function parseLog() {
@@ -154,8 +222,6 @@
       }
     }
 
-    modified();
-
     parseLogEvents(
       demo_name,
       events.sort((a, b) => a.time - b.time)
@@ -177,10 +243,19 @@
     resp = {};
     resp.loading = false;
     url = "";
+    dispatch('reload');
     toggle();
+  }
+
+  function toggle() {
+    enabled = !enabled;
   }
 </script>
 
+<button class="btn btn--sec" on:click={toggle}>
+  <Fa icon={faFlag} color={`var(--sec)`} />
+  Load from Logs.tf
+</button>
 {#if enabled}
   <div class="modal">
     <a class="modal__background" on:click={closeModal} href="/"> </a>
@@ -384,6 +459,11 @@
 {/if}
 
 <style lang="scss">
+  .btn {
+    display: flex;
+    gap: 0.5rem;
+  }
+
   .section_header {
     margin-top: 2.5rem;
     margin-bottom: 0;

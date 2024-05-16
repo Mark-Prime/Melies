@@ -713,14 +713,14 @@
 
     &--selected {
       border: 1px solid var(--tert);
-    }
 
-    &--selected.timeline__life--red {
-      background: linear-gradient(-45deg, var(--red), transparent);
-    }
+      &.timeline__life--red {
+        background: linear-gradient(-45deg, var(--red), transparent);
+      }
 
-    &--selected.timeline__life--blue {
-      background: linear-gradient(-45deg, var(--blu), transparent);
+      &.timeline__life--blue {
+        background: linear-gradient(-45deg, var(--blu), transparent);
+      }
     }
 
     &__data-tooltip {
@@ -745,7 +745,7 @@
 
     &__marker {
       position: absolute;
-      top: -1px;
+      top: 0px;
       left: calc(-0.4rem + var(--position));
       height: 37px;
       width: 0.8rem;
@@ -758,7 +758,7 @@
       &__text {
         z-index: 1002;
         position: absolute;
-        top: calc(-2.2rem - (1.72rem * var(--kills)));
+        top: calc(-2.2rem - (1.72rem * 3));
         left: -0.4rem;
         display: none;
         background-color: var(--bg);
@@ -800,7 +800,7 @@
         position: absolute;
         top: 0;
         left: 0;
-        height: 35px;
+        height: 36px;
         width: 0.8rem;
         background-color: var(--tert-con);
         clip-path: polygon(40% 100%, 60% 100%, 60% 25%, 100% 0, 0 0, 40% 25%);
@@ -864,7 +864,7 @@
 
     &__ks {
       position: absolute;
-      top: -1px;
+      top: 0;
       left: var(--position);
       height: 3px;
       width: var(--length);

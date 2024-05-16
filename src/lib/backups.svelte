@@ -2,10 +2,15 @@
   // @ts-nocheck
   import { invoke } from "@tauri-apps/api/tauri";
   import { onMount } from "svelte";
+  import {
+    faFloppyDisk
+  } from "@fortawesome/free-solid-svg-icons";
+  import Fa from "svelte-fa";
+  import { createEventDispatcher } from 'svelte';
 
-  export let enabled;
-  export let toggle;
+  const dispatch = createEventDispatcher();
 
+  let enabled = false;
   let resp = {};
 
   async function loadBackups() {
@@ -18,6 +23,7 @@
 
   async function reloadBackup(backup) {
     await invoke("reload_backup", { fileName: backup.file_name });
+    dispatch('reload');
     toggle(true);
   }
 
@@ -29,8 +35,17 @@
     console.log("Modal Enabled:", enabled);
     loadBackups();
   }
+
+  function toggle() {
+    enabled = !enabled;
+  }
 </script>
 
+
+<button class="btn btn--sec" on:click={toggle}>
+  <Fa icon={faFloppyDisk} color={`var(--sec)`} />
+  Load Backup
+</button>
 {#if enabled}
   <div class="modal">
     <a class="modal__background" on:click={() => toggle(false)} href="/"> </a>
@@ -56,6 +71,11 @@
 {/if}
 
 <style lang="scss">
+  .btn {
+    display: flex;
+    gap: 0.5rem;
+  }
+
   .demo {
     font-size: small;
     padding: 0.3rem 0.5rem;
