@@ -1,6 +1,4 @@
 <script>
-  import { faGear } from "@fortawesome/free-solid-svg-icons";
-  import Fa from "svelte-fa";
   import EventViewer from "$lib/event_viewer/EventViewer.svelte";
   import Hero from "$lib/hero.svelte";
   import Backups from "$lib/backups.svelte";
@@ -10,6 +8,7 @@
   import ErrViewer from "$lib/ErrViewer.svelte";
   import LogViewer from "$lib/LogViewer.svelte";
   import EditEvents from "$lib/EditEvents.svelte";
+  import Settings from "$lib/settings.svelte";
 
   let resp = { vdms: 0, clips: 0, events: 0, code: 0 };
   let reload = false;
@@ -55,9 +54,7 @@
 
         <div class="homepage__run">
           <button class="btn" on:click={runMelies}> Run </button>
-          <a class="btn--sec" href="/settings">
-            <Fa icon={faGear} color={`var(--sec)`} />
-          </a>
+          <Settings on:close={() => forceReload(true)} />
         </div>
       </div>
     </div>
@@ -142,15 +139,6 @@
 
       & .btn {
         flex-grow: 1;
-      }
-
-      & a {
-        padding: 0.3rem 0.5rem;
-        height: 100%;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
       }
     }
   }

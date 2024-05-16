@@ -798,9 +798,9 @@
         z-index: 999;
         content: "";
         position: absolute;
-        top: 0;
+        top: -1px;
         left: 0;
-        height: 36px;
+        height: 37px;
         width: 0.8rem;
         background-color: var(--tert-con);
         clip-path: polygon(40% 100%, 60% 100%, 60% 25%, 100% 0, 0 0, 40% 25%);

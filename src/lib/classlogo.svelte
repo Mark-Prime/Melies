@@ -32,18 +32,30 @@
 </script>
 
 {#if getImgUrl(player_class)}
-  <div
-    class={tooltip ? "tooltip" : ""}
+  <button
+    class:tooltip={tooltip}
     data-tooltip={tooltip}
     style="--kills: 0"
     on:click={click(...args)}
     on:keydown={click(...args)}
   >
     <img src={getImgUrl(player_class)} alt={`${player_class} Icon`} />
-  </div>
+  </button>
 {/if}
 
-<style>
+<style lang="scss">
+  button {
+    all: unset;
+
+    &:hover {
+      filter: brightness(1);
+    }
+  }
+
+  .tooltip {
+    cursor: pointer;
+  }
+
   img {
     height: 1.5rem;
     display: flex;
