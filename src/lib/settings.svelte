@@ -5,6 +5,9 @@
   import { faGear } from "@fortawesome/free-solid-svg-icons";
   import Fa from "svelte-fa";
   import { createEventDispatcher } from "svelte";
+  import Input from "./Input.svelte";
+  import Switch from "./Switch.svelte";
+  import Select from "./Select.svelte";
   const dispatch = createEventDispatcher();
   let settings = {};
   let output_settings = {};
@@ -19,7 +22,6 @@
     output_settings = settings.output;
     recording_settings = settings.recording;
     addons = settings.addons;
-    console.log(addons);
   }
 
   async function saveSettings() {
@@ -31,7 +33,6 @@
     toggle();
   }
 
-  
   $: {
     if (enabled) {
       loadSettings();
@@ -50,442 +51,221 @@
   <h1>Settings</h1>
   <div class="setting">
     <div class="settings__input-group settings__span">
-      <label
-        for="tf_folder"
-        class="settings__label tooltip"
-        data-tooltip="The full filepath to your \tf folder within the Team Fortress 2 game files"
-        style={`--kills: 0;`}
-      >
-        \tf Folder
-      </label>
-      <input
+      <Input
+        title="\tf Folder"
         bind:value={settings.tf_folder}
-        id="tf_folder"
-        class="settings__input input"
+        tooltip="The full filepath to your \tf folder within the Team Fortress 2 game files."
       />
     </div>
-    {#if output_settings.method === "sparklyfx"}
-      <div class="settings__input-group settings__span">
-        <label
-          for="output_folder"
-          class="settings__label tooltip"
-          data-tooltip="The full filepath to the folder you want to output to.
+    <div class="settings__input-group settings__span">
+      <Input
+        title="Output Folder"
+        bind:value={output_settings.folder}
+        tooltip="The full filepath to the folder you want to output to.
 If left blank, the output folder will default to your sparklyfx settings."
-          style={`--kills: 1;`}
-        >
-          Output Folder
-        </label>
-        <input
-          bind:value={output_settings.folder}
-          id="output_folder"
-          class="settings__input input"
-        />
-      </div>
-    {/if}
-    <div class="settings__switch">
-      <label class="switch">
-        <input type="checkbox" bind:checked={settings.safe_mode} />
-        <span class="slider round"></span>
-      </label>
-      <div
-        class="tooltip"
-        data-tooltip="If a VDM already exists, do not rewrite it."
-        style={`--kills: 0;`}
-      >
-        Prevent overwriting previously made VDMs
-      </div>
+        display={output_settings.method === "sparklyfx"}
+      />
     </div>
-    <div class="settings__switch">
-      <label class="switch">
-        <input type="checkbox" bind:checked={settings.clear_events} />
-        <span class="slider round"></span>
-      </label>
-      <div
-        class="tooltip"
-        data-tooltip="Empty the _events.txt or KillStreaks.txt files once completed."
-        style={`--kills: 0;`}
-      >
-        Clear events after running
-      </div>
-    </div>
-    <div class="settings__switch">
-      <label class="switch">
-        <input type="checkbox" bind:checked={settings.save_backups} />
-        <span class="slider round"></span>
-      </label>
-      <div
-        class="tooltip"
-        data-tooltip="Save a backup of the original _events.txt or Killstreaks.txt file in the Documents folder."
-        style={`--kills: 0;`}
-      >
-        Save backups of events
-      </div>
-    </div>
+    <Switch
+      title="Prevent overwriting previously made VDMs"
+      bind:value={settings.safe_mode}
+      tooltip="If a VDM already exists, do not rewrite it."
+    />
+    <Switch
+      title="Clear events after running"
+      bind:value={settings.clear_events}
+      tooltip="Empty the _events.txt or KillStreaks.txt files once completed."
+    />
+    <Switch
+      title="Save backups of events"
+      bind:value={settings.save_backups}
+      tooltip="Save a backup of the original _events.txt or Killstreaks.txt file in the Documents folder."
+    />
   </div>
 
   <h2>Output</h2>
 
   <div class="setting">
-    <div class="settings__input-group">
-      <label
-        for="method"
-        class="settings__label tooltip"
-        data-tooltip={`The method you want to use to record each clip:
-      h264 - QuickTime encoding to .mp4 (requires you to launch the 32bit tf.exe)
-      tga - generates .tga image sequence
-      jpeg - generates .jpeg image sequence
-      SparklyFX - Automates recording using SparklyFX
-      Lawena - uses commands for Lawena (settings will be overwritten by Lawena)
-      Do Not Record - ignores recording commands but still skips
-`}
-        style={`--kills: 6;`}
-      >
-        <!-- 
-      NO LONGER SUPPORTED
-      SVR - uses Source Video Render to record .mkv
-      SVR.mov - uses Source Video Render to record .mov
-      SVR.mp4 - uses Source Video Render to record .mp4 (Requires SVR encoder to be updated) -->
-        Recording Method
-      </label>
-      <select
-        bind:value={output_settings.method}
-        id="method"
-        class="settings__input input--sec"
-      >
-        <option value="h264">h264</option>
-        <option value="tga">tga</option>
-        <option value="jpeg">jpeg</option>
-        <option value="sparklyfx">SparklyFX</option>
-        <!-- <option value="svr">SVR</option>
+    <Select
+      title="Recording Method"
+      bind:value={output_settings.method}
+      tooltip={`The method you want to use to record each clip:
+        h264 - QuickTime encoding to .mp4 (requires you to launch the 32bit tf.exe)
+        tga - generates .tga image sequence
+        jpeg - generates .jpeg image sequence
+        SparklyFX - Automates recording using SparklyFX
+        Lawena - uses commands for Lawena (settings will be overwritten by Lawena)
+        Do Not Record - ignores recording commands but still skips`}
+      color="sec"
+    >
+      <option value="h264">h264</option>
+      <option value="tga">tga</option>
+      <option value="jpeg">jpeg</option>
+      <option value="sparklyfx">SparklyFX</option>
+      <!-- <option value="svr">SVR</option>
       <option value="svr.mov">SVR.mov</option>
       <option value="svr.mp4">SVR.mp4</option> -->
-        <option value="lawena">Lawena</option>
-        <option value="none">Do Not Record</option>
-      </select>
-    </div>
-    <div class="settings__input-group">
-      <label for="framerate" class="settings__label">Framerate</label>
-      <input
-        bind:value={output_settings.framerate}
-        id="framerate"
-        class="settings__input input--sec"
-        type="number"
-      />
-    </div>
-    <div class="settings__switch">
-      <label class="switch">
-        <input type="checkbox" bind:checked={output_settings.text_chat} />
-        <span class="slider round slider--sec"></span>
-      </label>
-      Enable Text Chat
-    </div>
-    <div class="settings__switch">
-      <label class="switch">
-        <input type="checkbox" bind:checked={output_settings.crosshair} />
-        <span class="slider round slider--sec"></span>
-      </label>
-      Display Crosshair
-    </div>
-    <div class="settings__switch">
-      <label class="switch">
-        <input type="checkbox" bind:checked={output_settings.voice_chat} />
-        <span class="slider round slider--sec"></span>
-      </label>
-      Enable Voice Chat
-    </div>
-    <div class="settings__switch">
-      <label class="switch">
-        <input type="checkbox" bind:checked={output_settings.hud} />
-        <span class="slider round slider--sec"></span>
-      </label>
-      Display HUD
-    </div>
-    <div class="settings__switch">
-      <label class="switch">
-        <input type="checkbox" bind:checked={output_settings.snd_fix} />
-        <span class="slider round slider--sec"></span>
-      </label>
-      <div
-        class="tooltip"
-        data-tooltip="Reset games audio when clip is starting to undo demo glitches."
-        style={`--kills: 0;`}
-      >
-        Attempt to fix sound issues.
-      </div>
-    </div>
-    <div class="settings__switch">
-      <label class="switch">
-        <input type="checkbox" bind:checked={output_settings.viewmodel} />
-        <span class="slider round slider--sec"></span>
-      </label>
-      Display Viewmodel
-    </div>
-    <div class="settings__switch">
-      <label class="switch">
-        <input type="checkbox" bind:checked={output_settings.lock} />
-        <span class="slider round slider--sec"></span>
-      </label>
-      <div
-        class="tooltip"
-        data-tooltip="Disables commands from certain configs that could overwrite these settings when played."
-        style={`--kills: 0;`}
-      >
-        Prevent in-game settings from changing.
-      </div>
-    </div>
-    <div class="settings__switch">
-      <label class="switch">
-        <input type="checkbox" bind:checked={output_settings.minmode} />
-        <span class="slider round slider--sec"></span>
-      </label>
-      Enable Minmode Viewmodels
-    </div>
+      <option value="lawena">Lawena</option>
+      <option value="none">Do Not Record</option>
+    </Select>
+    <Input
+      title="Framerate"
+      bind:value={output_settings.framerate}
+      color="sec"
+    />
+    <Switch
+      title="Enable Text Chat"
+      bind:value={output_settings.text_chat}
+      color="sec"
+    />
+    <Switch
+      title="Display Crosshair"
+      bind:value={output_settings.crosshair}
+      color="sec"
+    />
+    <Switch
+      title="Enable Voice Chat"
+      bind:value={output_settings.voice_chat}
+      color="sec"
+    />
+    <Switch title="Display HUD" bind:value={output_settings.hud} color="sec" />
+    <Switch
+      title="Attempt to fix sound issues"
+      bind:value={output_settings.snd_fix}
+      tooltip="Reset games audio when clip is starting to undo demo glitches."
+      color="sec"
+    />
+    <Switch
+      title="Display Viewmodel"
+      bind:value={output_settings.viewmodel}
+      color="sec"
+    />
+    <Switch
+      title="Prevent in-game settings from changing"
+      bind:value={output_settings.lock}
+      tooltip="Disables commands from certain configs that could overwrite these settings when played."
+      color="sec"
+    />
+    <Switch
+      title="Minmode Viewmodels"
+      bind:value={output_settings.minmode}
+      color="sec"
+    />
   </div>
 
   <h2>Recording</h2>
 
   <div class="setting">
-    <div class="settings__input-group">
-      <label
-        for="commands"
-        class="settings__label tooltip"
-        data-tooltip="Commands to run before every clip is recorded."
-        style={`--kills: 0;`}
-      >
-        Commands
-      </label>
-      <input
-        bind:value={recording_settings.commands}
-        id="commands"
-        class="settings__input input--tert"
-      />
-    </div>
-    <div class="settings__input-group">
-      <label
-        for="end_commands"
-        class="settings__label tooltip"
-        data-tooltip={"Commands to run after every clip is done recording.\n\rUseful for resetting configs to in game settings."}
-        style={`--kills: 1;`}
-      >
-        End Commands
-      </label>
-      <input
-        bind:value={recording_settings.end_commands}
-        id="end_commands"
-        class="settings__input input--tert"
-      />
-    </div>
-    <div class="settings__input-group">
-      <label
-        for="start_delay"
-        class="settings__label tooltip"
-        data-tooltip={"How long to wait at the start of the demo before skipping ahead.\n\r1 second = 66 ticks"}
-        style={`--kills: 1;`}
-      >
-        Delay before initial skip
-      </label>
-      <input
-        bind:value={recording_settings.start_delay}
-        id="start_delay"
-        class="settings__input input--tert"
-        type="number"
-      />
-    </div>
-    <div class="settings__input-group">
-      <label
-        for="minimum_ticks_between_clips"
-        class="settings__label tooltip"
-        data-tooltip={"If clips are closer than this, combine them into a single clip.\n\r1 second = 66 ticks"}
-        style={`--kills: 1;`}
-      >
-        Minimum ticks between clips
-      </label>
-      <input
-        bind:value={recording_settings.minimum_ticks_between_clips}
-        id="minimum_ticks_between_clips"
-        class="settings__input input--tert"
-        type="number"
-      />
-    </div>
-    <div class="settings__input-group">
-      <label
-        for="before_bookmark"
-        class="settings__label tooltip"
-        data-tooltip={"How far before each bookmark to start recording.\n\r1 second = 66 ticks"}
-        style={`--kills: 1;`}
-      >
-        Ticks before bookmarks
-      </label>
-      <input
-        bind:value={recording_settings.before_bookmark}
-        id="before_bookmark"
-        class="settings__input input--tert"
-        type="number"
-      />
-    </div>
-    <div class="settings__input-group">
-      <label
-        for="after_bookmark"
-        class="settings__label tooltip"
-        data-tooltip={"How far after each bookmark to record.\n\r1 second = 66 ticks"}
-        style={`--kills: 1;`}
-      >
-        Ticks after bookmarks
-      </label>
-      <input
-        bind:value={recording_settings.after_bookmark}
-        id="after_bookmark"
-        class="settings__input input--tert"
-        type="number"
-      />
-    </div>
-    <div class="settings__input-group">
-      <label
-        for="before_killstreak_per_kill"
-        class="settings__label tooltip"
-        data-tooltip={"The average time between kills.\n\rShould match ds_kill_delay times 66.\n\r1 second = 66 ticks"}
-        style={`--kills: 2;`}
-      >
-        Ticks before killstreak per kill in streak
-      </label>
-      <input
-        bind:value={recording_settings.before_killstreak_per_kill}
-        id="before_killstreak_per_kill"
-        class="settings__input input--tert"
-        type="number"
-      />
-    </div>
-    <div class="settings__input-group">
-      <label
-        for="after_killstreak"
-        class="settings__label tooltip"
-        data-tooltip={"How far after each killstreak to record.\n\r1 second = 66 ticks"}
-        style={`--kills: 1;`}
-      >
-        Ticks after killstreak
-      </label>
-      <input
-        bind:value={recording_settings.after_killstreak}
-        id="after_killstreak"
-        class="settings__input input--tert"
-        type="number"
-      />
-    </div>
-    <div class="settings__input-group">
-      <label
-        for="interval_for_rewind_double_taps"
-        class="settings__label tooltip"
-        data-tooltip={"How close bookmarks need to be to be considered a double tap.\n\r1 second = 66 ticks"}
-        style={`--kills: 1;`}
-      >
-        Interval for rewind double taps
-      </label>
-      <input
-        bind:value={recording_settings.interval_for_rewind_double_taps}
-        id="interval_for_rewind_double_taps"
-        class="settings__input input--tert"
-        type="number"
-      />
-    </div>
-    <div class="settings__input-group">
-      <label
-        for="rewind_amount"
-        class="settings__label tooltip"
-        data-tooltip={"How far back it records when a double tap happens.\n\rUseful for if you missed a clip due to being too busy in game.\n\r1 second = 66 ticks"}
-        style={`--kills: 2;`}
-      >
-        Rewind amount upon double tap
-      </label>
-      <input
-        bind:value={recording_settings.rewind_amount}
-        id="rewind_amount"
-        class="settings__input input--tert"
-        type="number"
-      />
-    </div>
-    <div class="settings__input-group">
-      <label for="FOV" class="settings__label">FOV</label>
-      <input
-        bind:value={recording_settings.fov}
-        id="FOV"
-        class="settings__input input--tert"
-        type="number"
-      />
-    </div>
-    <div class="settings__input-group">
-      <label for="viewodel_fov" class="settings__label">Viewmodel FOV</label>
-      <input
-        bind:value={recording_settings.viewmodel_fov}
-        id="viewodel_fov"
-        class="settings__input input--tert"
-        type="number"
-      />
-    </div>
-    <div class="settings__switch">
-      <label class="switch">
-        <input
-          type="checkbox"
-          bind:checked={recording_settings.record_continuous}
-        />
-        <span class="slider round slider--tert"></span>
-      </label>
-      Automatically record next demo when current demo completes
-    </div>
-    <div class="settings__switch">
-      <label class="switch">
-        <input type="checkbox" bind:checked={recording_settings.auto_close} />
-        <span class="slider round slider--tert"></span>
-      </label>
-      <div
-        class="tooltip"
-        data-tooltip="Automatically close TF2 when the last clip is finished recording."
-        style={`--kills: 0;`}
-      >
-        Prevent idle hours
-      </div>
-    </div>
-    <div class="settings__switch">
-      <label class="switch">
-        <input type="checkbox" bind:checked={recording_settings.auto_suffix} />
-        <span class="slider round slider--tert"></span>
-      </label>
-      <div
-        class="tooltip"
-        data-tooltip="Add a label to the end of each clip with information from the bookmarks."
-        style={`--kills: 0;`}
-      >
-        Automatically label videos
-      </div>
-    </div>
-    <div class="settings__switch">
-      <label class="switch">
-        <input type="checkbox" bind:checked={recording_settings.third_person} />
-        <span class="slider round slider--tert"></span>
-      </label>
-      <div
-        class="tooltip"
-        data-tooltip={`Changes default recording to third person.\n\rWhen disabled always records in First Person`}
-        style={`--kills: 1;`}
-      >
-        Default to Third Person
-      </div>
-    </div>
-    <div class="settings__switch">
-      <label class="switch">
-        <input
-          type="checkbox"
-          bind:checked={recording_settings.prevent_taunt}
-        />
-        <span class="slider round slider--tert"></span>
-      </label>
-      <div
-        class="tooltip"
-        data-tooltip={`Disabled the taunt command and prevents the menu from opening.`}
-        style={`--kills: 0;`}
-      >
-        Prevent Taunt Menu Bug
-      </div>
-    </div>
+    <Input
+      title="Commands"
+      bind:value={recording_settings.commands}
+      tooltip="Commands to run before each clip is recorded."
+      color="tert"
+    />
+    <Input
+      title="End Commands"
+      bind:value={recording_settings.end_commands}
+      tooltip={"Commands to run after every clip is done recording.\nUseful for resetting configs to in game settings."}
+      color="tert"
+    />
+    <Input
+      title="Delay before initial skip"
+      bind:value={recording_settings.start_delay}
+      tooltip={"How long to wait at the start of the demo before skipping ahead.\n1 second = 66 ticks"}
+      color="tert"
+      type="number"
+    />
+    <Input
+      title="Minimum ticks between clips"
+      bind:value={recording_settings.minimum_ticks_between_clips}
+      tooltip={"If clips are closer than this, combine them into a single clip.\n1 second = 66 ticks"}
+      color="tert"
+      type="number"
+    />
+    <Input
+      title="Ticks before bookmarks"
+      bind:value={recording_settings.before_bookmark}
+      tooltip={"How far before each bookmark to start recording.\n1 second = 66 ticks"}
+      color="tert"
+      type="number"
+    />
+    <Input
+      title="Ticks after bookmarks"
+      bind:value={recording_settings.after_bookmark}
+      tooltip={"How far after each bookmark to record.\n1 second = 66 ticks"}
+      color="tert"
+      type="number"
+    />
+    <Input
+      title="Ticks before killstreak per kill in streak"
+      bind:value={recording_settings.before_killstreak_per_kill}
+      tooltip={"The average time between kills.\nShould match ds_kill_delay times 66.\n1 second = 66 ticks"}
+      color="tert"
+      type="number"
+    />
+    <Input
+      title="Ticks after killstreak"
+      bind:value={recording_settings.after_killstreak}
+      tooltip={"How far after each killstreak to record.\n1 second = 66 ticks"}
+      color="tert"
+      type="number"
+    />
+    <Input
+      title="Interval for rewind double tapscc"
+      bind:value={recording_settings.interval_for_rewind_double_taps}
+      tooltip={"How close bookmarks need to be to be considered a double tap.\n1 second = 66 ticks"}
+      color="tert"
+      type="number"
+    />
+    <Input
+      title="Rewind amount upon double tap"
+      bind:value={recording_settings.rewind_amount}
+      tooltip={"How far back it records when a double tap happens.\nUseful for if you missed a clip due to being too busy in game.\n1 second = 66 ticks"}
+      color="tert"
+      type="number"
+    />
+    <Input
+      title="FOV"
+      bind:value={recording_settings.fov}
+      color="tert"
+      type="number"
+    />
+    <Input
+      title="Viewmodel FOV"
+      bind:value={recording_settings.viewmodel_fov}
+      color="tert"
+      type="number"
+    />
+    <Switch
+      title="Automatically record next demo"
+      bind:value={recording_settings.record_continuous}
+      tooltip="If multiple demos are in a row, automatically record the next one."
+      color="tert"
+    />
+    <Switch
+      title="Prevent idle hours"
+      bind:value={recording_settings.auto_close}
+      tooltip="Automatically close TF2 when the last clip is finished recording."
+      color="tert"
+    />
+    <Switch
+      title="Automatically label videos"
+      bind:value={recording_settings.auto_suffix}
+      tooltip="Add a label to the end of each clip with information from the bookmarks."
+      color="tert"
+    />
+    <Switch
+      title="Default to Third Person"
+      bind:value={recording_settings.third_person}
+      tooltip={`Changes default recording to third person.\nWhen disabled always records in First Person`}
+      color="tert"
+    />
+    <Switch
+      title="Prevent Taunt Menu Bug"
+      bind:value={recording_settings.prevent_taunt}
+      tooltip="Disabled the taunt command to prevent the menu from opening."
+      color="tert"
+    />
   </div>
 
   <h2>Addons</h2>
@@ -501,59 +281,24 @@ If left blank, the output folder will default to your sparklyfx settings."
     <div class="setting">
       {#each Object.keys(addons[addon]) as addonSetting}
         {#if addons[addon][addonSetting].type === "string"}
-          <div class="settings__input-group">
-            <label
-              for={`${addon}-${addonSetting}`}
-              class={`settings__label ${
-                addons[addon][addonSetting].tooltip ? "tooltip" : ""
-              }`}
-              data-tooltip={addons[addon][addonSetting].tooltip}
-              style={`--kills: 0;`}
-            >
-              {addons[addon][addonSetting].title || addonSetting}
-            </label>
-            <input
-              bind:value={addons[addon][addonSetting].value}
-              id={`${addon}-${addonSetting}`}
-              class="settings__input input"
-            />
-          </div>
+          <Input
+            title={addons[addon][addonSetting].title || addonSetting}
+            bind:value={addons[addon][addonSetting].value}
+            tooltip={addons[addon][addonSetting].tooltip}
+          />
         {:else if addons[addon][addonSetting].type === "int"}
-          <div class="settings__input-group">
-            <label
-              for={`${addon}-${addonSetting}`}
-              class={`settings__label ${
-                addons[addon][addonSetting].tooltip ? "tooltip" : ""
-              }`}
-              data-tooltip={addons[addon][addonSetting].tooltip}
-              style={`--kills: 0;`}
-            >
-              {addons[addon][addonSetting].title || addonSetting}
-            </label>
-            <input
-              bind:value={addons[addon][addonSetting].value}
-              id={`${addon}-${addonSetting}`}
-              class="settings__input input"
-              type="number"
-            />
-          </div>
+          <Input
+            title={addons[addon][addonSetting].title || addonSetting}
+            bind:value={addons[addon][addonSetting].value}
+            tooltip={addons[addon][addonSetting].tooltip}
+            type="number"
+          />
         {:else if addons[addon][addonSetting].type === "bool" || addons[addon][addonSetting].type === "toggle"}
-          <div class="settings__switch">
-            <label class="switch">
-              <input
-                type="checkbox"
-                bind:checked={addons[addon][addonSetting].value}
-              />
-              <span class="slider round"></span>
-            </label>
-            <div
-              class={`${addons[addon][addonSetting].tooltip ? "tooltip" : ""}`}
-              data-tooltip={addons[addon][addonSetting].tooltip}
-              style={`--kills: 0;`}
-            >
-              {addons[addon][addonSetting].title || addonSetting}
-            </div>
-          </div>
+          <Switch
+            title={addons[addon][addonSetting].title || addonSetting}
+            bind:value={addons[addon][addonSetting].value}
+            tooltip={addons[addon][addonSetting].tooltip}
+          />
         {/if}
       {/each}
     </div>
@@ -594,29 +339,11 @@ If left blank, the output folder will default to your sparklyfx settings."
       flex-direction: column;
       align-items: flex-start;
       width: 100%;
-
-      & > input,
-      & > select {
-        width: 100%;
-      }
-    }
-
-    &__switch {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      width: 100%;
     }
 
     &__span {
       grid-column-start: 1;
       grid-column-end: span 2;
     }
-  }
-
-  .tooltip:hover::before,
-  .tooltip:active::before,
-  .tooltip:focus::before {
-    text-align: left;
   }
 </style>

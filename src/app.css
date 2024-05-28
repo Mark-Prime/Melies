@@ -151,6 +151,11 @@ input::placeholder {
   border-color: var(--pri-con);
 }
 
+input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 .input--sec {
   color: var(--sec-con-text);
   border-color: var(--sec-con);
@@ -169,6 +174,13 @@ input::placeholder {
 .input--tert::placeholder {
   color: var(--tert-con);
   opacity: 0.7;
+}
+
+.input__switch {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
 }
 
 button {
@@ -210,40 +222,28 @@ button:not(:disabled):hover {
   font-family: inherit;
   color: var(--pri-con-text);
   border-color: var(--pri-con);
-  background-color: var(--bg2);
+  background-color: var(--bg);
   transition: border-color 0.25s, filter 0.3s;
   outline: none;
   filter: drop-shadow(0px 0px -1px var(--pri));
 }
 
 .btn--sec {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.5rem 0.7rem;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
   color: var(--sec-con-text);
   border-color: var(--sec-con);
-  background-color: var(--bg2);
-  transition: border-color 0.25s, filter 0.3s;
-  outline: none;
   filter: drop-shadow(0px 0px -1px var(--sec));
 }
 
 .btn--tert {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.5rem 0.7rem;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
   color: var(--tert-con-text);
   border-color: var(--tert-con);
-  background-color: var(--bg2);
-  transition: border-color 0.25s, filter 0.3s;
-  outline: none;
   filter: drop-shadow(0px 0px -1px var(--tert));
+}
+
+.btn--cancel {
+  color: var(--err-con-text);
+  border-color: var(--err-con);
+  filter: drop-shadow(0px 0px -1px var(--err));
 }
 
 .cancel-btn {
@@ -504,6 +504,7 @@ input:checked + .slider--tert:before {
   white-space: pre;
   font-size: 12px;
   pointer-events: none;
+  text-align: left;
 }
 .tooltip::after {
   z-index: 1000;

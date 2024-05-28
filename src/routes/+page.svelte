@@ -9,6 +9,9 @@
   import LogViewer from "$lib/LogViewer.svelte";
   import EditEvents from "$lib/EditEvents.svelte";
   import Settings from "$lib/settings.svelte";
+  import VdmEditor from "../lib/VdmEditor.svelte";
+  import DemoManager from "../lib/DemoManager.svelte";
+  import RemuxFootage from "../lib/RemuxFootage.svelte";
 
   let resp = { vdms: 0, clips: 0, events: 0, code: 0 };
   let reload = false;
@@ -50,6 +53,10 @@
           <Demos on:reload={() => forceReload(true)} />
           <Logstf on:reload={() => forceReload(true)} />
           <Backups on:reload={() => forceReload(true)} />
+          <br />Advanced Tools
+          <VdmEditor on:reload={() => forceReload(true)} />
+          <DemoManager on:reload={() => forceReload(true)} />
+          <RemuxFootage on:reload={() => forceReload(true)} />
         </div>
 
         <div class="homepage__run">

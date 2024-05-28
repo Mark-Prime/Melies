@@ -8,11 +8,11 @@ use std::io::Write;
 use std::path::Path;
 use std::{ env, fs };
 use tauri::command;
-use vdm::action::ActionType;
+use vdm::action::{ Action, ActionType };
 use vdm::VDM;
 
 use crate::clip::Clip;
-use crate::demos::{ scan_demo, scan_for_demos, validate_demos_folder };
+use crate::demos::{ scan_demo, scan_for_demos, scan_for_vdms, validate_demos_folder };
 use crate::event::Event;
 use crate::event::EventStyle::{ Bookmark, Killstreak };
 use crate::logstf::parse;
@@ -233,7 +233,12 @@ fn check_spec(clip: &Clip, commands: String) -> String {
 
     let mut new_commands = commands;
 
-    new_commands = format!("{}; spec_player {}; spec_mode {};", new_commands, clip.spec_player, ifelse!(clip.spec_type == 1, 4, 5));
+    new_commands = format!(
+        "{}; spec_player {}; spec_mode {};",
+        new_commands,
+        clip.spec_player,
+        ifelse!(clip.spec_type == 1, 4, 5)
+    );
 
     return new_commands;
 }
@@ -381,17 +386,23 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
         let mut commands = String::new();
 
         match settings["output"]["method"].as_str().unwrap() {
-            "h264" | "jpeg" | "tga" | "svr" => {
+            "h264" | "jpeg" | "tga" | "svr" | "svr.mp4" | "svr.mov" => {
                 commands = format!(
                     "{}; endmovie; host_framerate 0;",
                     settings["recording"]["end_commands"].as_str().unwrap()
                 );
             }
             "sparklyfx" => {
-                commands = format!("sf_recorder_stop;");
+                commands = format!(
+                    "{}; sf_recorder_stop;",
+                    settings["recording"]["end_commands"].as_str().unwrap()
+                );
             }
             "lawena" => {
-                commands = format!("stoprecording;");
+                commands = format!(
+                    "{}; stoprecording;",
+                    settings["recording"]["end_commands"].as_str().unwrap()
+                );
             }
             _ => {}
         }
@@ -1049,6 +1060,16 @@ fn parse_log(url: Value) -> Value {
 }
 
 #[command]
+fn load_vdms() -> Result<Value, String> {
+    let settings = load_settings();
+    if validate_demos_folder(&settings) {
+        return Ok(scan_for_vdms(settings));
+    }
+
+    Err(String::from("Can't find \\tf folder. Please fix the \"\\tf Folder\" setting in settings."))
+}
+
+#[command]
 fn load_demos() -> Result<Value, String> {
     let settings = load_settings();
     if validate_demos_folder(&settings) {
@@ -1139,6 +1160,167 @@ fn parse_demo(path: String) -> Value {
     scan_demo(load_settings(), path)
 }
 
+fn vdm_to_json(vdm: VDM) -> Value {
+    let mut actions: Vec<Value> = vec![];
+
+    for action in vdm.actions {
+        match action {
+            Action::SkipAhead(props) => {
+                actions.push(
+                    json!({
+                        "factory": "SkipAhead",
+                        "name": props.name,
+                        "start_tick": props.start_tick,
+                        "start_time": props.start_time,
+                        "skip_to_tick": props.skip_to_tick,
+                        "skip_to_time": props.skip_to_time
+                    })
+                );
+            }
+            Action::StopPlayback(props) => {
+                actions.push(
+                    json!({
+                        "factory": "StopPlayback",
+                        "name": props.name,
+                        "start_tick": props.start_tick,
+                        "start_time": props.start_time,
+                    })
+                );
+            }
+            Action::PlayCommands(props) => {
+                actions.push(
+                    json!({
+                        "factory": "PlayCommands",
+                        "name": props.name,
+                        "start_tick": props.start_tick,
+                        "start_time": props.start_time,
+                        "commands": props.commands
+                    })
+                );
+            }
+            Action::ScreenFadeStart(props) => {
+                actions.push(
+                    json!({
+                        "factory": "ScreenFadeStart",
+                        "name": props.name,
+                        "start_tick": props.start_tick,
+                        "start_time": props.start_time,
+                        "duration": props.duration,
+                        "hold_time": props.hold_time,
+                        "fade_in_enabled": props.fade_in_enabled,
+                        "fade_out_enabled": props.fade_out_enabled,
+                        "modulate_enabled": props.modulate_enabled,
+                        "stay_out_enabled": props.stay_out_enabled,
+                        "purge_enabled": props.purge_enabled,
+                        "rgba1": props.rgba1,
+                    })
+                );
+            }
+            Action::TextMessageStart(props) => {
+                actions.push(
+                    json!({
+                        "factory": "TextMessageStart",
+                        "name": props.name,
+                        "start_tick": props.start_tick,
+                        "start_time": props.start_time,
+                        "message": props.message,
+                        "font": props.font,
+                        "fade_in": props.fade_in,
+                        "fade_out": props.fade_out,
+                        "hold_time": props.hold_time,
+                        "fx_time": props.fx_time,
+                        "effect": match props.effect {
+                            vdm::action::TextEffect::Flicker => "Flicker",
+                            vdm::action::TextEffect::FadeInOut => "FadeInOut",
+                            vdm::action::TextEffect::WriteOut => "WriteOut",
+                        },
+                        "xy": props.xy,
+                        "rgba1": props.rgba1,
+                        "rgba2": props.rgba2,
+                    })
+                );
+            }
+            Action::PlayCDTrackStart(props) => {
+                actions.push(
+                    json!({
+                        "factory": "PlayCDTrackStart",
+                        "name": props.name,
+                        "start_tick": props.start_tick,
+                        "start_time": props.start_time,
+                        "track": props.track,
+                    })
+                );
+            }
+            Action::PlaySoundStart(props) => {
+                actions.push(
+                    json!({
+                        "factory": "PlaySoundStart",
+                        "name": props.name,
+                        "start_tick": props.start_tick,
+                        "start_time": props.start_time,
+                        "sound": props.sound,
+                    })
+                );
+            }
+            Action::Pause(props) => {
+                actions.push(
+                    json!({
+                        "factory": "Pause",
+                        "name": props.name,
+                        "start_tick": props.start_tick,
+                        "start_time": props.start_time,
+                        "stop_tick": props.stop_tick,
+                        "stop_time": props.stop_time,
+                        "duration": props.duration
+                    })
+                );
+            }
+            Action::ChangePlaybackRate(props) => {
+                actions.push(
+                    json!({
+                        "factory": "ChangePlaybackRate",
+                        "name": props.name,
+                        "start_tick": props.start_tick,
+                        "start_time": props.start_time,
+                        "stop_tick": props.stop_tick,
+                        "stop_time": props.stop_time,
+                        "playback_rate": props.playback_rate
+                    })
+                );
+            }
+            Action::ZoomFov(props) => {
+                actions.push(
+                    json!({
+                        "factory": "ZoomFov",
+                        "name": props.name,
+                        "start_tick": props.start_tick,
+                        "start_time": props.start_time,
+                        "spline": props.spline,
+                        "stayout": props.stayout,
+                        "final_fov": props.final_fov,
+                        "fov_rate_out": props.fade_out,
+                        "fov_rate_in": props.fade_in,
+                        "fov_hold": props.hold_time,
+                    })
+                );
+            }
+        }
+    }
+
+    json!(actions)
+}
+
+#[command]
+fn load_vdm(name: Value) -> Value {
+    let settings = load_settings();
+
+    let dir = format!("{}{}", settings["tf_folder"].as_str().unwrap(), name.as_str().unwrap());
+
+    let vdm = VDM::open(&dir).unwrap();
+
+    vdm_to_json(vdm)
+}
+
 fn main() {
     tauri::Builder
         ::default()
@@ -1150,6 +1332,8 @@ fn main() {
                 load_events,
                 save_events,
                 parse_log,
+                load_vdm,
+                load_vdms,
                 load_demos,
                 load_backups,
                 reload_backup,

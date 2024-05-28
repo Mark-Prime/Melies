@@ -106,7 +106,7 @@ impl KillPointer {
         KillPointer {
             owner_id,
             life_index,
-            kill_index
+            kill_index,
         }
     }
 }
@@ -160,47 +160,74 @@ pub(crate) fn scan_for_demos(settings: Value) -> Value {
         return Value::from({});
     }
 
-    let paths = fs::read_dir(settings["tf_folder"].as_str().unwrap()).unwrap();
-
-    for path in paths {
-        let file_name = path.unwrap().path().display().to_string();
-
-        if file_name.ends_with(".dem") {
-            let parsed_file_name = file_name.replace(settings["tf_folder"].as_str().unwrap(), "");
-
-            let mut demo = Value::from({});
-            demo["name"] = Value::from(parsed_file_name);
-
-            demos.push(demo);
-        }
-    }
+    demos.extend(
+        scan_folder_for_filetype(&settings, settings["tf_folder"].as_str().unwrap(), ".dem")
+    );
 
     if Path::new(&format!("{}\\demos", settings["tf_folder"].as_str().unwrap())).exists() {
-        let paths = fs
-            ::read_dir(format!("{}\\demos", settings["tf_folder"].as_str().unwrap()))
-            .unwrap();
-
-        for path in paths {
-            let file_name = path.unwrap().path().display().to_string();
-
-            if file_name.ends_with(".dem") {
-                let parsed_file_name = file_name.replace(
-                    settings["tf_folder"].as_str().unwrap(),
-                    ""
-                );
-
-                let mut demo = Value::from({});
-                demo["name"] = Value::from(parsed_file_name);
-
-                demos.push(demo);
-            }
-        }
+        demos.extend(
+            scan_folder_for_filetype(
+                &settings,
+                &format!("{}\\demos", settings["tf_folder"].as_str().unwrap()),
+                ".dem"
+            )
+        );
     }
 
     let mut resp = Value::from({});
 
     resp["loaded"] = Value::from(true);
     resp["demos"] = Value::from(demos);
+
+    return resp;
+}
+
+fn scan_folder_for_filetype(settings: &Value, path: &str, file_type: &str) -> Vec<Value> {
+    let mut files: Vec<Value> = vec![];
+
+    let paths = fs::read_dir(path).unwrap();
+
+    for path in paths {
+        let file_name = path.as_ref().unwrap().path().display().to_string();
+
+        if file_name.ends_with(file_type) {
+            let parsed_file_name = file_name.replace(settings["tf_folder"].as_str().unwrap(), "");
+
+            let mut demo = Value::from({});
+            demo["name"] = Value::from(parsed_file_name);
+
+            files.push(demo);
+        }
+    }
+
+    files
+}
+
+pub(crate) fn scan_for_vdms(settings: Value) -> Value {
+    let mut vdms: Vec<Value> = vec![];
+
+    if !Path::new(settings["tf_folder"].as_str().unwrap()).exists() {
+        return Value::from({});
+    }
+
+    vdms.extend(
+        scan_folder_for_filetype(&settings, settings["tf_folder"].as_str().unwrap(), ".vdm")
+    );
+
+    if Path::new(&format!("{}\\demos", settings["tf_folder"].as_str().unwrap())).exists() {
+        vdms.extend(
+            scan_folder_for_filetype(
+                &settings,
+                &format!("{}\\demos", settings["tf_folder"].as_str().unwrap()),
+                ".vdm"
+            )
+        );
+    }
+
+    let mut resp = Value::from({});
+
+    resp["loaded"] = Value::from(true);
+    resp["vdms"] = Value::from(vdms);
 
     return resp;
 }
@@ -359,13 +386,21 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
 
                     // println!("{:?}", kill);
                     if kill.victim_class == Class::Medic {
-                        let med_pick = KillPointer::new(*key, current_player.len(), current_life.kills.len());
+                        let med_pick = KillPointer::new(
+                            *key,
+                            current_player.len(),
+                            current_life.kills.len()
+                        );
                         current_life.med_picks.push(med_pick.clone());
                         med_picks.push(med_pick);
                     }
 
                     if kill.rocket_jump {
-                        let airshot = KillPointer::new(*key, current_player.len(), current_life.kills.len());
+                        let airshot = KillPointer::new(
+                            *key,
+                            current_player.len(),
+                            current_life.kills.len()
+                        );
                         current_life.airshots.push(airshot.clone());
                         airshots.push(airshot);
                     }
@@ -439,7 +474,14 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
 
             for (kill_index, kill) in life.kills.iter().enumerate() {
                 if kill_count == 0 {
-                    life.killstreak_pointers.push(KillstreakPointer::new(key.to_owned(), life_index, kill_index, life.killstreak_pointers.len()));
+                    life.killstreak_pointers.push(
+                        KillstreakPointer::new(
+                            key.to_owned(),
+                            life_index,
+                            kill_index,
+                            life.killstreak_pointers.len()
+                        )
+                    );
                     last_kill_tick = kill.tick.0.into();
                     kill_count += 1;
                     streak_count += 1;
@@ -453,7 +495,12 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
                 } else if kill_count < 3 {
                     kill_count = 1;
                     last_kill_tick = kill.tick.0.into();
-                    life.killstreak_pointers[streak_count - 1] = KillstreakPointer::new(key.to_owned(), life_index, kill_index, life.killstreak_pointers.len() - 1);
+                    life.killstreak_pointers[streak_count - 1] = KillstreakPointer::new(
+                        key.to_owned(),
+                        life_index,
+                        kill_index,
+                        life.killstreak_pointers.len() - 1
+                    );
                 }
             }
 
