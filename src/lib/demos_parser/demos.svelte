@@ -83,14 +83,16 @@
     let spec_mode = recording_settings["third_person"] ? "spec_third" : "spec";
 
     for (let event of events) {
+      let spectate = `${spec_mode} ${event.steamid64}`;
+
       if (event.start) {
         new_demo.push({
           value: {
-            Bookmark: `clip_start ${spec_mode} ${event.steamid64}`,
+            Bookmark: `clip_start ${event.steamid64 !== undefined ? spectate : ""}`,
           },
           tick: event.time,
           demo_name: demo_name,
-          event: `[demo_${event.label}] clip_start ${spec_mode} ${event.steamid64} (\"${demo_name}\" at ${event.time})`,
+          event: `[demo_${event.label}] clip_start ${event.steamid64 !== undefined ? spectate : ""} (\"${demo_name}\" at ${event.time})`,
           isKillstreak: false,
         });
 
@@ -100,11 +102,11 @@
       if (event.bookmark) {
         new_demo.push({
           value: {
-            Bookmark: `${spec_mode} ${event.steamid64}`,
+            Bookmark: event.steamid64 !== undefined ? spectate : "General",
           },
           tick: event.time,
           demo_name: demo_name,
-          event: `[demo_${event.label}] ${spec_mode} ${event.steamid64} (\"${demo_name}\" at ${event.time})`,
+          event: `[demo_${event.label}] ${event.steamid64 !== undefined ? spectate : "General"} (\"${demo_name}\" at ${event.time})`,
           isKillstreak: false,
         });
 
@@ -377,11 +379,13 @@
         let message = parsed_demo.data.chat[i];
 
         if (message.selected) {
+          let steamid64 = parsed_demo.data.users[message.from]?.steamId64;
+
           events.push({
             time: message.tick,
             label: `message-sent`,
-            steamid64: parsed_demo.data.users[message.from].steamId64,
             bookmark: true,
+            steamid64,
           });
         }
       }
