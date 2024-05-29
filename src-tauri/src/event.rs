@@ -48,6 +48,15 @@ impl Event {
         let mut event_name: Vec<&str> = split.split_whitespace().collect();
         let value: EventStyle;
 
+        if event_name.len() == 0 {
+            return Ok(Event {
+                event: input[0].to_string(),
+                demo_name: input[3].to_string(),
+                tick,
+                value: EventStyle::Bookmark("General".to_owned()),
+            });
+        }
+
         let name = event_name[0].to_lowercase();
 
         match name.as_str() {
