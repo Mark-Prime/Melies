@@ -386,12 +386,12 @@
         />
         <Input
           title="FOV Rate In"
-          bind:value={action.fov_rate_in}
+          bind:value={action.fov_fade_in}
           on:change={() => dispatch("change", action)}
         />
         <Input
           title="FOV Rate Out"
-          bind:value={action.fov_rate_out}
+          bind:value={action.fov_fade_out}
           on:change={() => dispatch("change", action)}
         />
         <Switch

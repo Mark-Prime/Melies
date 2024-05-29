@@ -41,6 +41,12 @@
     console.log(vdm);
   }
 
+  async function saveVdm(name) {
+    resp = await invoke("save_vdm", { name, vdm });
+    console.log(resp);
+    toggle();
+  }
+
   function deleteAction(index) {
     vdm.splice(index, 1);
 
@@ -88,7 +94,7 @@
     </div>
   {:else if vdm}
     <div class="edit-vdm">
-      <h1>Edit VDM</h1>
+      <h1>{vdmName}</h1>
       <div class="actions">
         <div class="actions--display">
           {#each vdm as action, i}
@@ -112,7 +118,7 @@
       </div>
       <div class="buttons">
         <button class="btn btn--cancel" on:click={toggle}>Cancel</button>
-        <button class="btn">Save</button>
+        <button class="btn" on:click={() => saveVdm(vdmName)}>Save</button>
       </div>
     </div>
   {:else}

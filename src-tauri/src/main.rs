@@ -1298,8 +1298,8 @@ fn vdm_to_json(vdm: VDM) -> Value {
                         "spline": props.spline,
                         "stayout": props.stayout,
                         "final_fov": props.final_fov,
-                        "fov_rate_out": props.fade_out,
-                        "fov_rate_in": props.fade_in,
+                        "fov_fade_out": props.fade_out,
+                        "fov_fade_in": props.fade_in,
                         "fov_hold": props.hold_time,
                     })
                 );
@@ -1308,6 +1308,222 @@ fn vdm_to_json(vdm: VDM) -> Value {
     }
 
     json!(actions)
+}
+
+fn json_to_vdm(json: Value) -> VDM {
+    let mut vdm = VDM::new();
+
+    for action in json.as_array().unwrap() {
+        let factory = action["factory"].as_str().unwrap();
+
+        let factory = match factory {
+            "SkipAhead" => ActionType::SkipAhead,
+            "StopPlayback" => ActionType::StopPlayback,
+            "PlayCommands" => ActionType::PlayCommands,
+            "ScreenFadeStart" => ActionType::ScreenFadeStart,
+            "TextMessageStart" => ActionType::TextMessageStart,
+            "PlayCDTrackStart" => ActionType::PlayCDTrackStart,
+            "PlaySoundStart" => ActionType::PlaySoundStart,
+            "Pause" => ActionType::Pause,
+            "ChangePlaybackRate" => ActionType::ChangePlaybackRate,
+            "ZoomFov" => ActionType::ZoomFov,
+            _ => panic!("Invalid action type."),
+        };
+
+        let mut new_action = Action::new(factory.clone());
+
+        let props = new_action.props_mut();
+
+        props.name = action["name"].as_str().unwrap().to_string();
+
+        if action["start_tick"] != Value::Null {
+            props.start_tick = Some(action["start_tick"].as_i64().unwrap());
+        }
+
+        if action["start_time"] != Value::Null {
+            props.start_time = Some(action["start_time"].as_f64().unwrap());
+        }
+
+        match factory {
+            ActionType::SkipAhead => {
+                if action["skip_to_tick"] != Value::Null {
+                    props.skip_to_tick = Some(action["skip_to_tick"].as_i64().unwrap());
+                }
+
+                if action["skip_to_time"] != Value::Null {
+                    props.skip_to_time = Some(action["skip_to_time"].as_f64().unwrap());
+                }
+            }
+            ActionType::StopPlayback => {}
+            ActionType::PlayCommands => {
+                if action["commands"] != Value::Null {
+                    props.commands = action["commands"].as_str().unwrap().to_string();
+                }
+            }
+            ActionType::ScreenFadeStart => {
+                if action["duration"] != Value::Null {
+                    props.duration = action["duration"].as_f64().unwrap();
+                }
+
+                if action["hold_time"] != Value::Null {
+                    props.hold_time = action["hold_time"].as_f64().unwrap();
+                }
+
+                if action["fade_in_enabled"] != Value::Null {
+                    props.fade_in_enabled = action["fade_in_enabled"].as_bool().unwrap();
+                }
+
+                if action["fade_out_enabled"] != Value::Null {
+                    props.fade_out_enabled = action["fade_out_enabled"].as_bool().unwrap();
+                }
+
+                if action["modulate_enabled"] != Value::Null {
+                    props.modulate_enabled = action["modulate_enabled"].as_bool().unwrap();
+                }
+
+                if action["stay_out_enabled"] != Value::Null {
+                    props.stay_out_enabled = action["stay_out_enabled"].as_bool().unwrap();
+                }
+
+                if action["purge_enabled"] != Value::Null {
+                    props.purge_enabled = action["purge_enabled"].as_bool().unwrap();
+                }
+
+                if action["rgba1"] != Value::Null {
+                    props.rgba1 = [
+                        action["rgba1"][0].as_u64().unwrap() as u8,
+                        action["rgba1"][1].as_u64().unwrap() as u8,
+                        action["rgba1"][2].as_u64().unwrap() as u8,
+                        action["rgba1"][3].as_u64().unwrap() as u8,
+                    ];
+                }
+            }
+            ActionType::TextMessageStart => {
+                if action["message"] != Value::Null {
+                    props.message = action["message"].as_str().unwrap().to_string();
+                }
+
+                if action["font"] != Value::Null {
+                    props.font = action["font"].as_str().unwrap().to_string();
+                }
+
+                if action["fade_in"] != Value::Null {
+                    props.fade_in = action["fade_in"].as_f64().unwrap();
+                }
+
+                if action["fade_out"] != Value::Null {
+                    props.fade_out = action["fade_out"].as_f64().unwrap();
+                }
+
+                if action["hold_time"] != Value::Null {
+                    props.hold_time = action["hold_time"].as_f64().unwrap();
+                }
+
+                if action["fx_time"] != Value::Null {
+                    props.fx_time = action["fx_time"].as_f64().unwrap();
+                }
+
+                if action["effect"] != Value::Null {
+                    props.effect = match action["effect"].as_str().unwrap() {
+                        "Flicker" => vdm::action::TextEffect::Flicker,
+                        "FadeInOut" => vdm::action::TextEffect::FadeInOut,
+                        "WriteOut" => vdm::action::TextEffect::WriteOut,
+                        _ => panic!("Invalid text effect."),
+                    };
+                }
+
+                if action["xy"] != Value::Null {
+                    props.xy = [
+                        action["xy"][0].as_f64().unwrap(),
+                        action["xy"][1].as_f64().unwrap(),
+                    ];
+                }
+
+                if action["rgba1"] != Value::Null {
+                    props.rgba1 = [
+                        action["rgba1"][0].as_u64().unwrap() as u8,
+                        action["rgba1"][1].as_u64().unwrap() as u8,
+                        action["rgba1"][2].as_u64().unwrap() as u8,
+                        action["rgba1"][3].as_u64().unwrap() as u8,
+                    ];
+                }
+
+                if action["rgba2"] != Value::Null {
+                    props.rgba2 = [
+                        action["rgba2"][0].as_u64().unwrap() as u8,
+                        action["rgba2"][1].as_u64().unwrap() as u8,
+                        action["rgba2"][2].as_u64().unwrap() as u8,
+                        action["rgba2"][3].as_u64().unwrap() as u8,
+                    ];
+                }
+            }
+            ActionType::PlayCDTrackStart => {
+                if action["track"] != Value::Null {
+                    props.track = action["track"].as_i64().unwrap();
+                }
+            }
+            ActionType::PlaySoundStart => {
+                if action["sound"] != Value::Null {
+                    props.sound = action["sound"].as_str().unwrap().to_string();
+                }
+            }
+            ActionType::Pause => {
+                if action["stop_tick"] != Value::Null {
+                    props.stop_tick = Some(action["stop_tick"].as_i64().unwrap());
+                }
+
+                if action["stop_time"] != Value::Null {
+                    props.stop_time = Some(action["stop_time"].as_f64().unwrap());
+                }
+
+                if action["duration"] != Value::Null {
+                    props.duration = action["duration"].as_f64().unwrap();
+                }
+            }
+            ActionType::ChangePlaybackRate => {
+                if action["stop_tick"] != Value::Null {
+                    props.stop_tick = Some(action["stop_tick"].as_i64().unwrap());
+                }
+
+                if action["stop_time"] != Value::Null {
+                    props.stop_time = Some(action["stop_time"].as_f64().unwrap());
+                }
+
+                if action["playback_rate"] != Value::Null {
+                    props.playback_rate = action["playback_rate"].as_f64().unwrap();
+                }
+            }
+            ActionType::ZoomFov => {
+                if action["spline"] != Value::Null {
+                    props.spline = action["spline"].as_bool().unwrap();
+                }
+
+                if action["stayout"] != Value::Null {
+                    props.stayout = action["stayout"].as_bool().unwrap();
+                }
+
+                if action["final_fov"] != Value::Null {
+                    props.final_fov = action["final_fov"].as_f64().unwrap();
+                }
+
+                if action["fov_fade_out"] != Value::Null {
+                    props.fade_out = action["fov_fade_out"].as_f64().unwrap();
+                }
+
+                if action["fov_fade_in"] != Value::Null {
+                    props.fade_in = action["fov_fade_in"].as_f64().unwrap();
+                }
+
+                if action["fov_hold"] != Value::Null {
+                    props.hold_time = action["fov_hold"].as_f64().unwrap();
+                }
+            }
+        }
+
+        vdm.actions.push(new_action);
+    }
+
+    vdm
 }
 
 #[command]
@@ -1319,6 +1535,21 @@ fn load_vdm(name: Value) -> Value {
     let vdm = VDM::open(&dir).unwrap();
 
     vdm_to_json(vdm)
+}
+
+#[command]
+fn save_vdm(name: Value, vdm: Value) -> Value {
+    let settings = load_settings();
+
+    let dir = format!("{}{}", settings["tf_folder"].as_str().unwrap(), name.as_str().unwrap());
+
+    let vdm = json_to_vdm(vdm);
+
+    vdm.export(&dir);
+
+    json!({
+        "success": true
+    })
 }
 
 fn main() {
@@ -1334,6 +1565,7 @@ fn main() {
                 parse_log,
                 load_vdm,
                 load_vdms,
+                save_vdm,
                 load_demos,
                 load_backups,
                 reload_backup,
