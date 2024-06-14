@@ -298,7 +298,7 @@
   async function nextDemo(skipScan = false) {
     index += 1;
 
-    if (current_demo != "" && !skipScan) {
+    if (current_demo != "" && skipScan !== true) {
       let events = [];
 
       for (let i in parsed_demo.data.player_lives) {
