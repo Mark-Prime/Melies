@@ -102,9 +102,9 @@ If left blank, the output folder will default to your sparklyfx settings."
       <option value="tga">tga</option>
       <option value="jpeg">jpeg</option>
       <option value="sparklyfx">SparklyFX</option>
-      <!-- <option value="svr">SVR</option>
+      <option value="svr">SVR</option>
       <option value="svr.mov">SVR.mov</option>
-      <option value="svr.mp4">SVR.mp4</option> -->
+      <option value="svr.mp4">SVR.mp4</option>
       <option value="lawena">Lawena</option>
       <option value="none">Do Not Record</option>
     </Select>

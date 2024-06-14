@@ -74,6 +74,9 @@
   }
 
   async function parseDemoEvents(demo_name, events) {
+    console.log("demo_name", demo_name);
+    console.log("events", events);
+
     let demos = await loadEvents();
     let new_demo = [];
 
@@ -292,10 +295,10 @@
     nextDemo();
   }
 
-  async function nextDemo() {
+  async function nextDemo(skipScan = false) {
     index += 1;
 
-    if (current_demo != "") {
+    if (current_demo != "" && !skipScan) {
       let events = [];
 
       for (let i in parsed_demo.data.player_lives) {
@@ -392,10 +395,12 @@
 
       let name_split = current_demo.replace(".dem", "").split("\\");
 
-      parseDemoEvents(
-        name_split[name_split.length - 1],
-        events.sort((a, b) => a.time - b.time)
-      );
+      if (events.length !== 0) {
+        parseDemoEvents(
+          name_split[name_split.length - 1],
+          events.sort((a, b) => a.time - b.time)
+        );
+      }
     }
 
     if (selected.length !== 0) {
@@ -515,11 +520,70 @@
 
     let name_split = current_demo.replace(".dem", "").split("\\");
 
-    parseDemoEvents(
-      name_split[name_split.length - 1],
-      events.sort((a, b) => a.time - b.time)
-    );
+    let demo_name = name_split[name_split.length - 1];
+
+    parseDemoEvents(demo_name, events);
+
     nextDemo();
+  }
+
+  async function recordAll() {
+    let demos = await loadEvents();
+    let settings = await invoke("load_settings");
+    let recording_settings = settings.recording;
+
+    let spec_mode = recording_settings["third_person"] ? "spec_third" : "spec";
+
+    for (let userId in parsed_demo.data.users) {
+      let new_demo = [];
+
+      let name_split = current_demo.replace(".dem", "").split("\\");
+
+      let demo_name = name_split[name_split.length - 1];
+
+      let spectate = `${spec_mode} ${parsed_demo.data?.users[userId].steamId64}`;
+
+      console.log("spec", spectate);
+
+      if (!parsed_demo.data.player_lives[userId] || parsed_demo.data.player_lives[userId].length == 0) {
+        continue;
+      }
+
+      new_demo.push({
+        value: {
+          Bookmark: `clip_start ${spectate}`,
+        },
+        tick: parsed_demo.data.player_lives[userId][0].start + 20,
+        demo_name: demo_name + "_" + userId,
+        event: `[demo_${parsed_demo.data?.users[userId].steamId64}] clip_start  ${spectate} (\"${demo_name}\" at ${settings.recording.start_delay})`,
+        isKillstreak: false,
+      });
+
+      new_demo.push({
+        value: {
+          Bookmark: `clip_end`,
+        },
+        tick: Math.max(
+          parsed_demo.header?.ticks - 99,
+          settings.recording.start_delay + 66
+        ),
+        demo_name: demo_name + "_" + userId,
+        event: `[demo_${parsed_demo.data?.users[userId].steamId64}] clip_end (\"${demo_name}\" at ${Math.max(
+          parsed_demo.header?.ticks - 99,
+          settings.recording.start_delay + 66
+        )})`,
+        isKillstreak: false,
+      });
+
+      demos.push(new_demo);
+    }
+
+    await invoke("save_events", { newEvents: demos });
+    // dispatch("reload");
+
+    console.log(demos)
+
+    nextDemo(true);
   }
 
   function getClasses(playerId) {
@@ -750,7 +814,12 @@
   <Fa icon={faWandMagicSparkles} color={`var(--tert)`} />
   Scan Demos
 </button>
-<Modal color="tert" {toggle} {enabled} large={(current_demo !== "" && resp.loaded && !parsed_demo.loading)}>
+<Modal
+  color="tert"
+  {toggle}
+  {enabled}
+  large={current_demo !== "" && resp.loaded && !parsed_demo.loading}
+>
   {#if resp.loaded}
     {#if current_demo === ""}
       <h1>Demos</h1>
@@ -811,6 +880,9 @@
             </label>
             <p>Display players with 0 displayed lives</p>
           </div>
+          <!-- <button class="btn" on:click={recordAll}>
+            Automate Recording All
+          </button> -->
         </div>
         <div class="teams">
           {#each ["blue", "red"] as team}
@@ -1420,7 +1492,7 @@
       opacity: 0.75;
     }
   }
-  
+
   .loading {
     display: flex;
     justify-content: center;
