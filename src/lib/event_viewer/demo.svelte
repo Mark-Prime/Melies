@@ -68,7 +68,7 @@
           continue;
         }
 
-        if (!demo[index + 1].value.Bookmark.includes("clip_end")) {
+        if (!demo[index + 1].value.Bookmark?.includes("clip_end")) {
           event.err();
           events.push(event);
           continue;
@@ -116,7 +116,8 @@
           {#if event.color === "err"}
             <Fa icon={faCircleExclamation} color={`var(--err)`} /> {event.event}
           {:else}
-            {event.value} from
+            {event.isKillstreak ? `${event.value}ks` : `Bookmark "${event.value}"`}
+            from
             <span
               class="tick tooltip"
               data-tooltip={`${tickToTime(event.start)}`}
