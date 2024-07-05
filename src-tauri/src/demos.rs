@@ -395,7 +395,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
                         med_picks.push(med_pick);
                     }
 
-                    if kill.rocket_jump {
+                    if kill.is_airborne {
                         let airshot = KillPointer::new(
                             *key,
                             current_player.len(),

@@ -5,7 +5,7 @@ use tf_demo_parser::demo::gameevent_gen::{
     PlayerSpawnEvent,
     TeamPlayRoundWinEvent,
 };
-use tf_demo_parser::demo::message::packetentities::EntityId;
+use tf_demo_parser::demo::message::packetentities::{ EntityId, PacketEntitiesMessage };
 use tf_demo_parser::demo::message::usermessage::{ ChatMessageKind, SayText2Message, UserMessage };
 use tf_demo_parser::demo::message::{ Message, MessageType };
 use tf_demo_parser::demo::packet::stringtable::StringTableEntry;
@@ -21,6 +21,7 @@ use serde::{ ser::SerializeMap, Deserialize, Deserializer, Serialize, Serializer
 use std::collections::{ BTreeMap, HashMap };
 use std::convert::TryFrom;
 use std::ops::{ Index, IndexMut };
+use std::vec;
 use steamid_ng::SteamID;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -265,6 +266,7 @@ pub struct Death {
     pub penetration: bool,
     pub killer_class: Class,
     pub victim_class: Class,
+    pub is_airborne: bool,
 }
 
 impl Death {
@@ -288,6 +290,7 @@ impl Death {
             penetration,
             killer_class: Class::Other,
             victim_class: Class::Other,
+            is_airborne: false,
         }
     }
 }
@@ -338,7 +341,8 @@ impl MessageHandler for Analyser {
                 MessageType::UserMessage |
                 MessageType::ServerInfo |
                 MessageType::NetTick |
-                MessageType::SetPause
+                MessageType::SetPause |
+                MessageType::PacketEntities
         )
     }
 
@@ -366,6 +370,7 @@ impl MessageHandler for Analyser {
                     })
                 }
             }
+            Message::PacketEntities(message) => self.handle_packet_entities(message, tick),
             _ => {}
         }
     }
@@ -441,10 +446,51 @@ impl Analyser {
             // GameEvent::PlayerChargeDeployed(event) => {
             //     println!("{:?}", event);
             // }
-            // GameEvent::MedicDeath(event) => {
-            //     println!("{:?} at TICK: {}", event, tick);
-            // }
             _ => {}
+        }
+    }
+
+    fn handle_packet_entities(&mut self, message: &PacketEntitiesMessage, tick: DemoTick) {
+        let mut deaths_this_tick: Vec<u32> = vec![];
+        let mut deaths_index: Vec<usize> = vec![];
+        let deaths = &mut self.state.deaths;
+
+        for (i, death) in deaths.iter().enumerate().rev() {
+            if death.tick != tick {
+                break;
+            }
+            
+            deaths_this_tick.push(death.victim.0 as u32);
+            deaths_index.push(i);
+        }
+
+        for entity in message.entities.iter() {
+
+            if !deaths_this_tick.contains(&entity.entity_index.0) {
+                continue;
+            }
+
+            if entity.props.len() < 2 {
+                continue;
+            }
+
+            for prop in entity.props.iter() {
+                if prop.identifier.prop_name().is_none() {
+                    continue;
+                }
+
+                if prop.identifier.prop_name().unwrap() != "m_flFallVelocity" {
+                    continue;
+                }
+
+                let death = &mut deaths[deaths_index[deaths_this_tick.iter().position(|&x| x == entity.entity_index.0).unwrap()]];
+
+                if (death.victim.0 as u32) == entity.entity_index.0 {
+                    death.is_airborne = true;
+                }
+
+                break;
+            }
         }
     }
 

@@ -755,6 +755,10 @@
       transform: scale(1);
       z-index: 999;
 
+      &:nth-child(3) {
+        left: calc(-0.2rem + var(--position));
+      }
+
       &__text {
         z-index: 1002;
         position: absolute;

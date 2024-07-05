@@ -42,6 +42,73 @@
   let settings = {};
   let recording_settings = {};
 
+  function filterAirshots(k) {
+    let kill =
+      parsed_demo.data.player_lives[k.owner_id][k.life_index].kills[
+        k.kill_index
+      ];
+
+    if (["pumpkin", "explosion", "golden_frying_pan"].includes(kill.weapon)) {
+      return true;
+    }
+
+    switch (kill.killer_class) {
+      case "scout":
+        return false;
+      case "soldier":
+        return true;
+      case "pyro":
+        return [
+          "deflect_rocket",
+          "detonator",
+          "flare_gun",
+          "gas_blast",
+          "scorch_shot",
+          "deflect_sticky",
+          "deflect_arrow",
+          "deflect_ball",
+          "deflect_cannonballs",
+          "deflect_flaming_arrow",
+          "deflect_flare",
+          "deflect_grenade",
+          "deflect_repair_claws",
+          "execution",
+        ].includes(kill.weapon);
+      case "demoman":
+        return true;
+      case "heavy":
+        return false;
+      case "engineer":
+        return false;
+      case "medic":
+        return true;
+      case "sniper":
+        return kill.crit_type == 2;
+      case "spy":
+        return false;
+      default:
+        return false;
+    }
+  }
+
+  function filterLife(lives, valKey) {
+    let validLives = lives.filter((life) => life[valKey].length > 0)
+    
+    for (let life of validLives) {
+      let validKills = [];
+
+      for (let kill of life[valKey]) {
+        if (filterAirshots(kill)) {
+          validKills.push(kill);
+        }
+      }
+
+      life[valKey] = validKills
+    }
+
+    return validLives.filter((life) => life[valKey].length > 0);
+  }
+
   async function loadEvents() {
     let event_list = await invoke("load_events");
     let demos = [];
@@ -545,7 +612,10 @@
 
       console.log("spec", spectate);
 
-      if (!parsed_demo.data.player_lives[userId] || parsed_demo.data.player_lives[userId].length == 0) {
+      if (
+        !parsed_demo.data.player_lives[userId] ||
+        parsed_demo.data.player_lives[userId].length == 0
+      ) {
         continue;
       }
 
@@ -581,7 +651,7 @@
     await invoke("save_events", { newEvents: demos });
     // dispatch("reload");
 
-    console.log(demos)
+    console.log(demos);
 
     nextDemo(true);
   }
@@ -958,7 +1028,6 @@
                     <KillPointerList
                       label="Med Picks"
                       valKey="med_picks"
-                      {player}
                       {classConverter}
                       {parsed_demo}
                       {tickToTime}
@@ -968,18 +1037,16 @@
                         (life) => life.med_picks.length > 0
                       )}
                     />
-                    <!-- <KillPointerList
-                          label="Air Shots"
-                          valKey="airshots"
-                          {player}
-                          {classConverter}
-                          {parsed_demo}
-                          {tickToTime}
-                          {toggleKillsSelected}
-                          lives={parsed_demo.data.player_lives[player].filter(
-                            (life) => life.airshots.length > 0
-                          )}
-                        /> -->
+                    <KillPointerList
+                      label="Air Shots"
+                      valKey="airshots"
+                      {classConverter}
+                      {parsed_demo}
+                      {tickToTime}
+                      {toggleKillsSelected}
+                      {toggleSelected}
+                      lives={filterLife(parsed_demo.data.player_lives[player], "airshots")}
+                    />
                     {#if parsed_demo.data.player_lives[player].filter((life) => life.killstreak_pointers.length > 0).length > 0}
                       <h4 class="centered">Killstreaks</h4>
                       {#each parsed_demo.data.player_lives[player].filter((life) => life.killstreak_pointers.length > 0) as life}
@@ -1022,14 +1089,15 @@
               {tickToTime}
               {toggleSelected}
             />
-            <!-- <AllKillPointers
-                  label="Air Shots"
-                  {classConverter}
-                  {parsed_demo}
-                  {tickToTime}
-                  {toggleKillsSelected}
-                  kills={parsed_demo.data.airshots}
-                /> -->
+            <AllKillPointers
+              label="Air Shots"
+              {classConverter}
+              {parsed_demo}
+              {tickToTime}
+              {toggleKillsSelected}
+              {toggleSelected}
+              kills={parsed_demo.data.airshots.filter((k) => filterAirshots(k))}
+            />
           </div>
         {/if}
         {#if parsed_demo.data.chat.length > 0}

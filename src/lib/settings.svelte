@@ -94,6 +94,9 @@ If left blank, the output folder will default to your sparklyfx settings."
         tga - generates .tga image sequence
         jpeg - generates .jpeg image sequence
         SparklyFX - Automates recording using SparklyFX
+        SVR - uses Source Video Render to record .mkv
+        SVR.mov - uses Source Video Render to record .mov
+        SVR.mp4 - uses Source Video Render to record .mp4 (Requires SVR encoder to be updated)
         Lawena - uses commands for Lawena (settings will be overwritten by Lawena)
         Do Not Record - ignores recording commands but still skips`}
       color="sec"

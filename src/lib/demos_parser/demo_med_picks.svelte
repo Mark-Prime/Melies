@@ -3,7 +3,6 @@
 
   export let lives;
   export let label;
-  export let player;
   export let valKey;
   export let classConverter;
   export let parsed_demo;
@@ -21,7 +20,7 @@
   }
 </script>
 
-{#if parsed_demo.data.player_lives[player].filter((life) => life[valKey].length > 0).length > 0}
+{#if lives.length > 0}
   <h4 class="centered pointer__label">{label}</h4>
   <div class="killstreaks card demo__kills">
     {#each lives as life}
