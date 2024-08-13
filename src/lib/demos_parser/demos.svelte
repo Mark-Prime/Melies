@@ -43,6 +43,10 @@
   let recording_settings = {};
 
   function filterAirshots(k) {
+    if (!parsed_demo.data.player_lives[k.owner_id][k.life_index]?.kills) {
+      return false;
+    }
+
     let kill =
       parsed_demo.data.player_lives[k.owner_id][k.life_index].kills[
         k.kill_index
@@ -92,8 +96,8 @@
   }
 
   function filterLife(lives, valKey) {
-    let validLives = lives.filter((life) => life[valKey].length > 0)
-    
+    let validLives = lives.filter((life) => life[valKey].length > 0);
+
     for (let life of validLives) {
       let validKills = [];
 
@@ -103,7 +107,7 @@
         }
       }
 
-      life[valKey] = validKills
+      life[valKey] = validKills;
     }
 
     return validLives.filter((life) => life[valKey].length > 0);
@@ -594,6 +598,127 @@
     nextDemo();
   }
 
+  function bookmarkHighlight(spectate, userId, demo_name, label, tick, demo_count) {
+    return {
+      value: {
+        Bookmark: `${label} ${spectate}`,
+      },
+      tick: tick,
+      demo_name: demo_name + "_" + demo_count,
+      event: `[demo_${parsed_demo.data?.users[userId].steamId64}] ${label} ${spectate} (\"${demo_name + "_" + demo_count}\" at ${tick})`,
+      isKillstreak: false,
+    };
+  }
+
+  async function recordAllHighlights() {
+    let demos = await loadEvents();
+    let settings = await invoke("load_settings");
+    let recording_settings = settings.recording;
+
+    let spec_mode = recording_settings["third_person"] ? "spec_third" : "spec";
+
+    let demo_count = 1;
+
+    for (let userId in parsed_demo.data.users) {
+      let new_demo = [];
+
+      let name_split = current_demo.replace(".dem", "").split("\\");
+
+      let demo_name = name_split[name_split.length - 1];
+
+      let spectate = `${spec_mode} ${parsed_demo.data?.users[userId].steamId64}`;
+
+      if (
+        !parsed_demo.data.player_lives[userId] ||
+        parsed_demo.data.player_lives[userId].length == 0
+      ) {
+        continue;
+      }
+
+      for (let i in parsed_demo.data.player_lives[userId]) {
+        let player = parsed_demo.data.player_lives[userId][i];
+        if (player.kills.length == 0) {
+          continue;
+        }
+
+        for (let ks of player.killstreak_pointers) {
+          for (let k of ks.kills) {
+            let kill = player.kills[k];
+
+            let label = `KS`;
+
+            if (kill.is_airborne) {
+              label = `${label} AS`;
+            }
+
+            if (kill.victim_class == "medic") {
+              label = `${label} MP`;
+            }
+
+            new_demo.push(
+              bookmarkHighlight(spectate, userId, demo_name, label, kill.tick, demo_count)
+            );
+
+            kill.selected = true;
+          }
+        }
+
+        for (let mp of player.med_picks) {
+          let kill = player.kills[mp.kill_index];
+
+          if (kill.selected) {
+            continue;
+          }
+
+          let label = `MP`;
+
+          if (kill.is_airborne) {
+            label = `${label} AS`;
+          }
+
+          new_demo.push(
+            bookmarkHighlight(spectate, userId, demo_name, "MP", kill.tick, demo_count)
+          );
+
+          kill.selected = true;
+        }
+
+        for (let as of player.airshots) {
+          if (!filterAirshots(as)) {
+            continue;
+          }
+
+          let kill = player.kills[as.kill_index];
+
+          if (kill.selected) {
+            continue;
+          }
+
+          new_demo.push(
+            bookmarkHighlight(spectate, userId, demo_name, "AS", kill.tick, demo_count)
+          );
+
+          kill.selected = true;
+        }
+      }
+
+      if (new_demo.length == 0) {
+        continue;
+      }
+
+      demo_count += 1;
+
+      demos.push(new_demo);
+    }
+
+    await invoke("save_events", { newEvents: demos });
+    dispatch("reload");
+
+    console.log(demos);
+
+    nextDemo(true);
+  }
+
   async function recordAll() {
     let demos = await loadEvents();
     let settings = await invoke("load_settings");
@@ -649,7 +774,7 @@
     }
 
     await invoke("save_events", { newEvents: demos });
-    // dispatch("reload");
+    dispatch("reload");
 
     console.log(demos);
 
@@ -939,20 +1064,23 @@
             </label>
             <p>Display lives with 0 Kills if they have an Assist</p>
           </div>
-          <div class="settings__switch">
-            <label class="switch">
-              <input
-                type="checkbox"
-                bind:checked={displayPlayers}
-                on:changed={refreshList}
-              />
-              <span class="slider round slider--tert"></span>
-            </label>
-            <p>Display players with 0 displayed lives</p>
-          </div>
-          <!-- <button class="btn" on:click={recordAll}>
-            Automate Recording All
-          </button> -->
+        </div>
+        <div class="settings__switch">
+          <label class="switch">
+            <input
+              type="checkbox"
+              bind:checked={displayPlayers}
+              on:changed={refreshList}
+            />
+            <span class="slider round slider--tert"></span>
+          </label>
+          <p>Display players with 0 displayed lives</p>
+        </div>
+        <div class="buttons">
+          <button class="btn" on:click={recordAll}> Record All Lives </button>
+          <button class="btn" on:click={recordAllHighlights}>
+            Record All Highlights
+          </button>
         </div>
         <div class="teams">
           {#each ["blue", "red"] as team}
@@ -1045,7 +1173,10 @@
                       {tickToTime}
                       {toggleKillsSelected}
                       {toggleSelected}
-                      lives={filterLife(parsed_demo.data.player_lives[player], "airshots")}
+                      lives={filterLife(
+                        parsed_demo.data.player_lives[player],
+                        "airshots"
+                      )}
                     />
                     {#if parsed_demo.data.player_lives[player].filter((life) => life.killstreak_pointers.length > 0).length > 0}
                       <h4 class="centered">Killstreaks</h4>

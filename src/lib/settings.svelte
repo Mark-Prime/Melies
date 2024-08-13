@@ -81,11 +81,29 @@ If left blank, the output folder will default to your sparklyfx settings."
       bind:value={settings.save_backups}
       tooltip="Save a backup of the original _events.txt or Killstreaks.txt file in the Documents folder."
     />
+    <Switch
+      title="Display Automation Tools"
+      bind:value={settings.automation_tools}
+      tooltip="Shows extra buttons useful for quickly grabbing clips in the demo scanner."
+    />
   </div>
 
   <h2>Output</h2>
 
   <div class="setting">
+    <div class="settings__input-group settings__span">
+      <Input
+        title="Clip name format"
+        bind:value={output_settings.clip_name_template}
+        tooltip={`How you want clips to be titled by default.
+        {demo_name} - The name of the demo
+        {start_tick} - The start tick of the clip
+        {end_tick} - The end tick of the clip
+        {suffix} - If the clip is a bookmark or killstreak
+        {bookmarks} - The bookmarks of the clip`}
+        color="sec"
+      />
+    </div>
     <Select
       title="Recording Method"
       bind:value={output_settings.method}
@@ -115,7 +133,11 @@ If left blank, the output folder will default to your sparklyfx settings."
       title="Framerate"
       bind:value={output_settings.framerate}
       color="sec"
+      display={!["sparklyfx", "svr", "svr.mov", "svr.mp4", "lawena"].includes(output_settings.method)}
     />
+    {#if ["sparklyfx", "svr", "svr.mov", "svr.mp4", "lawena"].includes(output_settings.method)}
+      <div></div>
+    {/if}
     <Switch
       title="Enable Text Chat"
       bind:value={output_settings.text_chat}
@@ -143,12 +165,12 @@ If left blank, the output folder will default to your sparklyfx settings."
       bind:value={output_settings.viewmodel}
       color="sec"
     />
-    <Switch
+    <!-- <Switch
       title="Prevent in-game settings from changing"
       bind:value={output_settings.lock}
       tooltip="Disables commands from certain configs that could overwrite these settings when played."
       color="sec"
-    />
+    /> -->
     <Switch
       title="Minmode Viewmodels"
       bind:value={output_settings.minmode}
@@ -263,12 +285,12 @@ If left blank, the output folder will default to your sparklyfx settings."
       tooltip={`Changes default recording to third person.\nWhen disabled always records in First Person`}
       color="tert"
     />
-    <Switch
+    <!-- <Switch
       title="Prevent Taunt Menu Bug"
       bind:value={recording_settings.prevent_taunt}
       tooltip="Disabled the taunt command to prevent the menu from opening."
       color="tert"
-    />
+    /> -->
   </div>
 
   <h2>Addons</h2>
