@@ -2,13 +2,13 @@
 
 use chrono::prelude::*;
 use regex::Regex;
-use serde_json::{ self, json, Map, Value };
+use serde_json::{ self, json, Value };
 use std::fs::{ DirEntry, File };
 use std::io::Write;
 use std::path::Path;
 use std::{ env, fs };
 use tauri::command;
-use vdm::action::{ Action, ActionType };
+use vdm::action::ActionType;
 use vdm::VDM;
 
 use crate::clip::Clip;
@@ -16,10 +16,13 @@ use crate::demos::{ scan_demo, scan_for_demos, scan_for_vdms, validate_demos_fol
 use crate::event::Event;
 use crate::event::EventStyle::{ Bookmark, Killstreak };
 use crate::logstf::parse;
+use crate::vdms::*;
 
 mod clip;
 mod demos;
 mod event;
+mod settings;
+mod vdms;
 mod logstf;
 
 macro_rules! ifelse {
@@ -104,9 +107,9 @@ fn write_cfg(settings: &Value) {
         extend!(cfg, "{}\r\n", commands);
     }
 
-    if setting_as_bin(&settings["recording"]["prevent_taunt"]) == 1 {
-        extend!(cfg, "{}\r\n", "alias +taunt \"\"; alias -taunt \"\";");
-    }
+    // if setting_as_bin(&settings["recording"]["prevent_taunt"]) == 1 {
+    //     extend!(cfg, "{}\r\n", "alias +taunt \"\"; alias -taunt \"\";");
+    // }
 
     extend!(cfg, "{};\r\n", "alias \"snd_fix\" \"snd_restart; snd_soundmixer Default_mix;\"");
 
@@ -169,20 +172,20 @@ fn write_cfg(settings: &Value) {
         None => {}
     }
 
-    if setting_as_bin(&settings["output"]["lock"]) == 1 {
-        extend!(
-            cfg,
-            "\r\necho \"Preventing settings from changing\";\r\nalias cl_drawhud \"{}\";\r\n",
-            ""
-        );
-        extend!(cfg, "alias voice_enable \"{}\";\r\n", "");
-        extend!(cfg, "alias hud_saytext_time \"{}\";\r\n", "");
-        extend!(cfg, "alias crosshair \"{}\";\r\n", "");
-        extend!(cfg, "alias r_drawviewmodel \"{}\";\r\n", "");
-        extend!(cfg, "alias viewmodel_fov_demo \"{}\";\r\n", "");
-        extend!(cfg, "alias tf_use_min_viewmodels \"{}\";\r\n", "");
-        extend!(cfg, "alias fov_desired \"{}\";\r\n", "");
-    }
+    // if setting_as_bin(&settings["output"]["lock"]) == 1 {
+    //     extend!(
+    //         cfg,
+    //         "\r\necho \"Preventing settings from changing\";\r\nalias cl_drawhud \"{}\";\r\n",
+    //         ""
+    //     );
+    //     extend!(cfg, "alias voice_enable \"{}\";\r\n", "");
+    //     extend!(cfg, "alias hud_saytext_time \"{}\";\r\n", "");
+    //     extend!(cfg, "alias crosshair \"{}\";\r\n", "");
+    //     extend!(cfg, "alias r_drawviewmodel \"{}\";\r\n", "");
+    //     extend!(cfg, "alias viewmodel_fov_demo \"{}\";\r\n", "");
+    //     extend!(cfg, "alias tf_use_min_viewmodels \"{}\";\r\n", "");
+    //     extend!(cfg, "alias fov_desired \"{}\";\r\n", "");
+    // }
 
     let tf_folder = match settings["tf_folder"].as_str() {
         Some(folder) => folder,
@@ -305,13 +308,20 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
     {
         let start_record = vdm.create_action(ActionType::PlayCommands).props_mut();
 
-        let mut clip_name = format!(
+        let clip_name_fallback = format!(
             "{}_{}-{}_{}",
             vdm_name,
             clip.start_tick,
             clip.end_tick,
             suffix
         );
+
+        let mut clip_name = settings["output"]["clip_name_template"].as_str().unwrap_or(&clip_name_fallback)
+            .replace("{demo_name}", &vdm_name)
+            .replace("{start_tick}", &clip.start_tick.to_string())
+            .replace("{end_tick}", &clip.end_tick.to_string())
+            .replace("{suffix}", &suffix)
+            .to_string();
 
         let mut bm_value = clip.bm_value.to_owned();
 
@@ -323,11 +333,9 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
             setting_as_bool(&settings["recording"]["auto_suffix"]) &&
             bm_value != "General".to_string()
         {
-            clip_name = format!(
-                "{}_{}",
-                clip_name,
-                bm_value.replace("spec", "").trim().replace(" ", "-")
-            );
+            clip_name = clip_name.replace("{bookmarks}", &bm_value.replace("spec", "").trim().replace(" ", "-"));
+        } else {
+            clip_name = clip_name.replace("{bookmarks}", "");
         }
 
         let mut commands = "".to_string();
@@ -633,174 +641,14 @@ fn ryukbot() -> Value {
     })
 }
 
-fn load_addons() -> Value {
-    fs::create_dir_all(
-        format!("{}\\Documents\\Melies\\addons", env::var("USERPROFILE").unwrap())
-    ).unwrap();
-
-    let mut addons = json!({});
-
-    let files = fs
-        ::read_dir(format!("{}\\Documents\\Melies\\addons", env::var("USERPROFILE").unwrap()))
-        .unwrap();
-
-    for file in files {
-        let filename_os = file.as_ref().unwrap().file_name();
-        let filename = filename_os.to_str().unwrap().to_string();
-
-        if !filename.contains(".json") && !filename.contains(".JSON") {
-            continue;
-        }
-
-        let mut name = filename.replace(".json", "");
-        name = name.replace(".JSON", "");
-
-        let data = fs::read_to_string(file.unwrap().path()).expect("Unable to read file");
-        let res = match serde_json::from_str(&data) {
-            Ok(val) => val,
-            Err(_) => {
-                continue;
-            }
-        };
-
-        addons[name] = res;
-    }
-
-    addons
-}
-
-fn default_settings() -> Value {
-    let defaults =
-        json!({
-        "tf_folder": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Team Fortress 2\\tf",
-        "clear_events": true,
-        "save_backups": true,
-        "safe_mode": true,
-        "output": {
-            "folder": "",
-            "method": "tga",
-            "framerate": 60,
-            "crosshair": false,
-            "viewmodel": true,
-            "hud": true,
-            "text_chat": false,
-            "voice_chat": false,
-            "minmode": false,
-            "snd_fix": true,
-            "lock": true
-        },
-        "recording": {
-            "commands": "",
-            "end_commands": "",
-            "start_delay": 50,
-            "minimum_ticks_between_clips": 500,
-            "before_bookmark": 1000,
-            "after_bookmark": 200,
-            "before_killstreak_per_kill": 500,
-            "after_killstreak": 300,
-            "interval_for_rewind_double_taps": 66,
-            "rewind_amount": 1000,
-            "fov": 90,
-            "viewmodel_fov": 90,
-            "record_continuous": true,
-            "auto_close": true,
-            "auto_suffix": true,
-            "third_person": false,
-            "prevent_taunt": false
-        }
-    });
-
-    defaults
-}
-
-fn build_settings() -> Value {
-    let binding = env::var("USERPROFILE").unwrap() + "\\Documents\\Melies\\settings.json";
-    let settings_path = Path::new(&binding);
-    let settings_prefix = settings_path.parent().unwrap();
-    std::fs::create_dir_all(settings_prefix).unwrap();
-
-    File::create(settings_path).unwrap();
-
-    let mut settings = default_settings();
-
-    fs::write(settings_path, settings.to_string()).unwrap();
-
-    settings["addons"] = load_addons();
-
-    settings
-}
-
-fn merge(a: &mut Value, b: Value) {
-    if let Value::Object(a) = a {
-        if let Value::Object(b) = b {
-            for (k, v) in b {
-                if k == "addons" {
-                    continue;
-                }
-
-                if v.is_null() {
-                    a.remove(&k);
-                    continue;
-                }
-
-                merge(a.entry(k).or_insert(Value::Null), v);
-            }
-
-            return;
-        }
-    }
-
-    *a = b;
-}
-
 #[command]
 fn load_settings() -> Value {
-    let settings_path = env::var("USERPROFILE").unwrap() + "\\Documents\\Melies\\settings.json";
-
-    if Path::new(&settings_path).exists() {
-        let file = fs::read_to_string(settings_path).unwrap();
-        let settings: Value = serde_json::from_str(&file).unwrap();
-
-        let mut defaults = default_settings();
-
-        merge(&mut defaults, settings);
-
-        defaults["addons"] = load_addons();
-
-        return defaults;
-    }
-
-    build_settings()
-}
-
-fn save_addons(addons: &Value) {
-    let map: &Map<String, Value> = addons.as_object().unwrap();
-
-    for (k, v) in map {
-        let addon_path =
-            env::var("USERPROFILE").unwrap() + "\\Documents\\Melies\\addons\\" + k + ".json";
-        fs::write(addon_path, serde_json::to_string_pretty(v).unwrap()).unwrap();
-    }
+    settings::load_settings()
 }
 
 #[command]
 fn save_settings(new_settings: String) -> Value {
-    let settings: Value = serde_json::from_str(&new_settings).unwrap();
-    let settings_path = env::var("USERPROFILE").unwrap() + "\\Documents\\Melies\\settings.json";
-
-    if Path::new(&settings_path).exists() {
-        let mut defaults = default_settings();
-
-        save_addons(&settings["addons"]);
-
-        merge(&mut defaults, settings);
-
-        fs::write(settings_path, serde_json::to_string_pretty(&defaults).unwrap()).unwrap();
-
-        return defaults;
-    }
-
-    build_settings()
+    settings::save_settings(new_settings)
 }
 
 #[command]
@@ -1036,15 +884,21 @@ fn save_backup(settings: &Value) -> Value {
     let sys_time: DateTime<Local> = Local::now();
     let date = sys_time.format("%Y-%m-%d_%H-%M-%S").to_string().replace("\"", "");
 
-    let output_path = format!(
-        "{}\\Documents\\Melies\\backups\\{}.txt",
-        env::var("USERPROFILE").unwrap(),
-        date
-    );
+    let user_profile = env::var("USERPROFILE");
 
-    fs::create_dir_all(
-        format!("{}\\Documents\\Melies\\backups", env::var("USERPROFILE").unwrap())
-    ).unwrap();
+    let output_folder = match user_profile {
+        Ok(profile) => { format!("{}\\Documents\\Melies\\backups", profile) }
+        Err(_) => {
+            format!(
+                "{}\\backups",
+                std::env::current_exe().unwrap().parent().unwrap().to_str().unwrap()
+            )
+        }
+    };
+
+    let output_path = format!("{}\\{}.txt", output_folder, date);
+
+    fs::create_dir_all(output_folder).unwrap();
 
     fs::copy(dir, &output_path).unwrap();
 
@@ -1080,7 +934,19 @@ fn load_demos() -> Result<Value, String> {
 }
 
 pub(crate) fn validate_backups_folder() -> bool {
-    match fs::read_dir(format!("{}\\Documents\\Melies\\backups", env::var("USERPROFILE").unwrap())) {
+    let user_profile = env::var("USERPROFILE");
+
+    let backups_folder = match user_profile {
+        Ok(profile) => { format!("{}\\Documents\\Melies\\backups", profile) }
+        Err(_) => {
+            format!(
+                "{}\\backups",
+                std::env::current_exe().unwrap().parent().unwrap().to_str().unwrap()
+            )
+        }
+    };
+
+    match fs::read_dir(backups_folder) {
         Ok(_) => {
             return true;
         }
@@ -1093,9 +959,19 @@ pub(crate) fn validate_backups_folder() -> bool {
 pub(crate) fn scan_for_backups() -> Value {
     let mut events: Vec<Value> = vec![];
 
-    for entry in fs
-        ::read_dir(format!("{}\\Documents\\Melies\\backups", env::var("USERPROFILE").unwrap()))
-        .unwrap() {
+    let user_profile = env::var("USERPROFILE");
+
+    let backups_folder = match user_profile {
+        Ok(profile) => { format!("{}\\Documents\\Melies\\backups", profile) }
+        Err(_) => {
+            format!(
+                "{}\\backups",
+                std::env::current_exe().unwrap().parent().unwrap().to_str().unwrap()
+            )
+        }
+    };
+
+    for entry in fs::read_dir(backups_folder).unwrap() {
         let entry = entry.unwrap();
         let path = entry.path();
 
@@ -1122,11 +998,19 @@ fn load_backups() -> Result<Value, String> {
 
 #[command]
 fn reload_backup(file_name: Value) -> Result<Value, String> {
-    let file_path = format!(
-        "{}\\Documents\\Melies\\backups\\{}",
-        env::var("USERPROFILE").unwrap(),
-        file_name.as_str().unwrap()
-    );
+    let user_profile = env::var("USERPROFILE");
+
+    let backups_folder = match user_profile {
+        Ok(profile) => { format!("{}\\Documents\\Melies\\backups", profile) }
+        Err(_) => {
+            format!(
+                "{}\\backups",
+                std::env::current_exe().unwrap().parent().unwrap().to_str().unwrap()
+            )
+        }
+    };
+
+    let file_path = format!("{}\\{}", backups_folder, file_name.as_str().unwrap());
     let backup_file = Path::new(&file_path);
 
     let settings = load_settings();
@@ -1158,372 +1042,6 @@ fn reload_backup(file_name: Value) -> Result<Value, String> {
 #[command]
 fn parse_demo(path: String) -> Value {
     scan_demo(load_settings(), path)
-}
-
-fn vdm_to_json(vdm: VDM) -> Value {
-    let mut actions: Vec<Value> = vec![];
-
-    for action in vdm.actions {
-        match action {
-            Action::SkipAhead(props) => {
-                actions.push(
-                    json!({
-                        "factory": "SkipAhead",
-                        "name": props.name,
-                        "start_tick": props.start_tick,
-                        "start_time": props.start_time,
-                        "skip_to_tick": props.skip_to_tick,
-                        "skip_to_time": props.skip_to_time
-                    })
-                );
-            }
-            Action::StopPlayback(props) => {
-                actions.push(
-                    json!({
-                        "factory": "StopPlayback",
-                        "name": props.name,
-                        "start_tick": props.start_tick,
-                        "start_time": props.start_time,
-                    })
-                );
-            }
-            Action::PlayCommands(props) => {
-                actions.push(
-                    json!({
-                        "factory": "PlayCommands",
-                        "name": props.name,
-                        "start_tick": props.start_tick,
-                        "start_time": props.start_time,
-                        "commands": props.commands
-                    })
-                );
-            }
-            Action::ScreenFadeStart(props) => {
-                actions.push(
-                    json!({
-                        "factory": "ScreenFadeStart",
-                        "name": props.name,
-                        "start_tick": props.start_tick,
-                        "start_time": props.start_time,
-                        "duration": props.duration,
-                        "hold_time": props.hold_time,
-                        "fade_in_enabled": props.fade_in_enabled,
-                        "fade_out_enabled": props.fade_out_enabled,
-                        "modulate_enabled": props.modulate_enabled,
-                        "stay_out_enabled": props.stay_out_enabled,
-                        "purge_enabled": props.purge_enabled,
-                        "rgba1": props.rgba1,
-                    })
-                );
-            }
-            Action::TextMessageStart(props) => {
-                actions.push(
-                    json!({
-                        "factory": "TextMessageStart",
-                        "name": props.name,
-                        "start_tick": props.start_tick,
-                        "start_time": props.start_time,
-                        "message": props.message,
-                        "font": props.font,
-                        "fade_in": props.fade_in,
-                        "fade_out": props.fade_out,
-                        "hold_time": props.hold_time,
-                        "fx_time": props.fx_time,
-                        "effect": match props.effect {
-                            vdm::action::TextEffect::Flicker => "Flicker",
-                            vdm::action::TextEffect::FadeInOut => "FadeInOut",
-                            vdm::action::TextEffect::WriteOut => "WriteOut",
-                        },
-                        "xy": props.xy,
-                        "rgba1": props.rgba1,
-                        "rgba2": props.rgba2,
-                    })
-                );
-            }
-            Action::PlayCDTrackStart(props) => {
-                actions.push(
-                    json!({
-                        "factory": "PlayCDTrackStart",
-                        "name": props.name,
-                        "start_tick": props.start_tick,
-                        "start_time": props.start_time,
-                        "track": props.track,
-                    })
-                );
-            }
-            Action::PlaySoundStart(props) => {
-                actions.push(
-                    json!({
-                        "factory": "PlaySoundStart",
-                        "name": props.name,
-                        "start_tick": props.start_tick,
-                        "start_time": props.start_time,
-                        "sound": props.sound,
-                    })
-                );
-            }
-            Action::Pause(props) => {
-                actions.push(
-                    json!({
-                        "factory": "Pause",
-                        "name": props.name,
-                        "start_tick": props.start_tick,
-                        "start_time": props.start_time,
-                        "stop_tick": props.stop_tick,
-                        "stop_time": props.stop_time,
-                        "duration": props.duration
-                    })
-                );
-            }
-            Action::ChangePlaybackRate(props) => {
-                actions.push(
-                    json!({
-                        "factory": "ChangePlaybackRate",
-                        "name": props.name,
-                        "start_tick": props.start_tick,
-                        "start_time": props.start_time,
-                        "stop_tick": props.stop_tick,
-                        "stop_time": props.stop_time,
-                        "playback_rate": props.playback_rate
-                    })
-                );
-            }
-            Action::ZoomFov(props) => {
-                actions.push(
-                    json!({
-                        "factory": "ZoomFov",
-                        "name": props.name,
-                        "start_tick": props.start_tick,
-                        "start_time": props.start_time,
-                        "spline": props.spline,
-                        "stayout": props.stayout,
-                        "final_fov": props.final_fov,
-                        "fov_fade_out": props.fade_out,
-                        "fov_fade_in": props.fade_in,
-                        "fov_hold": props.hold_time,
-                    })
-                );
-            }
-        }
-    }
-
-    json!(actions)
-}
-
-fn json_to_vdm(json: Value) -> VDM {
-    let mut vdm = VDM::new();
-
-    for action in json.as_array().unwrap() {
-        let factory = action["factory"].as_str().unwrap();
-
-        let factory = match factory {
-            "SkipAhead" => ActionType::SkipAhead,
-            "StopPlayback" => ActionType::StopPlayback,
-            "PlayCommands" => ActionType::PlayCommands,
-            "ScreenFadeStart" => ActionType::ScreenFadeStart,
-            "TextMessageStart" => ActionType::TextMessageStart,
-            "PlayCDTrackStart" => ActionType::PlayCDTrackStart,
-            "PlaySoundStart" => ActionType::PlaySoundStart,
-            "Pause" => ActionType::Pause,
-            "ChangePlaybackRate" => ActionType::ChangePlaybackRate,
-            "ZoomFov" => ActionType::ZoomFov,
-            _ => panic!("Invalid action type."),
-        };
-
-        let mut new_action = Action::new(factory.clone());
-
-        let props = new_action.props_mut();
-
-        props.name = action["name"].as_str().unwrap().to_string();
-
-        if action["start_tick"] != Value::Null {
-            props.start_tick = Some(action["start_tick"].as_i64().unwrap());
-        }
-
-        if action["start_time"] != Value::Null {
-            props.start_time = Some(action["start_time"].as_f64().unwrap());
-        }
-
-        match factory {
-            ActionType::SkipAhead => {
-                if action["skip_to_tick"] != Value::Null {
-                    props.skip_to_tick = Some(action["skip_to_tick"].as_i64().unwrap());
-                }
-
-                if action["skip_to_time"] != Value::Null {
-                    props.skip_to_time = Some(action["skip_to_time"].as_f64().unwrap());
-                }
-            }
-            ActionType::StopPlayback => {}
-            ActionType::PlayCommands => {
-                if action["commands"] != Value::Null {
-                    props.commands = action["commands"].as_str().unwrap().to_string();
-                }
-            }
-            ActionType::ScreenFadeStart => {
-                if action["duration"] != Value::Null {
-                    props.duration = action["duration"].as_f64().unwrap();
-                }
-
-                if action["hold_time"] != Value::Null {
-                    props.hold_time = action["hold_time"].as_f64().unwrap();
-                }
-
-                if action["fade_in_enabled"] != Value::Null {
-                    props.fade_in_enabled = action["fade_in_enabled"].as_bool().unwrap();
-                }
-
-                if action["fade_out_enabled"] != Value::Null {
-                    props.fade_out_enabled = action["fade_out_enabled"].as_bool().unwrap();
-                }
-
-                if action["modulate_enabled"] != Value::Null {
-                    props.modulate_enabled = action["modulate_enabled"].as_bool().unwrap();
-                }
-
-                if action["stay_out_enabled"] != Value::Null {
-                    props.stay_out_enabled = action["stay_out_enabled"].as_bool().unwrap();
-                }
-
-                if action["purge_enabled"] != Value::Null {
-                    props.purge_enabled = action["purge_enabled"].as_bool().unwrap();
-                }
-
-                if action["rgba1"] != Value::Null {
-                    props.rgba1 = [
-                        action["rgba1"][0].as_u64().unwrap() as u8,
-                        action["rgba1"][1].as_u64().unwrap() as u8,
-                        action["rgba1"][2].as_u64().unwrap() as u8,
-                        action["rgba1"][3].as_u64().unwrap() as u8,
-                    ];
-                }
-            }
-            ActionType::TextMessageStart => {
-                if action["message"] != Value::Null {
-                    props.message = action["message"].as_str().unwrap().to_string();
-                }
-
-                if action["font"] != Value::Null {
-                    props.font = action["font"].as_str().unwrap().to_string();
-                }
-
-                if action["fade_in"] != Value::Null {
-                    props.fade_in = action["fade_in"].as_f64().unwrap();
-                }
-
-                if action["fade_out"] != Value::Null {
-                    props.fade_out = action["fade_out"].as_f64().unwrap();
-                }
-
-                if action["hold_time"] != Value::Null {
-                    props.hold_time = action["hold_time"].as_f64().unwrap();
-                }
-
-                if action["fx_time"] != Value::Null {
-                    props.fx_time = action["fx_time"].as_f64().unwrap();
-                }
-
-                if action["effect"] != Value::Null {
-                    props.effect = match action["effect"].as_str().unwrap() {
-                        "Flicker" => vdm::action::TextEffect::Flicker,
-                        "FadeInOut" => vdm::action::TextEffect::FadeInOut,
-                        "WriteOut" => vdm::action::TextEffect::WriteOut,
-                        _ => panic!("Invalid text effect."),
-                    };
-                }
-
-                if action["xy"] != Value::Null {
-                    props.xy = [
-                        action["xy"][0].as_f64().unwrap(),
-                        action["xy"][1].as_f64().unwrap(),
-                    ];
-                }
-
-                if action["rgba1"] != Value::Null {
-                    props.rgba1 = [
-                        action["rgba1"][0].as_u64().unwrap() as u8,
-                        action["rgba1"][1].as_u64().unwrap() as u8,
-                        action["rgba1"][2].as_u64().unwrap() as u8,
-                        action["rgba1"][3].as_u64().unwrap() as u8,
-                    ];
-                }
-
-                if action["rgba2"] != Value::Null {
-                    props.rgba2 = [
-                        action["rgba2"][0].as_u64().unwrap() as u8,
-                        action["rgba2"][1].as_u64().unwrap() as u8,
-                        action["rgba2"][2].as_u64().unwrap() as u8,
-                        action["rgba2"][3].as_u64().unwrap() as u8,
-                    ];
-                }
-            }
-            ActionType::PlayCDTrackStart => {
-                if action["track"] != Value::Null {
-                    props.track = action["track"].as_i64().unwrap();
-                }
-            }
-            ActionType::PlaySoundStart => {
-                if action["sound"] != Value::Null {
-                    props.sound = action["sound"].as_str().unwrap().to_string();
-                }
-            }
-            ActionType::Pause => {
-                if action["stop_tick"] != Value::Null {
-                    props.stop_tick = Some(action["stop_tick"].as_i64().unwrap());
-                }
-
-                if action["stop_time"] != Value::Null {
-                    props.stop_time = Some(action["stop_time"].as_f64().unwrap());
-                }
-
-                if action["duration"] != Value::Null {
-                    props.duration = action["duration"].as_f64().unwrap();
-                }
-            }
-            ActionType::ChangePlaybackRate => {
-                if action["stop_tick"] != Value::Null {
-                    props.stop_tick = Some(action["stop_tick"].as_i64().unwrap());
-                }
-
-                if action["stop_time"] != Value::Null {
-                    props.stop_time = Some(action["stop_time"].as_f64().unwrap());
-                }
-
-                if action["playback_rate"] != Value::Null {
-                    props.playback_rate = action["playback_rate"].as_f64().unwrap();
-                }
-            }
-            ActionType::ZoomFov => {
-                if action["spline"] != Value::Null {
-                    props.spline = action["spline"].as_bool().unwrap();
-                }
-
-                if action["stayout"] != Value::Null {
-                    props.stayout = action["stayout"].as_bool().unwrap();
-                }
-
-                if action["final_fov"] != Value::Null {
-                    props.final_fov = action["final_fov"].as_f64().unwrap();
-                }
-
-                if action["fov_fade_out"] != Value::Null {
-                    props.fade_out = action["fov_fade_out"].as_f64().unwrap();
-                }
-
-                if action["fov_fade_in"] != Value::Null {
-                    props.fade_in = action["fov_fade_in"].as_f64().unwrap();
-                }
-
-                if action["fov_hold"] != Value::Null {
-                    props.hold_time = action["fov_hold"].as_f64().unwrap();
-                }
-            }
-        }
-
-        vdm.actions.push(new_action);
-    }
-
-    vdm
 }
 
 #[command]

@@ -444,7 +444,7 @@ impl Analyser {
                 }
             }
             // GameEvent::PlayerChargeDeployed(event) => {
-            //     println!("{:?}", event);
+            //     println!("{:?} at {}", event, tick.0);
             // }
             _ => {}
         }

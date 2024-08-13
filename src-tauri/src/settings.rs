@@ -1,0 +1,227 @@
+use std::{ env, fs::{ self, File }, path::Path };
+use serde_json::{ json, Map, Value };
+
+// pub(crate) fn get_settings() -> Value {
+
+// }
+
+pub(crate) fn build_settings() -> Value {
+    let user_profile = env::var("USERPROFILE");
+
+    let binding = match user_profile {
+        Ok(profile) => { format!("{}\\Documents\\Melies\\settings.json", profile) }
+        Err(_) => {
+            format!(
+                "{}\\settings.json",
+                std::env::current_exe().unwrap().parent().unwrap().to_str().unwrap()
+            )
+        }
+    };
+
+    let settings_path = Path::new(&binding);
+    let settings_prefix = settings_path.parent().unwrap();
+    std::fs::create_dir_all(settings_prefix).unwrap();
+
+    File::create(settings_path).unwrap();
+
+    let mut settings = default_settings();
+
+    fs::write(settings_path, settings.to_string()).unwrap();
+
+    settings["addons"] = load_addons();
+
+    settings
+}
+
+pub(crate) fn default_settings() -> Value {
+    let defaults =
+        json!({
+      "tf_folder": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Team Fortress 2\\tf",
+      "clear_events": true,
+      "save_backups": true,
+      "safe_mode": true,
+      "automation_tools": false,
+      "output": {
+          "folder": "",
+          "method": "tga",
+          "framerate": 60,
+          "crosshair": false,
+          "viewmodel": true,
+          "hud": true,
+          "text_chat": false,
+          "voice_chat": false,
+          "minmode": false,
+          "snd_fix": true,
+          "lock": true,
+          "clip_name_template": "{demo_name}_{start_tick}-{end_tick}_{suffix}_{bookmarks}"
+      },
+      "recording": {
+          "commands": "",
+          "end_commands": "",
+          "start_delay": 50,
+          "minimum_ticks_between_clips": 500,
+          "before_bookmark": 1000,
+          "after_bookmark": 200,
+          "before_killstreak_per_kill": 500,
+          "after_killstreak": 300,
+          "interval_for_rewind_double_taps": 66,
+          "rewind_amount": 1000,
+          "fov": 90,
+          "viewmodel_fov": 90,
+          "record_continuous": true,
+          "auto_close": true,
+          "auto_suffix": true,
+          "third_person": false,
+          "prevent_taunt": false
+      }
+  });
+
+    defaults
+}
+
+pub(crate) fn load_settings() -> Value {
+    let user_profile = env::var("USERPROFILE");
+
+    let settings_path = match user_profile {
+        Ok(profile) => { format!("{}\\Documents\\Melies\\settings.json", profile) }
+        Err(_) => {
+            format!(
+                "{}\\settings.json",
+                std::env::current_exe().unwrap().parent().unwrap().to_str().unwrap()
+            )
+        }
+    };
+
+    if Path::new(&settings_path).exists() {
+        let file = fs::read_to_string(settings_path).unwrap();
+        let settings: Value = serde_json::from_str(&file).unwrap();
+
+        let mut defaults = default_settings();
+
+        merge(&mut defaults, settings);
+
+        defaults["addons"] = load_addons();
+
+        return defaults;
+    }
+
+    build_settings()
+}
+
+pub(crate) fn save_settings(new_settings: String) -> Value {
+    let settings: Value = serde_json::from_str(&new_settings).unwrap();
+
+    let user_profile = env::var("USERPROFILE");
+
+    let settings_path = match user_profile {
+        Ok(profile) => { format!("{}\\Documents\\Melies\\settings.json", profile) }
+        Err(_) => {
+            format!(
+                "{}\\settings.json",
+                std::env::current_exe().unwrap().parent().unwrap().to_str().unwrap()
+            )
+        }
+    };
+
+    if Path::new(&settings_path).exists() {
+        let mut defaults = default_settings();
+
+        save_addons(&settings["addons"]);
+
+        merge(&mut defaults, settings);
+
+        fs::write(settings_path, serde_json::to_string_pretty(&defaults).unwrap()).unwrap();
+
+        return defaults;
+    }
+
+    build_settings()
+}
+
+pub(crate) fn load_addons() -> Value {
+    let user_profile = env::var("USERPROFILE");
+
+    let addons_path = match user_profile {
+        Ok(profile) => { format!("{}\\Documents\\Melies\\addons", profile) }
+        Err(_) => {
+            format!(
+                "{}\\addons",
+                std::env::current_exe().unwrap().parent().unwrap().to_str().unwrap()
+            )
+        }
+    };
+
+    fs::create_dir_all(&addons_path).unwrap();
+
+    let mut addons = json!({});
+
+    let files = fs::read_dir(addons_path).unwrap();
+
+    for file in files {
+        let filename_os = file.as_ref().unwrap().file_name();
+        let filename = filename_os.to_str().unwrap().to_string();
+
+        if !filename.contains(".json") && !filename.contains(".JSON") {
+            continue;
+        }
+
+        let mut name = filename.replace(".json", "");
+        name = name.replace(".JSON", "");
+
+        let data = fs::read_to_string(file.unwrap().path()).expect("Unable to read file");
+        let res = match serde_json::from_str(&data) {
+            Ok(val) => val,
+            Err(_) => {
+                continue;
+            }
+        };
+
+        addons[name] = res;
+    }
+
+    addons
+}
+
+fn save_addons(addons: &Value) {
+    let map: &Map<String, Value> = addons.as_object().unwrap();
+
+    for (k, v) in map {
+        let user_profile = env::var("USERPROFILE");
+
+        let addon_path = match user_profile {
+            Ok(profile) => { format!("{}\\Documents\\Melies\\addons\\{}.json", profile, k) }
+            Err(_) => {
+                format!(
+                    "{}\\addons\\{}.json",
+                    std::env::current_exe().unwrap().parent().unwrap().to_str().unwrap(),
+                    k
+                )
+            }
+        };
+
+        fs::write(addon_path, serde_json::to_string_pretty(v).unwrap()).unwrap();
+    }
+}
+
+fn merge(a: &mut Value, b: Value) {
+    if let Value::Object(a) = a {
+        if let Value::Object(b) = b {
+            for (k, v) in b {
+                if k == "addons" {
+                    continue;
+                }
+
+                if v.is_null() {
+                    a.remove(&k);
+                    continue;
+                }
+
+                merge(a.entry(k).or_insert(Value::Null), v);
+            }
+
+            return;
+        }
+    }
+
+    *a = b;
+}
