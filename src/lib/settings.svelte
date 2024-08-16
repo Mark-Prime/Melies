@@ -12,6 +12,7 @@
   let settings = {};
   let output_settings = {};
   let recording_settings = {};
+  let automation_settings = {};
   let addons = {};
   let enabled = false;
 
@@ -21,7 +22,9 @@
     settings = await invoke("load_settings");
     output_settings = settings.output;
     recording_settings = settings.recording;
+    automation_settings = settings.automation;
     addons = settings.addons;
+    console.log(settings)
   }
 
   async function saveSettings() {
@@ -83,10 +86,50 @@ If left blank, the output folder will default to your sparklyfx settings."
     />
     <Switch
       title="Display Automation Tools"
-      bind:value={settings.automation_tools}
+      bind:value={automation_settings.enabled}
       tooltip="Shows extra buttons useful for quickly grabbing clips in the demo scanner."
     />
   </div>
+
+  {#if automation_settings.enabled}
+    <h2>Automation</h2>
+
+    <div class="setting">
+      <Switch
+        title="Airshots"
+        bind:value={automation_settings.airshots}
+        tooltip="Bookmark anytime a player hits an airshot."
+      />
+      <Switch
+        title="Med Picks"
+        bind:value={automation_settings.med_picks}
+        tooltip="Bookmark anytime a player kills a Medic."
+      />
+      <Switch
+        title="Killstreaks"
+        bind:value={automation_settings.killstreaks}
+        tooltip="Bookmark anytime a player gets a killstreak."
+      />
+      <Switch
+        title="Record Entire Life"
+        bind:value={automation_settings.whole_life}
+        tooltip="Record the entire life. Will use standard bookmarks if disabled."
+      />
+    </div>
+
+    <h4>Classes</h4>
+
+    <div class="setting">
+      {#each Object.keys(automation_settings.classes) as class_name}
+        
+        <Switch
+          title="Record {class_name[0].toUpperCase() + class_name.slice(1)}"
+          bind:value={automation_settings.classes[class_name]}
+          tooltip="Record clips of {class_name}."
+        />
+      {/each}
+    </div>
+  {/if}
 
   <h2>Output</h2>
 

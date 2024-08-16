@@ -6,6 +6,8 @@
   import Fa from "svelte-fa";
   import { createEventDispatcher } from "svelte";
 
+  import isAirshot from "$lib/composables/isAirshot.js";
+
   const dispatch = createEventDispatcher();
 
   let index = 0,
@@ -42,58 +44,7 @@
   let settings = {};
   let recording_settings = {};
 
-  function filterAirshots(k) {
-    if (!parsed_demo.data.player_lives[k.owner_id][k.life_index]?.kills) {
-      return false;
-    }
-
-    let kill =
-      parsed_demo.data.player_lives[k.owner_id][k.life_index].kills[
-        k.kill_index
-      ];
-
-    if (["pumpkin", "explosion", "golden_frying_pan"].includes(kill.weapon)) {
-      return true;
-    }
-
-    switch (kill.killer_class) {
-      case "scout":
-        return false;
-      case "soldier":
-        return true;
-      case "pyro":
-        return [
-          "deflect_rocket",
-          "detonator",
-          "flare_gun",
-          "gas_blast",
-          "scorch_shot",
-          "deflect_sticky",
-          "deflect_arrow",
-          "deflect_ball",
-          "deflect_cannonballs",
-          "deflect_flaming_arrow",
-          "deflect_flare",
-          "deflect_grenade",
-          "deflect_repair_claws",
-          "execution",
-        ].includes(kill.weapon);
-      case "demoman":
-        return true;
-      case "heavy":
-        return false;
-      case "engineer":
-        return false;
-      case "medic":
-        return true;
-      case "sniper":
-        return kill.crit_type == 2;
-      case "spy":
-        return false;
-      default:
-        return false;
-    }
-  }
+  let filterAirshots = (k) => isAirshot(parsed_demo, k, settings);
 
   function filterLife(lives, valKey) {
     let validLives = lives.filter((life) => life[valKey].length > 0);
@@ -598,7 +549,14 @@
     nextDemo();
   }
 
-  function bookmarkHighlight(spectate, userId, demo_name, label, tick, demo_count) {
+  function bookmarkHighlight(
+    spectate,
+    userId,
+    demo_name,
+    label,
+    tick,
+    demo_count
+  ) {
     return {
       value: {
         Bookmark: `${label} ${spectate}`,
@@ -610,6 +568,50 @@
     };
   }
 
+  function bookmarkLife(spectate, demo_name, userId, life, demo_count) {
+    let new_demo = [];
+
+    new_demo.push({
+      value: {
+        Bookmark: `clip_start ${spectate}`,
+      },
+      tick: life.start + 20,
+      demo_name: demo_name + "_" + demo_count,
+      event: `[demo_${parsed_demo.data?.users[userId].steamId64}] clip_start ${spectate} (\"${demo_name + "_" + demo_count}\" at ${life.start + 20})`,
+      isKillstreak: false,
+    });
+
+    new_demo.push({
+      value: {
+        Bookmark: `clip_end`,
+      },
+      tick: life.end + 132,
+      demo_name: demo_name + "_" + demo_count,
+      event: `[demo_${parsed_demo.data?.users[userId].steamId64}] clip_end (\"${demo_name + "_" + demo_count}\" at ${life.end + 132})`,
+      isKillstreak: false,
+    });
+
+    return new_demo;
+  }
+
+  function shouldRecordLife(life) {
+    for (const class_name of life.classes) {
+      if (settings.automation.classes[class_name]) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  function shouldRecordKill(killer_class) {
+    if (settings.automation.classes[killer_class]) {
+      return true;
+    }
+
+    return false;
+  }
+
   async function recordAllHighlights() {
     let demos = await loadEvents();
     let settings = await invoke("load_settings");
@@ -618,8 +620,14 @@
     let spec_mode = recording_settings["third_person"] ? "spec_third" : "spec";
 
     let demo_count = 1;
-
+    
     for (let userId in parsed_demo.data.users) {
+      if (isPovDemo) {
+        if (povId != userId) {
+          continue;
+        }
+      }
+
       let new_demo = [];
 
       let name_split = current_demo.replace(".dem", "").split("\\");
@@ -637,68 +645,163 @@
 
       for (let i in parsed_demo.data.player_lives[userId]) {
         let player = parsed_demo.data.player_lives[userId][i];
+
         if (player.kills.length == 0) {
           continue;
         }
 
-        for (let ks of player.killstreak_pointers) {
-          for (let k of ks.kills) {
-            let kill = player.kills[k];
+        if (!shouldRecordLife(player)) {
+          continue;
+        }
 
-            let label = `KS`;
+        if (settings.automation.killstreaks) {
+          for (let ks of player.killstreak_pointers) {
+            if (settings.automation.whole_life) {
+              let life = player;
+
+              if (life.selected) {
+                continue;
+              }
+
+              life.selected = true;
+
+              new_demo = [
+                ...new_demo,
+                ...bookmarkLife(spectate, demo_name, userId, life, demo_count),
+              ];
+
+              continue;
+            }
+
+            for (let k of ks.kills) {
+              let kill = player.kills[k];
+
+              if (!shouldRecordKill(kill.killer_class)) {
+                continue;
+              }
+
+              let label = `KS`;
+
+              if (kill.is_airborne) {
+                label = `${label} AS`;
+              }
+
+              if (kill.victim_class == "medic") {
+                label = `${label} MP`;
+              }
+
+              new_demo.push(
+                bookmarkHighlight(
+                  spectate,
+                  userId,
+                  demo_name,
+                  label,
+                  kill.tick,
+                  demo_count
+                )
+              );
+
+              kill.selected = true;
+            }
+          }
+        }
+
+        if (settings.automation.med_picks) {
+          for (let mp of player.med_picks) {
+            if (settings.automation.whole_life) {
+              let life = player;
+
+              if (life.selected) {
+                continue;
+              }
+
+              life.selected = true;
+
+              new_demo = [
+                ...new_demo,
+                ...bookmarkLife(spectate, demo_name, userId, life, demo_count),
+              ];
+
+              continue;
+            }
+
+            let kill = player.kills[mp.kill_index];
+
+            if (!shouldRecordKill(kill.killer_class)) {
+              continue;
+            }
+
+            if (kill.selected) {
+              continue;
+            }
+
+            kill.selected = true;
+
+            let label = `MP`;
 
             if (kill.is_airborne) {
               label = `${label} AS`;
             }
 
-            if (kill.victim_class == "medic") {
-              label = `${label} MP`;
+            new_demo.push(
+              bookmarkHighlight(
+                spectate,
+                userId,
+                demo_name,
+                "MP",
+                kill.tick,
+                demo_count
+              )
+            );
+          }
+        }
+
+        if (settings.automation.airshots) {
+          for (let as of player.airshots) {
+            if (settings.automation.whole_life) {
+              let life = player;
+
+              if (life.selected) {
+                continue;
+              }
+
+              life.selected = true;
+
+              new_demo = [
+                ...new_demo,
+                ...bookmarkLife(spectate, demo_name, userId, life, demo_count),
+              ];
+
+              continue;
             }
 
-            new_demo.push(
-              bookmarkHighlight(spectate, userId, demo_name, label, kill.tick, demo_count)
-            );
+            if (!filterAirshots(as)) {
+              continue;
+            }
+
+            let kill = player.kills[as.kill_index];
+
+            if (!shouldRecordKill(kill.killer_class)) {
+              continue;
+            }
+
+            if (kill.selected) {
+              continue;
+            }
 
             kill.selected = true;
+
+            new_demo.push(
+              bookmarkHighlight(
+                spectate,
+                userId,
+                demo_name,
+                "AS",
+                kill.tick,
+                demo_count
+              )
+            );
           }
-        }
-
-        for (let mp of player.med_picks) {
-          let kill = player.kills[mp.kill_index];
-
-          if (kill.selected) {
-            continue;
-          }
-
-          let label = `MP`;
-
-          if (kill.is_airborne) {
-            label = `${label} AS`;
-          }
-
-          new_demo.push(
-            bookmarkHighlight(spectate, userId, demo_name, "MP", kill.tick, demo_count)
-          );
-
-          kill.selected = true;
-        }
-
-        for (let as of player.airshots) {
-          if (!filterAirshots(as)) {
-            continue;
-          }
-
-          let kill = player.kills[as.kill_index];
-
-          if (kill.selected) {
-            continue;
-          }
-
-          new_demo.push(
-            bookmarkHighlight(spectate, userId, demo_name, "AS", kill.tick, demo_count)
-          );
-
-          kill.selected = true;
         }
       }
 
@@ -713,6 +816,8 @@
 
     await invoke("save_events", { newEvents: demos });
     dispatch("reload");
+
+    demos = await loadEvents();
 
     console.log(demos);
 
@@ -1064,24 +1169,26 @@
             </label>
             <p>Display lives with 0 Kills if they have an Assist</p>
           </div>
+          <div class="settings__switch">
+            <label class="switch">
+              <input
+                type="checkbox"
+                bind:checked={displayPlayers}
+                on:changed={refreshList}
+              />
+              <span class="slider round slider--tert"></span>
+            </label>
+            <p>Display players with 0 displayed lives</p>
+          </div>
         </div>
-        <div class="settings__switch">
-          <label class="switch">
-            <input
-              type="checkbox"
-              bind:checked={displayPlayers}
-              on:changed={refreshList}
-            />
-            <span class="slider round slider--tert"></span>
-          </label>
-          <p>Display players with 0 displayed lives</p>
-        </div>
-        <div class="buttons">
-          <button class="btn" on:click={recordAll}> Record All Lives </button>
-          <button class="btn" on:click={recordAllHighlights}>
-            Record All Highlights
-          </button>
-        </div>
+        {#if settings.automation.enabled}
+          <div class="buttons">
+            <button class="btn" on:click={recordAll}> Record All Lives </button>
+            <button class="btn" on:click={recordAllHighlights}>
+              Record All Highlights
+            </button>
+          </div>
+        {/if}
         <div class="teams">
           {#each ["blue", "red"] as team}
             <div class="team">
