@@ -271,6 +271,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
         demo.get_stream(),
         new_analyser::Analyser::new()
     );
+    
     let (header, mut state) = match parser.parse() {
         Ok(val) => val,
         Err(err) => {

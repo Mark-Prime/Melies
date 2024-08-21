@@ -262,7 +262,6 @@ pub struct Death {
     pub killer: UserId,
     pub tick: DemoTick,
     pub crit_type: u16,
-    pub rocket_jump: bool,
     pub penetration: bool,
     pub killer_class: Class,
     pub victim_class: Class,
@@ -270,7 +269,7 @@ pub struct Death {
 }
 
 impl Death {
-    pub fn from_event(event: &PlayerDeathEvent, tick: DemoTick) -> Self {
+    pub fn from_event(event: &PlayerDeathEvent, tick: DemoTick, state: &MatchState) -> Self {
         let assister = if event.assister < 16 * 1024 {
             Some(UserId::from(event.assister))
         } else {
@@ -278,6 +277,11 @@ impl Death {
         };
 
         let penetration = if event.player_penetrate_count > 0 { true } else { false };
+        let mut is_airborne = event.rocket_jump;
+
+        if state.jump_status.contains_key(&UserId::from(event.user_id)) {
+            is_airborne = state.jump_status[&UserId::from(event.user_id)];
+        }
 
         Death {
             assister,
@@ -286,11 +290,10 @@ impl Death {
             weapon: event.weapon.to_string(),
             victim: UserId::from(event.user_id),
             crit_type: event.crit_type,
-            rocket_jump: event.rocket_jump,
             penetration,
             killer_class: Class::Other,
             victim_class: Class::Other,
-            is_airborne: false,
+            is_airborne,
         }
     }
 }
@@ -429,20 +432,85 @@ impl Analyser {
         const WIN_REASON_TIME_LIMIT: u8 = 6;
 
         match event {
-            GameEvent::PlayerDeath(event) => self.state.deaths.push(Death::from_event(event, tick)),
+            GameEvent::PlayerDeath(event) => {
+                self.state.deaths.push(Death::from_event(event, tick, &self.state));
+
+                self.state.jump_status.entry(UserId(event.user_id))
+                    .and_modify(|info| {
+                        *info = false;
+                    })
+                    .or_insert_with(|| false);
+            },
             GameEvent::PlayerSpawn(event) => {
                 let spawn = Spawn::from_event(event, tick);
+
                 if let Some(user_state) = self.state.users.get_mut(&spawn.user) {
                     user_state.classes[spawn.class] += 1;
                     user_state.team = spawn.team;
                 }
+
                 self.state.spawns.push(spawn);
+
+                self.state.jump_status.entry(UserId(event.user_id))
+                    .and_modify(|info| {
+                        *info = false;
+                    })
+                    .or_insert_with(|| false);
             }
             GameEvent::TeamPlayRoundWin(event) => {
                 if event.win_reason != WIN_REASON_TIME_LIMIT {
                     self.state.rounds.push(Round::from_event(event, tick))
                 }
             }
+            GameEvent::RocketJump(event) => {
+                self.state.jump_status.entry(UserId(event.user_id))
+                    .and_modify(|info| {
+                        *info = true;
+                    })
+                    .or_insert_with(|| true);
+            },
+            GameEvent::RocketJumpLanded(event) => {
+                self.state.jump_status.entry(UserId(event.user_id))
+                    .and_modify(|info| {
+                        *info = false;
+                    })
+                    .or_insert_with(|| false);
+            },
+            GameEvent::StickyJump(event) => {
+                self.state.jump_status.entry(UserId(event.user_id))
+                    .and_modify(|info| {
+                        *info = true;
+                    })
+                    .or_insert_with(|| true);
+            },
+            GameEvent::StickyJumpLanded(event) => {
+                self.state.jump_status.entry(UserId(event.user_id))
+                    .and_modify(|info| {
+                        *info = false;
+                    })
+                    .or_insert_with(|| false);
+            },
+            GameEvent::RocketPackLaunch(event) => {
+                self.state.jump_status.entry(UserId(event.user_id))
+                    .and_modify(|info| {
+                        *info = true;
+                    })
+                    .or_insert_with(|| true);
+            },
+            GameEvent::RocketPackLanded(event) => {
+                self.state.jump_status.entry(UserId(event.user_id))
+                    .and_modify(|info| {
+                        *info = false;
+                    })
+                    .or_insert_with(|| false);
+            },
+            GameEvent::Landed(event) => {
+                self.state.jump_status.entry(UserId(event.player.into()))
+                    .and_modify(|info| {
+                        *info = false;
+                    })
+                    .or_insert_with(|| false);
+            },
             // GameEvent::PlayerChargeDeployed(event) => {
             //     println!("{:?} at {}", event, tick.0);
             // }
@@ -459,18 +527,17 @@ impl Analyser {
             if death.tick != tick {
                 break;
             }
-            
+
             deaths_this_tick.push(death.victim.0 as u32);
             deaths_index.push(i);
         }
 
         for entity in message.entities.iter() {
-
-            if !deaths_this_tick.contains(&entity.entity_index.0) {
+            if !self.state.id_map.contains_key(&entity.entity_index) {
                 continue;
             }
 
-            if entity.props.len() < 2 {
+            if !deaths_this_tick.contains(&self.state.id_map.get(&entity.entity_index).unwrap().0.try_into().unwrap()) {
                 continue;
             }
 
@@ -479,16 +546,26 @@ impl Analyser {
                     continue;
                 }
 
-                if prop.identifier.prop_name().unwrap() != "m_flFallVelocity" {
+                let propname = prop.identifier.prop_name().unwrap().to_string();
+                
+                if propname != "m_flFallVelocity" && propname != "m_hGroundEntity" {
                     continue;
                 }
 
-                let death = &mut deaths[deaths_index[deaths_this_tick.iter().position(|&x| x == entity.entity_index.0).unwrap()]];
+                let user = self.state.users.get(self.state.id_map.get(&entity.entity_index).unwrap()).unwrap();
 
-                if (death.victim.0 as u32) == entity.entity_index.0 {
-                    death.is_airborne = true;
+                let death = &mut deaths[deaths_index[deaths_this_tick.iter().position(|&x| x == user.user_id.0 as u32).unwrap()]];
+
+                match propname.as_str() {
+                    "m_flFallVelocity" => {
+                        death.is_airborne = true;
+                    }
+                    "m_hGroundEntity" => {
+                        death.is_airborne = false;
+                    }
+                    _ => continue
                 }
-
+                
                 break;
             }
         }
@@ -507,12 +584,18 @@ impl Analyser {
                 data
             )?
         {
+
+            let user_id = user_info.player_info.user_id;
+            let entity_id = user_info.entity_id;
+
             self.state.users
                 .entry(user_info.player_info.user_id)
                 .and_modify(|info| {
                     info.entity_id = user_info.entity_id;
                 })
                 .or_insert_with(|| user_info.into());
+
+            self.state.id_map.insert(entity_id, user_id);
         }
 
         Ok(())
@@ -532,4 +615,6 @@ pub struct MatchState {
     pub start_tick: ServerTick,
     pub interval_per_tick: f32,
     pub pauses: Vec<Pause>,
+    pub jump_status: BTreeMap<UserId, bool>,
+    id_map: HashMap<EntityId, UserId>,
 }
