@@ -107,12 +107,9 @@ fn write_cfg(settings: &Value) {
         extend!(cfg, "{}\r\n", commands);
     }
 
-    // if setting_as_bin(&settings["recording"]["prevent_taunt"]) == 1 {
-    //     extend!(cfg, "{}\r\n", "alias +taunt \"\"; alias -taunt \"\";");
-    // }
-
     extend!(cfg, "{};\r\n", "alias \"snd_fix\" \"snd_restart; snd_soundmixer Default_mix;\"");
 
+    println!("BLOCK POINT 4");
     let addons = settings["addons"].as_object();
 
     match addons {
@@ -171,21 +168,6 @@ fn write_cfg(settings: &Value) {
         }
         None => {}
     }
-
-    // if setting_as_bin(&settings["output"]["lock"]) == 1 {
-    //     extend!(
-    //         cfg,
-    //         "\r\necho \"Preventing settings from changing\";\r\nalias cl_drawhud \"{}\";\r\n",
-    //         ""
-    //     );
-    //     extend!(cfg, "alias voice_enable \"{}\";\r\n", "");
-    //     extend!(cfg, "alias hud_saytext_time \"{}\";\r\n", "");
-    //     extend!(cfg, "alias crosshair \"{}\";\r\n", "");
-    //     extend!(cfg, "alias r_drawviewmodel \"{}\";\r\n", "");
-    //     extend!(cfg, "alias viewmodel_fov_demo \"{}\";\r\n", "");
-    //     extend!(cfg, "alias tf_use_min_viewmodels \"{}\";\r\n", "");
-    //     extend!(cfg, "alias fov_desired \"{}\";\r\n", "");
-    // }
 
     let tf_folder = match settings["tf_folder"].as_str() {
         Some(folder) => folder,

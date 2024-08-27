@@ -42,6 +42,7 @@ pub(crate) fn build_settings() -> Value {
 
     fs::write(settings_path, serde_json::to_string_pretty(&settings.to_string()).unwrap()).unwrap();
 
+    println!("BLOCK POINT 2");
     settings["addons"] = load_addons();
 
     settings
@@ -54,6 +55,7 @@ pub(crate) fn default_settings() -> Value {
     "clear_events": true,
     "save_backups": true,
     "safe_mode": true,
+    "addons": {},
     "output": {
       "folder": "",
       "method": "tga",
@@ -157,7 +159,12 @@ pub(crate) fn load_settings() -> Value {
 
         merge(&mut defaults, settings);
 
+        // I have no idea why this needs to happen but it prevents a crash
+        let mut defaults: Value = serde_json::from_str(&defaults.as_str().unwrap()).unwrap();
+
         defaults["addons"] = load_addons();
+
+        println!("{}", serde_json::to_string_pretty(&defaults).unwrap());
 
         return defaults;
     }
@@ -261,24 +268,13 @@ fn save_addons(addons: &Value) {
 }
 
 fn merge(a: &mut Value, b: Value) {
-    if let Value::Object(a) = a {
-        if let Value::Object(b) = b {
+    match (a, b) {
+        (a @ &mut Value::Object(_), Value::Object(b)) => {
+            let a = a.as_object_mut().unwrap();
             for (k, v) in b {
-                if k == "addons" {
-                    continue;
-                }
-
-                if v.is_null() {
-                    a.remove(&k);
-                    continue;
-                }
-
                 merge(a.entry(k).or_insert(Value::Null), v);
             }
-
-            return;
         }
+        (a, b) => *a = b,
     }
-
-    *a = b;
 }

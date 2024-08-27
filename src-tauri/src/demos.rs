@@ -143,7 +143,12 @@ impl Life {
 }
 
 pub(crate) fn validate_demos_folder(settings: &Value) -> bool {
-    match fs::read_dir(settings["tf_folder"].as_str().unwrap()) {
+    let tf_folder = settings["tf_folder"].as_str();
+    if tf_folder.is_none() {
+        return false;
+    }
+
+    match fs::read_dir(tf_folder.unwrap()) {
         Ok(_) => {
             return true;
         }
