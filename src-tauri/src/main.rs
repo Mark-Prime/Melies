@@ -76,7 +76,7 @@ fn setting_as_bool(setting: &Value) -> bool {
     }
 }
 
-fn write_cfg(settings: &Value) {
+fn write_cfg(settings: &Value) -> Result<(), String> {
     let mut cfg = String::new();
 
     extend!(
@@ -109,7 +109,6 @@ fn write_cfg(settings: &Value) {
 
     extend!(cfg, "{};\r\n", "alias \"snd_fix\" \"snd_restart; snd_soundmixer Default_mix;\"");
 
-    println!("BLOCK POINT 4");
     let addons = settings["addons"].as_object();
 
     match addons {
@@ -171,18 +170,25 @@ fn write_cfg(settings: &Value) {
 
     let tf_folder = match settings["tf_folder"].as_str() {
         Some(folder) => folder,
-        None => panic!("tf_folder setting is not a string"),
+        None => return Err("tf_folder setting is not a string".to_string()),
     };
+
+    if !Path::new(&format!("{}\\cfg", tf_folder)).exists() {
+        std::fs::create_dir_all(format!("{}\\cfg", tf_folder)).unwrap();
+    }
 
     let mut file = match File::create(format!("{}\\cfg\\melies.cfg", tf_folder)) {
         Ok(file) => file,
-        Err(why) => { panic!("Couldn't create melies.cfg: {}", why) }
+        Err(why) => { return Err(format!("Couldn't create melies.cfg: {}", why)) }
     };
 
     match file.write_all(cfg.as_bytes()) {
+
         Ok(_) => {}
-        Err(why) => panic!("Couldn't write melies.cfg: {}", why),
+        Err(why) => return Err(format!("Couldn't write melies.cfg: {}", why)),
     };
+
+    Ok(())
 }
 
 fn end_vdm(vdm: &mut VDM, settings: &Value, next_demoname: String) -> VDM {
@@ -303,6 +309,7 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
             .replace("{start_tick}", &clip.start_tick.to_string())
             .replace("{end_tick}", &clip.end_tick.to_string())
             .replace("{suffix}", &suffix)
+            .replace("{recording_method}", &settings["output"]["method"].as_str().unwrap())
             .to_string();
 
         let mut bm_value = clip.bm_value.to_owned();
@@ -524,7 +531,15 @@ fn ryukbot() -> Value {
         });
     }
 
-    write_cfg(&settings);
+    match write_cfg(&settings) {
+        Ok(_) => {}
+        Err(err) => {
+            return json!({
+                "code": 500,
+                "err_text": err
+            });
+        }
+    }
 
     let mut clips: Vec<Clip> = vec![];
 

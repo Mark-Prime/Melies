@@ -41,8 +41,7 @@ pub(crate) fn build_settings() -> Value {
     let mut settings = default_settings();
 
     fs::write(settings_path, serde_json::to_string_pretty(&settings.to_string()).unwrap()).unwrap();
-
-    println!("BLOCK POINT 2");
+    
     settings["addons"] = load_addons();
 
     settings
@@ -160,11 +159,11 @@ pub(crate) fn load_settings() -> Value {
         merge(&mut defaults, settings);
 
         // I have no idea why this needs to happen but it prevents a crash
-        let mut defaults: Value = serde_json::from_str(&defaults.as_str().unwrap()).unwrap();
+        if defaults.is_string() {
+            defaults = serde_json::from_str(&defaults.as_str().unwrap()).unwrap();
+        }
 
         defaults["addons"] = load_addons();
-
-        println!("{}", serde_json::to_string_pretty(&defaults).unwrap());
 
         return defaults;
     }

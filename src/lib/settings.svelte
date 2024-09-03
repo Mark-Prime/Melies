@@ -143,7 +143,8 @@ If left blank, the output folder will default to your sparklyfx settings."
         {start_tick} - The start tick of the clip
         {end_tick} - The end tick of the clip
         {suffix} - If the clip is a bookmark or killstreak
-        {bookmarks} - The bookmarks of the clip`}
+        {bookmarks} - The bookmarks of the clip
+        {recording_method} - The recording method of the clip`}
         color="sec"
       />
     </div>
