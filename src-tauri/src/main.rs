@@ -980,6 +980,7 @@ pub(crate) fn scan_for_backups() -> Value {
             events.push(
                 json!({
                     "file_name": path.file_name().unwrap().to_str().unwrap().to_string(),
+                    "created": entry.metadata().unwrap().created().unwrap(),
                 })
             );
         }

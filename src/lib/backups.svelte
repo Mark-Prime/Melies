@@ -6,6 +6,7 @@
   import Fa from "svelte-fa";
   import { createEventDispatcher } from "svelte";
   import Modal from "./Modal.svelte";
+  import dayjs from "dayjs";
 
   const dispatch = createEventDispatcher();
 
@@ -23,12 +24,8 @@
   async function reloadBackup(backup) {
     await invoke("reload_backup", { fileName: backup.file_name });
     dispatch("reload");
-    toggle(true);
+    toggle();
   }
-
-  onMount(async () => {
-    loadBackups();
-  });
 
   function toggle() {
     enabled = !enabled;
@@ -48,6 +45,7 @@
     {#each resp.sort( (a, b) => b.file_name.localeCompare(a.file_name) ) as backup}
       <div class="demo">
         <p>{backup.file_name}</p>
+        <p>{dayjs.unix(backup.created.secs_since_epoch).format('MMM DD, YYYY')}</p>
         <div class="add_demo">
           <button on:click={reloadBackup(backup)}>Load</button>
         </div>
@@ -74,7 +72,7 @@
     border-radius: 5px;
 
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 3rem;
     white-space: nowrap;
 
     transition: all 0.2s;

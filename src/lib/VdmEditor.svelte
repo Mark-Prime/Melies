@@ -1,14 +1,12 @@
 <script>
   import { invoke } from "@tauri-apps/api/tauri";
-  import { createEventDispatcher } from "svelte";
   import { faPenFancy } from "@fortawesome/free-solid-svg-icons";
   import Modal from "./Modal.svelte";
   import Fa from "svelte-fa";
   import VdmAction from "./VdmAction.svelte";
   import ActionEdit from "./ActionEdit.svelte";
   import AddAction from "./AddAction.svelte";
-
-  const dispatch = createEventDispatcher();
+  import dayjs from "dayjs";
 
   let enabled = false;
   let resp = {};
@@ -83,6 +81,7 @@
     {#each resp.vdms as vdm}
       <div class={"demo"}>
         <p>{vdm.name}</p>
+        <p>{dayjs.unix(vdm.metadata.created.secs_since_epoch).format('MMM DD, YYYY')}</p>
         <div class="add_demo">
           <button class="btn" on:click={() => loadVdm(vdm.name)}> Edit </button>
         </div>
@@ -209,7 +208,7 @@
     border-radius: 5px;
 
     display: grid;
-    grid-template-columns: 1fr 0.1fr;
+    grid-template-columns: 2fr 1fr 3rem;
     white-space: nowrap;
 
     transition: all 0.2s;

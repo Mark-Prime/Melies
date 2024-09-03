@@ -5,6 +5,7 @@
   import { faWandMagicSparkles } from "@fortawesome/free-solid-svg-icons";
   import Fa from "svelte-fa";
   import { createEventDispatcher } from "svelte";
+  import dayjs from "dayjs";
 
   import isAirshot from "$lib/composables/isAirshot.js";
 
@@ -620,7 +621,7 @@
     let spec_mode = recording_settings["third_person"] ? "spec_third" : "spec";
 
     let demo_count = 1;
-    
+
     for (let userId in parsed_demo.data.users) {
       if (isPovDemo) {
         if (povId != userId) {
@@ -1125,7 +1126,16 @@
       <h1>Demos</h1>
       {#each resp.demos as demo, i}
         <div class={"demo " + (demo.selected && "demo--selected")}>
-          <p>{demo.name}</p>
+          <p 
+            class="tooltip"
+            data-tooltip={`ticks: ${demo.header.ticks} (${tickToTime(demo.header.ticks)})
+nickname: ${demo.header.nick}
+created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YYYY')}`}
+            style="--kills: 2;"
+          >
+            {demo.name}
+          </p>
+          <p class="demo__map">{demo.header.map}</p>
           <div class="add_demo">
             {#if demo.selected}
               <button
@@ -1682,7 +1692,7 @@
     border-radius: 5px;
 
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 2fr 1fr 3rem;
     white-space: nowrap;
 
     transition: all 0.2s;
@@ -1752,7 +1762,7 @@
     }
 
     & > div,
-    & > p {
+    & p {
       display: flex;
       align-items: center;
       white-space: nowrap;

@@ -1,12 +1,16 @@
+use bitbuffer::BitRead;
 use serde::Serialize;
 use serde_json::json;
 use serde_json::Value;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fs;
+use std::fs::File;
+use std::io::Read;
 use std::path::Path;
 use std::vec;
 use tf_demo_parser::{ Demo, DemoParser };
+use tf_demo_parser::demo::header::Header;
 
 use crate::demos::new_analyser::Class;
 
@@ -198,10 +202,29 @@ fn scan_folder_for_filetype(settings: &Value, path: &str, file_type: &str) -> Ve
         if file_name.ends_with(file_type) {
             let parsed_file_name = file_name.replace(settings["tf_folder"].as_str().unwrap(), "");
 
-            let mut demo = Value::from({});
-            demo["name"] = Value::from(parsed_file_name);
+            let mut file = Value::from({});
+            let metadata = fs::metadata(path.as_ref().unwrap().path()).unwrap();
+            file["name"] = Value::from(parsed_file_name);
+            file["metadata"] = json!({
+                "modified": metadata.modified().unwrap(),
+                "created": metadata.created().unwrap(),
+            });
 
-            files.push(demo);
+            if file_type == ".dem" {
+                let mut demo_file = File::open(path.unwrap().path()).unwrap();
+                let mut file_buf = [0u8; 1072];
+                demo_file.read_exact(&mut file_buf).unwrap();
+
+                let demo = Demo::new(&file_buf);
+
+                let mut stream = demo.get_stream();
+
+                let header = Header::read(&mut stream).unwrap();
+                
+                file["header"] = json!(header);
+            }
+
+            files.push(file);
         }
     }
 
