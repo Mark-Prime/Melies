@@ -17,6 +17,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.5.2",
     "@svelteuidev/composables": "^0.14.0",
     "@tauri-apps/api": "^1.5.1",
+    "dayjs": "^1.11.13",
     "mathjs": "^11.10.0",
     "svelte-fa": "^4.0.2",
     "tauri-plugin-store-api": "github:tauri-apps/tauri-plugin-store"
