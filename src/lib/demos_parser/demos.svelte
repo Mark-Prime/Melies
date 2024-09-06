@@ -416,11 +416,15 @@
         }
       }
 
-      let name_split = current_demo.replace(".dem", "").split("\\");
+      let demo_name = current_demo.replace(".dem", "").substring(1);
+
+      if (!settings.absolute_file_paths) {
+        demo_name = demo_name.replace("demos\\", "");
+      }
 
       if (events.length !== 0) {
         parseDemoEvents(
-          name_split[name_split.length - 1],
+          demo_name,
           events.sort((a, b) => a.time - b.time)
         );
       }
@@ -541,9 +545,11 @@
       },
     ];
 
-    let name_split = current_demo.replace(".dem", "").split("\\");
-
-    let demo_name = name_split[name_split.length - 1];
+    let demo_name = current_demo.replace(".dem", "").substring(1);
+    
+    if (!settings.absolute_file_paths) {
+      demo_name = demo_name.replace("demos\\", "");
+    }
 
     parseDemoEvents(demo_name, events);
 

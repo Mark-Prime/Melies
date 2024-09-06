@@ -91,6 +91,14 @@ If left blank, the output folder will default to your sparklyfx settings."
       bind:value={automation_settings.enabled}
       tooltip="Shows extra buttons useful for quickly grabbing clips in the demo scanner."
     />
+    <Switch
+      title="Absolute File Paths"
+      bind:value={settings.absolute_file_paths}
+      tooltip=".VDM files made with the demo scanner will now be saved to the folder the demo is in.
+Note: the order of the demos remains the same (top to bottom)
+
+DO NOT MOVE THE DEMOS FROM THEIR FOLDERS IF THIS IS ENABLED."
+    />
   </div>
 
   {#if automation_settings.enabled}

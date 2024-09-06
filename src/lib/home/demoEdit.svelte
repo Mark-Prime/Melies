@@ -161,6 +161,8 @@
 
     transition: all 0.2s;
 
+    background-color: var(--bg2);
+
     &-delete {
       white-space: nowrap;
       color: var(--err);
@@ -209,6 +211,7 @@
     &__event {
       color: var(--tert-con-text);
       border: var(--tert-con) 1px solid;
+      background-color: var(--bg2);
       border-radius: 3px;
       margin: 1px 0;
       padding: 1px 0.5rem;

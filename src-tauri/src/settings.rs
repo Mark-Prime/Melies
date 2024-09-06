@@ -54,6 +54,7 @@ pub(crate) fn default_settings() -> Value {
     "clear_events": true,
     "save_backups": true,
     "safe_mode": true,
+    "absolute_file_paths": true,
     "addons": {},
     "output": {
       "folder": "",

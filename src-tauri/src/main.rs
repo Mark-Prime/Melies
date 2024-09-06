@@ -201,7 +201,11 @@ fn add_clip_to_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
 }
 
 fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
-    let vdm_name = vdm.name.clone();
+    let mut vdm_name = vdm.name.clone();
+
+    if settings["absolute_file_paths"].as_bool().unwrap_or(false) {
+        vdm_name = vdm_name.replace("demos\\", "");
+    }
 
     let mut suffix = "bm".to_string();
 
@@ -525,11 +529,17 @@ fn ryukbot() -> Value {
     for (i, vdm) in vdms.iter().enumerate() {
         let mut folder = format!("{}\\demos", &settings["tf_folder"].as_str().unwrap());
 
-        if !Path::new(&folder).exists() {
+        if settings["absolute_file_paths"].as_bool().unwrap() {
             folder = format!("{}", &settings["tf_folder"].as_str().unwrap());
         }
 
         let file_location = format!("{}\\{}.vdm", folder, &vdm.name);
+        
+        let path = Path::new(&file_location);
+
+        if !path.parent().unwrap().exists() {
+            fs::create_dir_all(path).unwrap();
+        }
 
         if settings["safe_mode"].as_i64().is_some() {
             if setting_as_bool(&settings["safe_mode"]) {
@@ -545,6 +555,7 @@ fn ryukbot() -> Value {
             &settings,
             ifelse!(vdms.len() > i + 1, String::from(&vdms[i + 1].name), String::new())
         );
+
         vdm.export(&file_location);
     }
 
