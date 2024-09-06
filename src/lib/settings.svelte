@@ -8,6 +8,8 @@
   import Input from "./Input.svelte";
   import Switch from "./Switch.svelte";
   import Select from "./Select.svelte";
+  import Collapse from "./Collapse.svelte";
+  import Addons from "./addons/Addons.svelte";
   const dispatch = createEventDispatcher();
   let settings = {};
   let output_settings = {};
@@ -92,43 +94,45 @@ If left blank, the output folder will default to your sparklyfx settings."
   </div>
 
   {#if automation_settings.enabled}
-    <h2>Automation</h2>
+    <Collapse defaultOpen={true} title="Automation Tools">
+      <div class="bordered bordered--pri ">
+        <div class="setting">
+          <Switch
+            title="Airshots"
+            bind:value={automation_settings.airshots}
+            tooltip="Bookmark anytime a player hits an airshot."
+          />
+          <Switch
+            title="Med Picks"
+            bind:value={automation_settings.med_picks}
+            tooltip="Bookmark anytime a player kills a Medic."
+          />
+          <Switch
+            title="Killstreaks"
+            bind:value={automation_settings.killstreaks}
+            tooltip="Bookmark anytime a player gets a killstreak."
+          />
+          <Switch
+            title="Record Entire Life"
+            bind:value={automation_settings.whole_life}
+            tooltip="Record the entire life. Will use standard bookmarks if disabled."
+          />
+        </div>
 
-    <div class="setting">
-      <Switch
-        title="Airshots"
-        bind:value={automation_settings.airshots}
-        tooltip="Bookmark anytime a player hits an airshot."
-      />
-      <Switch
-        title="Med Picks"
-        bind:value={automation_settings.med_picks}
-        tooltip="Bookmark anytime a player kills a Medic."
-      />
-      <Switch
-        title="Killstreaks"
-        bind:value={automation_settings.killstreaks}
-        tooltip="Bookmark anytime a player gets a killstreak."
-      />
-      <Switch
-        title="Record Entire Life"
-        bind:value={automation_settings.whole_life}
-        tooltip="Record the entire life. Will use standard bookmarks if disabled."
-      />
-    </div>
+        <h4>Classes</h4>
 
-    <h4>Classes</h4>
-
-    <div class="setting">
-      {#each Object.keys(automation_settings.classes) as class_name}
-        
-        <Switch
-          title="Record {class_name[0].toUpperCase() + class_name.slice(1)}"
-          bind:value={automation_settings.classes[class_name]}
-          tooltip="Record clips of {class_name}."
-        />
-      {/each}
-    </div>
+        <div class="setting">
+          {#each Object.keys(automation_settings.classes) as class_name}
+            
+            <Switch
+              title="Record {class_name[0].toUpperCase() + class_name.slice(1)}"
+              bind:value={automation_settings.classes[class_name]}
+              tooltip="Record clips of {class_name}."
+            />
+          {/each}
+        </div>
+      </div>
+    </Collapse>
   {/if}
 
   <h2>Output</h2>
@@ -337,41 +341,7 @@ If left blank, the output folder will default to your sparklyfx settings."
     /> -->
   </div>
 
-  <h2>Addons</h2>
-
-  {#if Object.keys(addons).length === 0}
-    <div class="setting">
-      <div class="settings__span">No Addons installed</div>
-    </div>
-  {/if}
-
-  {#each Object.keys(addons) as addon}
-    <h3>{addon}</h3>
-    <div class="setting">
-      {#each Object.keys(addons[addon]) as addonSetting}
-        {#if addons[addon][addonSetting].type === "string"}
-          <Input
-            title={addons[addon][addonSetting].title || addonSetting}
-            bind:value={addons[addon][addonSetting].value}
-            tooltip={addons[addon][addonSetting].tooltip}
-          />
-        {:else if addons[addon][addonSetting].type === "int"}
-          <Input
-            title={addons[addon][addonSetting].title || addonSetting}
-            bind:value={addons[addon][addonSetting].value}
-            tooltip={addons[addon][addonSetting].tooltip}
-            type="number"
-          />
-        {:else if addons[addon][addonSetting].type === "bool" || addons[addon][addonSetting].type === "toggle"}
-          <Switch
-            title={addons[addon][addonSetting].title || addonSetting}
-            bind:value={addons[addon][addonSetting].value}
-            tooltip={addons[addon][addonSetting].tooltip}
-          />
-        {/if}
-      {/each}
-    </div>
-  {/each}
+  <Addons bind:addons={addons} />
 
   <div class="setting">
     <button on:click={toggle} class="cancel-btn">Cancel</button>
@@ -380,6 +350,14 @@ If left blank, the output folder will default to your sparklyfx settings."
 </Modal>
 
 <style lang="scss">
+  .bordered {
+    padding: 1rem;
+
+    & > .setting {
+      margin-bottom: 0;
+    }
+  }
+
   .btn {
     padding: 0.3rem 0.5rem;
     height: 100%;
@@ -388,18 +366,6 @@ If left blank, the output folder will default to your sparklyfx settings."
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-
-  .setting {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    justify-content: space-between;
-    gap: 1rem;
-    margin: auto;
-    margin-bottom: 2rem;
-    width: 100%;
-    max-width: 1000px;
-    padding: 0rem 1rem;
   }
 
   .settings {

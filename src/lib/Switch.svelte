@@ -21,7 +21,7 @@
     </label>
     <div
       class:tooltip
-      data-tooltip={tooltip.trim()}
+      data-tooltip={tooltip?.trim() || ""}
       style={tooltip
         ? `--kills: ${tooltip.split(/\r\n|\r|\n/).length - 1};`
         : ""}

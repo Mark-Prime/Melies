@@ -121,6 +121,41 @@ h1 {
   text-align: left;
 }
 
+.bordered {
+  border: 1px solid black;
+  border-radius: 5px;
+  background-color: var(--bg2);
+}
+
+.bordered--pri {
+  border-color: var(--pri-con);
+}
+
+.bordered--sec {
+  border-color: var(--sec-con);
+}
+
+.bordered--tert {
+  border-color: var(--tert-con);
+}
+
+.setting {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(auto-fill, 1fr);
+  justify-content: space-between;
+  gap: 1rem;
+  margin: auto;
+  margin-bottom: 2rem;
+  width: 100%;
+  max-width: 1000px;
+  padding: 0rem 1rem;
+}
+
+.setting > .input-group:nth-child(odd):last-of-type {
+  grid-column: 1 / span 2;
+}
+
 body {
   margin: 0;
 }
@@ -135,7 +170,7 @@ select {
   font-weight: 500;
   font-family: inherit;
   color: var(--pri-con-text);
-  background-color: var(--bg);
+  background-color: var(--bg2);
   transition: border-color 0.25s, filter 0.3s;
   outline: none;
   filter: drop-shadow(0px 0px -1px var(--pri));
@@ -148,7 +183,7 @@ input::placeholder {
 
 .input {
   color: var(--pri-con-text);
-  border-color: var(--pri-con);
+  border-bottom: 2px solid var(--pri-con);
 }
 
 input:disabled {
@@ -256,7 +291,6 @@ button:not(:disabled):hover {
   font-family: inherit;
   color: var(--err-con-text);
   border-color: var(--err-con);
-  background-color: var(--bg);
   transition: border-color 0.25s, filter 0.3s;
   outline: none;
   filter: drop-shadow(0px 0px -1px var(--err));
