@@ -562,29 +562,42 @@
     demo_name,
     label,
     tick,
-    demo_count
+    demo_count,
+    isPovDemo
   ) {
+    let name = demo_name
+
+    if (!isPovDemo) {
+      name = name + "_" + demo_count
+    }
+
     return {
       value: {
-        Bookmark: `${label} ${spectate}`,
+        Bookmark: `${label}${isPovDemo ? "" : " " + spectate}`,
       },
       tick: tick,
-      demo_name: demo_name + "_" + demo_count,
-      event: `[demo_${parsed_demo.data?.users[userId].steamId64}] ${label} ${spectate} (\"${demo_name + "_" + demo_count}\" at ${tick})`,
+      demo_name: name,
+      event: `[demo_${parsed_demo.data?.users[userId].steamId64}] ${label} ${isPovDemo ? "" : spectate + " "}(\"${name}\" at ${tick})`,
       isKillstreak: false,
     };
   }
 
-  function bookmarkLife(spectate, demo_name, userId, life, demo_count) {
+  function bookmarkLife(spectate, demo_name, userId, life, demo_count, isPovDemo) {
     let new_demo = [];
+
+    let name = demo_name
+
+    if (!isPovDemo) {
+      name = name + "_" + demo_count
+    }
 
     new_demo.push({
       value: {
-        Bookmark: `clip_start ${spectate}`,
+        Bookmark: `clip_start${isPovDemo ? "" : " " + spectate}`,
       },
       tick: life.start + 20,
-      demo_name: demo_name + "_" + demo_count,
-      event: `[demo_${parsed_demo.data?.users[userId].steamId64}] clip_start ${spectate} (\"${demo_name + "_" + demo_count}\" at ${life.start + 20})`,
+      demo_name: name,
+      event: `[demo_${parsed_demo.data?.users[userId].steamId64}] clip_start ${isPovDemo ? "" : spectate + " "}(\"${name}\" at ${life.start + 20})`,
       isKillstreak: false,
     });
 
@@ -593,8 +606,8 @@
         Bookmark: `clip_end`,
       },
       tick: life.end + 132,
-      demo_name: demo_name + "_" + demo_count,
-      event: `[demo_${parsed_demo.data?.users[userId].steamId64}] clip_end (\"${demo_name + "_" + demo_count}\" at ${life.end + 132})`,
+      demo_name: name,
+      event: `[demo_${parsed_demo.data?.users[userId].steamId64}] clip_end (\"${name}\" at ${life.end + 132})`,
       isKillstreak: false,
     });
 
@@ -674,7 +687,7 @@
 
               new_demo = [
                 ...new_demo,
-                ...bookmarkLife(spectate, demo_name, userId, life, demo_count),
+                ...bookmarkLife(spectate, demo_name, userId, life, demo_count, isPovDemo),
               ];
 
               continue;
@@ -704,7 +717,8 @@
                   demo_name,
                   label,
                   kill.tick,
-                  demo_count
+                  demo_count,
+                  isPovDemo
                 )
               );
 
@@ -726,7 +740,7 @@
 
               new_demo = [
                 ...new_demo,
-                ...bookmarkLife(spectate, demo_name, userId, life, demo_count),
+                ...bookmarkLife(spectate, demo_name, userId, life, demo_count, isPovDemo),
               ];
 
               continue;
@@ -757,7 +771,8 @@
                 demo_name,
                 "MP",
                 kill.tick,
-                demo_count
+                demo_count,
+                isPovDemo
               )
             );
           }
@@ -776,7 +791,7 @@
 
               new_demo = [
                 ...new_demo,
-                ...bookmarkLife(spectate, demo_name, userId, life, demo_count),
+                ...bookmarkLife(spectate, demo_name, userId, life, demo_count, isPovDemo),
               ];
 
               continue;
@@ -805,7 +820,8 @@
                 demo_name,
                 "AS",
                 kill.tick,
-                demo_count
+                demo_count,
+                isPovDemo
               )
             );
           }
