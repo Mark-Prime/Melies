@@ -257,7 +257,7 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
             setting_as_bool(&settings["recording"]["auto_suffix"]) &&
             bm_value != "General".to_string()
         {
-            clip_name = clip_name.replace("{bookmarks}", &bm_value.replace("spec", "").trim().replace(" ", "-"));
+            clip_name = clip_name.replace("{bookmarks}", &bm_value.replace("-spec", "").trim().replace(" ", "-"));
         } else {
             clip_name = clip_name.replace("{bookmarks}", "");
         }

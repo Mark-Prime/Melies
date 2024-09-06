@@ -23,6 +23,16 @@ impl Clip {
         let demo_name = String::from(event.demo_name.clone());
         match &event.value {
             Killstreak(killstreak_value) => {
+                let mut start_tick = &event.tick
+                    - settings["recording"]["before_killstreak_per_kill"]
+                        .as_i64()
+                        .unwrap()
+                        * killstreak_value;
+
+                if start_tick < 0 {
+                    start_tick = settings["recording"]["start_delay"].as_i64().unwrap();
+                }
+
                 return Clip {
                     events: vec![event.clone()],
                     demo_name: demo_name.to_string(),
@@ -30,11 +40,7 @@ impl Clip {
                     has_bookmark: false,
                     ks_value: killstreak_value.to_owned(),
                     bm_value: "".to_string(),
-                    start_tick: &event.tick
-                        - settings["recording"]["before_killstreak_per_kill"]
-                            .as_i64()
-                            .unwrap()
-                            * killstreak_value,
+                    start_tick,
                     end_tick: &event.tick
                         + settings["recording"]["after_killstreak"].as_i64().unwrap(),
                     spec_type: 0,
@@ -43,6 +49,13 @@ impl Clip {
                 };
             }
             Bookmark(bookmark_value) => {
+                let mut start_tick = &event.tick
+                    - settings["recording"]["before_bookmark"].as_i64().unwrap();
+
+                if start_tick < 0 {
+                    start_tick = settings["recording"]["start_delay"].as_i64().unwrap();
+                }
+
                 let mut clip = Clip {
                     events: vec![event.clone()],
                     demo_name: demo_name.to_string(),
@@ -50,8 +63,7 @@ impl Clip {
                     has_bookmark: true,
                     ks_value: 0,
                     bm_value: bookmark_value.to_string(),
-                    start_tick: &event.tick
-                        - settings["recording"]["before_bookmark"].as_i64().unwrap(),
+                    start_tick,
                     end_tick: &event.tick
                         + settings["recording"]["after_bookmark"].as_i64().unwrap(),
                     spec_type: 0,
@@ -74,11 +86,28 @@ impl Clip {
                 if split.contains(&"clip_start") {
                     clip.long_clip = true;
                     clip.start_tick = event.tick;
+                    
+                    if clip.start_tick < 0 {
+                        clip.start_tick = settings["recording"]["start_delay"].as_i64().unwrap();
+                    }
                 }
 
                 return clip;
             }
         }
+    }
+
+    fn push_bm_value(&mut self, bm_value: &str) {
+        let split_bm = self.bm_value.split(" ");
+        let mut split: Vec<&str> = split_bm.collect();
+
+        if split.contains(&bm_value) {
+            return;
+        }
+        
+        split.push(bm_value);
+
+        self.bm_value = split.join(" ");
     }
 
     fn calc_ks(&mut self, ks_count: i64) {
@@ -169,6 +198,10 @@ impl Clip {
                 if bm.contains("clip_end") {
                     new_end = event.tick;
                     self.long_clip = false;
+                }
+
+                for val in split {
+                    self.push_bm_value(val);
                 }
             }
             Killstreak(killstreak_value) => {
