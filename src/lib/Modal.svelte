@@ -8,6 +8,7 @@
   export let large = false;
   export let tall = false;
   export let small = false;
+  export let grow = false;
 
   $: {
     if (enabled) {
@@ -28,6 +29,7 @@
       class:modal__card--large={large}
       class:modal__card--small={small}
       class:modal__card--tall={tall}
+      class:modal__card--grow={grow}
       style={`--color: var(--${color}); --color-con: var(--${color}-con);`}
     >
       <slot />
@@ -67,6 +69,13 @@
       &--large {
         max-width: min(calc(100vw - 2rem), 1680px);
         max-height: min(calc(100vh - 2rem), 900px);
+      }
+      
+      &--grow {
+        max-width: min(calc(100vw - 2rem), 1680px);
+        max-height: min(calc(100vh - 2rem), 900px);
+
+        width: fit-content;
       }
 
       &--small {
