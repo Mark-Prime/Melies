@@ -89,7 +89,8 @@ If left blank, the output folder will default to your sparklyfx settings."
     <Switch
       title="Display Automation Tools"
       bind:value={automation_settings.enabled}
-      tooltip="Shows extra buttons useful for quickly grabbing clips in the demo scanner."
+      tooltip="Shows extra buttons useful for quickly grabbing clips
+in the demo scanner."
     />
     <Switch
       title="Absolute File Paths"

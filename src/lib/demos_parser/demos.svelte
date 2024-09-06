@@ -1771,9 +1771,39 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YY
     margin: 2px 0;
     border-radius: 5px;
 
+    transition: all 0.2s;
+
+    background-color: var(--bg2);
+
+    &.demo--hasvdm .tooltip:hover {
+      color: var(--sec);
+    }
+
+    &:not(.demo--hasvdm) .tooltip:hover {
+      color: var(--tert);
+    }
+
     &.demo--hasvdm > td {
       color: var(--sec-con-text);
       border-color: var(--sec-con);
+    }
+
+    &:hover {
+      &:not(.demo--hasvdm) {
+        filter: drop-shadow(0px 0px 3px var(--tert));
+      }
+
+      &.demo--hasvdm {
+        filter: drop-shadow(0px 0px 3px var(--sec));
+      }
+
+      & > td {
+        border-color: var(--tert-con-text);
+      }
+
+      &.demo--hasvdm > td {
+        border-color: var(--sec-con-text);
+      }
     }
 
     & > td {
@@ -1794,6 +1824,8 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YY
         border-right-width: 1px;
         border-radius: 0 5px 5px 0;
         padding-right: 0.5rem;
+
+        overflow: hidden;
       }
     }
   }
