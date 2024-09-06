@@ -75,7 +75,7 @@
   VDM Editor
 </button>
 
-<Modal color="pri" {toggle} {enabled} tall>
+<Modal color="pri" {toggle} {enabled} tall grow>
   {#if resp.loaded && resp.vdms && !vdmName}
     <h1>Load VDM</h1>
     {#each resp.vdms as vdm}

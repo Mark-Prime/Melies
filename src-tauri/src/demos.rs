@@ -11,6 +11,7 @@ use std::path::Path;
 use std::vec;
 use tf_demo_parser::{ Demo, DemoParser };
 use tf_demo_parser::demo::header::Header;
+use human_sort::compare;
 
 use crate::demos::new_analyser::Class;
 
@@ -236,6 +237,8 @@ fn scan_folder_for_filetype(settings: &Value, path: &str, file_type: &str) -> Ve
             files.push(file);
         }
     }
+
+    files.sort_by(|a, b| compare(a["name"].as_str().unwrap(), b["name"].as_str().unwrap()));
 
     files
 }

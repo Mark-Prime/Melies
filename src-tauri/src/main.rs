@@ -1019,6 +1019,52 @@ fn open_addons_folder() {
     addons::open_addons_folder();
 }
 
+#[command]
+fn delete_demo(file_name: Value) {
+    let settings = load_settings();
+
+    let file_path = format!("{}{}", settings["tf_folder"].as_str().unwrap(), file_name.as_str().unwrap());
+    let vdm_file_path = format!("{}{}", settings["tf_folder"].as_str().unwrap(), file_name.as_str().unwrap().replace(".dem", ".vdm"));
+
+    let path = Path::new(&file_path);
+    let vdm_path = Path::new(&vdm_file_path);
+
+    if path.exists() {
+        fs::remove_file(path).unwrap();
+    }
+
+    if vdm_path.exists() {
+        fs::remove_file(vdm_path).unwrap();
+    }
+}
+
+#[command]
+fn delete_vdm(file_name: Value) {
+    let settings = load_settings();
+
+    let file_path = format!("{}{}", settings["tf_folder"].as_str().unwrap(), file_name.as_str().unwrap().replace(".dem", ".vdm"));
+
+    let path = Path::new(&file_path);
+
+    if path.exists() {
+        fs::remove_file(path).unwrap();
+    }
+}
+
+#[command]
+fn create_vdm(file_name: Value) {
+    let settings = load_settings();
+
+    let file_path = format!("{}{}", settings["tf_folder"].as_str().unwrap(), file_name.as_str().unwrap().replace(".dem", ".vdm"));
+
+    let path = Path::new(&file_path);
+
+    if !path.exists() {
+        let vdm = VDM::new();
+        vdm.export(&file_path);
+    }
+}
+
 fn main() {
     tauri::Builder
         ::default()
@@ -1038,6 +1084,9 @@ fn main() {
                 reload_backup,
                 parse_demo,
                 open_addons_folder,
+                delete_demo,
+                delete_vdm,
+                create_vdm
             ]
         )
         .run(tauri::generate_context!())

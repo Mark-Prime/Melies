@@ -6,6 +6,7 @@
   import Fa from "svelte-fa";
   import { createEventDispatcher } from "svelte";
   import dayjs from "dayjs";
+  import tickToTime from "$lib/composables/tickToTime.js";
 
   import isAirshot from "$lib/composables/isAirshot.js";
 
@@ -1090,12 +1091,6 @@
     displayPlayers = displayPlayers;
     resp = resp;
     parsed_demo = parsed_demo;
-  }
-
-  function tickToTime(ticks) {
-    return `${Math.floor(Math.round(ticks / 66) / 60)}m ${
-      Math.round(ticks / 66) % 60
-    }s`;
   }
 
   function on_key_down(event) {

@@ -1,6 +1,6 @@
 [package]
 name = "melies"
-version = "1.2.1"
+version = "1.2.2"
 description = "A TF2 Recording Tool and more!"
 authors = ["Maven (famous)"]
 license = ""
@@ -17,11 +17,12 @@ serde_json = "1.0"
 chrono = "0.4.24"
 regex = "1"
 serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "1.2", features = [ "dialog-message", "shell-open"] }
+tauri = { version = "1.2", features = [ "dialog-confirm", "dialog-message", "shell-open"] }
 vdm = "1.0.8"
 reqwest = { version = "0.11", features = ["blocking", "json"] }
 steamid-ng = "1.0.0"
 tf-demo-parser = { path = "D:/parser" }
+human-sort = "0.2.2"
 fnv = "1.0.7"
 bitbuffer = { version = "0.10.9", features = ["serde"] }
 num_enum = "0.5.7"

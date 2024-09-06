@@ -165,6 +165,7 @@ button,
 select {
   border-radius: 8px;
   border: 1px solid var(--pri-con);
+  border-bottom-width: 2px;
   padding: 0.5rem 0.7rem;
   font-size: 1em;
   font-weight: 500;
@@ -183,7 +184,6 @@ input::placeholder {
 
 .input {
   color: var(--pri-con-text);
-  border-bottom: 2px solid var(--pri-con);
 }
 
 input:disabled {

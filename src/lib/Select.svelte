@@ -40,6 +40,7 @@
 <style lang="scss">
   select {
     width: 100%;
+    padding-top: calc(.5rem - 2px);
   }
 
   label {
