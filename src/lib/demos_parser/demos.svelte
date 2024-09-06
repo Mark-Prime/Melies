@@ -2,7 +2,7 @@
   // @ts-nocheck
   import { invoke } from "@tauri-apps/api/tauri";
   import { onMount } from "svelte";
-  import { faWandMagicSparkles } from "@fortawesome/free-solid-svg-icons";
+  import { faWandMagicSparkles, faCheck, faXmark } from "@fortawesome/free-solid-svg-icons";
   import Fa from "svelte-fa";
   import { createEventDispatcher } from "svelte";
   import dayjs from "dayjs";
@@ -1141,35 +1141,78 @@
   color="tert"
   {toggle}
   {enabled}
-  large={current_demo !== "" && resp.loaded && !parsed_demo.loading}
+  grow
 >
   {#if resp.loaded}
     {#if current_demo === ""}
       <h1>Demos</h1>
-      {#each resp.demos as demo, i}
-        <div class={"demo " + (demo.selected && "demo--selected")}>
-          <p 
-            class="tooltip"
-            data-tooltip={`ticks: ${demo.header.ticks} (${tickToTime(demo.header.ticks)})
-nickname: ${demo.header.nick}
+      <table>
+        <thead>
+          <tr>
+            <th>
+              Name
+            </th>
+            <th>Length</th>
+            <th>Map</th>
+            <th
+              class="tooltip tooltip--left"
+              data-tooltip={`Does the demo have a vdm?`}
+              style="--kills: 0;"
+            >
+              VDM
+            </th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {#each resp.demos as demo, i}
+            <tr class={"table_row " + (demo.hasVdm && "demo--hasvdm") + " " + (demo.selected && "demo--selected")}>
+              <td 
+                class="tooltip"
+                data-tooltip={`nickname: ${demo.header.nick}
 created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YYYY')}`}
-            style="--kills: 2;"
-          >
-            {demo.name}
-          </p>
-          <p class="demo__map">{demo.header.map}</p>
-          <div class="add_demo">
-            {#if demo.selected}
-              <button
-                class="cancel-btn"
-                on:click={toggleSelected(demo, null, i)}>-</button
+                style="--kills: 1;"
               >
-            {:else}
-              <button on:click={toggleSelected(demo, null, i)}>+</button>
-            {/if}
-          </div>
-        </div>
-      {/each}
+                {demo.name}
+              </td>
+              <td>{tickToTime(demo.header.ticks)}</td>
+              <td>{demo.header.map}</td>
+              <td class="table__has-vdm">
+                {#if demo.hasVdm}
+                <span
+                  class="tooltip tooltip--left"
+                  data-tooltip={`This demo has a VDM.`}
+                  style="--kills: 0;"
+                >
+                  <Fa 
+                    icon={faCheck}
+                    color={`var(--sec)`}
+                  />
+                </span>
+                {:else}
+                  <span
+                    class="tooltip tooltip--left"
+                    data-tooltip={`This demo does not have a VDM.`}
+                    style="--kills: 0;"
+                  >
+                    <Fa icon={faXmark} color={`var(--tert)`} />
+                  </span>
+                {/if}
+              </td>
+              <td class="add_demo">
+                {#if demo.selected}
+                  <button
+                    class="cancel-btn"
+                    on:click={toggleSelected(demo, null, i)}>-</button
+                  >
+                {:else}
+                  <button on:click={toggleSelected(demo, null, i)}>+</button>
+                {/if}
+              </td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
       <div class="buttons">
         <button class="cancel-btn" on:click={closeModal}>Cancel</button>
         <button on:click={parseDemos}>Parse</button>
@@ -1454,6 +1497,17 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YY
 </Modal>
 
 <style lang="scss">
+  .demo-labels {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 3rem;
+    justify-items: center;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 0 1rem;
+    margin: 0;
+  }
+
   .btn {
     display: flex;
     gap: 0.5rem;
@@ -1565,12 +1619,6 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YY
     justify-content: left;
     align-items: center;
     gap: 1rem;
-
-    & > div {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
   }
 
   .team {
@@ -1704,6 +1752,52 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YY
     line-height: 0;
   }
 
+  table {
+    border-collapse: separate;
+    border-spacing: 0 2px;
+    width: 100%;
+  }
+
+  th {
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .table_row {
+    font-size: small;
+    font-family: "Source Code Pro", monospace;
+    color: var(--tert-con-text);
+    padding: 0 1rem;
+    margin: 2px 0;
+    border-radius: 5px;
+
+    &.demo--hasvdm > td {
+      color: var(--sec-con-text);
+      border-color: var(--sec-con);
+    }
+
+    & > td {
+      text-align: left;
+      white-space: nowrap;
+      border: 1px solid var(--tert-con);
+      border-left-width: 0px;
+      border-right-width: 0px;
+      padding: 0.3rem 0.25rem;
+
+      &:first-of-type {
+        border-left-width: 1px;
+        border-radius: 5px 0 0 5px;
+        padding-left: 0.5rem;
+      }
+
+      &:last-of-type {
+        border-right-width: 1px;
+        border-radius: 0 5px 5px 0;
+        padding-right: 0.5rem;
+      }
+    }
+  }
+
   .demo {
     font-size: small;
     padding: 0.3rem 0.5rem;
@@ -1714,7 +1808,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YY
     border-radius: 5px;
 
     display: grid;
-    grid-template-columns: 2fr 1fr 3rem;
+    grid-template-columns: 2fr 1fr 1fr 1fr 3rem;
     white-space: nowrap;
 
     transition: all 0.2s;
@@ -1781,15 +1875,6 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YY
 
     &--selected {
       border: 1px solid var(--tert);
-    }
-
-    & > div,
-    & p {
-      display: flex;
-      align-items: center;
-      white-space: nowrap;
-      padding: 0;
-      margin: 0;
     }
 
     &:hover {

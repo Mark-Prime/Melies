@@ -116,6 +116,7 @@
   }
 
   .buttons {
+    margin-left: 0.5rem;
     display: flex;
     gap: 0.5rem;
   }

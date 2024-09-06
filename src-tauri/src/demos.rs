@@ -197,6 +197,10 @@ fn scan_folder_for_filetype(settings: &Value, path: &str, file_type: &str) -> Ve
     let paths = fs::read_dir(path).unwrap();
 
     for path in paths {
+        if path.as_ref().is_err() {
+            continue;
+        }
+
         let file_name = path.as_ref().unwrap().path().display().to_string();
 
         if file_name.ends_with(file_type) {
@@ -211,6 +215,7 @@ fn scan_folder_for_filetype(settings: &Value, path: &str, file_type: &str) -> Ve
             });
 
             if file_type == ".dem" {
+                let mut vdm_path = path.as_ref().unwrap().path();
                 let mut demo_file = File::open(path.unwrap().path()).unwrap();
                 let mut file_buf = [0u8; 1072];
                 demo_file.read_exact(&mut file_buf).unwrap();
@@ -222,6 +227,10 @@ fn scan_folder_for_filetype(settings: &Value, path: &str, file_type: &str) -> Ve
                 let header = Header::read(&mut stream).unwrap();
                 
                 file["header"] = json!(header);
+
+                vdm_path.set_extension("vdm");
+
+                file["hasVdm"] = serde_json::Value::Bool(vdm_path.exists());
             }
 
             files.push(file);
