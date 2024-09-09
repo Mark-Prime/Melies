@@ -77,6 +77,7 @@ pub(crate) fn default_settings() -> Value {
       "minimum_ticks_between_clips": 500,
       "before_bookmark": 1000,
       "after_bookmark": 200,
+      "minimum_kills_in_streak": 3,
       "before_killstreak_per_kill": 500,
       "after_killstreak": 300,
       "interval_for_rewind_double_taps": 66,

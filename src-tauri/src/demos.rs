@@ -548,7 +548,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
             life.killstreak_pointers = life.killstreak_pointers
                 .iter()
                 .map(|v| v.clone())
-                .filter(|sen| sen.kills.len() >= 3)
+                .filter(|sen| sen.kills.len() >= settings["recording"]["minimum_kills_in_streak"].as_i64().unwrap() as usize)
                 .collect::<Vec<KillstreakPointer>>();
 
             for ks in &life.killstreak_pointers {

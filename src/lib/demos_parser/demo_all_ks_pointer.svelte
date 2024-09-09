@@ -211,6 +211,7 @@
   }
 
   .demo {
+    background-color: var(--bg2);
     font-size: small;
     padding: 0rem 0.5rem;
     margin: 2px 0;

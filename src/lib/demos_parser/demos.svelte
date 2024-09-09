@@ -1833,6 +1833,8 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YY
     color: var(--tert-con-text);
     border: 1px solid var(--tert-con);
     border-radius: 5px;
+    background: var(--bg2);
+    max-height: 100vh;
 
     display: grid;
     grid-template-columns: 2fr 1fr 1fr 1fr 3rem;
@@ -1849,8 +1851,9 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YY
     &__life {
       grid-template-columns: 0.5fr 1fr 1fr 1fr 1fr min-content;
       height: auto;
-      max-height: 35.75px;
+      max-height: 100%;
       transition: all 0.2s;
+      background: var(--bg2);
 
       &:hover {
         max-height: 100%;
@@ -1906,7 +1909,6 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YY
 
     &:hover {
       border: 1px solid var(--tert-con-text);
-      max-height: 100vh;
     }
   }
 

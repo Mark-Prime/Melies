@@ -191,6 +191,7 @@
   }
 
   .demo__kills {
+    background-color: var(--bg2);
     grid-row: 2;
     grid-column: 1 / 7;
     display: flex;

@@ -174,6 +174,7 @@
     color: var(--tert-con-text);
     border: 1px solid var(--tert-con);
     border-radius: 5px;
+    background-color: var(--bg2);
 
     display: grid;
     grid-template-columns: 1fr 1fr;

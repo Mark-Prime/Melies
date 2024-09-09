@@ -1065,6 +1065,35 @@ fn create_vdm(file_name: Value) {
     }
 }
 
+#[command]
+fn load_theme() -> Value {
+    let user_profile = env::var("USERPROFILE");
+
+    let settings_path = match user_profile {
+        Ok(profile) => { format!("{}\\Documents\\Melies\\theme.json", profile) }
+        Err(_) => {
+            format!(
+                "{}\\theme.json",
+                std::env::current_exe().unwrap().parent().unwrap().to_str().unwrap()
+            )
+        }
+    };
+
+    if Path::new(&settings_path).exists() {
+        let file = fs::read_to_string(settings_path).unwrap();
+        let mut theme: Value = serde_json::from_str(&file).unwrap();
+        println!("{:#?}", theme);
+
+        theme["has_theme"] = json!(true);
+
+        return theme;
+    }
+
+    return json!({
+        "has_theme": false
+    })
+}
+
 fn main() {
     tauri::Builder
         ::default()
@@ -1086,7 +1115,8 @@ fn main() {
                 open_addons_folder,
                 delete_demo,
                 delete_vdm,
-                create_vdm
+                create_vdm,
+                load_theme
             ]
         )
         .run(tauri::generate_context!())

@@ -10,6 +10,7 @@
   import Select from "./Select.svelte";
   import Collapse from "./Collapse.svelte";
   import Addons from "./addons/Addons.svelte";
+  import Theme from "./Theme.svelte";
   const dispatch = createEventDispatcher();
   let settings = {};
   let output_settings = {};
@@ -279,6 +280,13 @@ DO NOT MOVE THE DEMOS FROM THEIR FOLDERS IF THIS IS ENABLED."
       type="number"
     />
     <Input
+      title="Minimum Kills in Killstreak"
+      bind:value={recording_settings.minimum_kills_in_streak}
+      tooltip={"Used by the demo scanner to determine what a killstreak is."}
+      color="tert"
+      type="number"
+    />
+    <Input
       title="Ticks before killstreak per kill in streak"
       bind:value={recording_settings.before_killstreak_per_kill}
       tooltip={"The average time between kills.\nShould match ds_kill_delay times 66.\n1 second = 66 ticks"}
@@ -300,13 +308,6 @@ DO NOT MOVE THE DEMOS FROM THEIR FOLDERS IF THIS IS ENABLED."
       type="number"
     />
     <Input
-      title="Rewind amount upon double tap"
-      bind:value={recording_settings.rewind_amount}
-      tooltip={"How far back it records when a double tap happens.\nUseful for if you missed a clip due to being too busy in game.\n1 second = 66 ticks"}
-      color="tert"
-      type="number"
-    />
-    <Input
       title="FOV"
       bind:value={recording_settings.fov}
       color="tert"
@@ -318,6 +319,14 @@ DO NOT MOVE THE DEMOS FROM THEIR FOLDERS IF THIS IS ENABLED."
       color="tert"
       type="number"
     />
+    <Input
+      title="Rewind amount upon double tap"
+      bind:value={recording_settings.rewind_amount}
+      tooltip={"How far back it records when a double tap happens.\nUseful for if you missed a clip due to being too busy in game.\n1 second = 66 ticks"}
+      color="tert"
+      type="number"
+    />
+    <div></div>
     <Switch
       title="Automatically record next demo"
       bind:value={recording_settings.record_continuous}
@@ -351,6 +360,8 @@ DO NOT MOVE THE DEMOS FROM THEIR FOLDERS IF THIS IS ENABLED."
   </div>
 
   <Addons bind:addons={addons} />
+
+  <Theme />
 
   <div class="setting">
     <button on:click={toggle} class="cancel-btn">Cancel</button>
