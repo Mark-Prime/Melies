@@ -1082,7 +1082,6 @@ fn load_theme() -> Value {
     if Path::new(&settings_path).exists() {
         let file = fs::read_to_string(settings_path).unwrap();
         let mut theme: Value = serde_json::from_str(&file).unwrap();
-        println!("{:#?}", theme);
 
         theme["has_theme"] = json!(true);
 
