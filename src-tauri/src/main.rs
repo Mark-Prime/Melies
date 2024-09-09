@@ -7,6 +7,7 @@ use serde_json::{ self, json, Value };
 use std::fs::{ DirEntry, File };
 use std::io::Write;
 use std::path::Path;
+use std::process::Command;
 use std::{ env, fs };
 use tauri::command;
 use vdm::action::ActionType;
@@ -1093,6 +1094,28 @@ fn load_theme() -> Value {
     })
 }
 
+#[command]
+fn open_themes_folder() {
+    let user_profile = env::var("USERPROFILE");
+  
+    let addons_path = match user_profile {
+        Ok(profile) => { format!("{}\\Documents\\Melies", profile) }
+        Err(_) => {
+            format!(
+                "{}",
+                std::env::current_exe().unwrap().parent().unwrap().to_str().unwrap()
+            )
+        }
+    };
+  
+    fs::create_dir_all(&addons_path).unwrap();
+  
+    Command::new("explorer")
+        .arg(addons_path)
+        .spawn()
+        .unwrap();
+  }
+
 fn main() {
     tauri::Builder
         ::default()
@@ -1115,7 +1138,8 @@ fn main() {
                 delete_demo,
                 delete_vdm,
                 create_vdm,
-                load_theme
+                load_theme,
+                open_themes_folder
             ]
         )
         .run(tauri::generate_context!())

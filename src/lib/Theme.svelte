@@ -1,7 +1,8 @@
 <script>
   import Collapse from "./Collapse.svelte";
+  import { invoke } from "@tauri-apps/api/tauri";
 </script>
-<Collapse defaultOpen={true} title="Theme">
+<Collapse defaultOpen={false} title="Theme">
   <div class="setting">
     <div>
       <h4>Primary Colors</h4>
@@ -55,7 +56,8 @@
       </div>
     </div>
   </div>
-  <button>Install Theme</button>
+  <p>To install a new theme, click the button below and drag a theme.json file into this folder.</p>
+  <button on:click={() => invoke("open_themes_folder")}>Install Theme</button>
 </Collapse>
 
 <style>
