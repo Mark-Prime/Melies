@@ -217,21 +217,31 @@ fn scan_folder_for_filetype(settings: &Value, path: &str, file_type: &str) -> Ve
 
             if file_type == ".dem" {
                 let mut vdm_path = path.as_ref().unwrap().path();
+                let demo_path = path.as_ref().unwrap().path();
                 let mut demo_file = File::open(path.unwrap().path()).unwrap();
                 let mut file_buf = [0u8; 1072];
                 demo_file.read_exact(&mut file_buf).unwrap();
 
                 let demo = Demo::new(&file_buf);
 
-                let mut stream = demo.get_stream();
-
-                let header = Header::read(&mut stream).unwrap();
-                
-                file["header"] = json!(header);
-
                 vdm_path.set_extension("vdm");
 
                 file["hasVdm"] = serde_json::Value::Bool(vdm_path.exists());
+
+                let mut stream = demo.get_stream();
+
+                let header = Header::read(&mut stream);
+
+                match header {
+                    Ok(val) => {
+                        file["header"] = json!(val);
+                    }
+                    Err(err) => {
+                        println!("Corrupt demo: {}", demo_path.display());
+                        println!("{}", err);
+                        continue;
+                    }
+                }
             }
 
             files.push(file);

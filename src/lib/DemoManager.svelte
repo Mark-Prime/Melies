@@ -37,10 +37,6 @@
 
   function toggle() {
     enabled = !enabled;
-
-    if (enabled) {
-      loadDemos();
-    }
   }
 
   async function delete_vdm(fileName) {
@@ -94,7 +90,7 @@
   Demo Manager
 </button>
 
-<Modal color="sec" {toggle} {enabled} large tall>
+<Modal color="sec" {toggle} {enabled} large tall on:open={loadDemos}>
   <h1>Demo Manager</h1>
   {#if resp.loaded}
     <h4>Filters</h4>

@@ -1,7 +1,6 @@
 <script>
   // @ts-nocheck
   import { invoke } from "@tauri-apps/api/tauri";
-  import { onMount } from "svelte";
   import { faWandMagicSparkles, faCheck, faXmark } from "@fortawesome/free-solid-svg-icons";
   import Fa from "svelte-fa";
   import { createEventDispatcher } from "svelte";
@@ -201,14 +200,10 @@
     toggle();
   }
 
-  onMount(async () => {
-    loadDemos();
-    loadSettings();
-  });
-
   $: {
     console.log("Modal Enabled:", enabled);
     loadDemos();
+    loadSettings();
   }
 
   function limitStringLength(str, len) {

@@ -2,7 +2,6 @@
   import { invoke } from "@tauri-apps/api/tauri";
   import { createEventDispatcher } from "svelte";
   import { faFilePen } from "@fortawesome/free-solid-svg-icons";
-  import { onMount } from "svelte";
   import DemoEdit from "$lib/home/demoEdit.svelte";
   import Modal from "./Modal.svelte";
   import Fa from "svelte-fa";
@@ -11,14 +10,7 @@
 
   let enabled = false;
   let demos = [];
-
-  function toggle() {
-    enabled = !enabled;
-
-    if (enabled) {
-      loadEvents();
-    }
-  }
+  let toggle = () => (enabled = !enabled);
 
   function cancel() {
     enabled = false;
@@ -73,10 +65,6 @@
     setEvents(event_list);
   }
 
-  onMount(async () => {
-    loadEvents();
-  });
-
   function addDemo() {
     demos.push([
       {
@@ -99,7 +87,7 @@
   Edit Events
 </button>
 
-<Modal color="pri" {toggle} {enabled}>
+<Modal color="pri" {toggle} {enabled} on:open={loadEvents}>
   {#each demos as demo, demo_i}
     {#each demo as event, i (`${demo_i}__${i}`)}
       <DemoEdit {demo_i} {i} {demo} {demos} {event} {refresh} />

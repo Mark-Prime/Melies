@@ -1,7 +1,6 @@
 <script>
   // @ts-nocheck
   import { invoke } from "@tauri-apps/api/tauri";
-  import { onMount } from "svelte";
   import { faFloppyDisk } from "@fortawesome/free-solid-svg-icons";
   import Fa from "svelte-fa";
   import { createEventDispatcher } from "svelte";
@@ -12,6 +11,7 @@
 
   let enabled = false;
   let resp = {};
+  let toggle = () => (enabled = !enabled);
 
   async function loadBackups() {
     try {
@@ -25,10 +25,6 @@
     await invoke("reload_backup", { fileName: backup.file_name });
     dispatch("reload");
     toggle();
-  }
-
-  function toggle() {
-    enabled = !enabled;
   }
 </script>
 

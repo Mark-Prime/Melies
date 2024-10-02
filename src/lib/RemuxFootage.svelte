@@ -10,10 +10,6 @@
   
     function toggle() {
       enabled = !enabled;
-  
-      if (enabled) {
-        loadEvents();
-      }
     }
     
   </script>
