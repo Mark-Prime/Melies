@@ -1132,6 +1132,7 @@
   {toggle}
   {enabled}
   grow
+  wide={resp.loaded && current_demo !== ""}
 >
   {#if resp.loaded}
     {#if current_demo === ""}
@@ -1203,14 +1204,10 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YY
           {/each}
         </tbody>
       </table>
-      <div class="buttons">
-        <button class="cancel-btn" on:click={closeModal}>Cancel</button>
-        <button on:click={parseDemos}>Parse</button>
-      </div>
     {:else if !parsed_demo.err_text}
       <h1>{current_demo}</h1>
       {#if !parsed_demo.loading}
-        <h4 class="centered">{parsed_demo.header.map}</h4>
+        <h4 class="centered full-width">{parsed_demo.header.map}</h4>
         <div class="flex-between flex-wrap">
           <div class="settings__switch">
             <label class="switch">
@@ -1456,10 +1453,6 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YY
           {displayAssists}
           {getTeam}
         />
-        <div class="buttons">
-          <button class="cancel-btn" on:click={closeModal}>Cancel</button>
-          <button on:click={nextDemo}>Save</button>
-        </div>
       {:else}
         <div class="loading">
           <div class="loadingio-spinner-dual-ball-gstkvx2ybq5">
@@ -1475,15 +1468,28 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YY
     {:else if parsed_demo.err_text}
       <h1>Error: {parsed_demo.code}</h1>
       <h2 class="centered">{parsed_demo.err_text}</h2>
-
-      <div class="buttons">
-        <button class="cancel-btn" on:click={closeModal}>Cancel</button>
-        <button on:click={nextDemo}>Skip</button>
-      </div>
     {/if}
   {:else}
     <h1>LOADING DEMOS</h1>
   {/if}
+
+
+  <div class="buttons" slot="footer">
+    {#if resp.loaded}
+      {#if current_demo === ""}
+        <button class="cancel-btn" on:click={closeModal}>Cancel</button>
+        <button on:click={parseDemos}>Parse</button>
+      {:else if !parsed_demo.err_text}
+        {#if !parsed_demo.loading}
+          <button class="cancel-btn" on:click={closeModal}>Cancel</button>
+          <button on:click={nextDemo}>Save</button>
+        {/if}
+      {:else if parsed_demo.err_text}
+        <button class="cancel-btn" on:click={closeModal}>Cancel</button>
+        <button on:click={nextDemo}>Skip</button>
+      {/if}
+    {/if}
+  </div>
 </Modal>
 
 <style lang="scss">

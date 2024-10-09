@@ -71,6 +71,19 @@
 </button>
 
 <Modal color="pri" {toggle} {enabled} tall grow on:open={loadVdms}>
+  <div slot="footer">
+    {#if resp.loaded && resp.vdms && !vdmName}
+      <div class="buttons">
+        <button class="btn btn--cancel" on:click={toggle}>Cancel</button>
+        <button class="btn" disabled>New VDM</button>
+      </div>
+    {:else if vdm}
+      <div class="buttons">
+        <button class="btn btn--cancel" on:click={toggle}>Cancel</button>
+        <button class="btn" on:click={() => saveVdm(vdmName)}>Save</button>
+      </div>
+    {/if}
+  </div>
   {#if resp.loaded && resp.vdms && !vdmName}
     <h1>Load VDM</h1>
     {#each resp.vdms as vdm}
@@ -82,10 +95,6 @@
         </div>
       </div>
     {/each}
-    <div class="buttons">
-      <button class="btn btn--cancel" on:click={toggle}>Cancel</button>
-      <button class="btn">New VDM</button>
-    </div>
   {:else if vdm}
     <div class="edit-vdm">
       <h1>{vdmName}</h1>
@@ -109,10 +118,6 @@
             on:delete={() => deleteAction(selectedAction)}
           />
         </div>
-      </div>
-      <div class="buttons">
-        <button class="btn btn--cancel" on:click={toggle}>Cancel</button>
-        <button class="btn" on:click={() => saveVdm(vdmName)}>Save</button>
       </div>
     </div>
   {:else}

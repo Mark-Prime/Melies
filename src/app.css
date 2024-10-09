@@ -516,6 +516,10 @@ input:checked + .slider--tert:before {
   }
 }
 
+.full-width {
+  width: 100%;
+}
+
 .tooltip {
   position: relative;
   cursor: pointer;

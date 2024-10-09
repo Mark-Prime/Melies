@@ -93,12 +93,14 @@
       <DemoEdit {demo_i} {i} {demo} {demos} {event} {refresh} />
     {/each}
   {/each}
-  <div class="new-demo">
-    <a href="/" class="new-demo__1" on:click={addDemo}> Add Event Manually </a>
-  </div>
-  <div class="new-demo">
-    <a href="/" class="new-demo__2" on:click={cancel}> Cancel </a>
-    <a href="/" class="new-demo__3" on:click={saveEvents}> Save Events </a>
+  <div slot="footer">
+    <div class="new-demo">
+      <a href="/" class="new-demo__1" on:click={addDemo}> Add Event Manually </a>
+    </div>
+    <div class="new-demo">
+      <a href="/" class="new-demo__2" on:click={cancel}> Cancel </a>
+      <a href="/" class="new-demo__3" on:click={saveEvents}> Save Events </a>
+    </div>
   </div>
 </Modal>
 

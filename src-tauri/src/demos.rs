@@ -559,10 +559,12 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
                 .iter()
                 .map(|v| v.clone())
                 .filter(|sen| {
-                    sen.kills.len()
-                        >= settings["recording"]["minimum_kills_in_streak"]
-                            .as_i64()
-                            .unwrap() as usize
+                    let min_kills = settings["recording"]["minimum_kills_in_streak"].as_i64();
+
+                    match min_kills {
+                        Some(min_kills) => sen.kills.len() >= min_kills as usize,
+                        None => false,
+                    }
                 })
                 .collect::<Vec<KillstreakPointer>>();
 

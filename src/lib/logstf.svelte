@@ -422,12 +422,6 @@
         {/if}
       {/each}
     </div>
-    <h3 class="centered padding-0">Ticks may be inaccurate</h3>
-    <p class="centered padding-0">(logs.tf doesn't store them well)</p>
-    <div class="buttons">
-      <button class="cancel-btn" on:click={closeModal}>Cancel</button>
-      <button on:click={saveSelected}>Save</button>
-    </div>
   {:else}
     <h1>Logs.tf Parser</h1>
     <div class="input-group">
@@ -444,6 +438,16 @@
       <button on:click={parseUrls}>Parse</button>
     </div>
   {/if}
+  <div slot="footer">
+    {#if resp.loaded}
+      <h3 class="centered padding-0">Ticks may be inaccurate</h3>
+      <p class="centered padding-0">(logs.tf doesn't store them well)</p>
+      <div class="buttons">
+        <button class="cancel-btn" on:click={closeModal}>Cancel</button>
+        <button on:click={saveSelected}>Save</button>
+      </div>
+    {/if}
+  </div>
 </Modal>
 
 <style lang="scss">

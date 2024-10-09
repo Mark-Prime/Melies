@@ -19,7 +19,17 @@ pub(crate) fn parse(url: Value) -> Value {
     }
 
     let resp = binding.as_str();
-    let mut info: Value = serde_json::from_str(resp).unwrap();
+    let json_data = serde_json::from_str(resp);
+
+    if json_data.is_err() {
+        return json!({
+            "code": 404,
+            "err_text": "Unable to load logs.tf data"
+        });
+    }
+
+    let mut info: Value = json_data.unwrap();
+    
     let players = &info["players"].as_object().unwrap().to_owned();
 
     let mut demo_api = "https://api.demos.tf/demos/?".to_owned();
