@@ -434,6 +434,7 @@
       verifyTicks();
       isPovDemo = isDemoPov();
 
+      console.log(settings)
       console.log("isPovDemo", isPovDemo);
       console.log("povId", povId);
 
@@ -456,6 +457,10 @@
 
   function isDemoPov() {
     let nick = parsed_demo.header.nick;
+
+    if (settings.pov_as_stv) {
+      return false;
+    }
 
     bluTeam = [];
     redTeam = [];

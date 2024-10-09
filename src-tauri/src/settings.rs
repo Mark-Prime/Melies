@@ -70,6 +70,7 @@ pub(crate) fn default_settings() -> Value {
       "save_backups": true,
       "safe_mode": true,
       "absolute_file_paths": true,
+      "pov_as_stv": false,
       "addons": {},
       "output": {
         "folder": "",

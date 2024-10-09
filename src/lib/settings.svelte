@@ -101,6 +101,12 @@ Note: the order of the demos remains the same (top to bottom)
 
 DO NOT MOVE THE DEMOS FROM THEIR FOLDERS IF THIS IS ENABLED."
     />
+    <Switch
+      title="Treat POV demos as STV demos"
+      bind:value={settings.pov_as_stv}
+      tooltip="Forces the demo scanner to show all information
+on all players in POV demos."
+    />
   </div>
 
   {#if automation_settings.enabled}
@@ -363,13 +369,20 @@ DO NOT MOVE THE DEMOS FROM THEIR FOLDERS IF THIS IS ENABLED."
 
   <Theme />
 
-  <div class="setting">
+  <div class="buttons" slot="footer">
     <button on:click={toggle} class="cancel-btn">Cancel</button>
     <button on:click={saveSettings} class="Save"> Save </button>
   </div>
 </Modal>
 
 <style lang="scss">
+  .buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    padding-top: 1rem;
+  }
+
   .bordered {
     padding: 1rem;
 
