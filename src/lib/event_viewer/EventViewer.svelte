@@ -7,6 +7,7 @@
   let settings = {};
   let demos = [];
   let resp = "";
+  let loading = true;
 
   async function loadSettings() {
     settings = await invoke("load_settings");
@@ -38,9 +39,12 @@
 
       demos = demos;
     }
+
+    loading = false;
   }
 
   async function loadEvents() {
+    loading = true;
     let event_list = await invoke("load_events");
 
     setEvents(event_list);
@@ -53,6 +57,9 @@
 </script>
 
 <div class="event-viewer">
+  {#if loading}
+    <h1>Loading...</h1>
+  {/if}
   {#each demos as demo}
     <Demo {demo} {settings} />
   {/each}

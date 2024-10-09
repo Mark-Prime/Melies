@@ -16,7 +16,9 @@
   "dependencies": {
     "@fortawesome/free-solid-svg-icons": "^6.5.2",
     "@svelteuidev/composables": "^0.14.0",
-    "@tauri-apps/api": "^1.5.1",
+    "@tauri-apps/api": "^2.0.0",
+    "@tauri-apps/plugin-dialog": "^2.0.0",
+    "@tauri-apps/plugin-shell": "^2.0.0",
     "dayjs": "^1.11.13",
     "mathjs": "^11.10.0",
     "svelte-fa": "^4.0.2",
@@ -25,7 +27,7 @@
   "devDependencies": {
     "@sveltejs/adapter-static": "^1.0.6",
     "@sveltejs/kit": "^1.20.4",
-    "@tauri-apps/cli": "^1.5.6",
+    "@tauri-apps/cli": "^2.0.2",
     "sass": "^1.60.0",
     "svelte": "^4.0.0",
     "svelte-check": "^3.4.3",

@@ -49,8 +49,8 @@ impl Clip {
                 };
             }
             Bookmark(bookmark_value) => {
-                let mut start_tick = &event.tick
-                    - settings["recording"]["before_bookmark"].as_i64().unwrap();
+                let mut start_tick =
+                    &event.tick - settings["recording"]["before_bookmark"].as_i64().unwrap();
 
                 if start_tick < 0 {
                     start_tick = settings["recording"]["start_delay"].as_i64().unwrap();
@@ -86,7 +86,7 @@ impl Clip {
                 if split.contains(&"clip_start") {
                     clip.long_clip = true;
                     clip.start_tick = event.tick;
-                    
+
                     if clip.start_tick < 0 {
                         clip.start_tick = settings["recording"]["start_delay"].as_i64().unwrap();
                     }
@@ -104,7 +104,7 @@ impl Clip {
         if split.contains(&bm_value) {
             return;
         }
-        
+
         split.push(bm_value);
 
         self.bm_value = split.join(" ");
@@ -135,10 +135,13 @@ impl Clip {
                 let mut min_tick_between = 0;
 
                 if !bm.contains("clip_start") {
-                    if let Some(before_bookmark) = settings["recording"]["before_bookmark"].as_i64() {
+                    if let Some(before_bookmark) = settings["recording"]["before_bookmark"].as_i64()
+                    {
                         new_start = event.tick - before_bookmark;
                     }
-                    if let Some(min_tick_between_clips) = settings["recording"]["minimum_ticks_between_clips"].as_i64() {
+                    if let Some(min_tick_between_clips) =
+                        settings["recording"]["minimum_ticks_between_clips"].as_i64()
+                    {
                         min_tick_between = min_tick_between_clips;
                     }
                 }

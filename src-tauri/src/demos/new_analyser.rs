@@ -1,26 +1,23 @@
-use tf_demo_parser::demo::data::{ DemoTick, ServerTick };
+use tf_demo_parser::demo::data::{DemoTick, ServerTick};
 use tf_demo_parser::demo::gameevent_gen::{
-    GameEvent,
-    PlayerDeathEvent,
-    PlayerSpawnEvent,
-    TeamPlayRoundWinEvent,
+    GameEvent, PlayerDeathEvent, PlayerSpawnEvent, TeamPlayRoundWinEvent,
 };
-use tf_demo_parser::demo::message::packetentities::{ EntityId, PacketEntitiesMessage };
-use tf_demo_parser::demo::message::usermessage::{ ChatMessageKind, SayText2Message, UserMessage };
-use tf_demo_parser::demo::message::{ Message, MessageType };
+use tf_demo_parser::demo::message::packetentities::{EntityId, PacketEntitiesMessage};
+use tf_demo_parser::demo::message::usermessage::{ChatMessageKind, SayText2Message, UserMessage};
+use tf_demo_parser::demo::message::{Message, MessageType};
 use tf_demo_parser::demo::packet::stringtable::StringTableEntry;
 use tf_demo_parser::demo::parser::gamestateanalyser::UserId;
-use tf_demo_parser::demo::parser::handler::{ BorrowMessageHandler, MessageHandler };
+use tf_demo_parser::demo::parser::handler::{BorrowMessageHandler, MessageHandler};
 use tf_demo_parser::demo::vector::Vector;
-use tf_demo_parser::{ ParserState, ReadResult, Stream };
+use tf_demo_parser::{ParserState, ReadResult, Stream};
 // use bitbuffer::{BitWrite, BitWriteStream, Endianness};
 use num_enum::TryFromPrimitive;
-use parse_display::{ Display, FromStr };
+use parse_display::{Display, FromStr};
 use serde::de::Error;
-use serde::{ ser::SerializeMap, Deserialize, Deserializer, Serialize, Serializer };
-use std::collections::{ BTreeMap, HashMap };
+use serde::{ser::SerializeMap, Deserialize, Deserializer, Serialize, Serializer};
+use std::collections::{BTreeMap, HashMap};
 use std::convert::TryFrom;
-use std::ops::{ Index, IndexMut };
+use std::ops::{Index, IndexMut};
 use std::vec;
 use steamid_ng::SteamID;
 
@@ -38,7 +35,8 @@ impl ChatMessage {
     pub fn from_message(message: &SayText2Message, tick: DemoTick) -> Self {
         ChatMessage {
             kind: message.kind,
-            name: message.from
+            name: message
+                .from
                 .as_ref()
                 .map(|s| s.to_string())
                 .unwrap_or_default(),
@@ -51,16 +49,7 @@ impl ChatMessage {
 }
 
 #[derive(
-    Debug,
-    Clone,
-    Serialize,
-    Deserialize,
-    Copy,
-    PartialEq,
-    Eq,
-    Hash,
-    TryFromPrimitive,
-    Default
+    Debug, Clone, Serialize, Deserialize, Copy, PartialEq, Eq, Hash, TryFromPrimitive, Default,
 )]
 #[serde(rename_all = "lowercase")]
 #[repr(u8)]
@@ -73,23 +62,16 @@ pub enum Team {
 }
 
 impl Team {
-    pub fn new<U>(number: U) -> Self where u8: TryFrom<U> {
+    pub fn new<U>(number: U) -> Self
+    where
+        u8: TryFrom<U>,
+    {
         Team::try_from(u8::try_from(number).unwrap_or_default()).unwrap_or_default()
     }
 }
 
 #[derive(
-    Debug,
-    Clone,
-    Serialize,
-    Copy,
-    PartialEq,
-    Eq,
-    Hash,
-    TryFromPrimitive,
-    Display,
-    FromStr,
-    Default
+    Debug, Clone, Serialize, Copy, PartialEq, Eq, Hash, TryFromPrimitive, Display, FromStr, Default,
 )]
 #[display(style = "lowercase")]
 #[serde(rename_all = "lowercase")]
@@ -109,7 +91,10 @@ pub enum Class {
 }
 
 impl<'de> Deserialize<'de> for Class {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
         #[derive(Deserialize, Debug)]
         #[serde(untagged)]
         enum IntOrStr<'a> {
@@ -121,9 +106,8 @@ impl<'de> Deserialize<'de> for Class {
         match raw {
             IntOrStr::Int(class) => Class::try_from_primitive(class).map_err(D::Error::custom),
             IntOrStr::Str(class) if class.len() == 1 => {
-                Class::try_from_primitive(class.parse().map_err(D::Error::custom)?).map_err(
-                    D::Error::custom
-                )
+                Class::try_from_primitive(class.parse().map_err(D::Error::custom)?)
+                    .map_err(D::Error::custom)
             }
             IntOrStr::Str(class) => class.parse().map_err(D::Error::custom),
         }
@@ -138,7 +122,10 @@ fn test_class_deserialize() {
 }
 
 impl Class {
-    pub fn new<U>(number: U) -> Self where u8: TryFrom<U> {
+    pub fn new<U>(number: U) -> Self
+    where
+        u8: TryFrom<U>,
+    {
         Class::try_from(u8::try_from(number).unwrap_or_default()).unwrap_or_default()
     }
 }
@@ -164,11 +151,11 @@ impl IndexMut<Class> for ClassList {
 }
 
 impl Serialize for ClassList {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
-        let count = self.0
-            .iter()
-            .filter(|c| **c > 0)
-            .count();
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let count = self.0.iter().filter(|c| **c > 0).count();
         let mut classes = serializer.serialize_map(Some(count))?;
         for (class, count) in self.0.iter().copied().enumerate() {
             if count > 0 {
@@ -246,11 +233,11 @@ impl From<tf_demo_parser::demo::data::UserInfo> for UserInfo {
 
 impl PartialEq for UserInfo {
     fn eq(&self, other: &UserInfo) -> bool {
-        self.classes == other.classes &&
-            self.name == other.name &&
-            self.user_id == other.user_id &&
-            self.steam_id == other.steam_id &&
-            self.team == other.team
+        self.classes == other.classes
+            && self.name == other.name
+            && self.user_id == other.user_id
+            && self.steam_id == other.steam_id
+            && self.team == other.team
     }
 }
 
@@ -276,7 +263,11 @@ impl Death {
             None
         };
 
-        let penetration = if event.player_penetrate_count > 0 { true } else { false };
+        let penetration = if event.player_penetrate_count > 0 {
+            true
+        } else {
+            false
+        };
         let mut is_airborne = event.rocket_jump;
 
         if state.jump_status.contains_key(&UserId::from(event.user_id)) {
@@ -340,12 +331,12 @@ impl MessageHandler for Analyser {
     fn does_handle(message_type: MessageType) -> bool {
         matches!(
             message_type,
-            MessageType::GameEvent |
-                MessageType::UserMessage |
-                MessageType::ServerInfo |
-                MessageType::NetTick |
-                MessageType::SetPause |
-                MessageType::PacketEntities
+            MessageType::GameEvent
+                | MessageType::UserMessage
+                | MessageType::ServerInfo
+                | MessageType::NetTick
+                | MessageType::SetPause
+                | MessageType::PacketEntities
         )
     }
 
@@ -383,13 +374,13 @@ impl MessageHandler for Analyser {
         table: &str,
         index: usize,
         entry: &StringTableEntry,
-        _parser_state: &ParserState
+        _parser_state: &ParserState,
     ) {
         if table == "userinfo" {
             let _ = self.parse_user_info(
                 index,
                 entry.text.as_ref().map(|s| s.as_ref()),
-                entry.extra_data.as_ref().map(|data| data.data.clone())
+                entry.extra_data.as_ref().map(|data| data.data.clone()),
             );
         }
     }
@@ -417,7 +408,9 @@ impl Analyser {
                     self.change_name(from.into(), text_message.plain_text());
                 }
             } else {
-                self.state.chat.push(ChatMessage::from_message(text_message, tick));
+                self.state
+                    .chat
+                    .push(ChatMessage::from_message(text_message, tick));
             }
         }
     }
@@ -433,14 +426,18 @@ impl Analyser {
 
         match event {
             GameEvent::PlayerDeath(event) => {
-                self.state.deaths.push(Death::from_event(event, tick, &self.state));
+                self.state
+                    .deaths
+                    .push(Death::from_event(event, tick, &self.state));
 
-                self.state.jump_status.entry(UserId(event.user_id))
+                self.state
+                    .jump_status
+                    .entry(UserId(event.user_id))
                     .and_modify(|info| {
                         *info = false;
                     })
                     .or_insert_with(|| false);
-            },
+            }
             GameEvent::PlayerSpawn(event) => {
                 let spawn = Spawn::from_event(event, tick);
 
@@ -451,7 +448,9 @@ impl Analyser {
 
                 self.state.spawns.push(spawn);
 
-                self.state.jump_status.entry(UserId(event.user_id))
+                self.state
+                    .jump_status
+                    .entry(UserId(event.user_id))
                     .and_modify(|info| {
                         *info = false;
                     })
@@ -463,54 +462,68 @@ impl Analyser {
                 }
             }
             GameEvent::RocketJump(event) => {
-                self.state.jump_status.entry(UserId(event.user_id))
+                self.state
+                    .jump_status
+                    .entry(UserId(event.user_id))
                     .and_modify(|info| {
                         *info = true;
                     })
                     .or_insert_with(|| true);
-            },
+            }
             GameEvent::RocketJumpLanded(event) => {
-                self.state.jump_status.entry(UserId(event.user_id))
+                self.state
+                    .jump_status
+                    .entry(UserId(event.user_id))
                     .and_modify(|info| {
                         *info = false;
                     })
                     .or_insert_with(|| false);
-            },
+            }
             GameEvent::StickyJump(event) => {
-                self.state.jump_status.entry(UserId(event.user_id))
+                self.state
+                    .jump_status
+                    .entry(UserId(event.user_id))
                     .and_modify(|info| {
                         *info = true;
                     })
                     .or_insert_with(|| true);
-            },
+            }
             GameEvent::StickyJumpLanded(event) => {
-                self.state.jump_status.entry(UserId(event.user_id))
+                self.state
+                    .jump_status
+                    .entry(UserId(event.user_id))
                     .and_modify(|info| {
                         *info = false;
                     })
                     .or_insert_with(|| false);
-            },
+            }
             GameEvent::RocketPackLaunch(event) => {
-                self.state.jump_status.entry(UserId(event.user_id))
+                self.state
+                    .jump_status
+                    .entry(UserId(event.user_id))
                     .and_modify(|info| {
                         *info = true;
                     })
                     .or_insert_with(|| true);
-            },
+            }
             GameEvent::RocketPackLanded(event) => {
-                self.state.jump_status.entry(UserId(event.user_id))
+                self.state
+                    .jump_status
+                    .entry(UserId(event.user_id))
                     .and_modify(|info| {
                         *info = false;
                     })
                     .or_insert_with(|| false);
-            },
+            }
             GameEvent::Landed(event) => {
-                self.state.jump_status.entry(UserId(event.player.into()))
+                self.state
+                    .jump_status
+                    .entry(UserId(event.player.into()))
                     .and_modify(|info| {
                         *info = false;
                     })
                     .or_insert_with(|| false);
-            },
+            }
             // GameEvent::PlayerChargeDeployed(event) => {
             //     println!("{:?} at {}", event, tick.0);
             // }
@@ -537,7 +550,16 @@ impl Analyser {
                 continue;
             }
 
-            if !deaths_this_tick.contains(&self.state.id_map.get(&entity.entity_index).unwrap().0.try_into().unwrap()) {
+            if !deaths_this_tick.contains(
+                &self
+                    .state
+                    .id_map
+                    .get(&entity.entity_index)
+                    .unwrap()
+                    .0
+                    .try_into()
+                    .unwrap(),
+            ) {
                 continue;
             }
 
@@ -547,14 +569,21 @@ impl Analyser {
                 }
 
                 let propname = prop.identifier.prop_name().unwrap().to_string();
-                
+
                 if propname != "m_flFallVelocity" && propname != "m_hGroundEntity" {
                     continue;
                 }
 
-                let user = self.state.users.get(self.state.id_map.get(&entity.entity_index).unwrap()).unwrap();
+                let user = self
+                    .state
+                    .users
+                    .get(self.state.id_map.get(&entity.entity_index).unwrap())
+                    .unwrap();
 
-                let death = &mut deaths[deaths_index[deaths_this_tick.iter().position(|&x| x == user.user_id.0 as u32).unwrap()]];
+                let death = &mut deaths[deaths_index[deaths_this_tick
+                    .iter()
+                    .position(|&x| x == user.user_id.0 as u32)
+                    .unwrap()]];
 
                 match propname.as_str() {
                     "m_flFallVelocity" => {
@@ -563,9 +592,9 @@ impl Analyser {
                     "m_hGroundEntity" => {
                         death.is_airborne = false;
                     }
-                    _ => continue
+                    _ => continue,
                 }
-                
+
                 break;
             }
         }
@@ -575,20 +604,16 @@ impl Analyser {
         &mut self,
         index: usize,
         text: Option<&str>,
-        data: Option<Stream>
+        data: Option<Stream>,
     ) -> ReadResult<()> {
-        if
-            let Some(user_info) = tf_demo_parser::demo::data::UserInfo::parse_from_string_table(
-                index as u16,
-                text,
-                data
-            )?
+        if let Some(user_info) =
+            tf_demo_parser::demo::data::UserInfo::parse_from_string_table(index as u16, text, data)?
         {
-
             let user_id = user_info.player_info.user_id;
             let entity_id = user_info.entity_id;
 
-            self.state.users
+            self.state
+                .users
                 .entry(user_info.player_info.user_id)
                 .and_modify(|info| {
                     info.entity_id = user_info.entity_id;

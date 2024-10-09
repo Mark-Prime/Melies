@@ -1,13 +1,18 @@
-use std::{ env, fs::{ self, File }, path::Path };
 use serde::Serialize;
-use serde_json::{ json, Map, Value };
+use serde_json::{json, Map, Value};
+use std::{
+    env,
+    fs::{self, File},
+    path::Path,
+};
 
 // pub(crate) fn get_settings() -> Value {
 
 // }
 
 #[derive(Debug, Serialize)]
-pub enum RecordToggle { // * 0 = off, 1 = on critical hit, 2 = weapon dependant, 3 = ranged only,  4 = melee only, 5 = always
+pub enum RecordToggle {
+    // * 0 = off, 1 = on critical hit, 2 = weapon dependant, 3 = ranged only,  4 = melee only, 5 = always
     Never,
     CriticalHit,
     // MiniCriticalHit,
@@ -23,11 +28,18 @@ pub(crate) fn build_settings() -> Value {
     let user_profile = env::var("USERPROFILE");
 
     let binding = match user_profile {
-        Ok(profile) => { format!("{}\\Documents\\Melies\\settings.json", profile) }
+        Ok(profile) => {
+            format!("{}\\Documents\\Melies\\settings.json", profile)
+        }
         Err(_) => {
             format!(
                 "{}\\settings.json",
-                std::env::current_exe().unwrap().parent().unwrap().to_str().unwrap()
+                std::env::current_exe()
+                    .unwrap()
+                    .parent()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
             )
         }
     };
@@ -40,114 +52,124 @@ pub(crate) fn build_settings() -> Value {
 
     let mut settings = default_settings();
 
-    fs::write(settings_path, serde_json::to_string_pretty(&settings.to_string()).unwrap()).unwrap();
-    
+    fs::write(
+        settings_path,
+        serde_json::to_string_pretty(&settings.to_string()).unwrap(),
+    )
+    .unwrap();
+
     settings["addons"] = load_addons();
 
     settings
 }
 
 pub(crate) fn default_settings() -> Value {
-  let defaults =
-      json!({
-    "tf_folder": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Team Fortress 2\\tf",
-    "clear_events": true,
-    "save_backups": true,
-    "safe_mode": true,
-    "absolute_file_paths": true,
-    "addons": {},
-    "output": {
-      "folder": "",
-      "method": "tga",
-      "framerate": 60,
-      "crosshair": false,
-      "viewmodel": true,
-      "hud": true,
-      "text_chat": false,
-      "voice_chat": false,
-      "minmode": false,
-      "snd_fix": true,
-      "lock": true,
-      "clip_name_template": "{demo_name}_{start_tick}-{end_tick}_{suffix}_{bookmarks}"
-    },
-    "recording": {
-      "commands": "",
-      "end_commands": "",
-      "start_delay": 50,
-      "minimum_ticks_between_clips": 500,
-      "before_bookmark": 1000,
-      "after_bookmark": 200,
-      "minimum_kills_in_streak": 3,
-      "before_killstreak_per_kill": 500,
-      "after_killstreak": 300,
-      "interval_for_rewind_double_taps": 66,
-      "rewind_amount": 1000,
-      "fov": 90,
-      "viewmodel_fov": 90,
-      "record_continuous": true,
-      "auto_close": true,
-      "auto_suffix": true,
-      "third_person": false,
-    },
-    "automation": {
-      "enabled": true,
-      "med_picks": true,
-      "airshots": true,
-      "killstreaks": true,
-      "whole_life": false,
-      "classes": {
-          "scout": true,
-          "soldier": true,
-          "pyro": true,
-          "demoman": true,
-          "heavyweapons": true,
-          "engineer": true,
-          "medic": true,
-          "sniper": true,
-          "spy": true,
-      }
-    },
-    "advanced": {
-      "airshots": {
-        "default": true,
-        "killer": {
-          "scout": RecordToggle::Never,
-          "soldier": RecordToggle::Always,
-          "pyro": RecordToggle::AnyCritHit,
-          "demoman": RecordToggle::Always,
-          "heavy": RecordToggle::Never,
-          "engineer": RecordToggle::Never,
-          "medic": RecordToggle::Always,
-          "sniper": RecordToggle::CriticalHit,
-          "spy": RecordToggle::CriticalHit,
-        },
-        "victim": {
-          "scout": RecordToggle::Passive,
-          "soldier": RecordToggle::Passive,
-          "pyro": RecordToggle::Passive,
-          "demoman": RecordToggle::Passive,
-          "heavy": RecordToggle::Passive,
-          "engineer": RecordToggle::Passive,
-          "medic": RecordToggle::Passive,
-          "sniper": RecordToggle::Passive,
-          "spy": RecordToggle::Passive,
+    let defaults = json!({
+      "tf_folder": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Team Fortress 2\\tf",
+      "clear_events": true,
+      "save_backups": true,
+      "safe_mode": true,
+      "absolute_file_paths": true,
+      "addons": {},
+      "output": {
+        "folder": "",
+        "method": "tga",
+        "framerate": 60,
+        "crosshair": false,
+        "viewmodel": true,
+        "hud": true,
+        "text_chat": false,
+        "voice_chat": false,
+        "minmode": false,
+        "snd_fix": true,
+        "lock": true,
+        "clip_name_template": "{demo_name}_{start_tick}-{end_tick}_{suffix}_{bookmarks}"
+      },
+      "recording": {
+        "commands": "",
+        "end_commands": "",
+        "start_delay": 50,
+        "minimum_ticks_between_clips": 500,
+        "before_bookmark": 1000,
+        "after_bookmark": 200,
+        "minimum_kills_in_streak": 3,
+        "before_killstreak_per_kill": 500,
+        "after_killstreak": 300,
+        "interval_for_rewind_double_taps": 66,
+        "rewind_amount": 1000,
+        "fov": 90,
+        "viewmodel_fov": 90,
+        "record_continuous": true,
+        "auto_close": true,
+        "auto_suffix": true,
+        "third_person": false,
+      },
+      "automation": {
+        "enabled": true,
+        "med_picks": true,
+        "airshots": true,
+        "killstreaks": true,
+        "whole_life": false,
+        "classes": {
+            "scout": true,
+            "soldier": true,
+            "pyro": true,
+            "demoman": true,
+            "heavyweapons": true,
+            "engineer": true,
+            "medic": true,
+            "sniper": true,
+            "spy": true,
+        }
+      },
+      "advanced": {
+        "airshots": {
+          "default": true,
+          "killer": {
+            "scout": RecordToggle::Never,
+            "soldier": RecordToggle::Always,
+            "pyro": RecordToggle::AnyCritHit,
+            "demoman": RecordToggle::Always,
+            "heavy": RecordToggle::Never,
+            "engineer": RecordToggle::Never,
+            "medic": RecordToggle::Always,
+            "sniper": RecordToggle::CriticalHit,
+            "spy": RecordToggle::CriticalHit,
+          },
+          "victim": {
+            "scout": RecordToggle::Passive,
+            "soldier": RecordToggle::Passive,
+            "pyro": RecordToggle::Passive,
+            "demoman": RecordToggle::Passive,
+            "heavy": RecordToggle::Passive,
+            "engineer": RecordToggle::Passive,
+            "medic": RecordToggle::Passive,
+            "sniper": RecordToggle::Passive,
+            "spy": RecordToggle::Passive,
+          }
         }
       }
-    }
-  });
+    });
 
-  defaults
+    defaults
 }
 
 pub(crate) fn load_settings() -> Value {
     let user_profile = env::var("USERPROFILE");
 
     let settings_path = match user_profile {
-        Ok(profile) => { format!("{}\\Documents\\Melies\\settings.json", profile) }
+        Ok(profile) => {
+            format!("{}\\Documents\\Melies\\settings.json", profile)
+        }
         Err(_) => {
             format!(
                 "{}\\settings.json",
-                std::env::current_exe().unwrap().parent().unwrap().to_str().unwrap()
+                std::env::current_exe()
+                    .unwrap()
+                    .parent()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
             )
         }
     };
@@ -179,11 +201,18 @@ pub(crate) fn save_settings(new_settings: String) -> Value {
     let user_profile = env::var("USERPROFILE");
 
     let settings_path = match user_profile {
-        Ok(profile) => { format!("{}\\Documents\\Melies\\settings.json", profile) }
+        Ok(profile) => {
+            format!("{}\\Documents\\Melies\\settings.json", profile)
+        }
         Err(_) => {
             format!(
                 "{}\\settings.json",
-                std::env::current_exe().unwrap().parent().unwrap().to_str().unwrap()
+                std::env::current_exe()
+                    .unwrap()
+                    .parent()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
             )
         }
     };
@@ -195,7 +224,11 @@ pub(crate) fn save_settings(new_settings: String) -> Value {
 
         merge(&mut defaults, settings);
 
-        fs::write(settings_path, serde_json::to_string_pretty(&defaults).unwrap()).unwrap();
+        fs::write(
+            settings_path,
+            serde_json::to_string_pretty(&defaults).unwrap(),
+        )
+        .unwrap();
 
         return defaults;
     }
@@ -207,11 +240,18 @@ pub(crate) fn load_addons() -> Value {
     let user_profile = env::var("USERPROFILE");
 
     let addons_path = match user_profile {
-        Ok(profile) => { format!("{}\\Documents\\Melies\\addons", profile) }
+        Ok(profile) => {
+            format!("{}\\Documents\\Melies\\addons", profile)
+        }
         Err(_) => {
             format!(
                 "{}\\addons",
-                std::env::current_exe().unwrap().parent().unwrap().to_str().unwrap()
+                std::env::current_exe()
+                    .unwrap()
+                    .parent()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
             )
         }
     };
@@ -254,11 +294,18 @@ fn save_addons(addons: &Value) {
         let user_profile = env::var("USERPROFILE");
 
         let addon_path = match user_profile {
-            Ok(profile) => { format!("{}\\Documents\\Melies\\addons\\{}.json", profile, k) }
+            Ok(profile) => {
+                format!("{}\\Documents\\Melies\\addons\\{}.json", profile, k)
+            }
             Err(_) => {
                 format!(
                     "{}\\addons\\{}.json",
-                    std::env::current_exe().unwrap().parent().unwrap().to_str().unwrap(),
+                    std::env::current_exe()
+                        .unwrap()
+                        .parent()
+                        .unwrap()
+                        .to_str()
+                        .unwrap(),
                     k
                 )
             }

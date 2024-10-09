@@ -1,4 +1,5 @@
 use bitbuffer::BitRead;
+use human_sort::compare;
 use serde::Serialize;
 use serde_json::json;
 use serde_json::Value;
@@ -9,9 +10,8 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 use std::vec;
-use tf_demo_parser::{ Demo, DemoParser };
 use tf_demo_parser::demo::header::Header;
-use human_sort::compare;
+use tf_demo_parser::{Demo, DemoParser};
 
 use crate::demos::new_analyser::Class;
 
@@ -170,18 +170,23 @@ pub(crate) fn scan_for_demos(settings: Value) -> Value {
         return Value::from({});
     }
 
-    demos.extend(
-        scan_folder_for_filetype(&settings, settings["tf_folder"].as_str().unwrap(), ".dem")
-    );
+    demos.extend(scan_folder_for_filetype(
+        &settings,
+        settings["tf_folder"].as_str().unwrap(),
+        ".dem",
+    ));
 
-    if Path::new(&format!("{}\\demos", settings["tf_folder"].as_str().unwrap())).exists() {
-        demos.extend(
-            scan_folder_for_filetype(
-                &settings,
-                &format!("{}\\demos", settings["tf_folder"].as_str().unwrap()),
-                ".dem"
-            )
-        );
+    if Path::new(&format!(
+        "{}\\demos",
+        settings["tf_folder"].as_str().unwrap()
+    ))
+    .exists()
+    {
+        demos.extend(scan_folder_for_filetype(
+            &settings,
+            &format!("{}\\demos", settings["tf_folder"].as_str().unwrap()),
+            ".dem",
+        ));
     }
 
     let mut resp = Value::from({});
@@ -260,18 +265,23 @@ pub(crate) fn scan_for_vdms(settings: Value) -> Value {
         return Value::from({});
     }
 
-    vdms.extend(
-        scan_folder_for_filetype(&settings, settings["tf_folder"].as_str().unwrap(), ".vdm")
-    );
+    vdms.extend(scan_folder_for_filetype(
+        &settings,
+        settings["tf_folder"].as_str().unwrap(),
+        ".vdm",
+    ));
 
-    if Path::new(&format!("{}\\demos", settings["tf_folder"].as_str().unwrap())).exists() {
-        vdms.extend(
-            scan_folder_for_filetype(
-                &settings,
-                &format!("{}\\demos", settings["tf_folder"].as_str().unwrap()),
-                ".vdm"
-            )
-        );
+    if Path::new(&format!(
+        "{}\\demos",
+        settings["tf_folder"].as_str().unwrap()
+    ))
+    .exists()
+    {
+        vdms.extend(scan_folder_for_filetype(
+            &settings,
+            &format!("{}\\demos", settings["tf_folder"].as_str().unwrap()),
+            ".vdm",
+        ));
     }
 
     let mut resp = Value::from({});
@@ -291,7 +301,7 @@ struct ClassSpawn {
 fn get_player_class(
     mut user_classes: HashMap<u16, Vec<ClassSpawn>>,
     user_id: u16,
-    tick: DemoTick
+    tick: DemoTick,
 ) -> Class {
     let player = user_classes.entry(user_id).or_insert(vec![]);
 
@@ -317,11 +327,9 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
 
     let demo = Demo::new(&file);
 
-    let parser = DemoParser::new_all_with_analyser(
-        demo.get_stream(),
-        new_analyser::Analyser::new()
-    );
-    
+    let parser =
+        DemoParser::new_all_with_analyser(demo.get_stream(), new_analyser::Analyser::new());
+
     let (header, mut state) = match parser.parse() {
         Ok(val) => val,
         Err(err) => {
@@ -353,20 +361,14 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
 
         {
             let user_classes_clone = user_classes.clone();
-            death.killer_class = get_player_class(
-                user_classes_clone,
-                death.killer.into(),
-                death.tick
-            );
+            death.killer_class =
+                get_player_class(user_classes_clone, death.killer.into(), death.tick);
         }
 
         {
             let user_classes_clone = user_classes.clone();
-            death.victim_class = get_player_class(
-                user_classes_clone,
-                death.victim.into(),
-                death.tick
-            );
+            death.victim_class =
+                get_player_class(user_classes_clone, death.victim.into(), death.tick);
         }
 
         killer.push(Event::Kill(death.clone()));
@@ -374,7 +376,9 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
         let assist_id = death.assister;
 
         if assist_id.is_some() {
-            let assister = user_events.entry(assist_id.unwrap().into()).or_insert(vec![]);
+            let assister = user_events
+                .entry(assist_id.unwrap().into())
+                .or_insert(vec![]);
 
             assister.push(Event::Assist(death.clone()));
         }
@@ -437,21 +441,15 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
 
                     // println!("{:?}", kill);
                     if kill.victim_class == Class::Medic {
-                        let med_pick = KillPointer::new(
-                            *key,
-                            current_player.len(),
-                            current_life.kills.len()
-                        );
+                        let med_pick =
+                            KillPointer::new(*key, current_player.len(), current_life.kills.len());
                         current_life.med_picks.push(med_pick.clone());
                         med_picks.push(med_pick);
                     }
 
                     if kill.is_airborne {
-                        let airshot = KillPointer::new(
-                            *key,
-                            current_player.len(),
-                            current_life.kills.len()
-                        );
+                        let airshot =
+                            KillPointer::new(*key, current_player.len(), current_life.kills.len());
                         current_life.airshots.push(airshot.clone());
                         airshots.push(airshot);
                     }
@@ -525,23 +523,24 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
 
             for (kill_index, kill) in life.kills.iter().enumerate() {
                 if kill_count == 0 {
-                    life.killstreak_pointers.push(
-                        KillstreakPointer::new(
-                            key.to_owned(),
-                            life_index,
-                            kill_index,
-                            life.killstreak_pointers.len()
-                        )
-                    );
+                    life.killstreak_pointers.push(KillstreakPointer::new(
+                        key.to_owned(),
+                        life_index,
+                        kill_index,
+                        life.killstreak_pointers.len(),
+                    ));
                     last_kill_tick = kill.tick.0.into();
                     kill_count += 1;
                     streak_count += 1;
-                } else if
-                    (kill.tick.0 as i64) <
-                    last_kill_tick +
-                        settings["recording"]["before_killstreak_per_kill"].as_i64().unwrap()
+                } else if (kill.tick.0 as i64)
+                    < last_kill_tick
+                        + settings["recording"]["before_killstreak_per_kill"]
+                            .as_i64()
+                            .unwrap()
                 {
-                    life.killstreak_pointers[streak_count - 1].kills.push(kill_index);
+                    life.killstreak_pointers[streak_count - 1]
+                        .kills
+                        .push(kill_index);
                     kill_count += 1;
                 } else if kill_count < 3 {
                     kill_count = 1;
@@ -550,15 +549,21 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
                         key.to_owned(),
                         life_index,
                         kill_index,
-                        life.killstreak_pointers.len() - 1
+                        life.killstreak_pointers.len() - 1,
                     );
                 }
             }
 
-            life.killstreak_pointers = life.killstreak_pointers
+            life.killstreak_pointers = life
+                .killstreak_pointers
                 .iter()
                 .map(|v| v.clone())
-                .filter(|sen| sen.kills.len() >= settings["recording"]["minimum_kills_in_streak"].as_i64().unwrap() as usize)
+                .filter(|sen| {
+                    sen.kills.len()
+                        >= settings["recording"]["minimum_kills_in_streak"]
+                            .as_i64()
+                            .unwrap() as usize
+                })
                 .collect::<Vec<KillstreakPointer>>();
 
             for ks in &life.killstreak_pointers {
@@ -576,8 +581,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
 
     let ticks = header.ticks;
 
-    let resp =
-        json!({
+    let resp = json!({
         "header": {
             "demo_type": header.demo_type,
             "version": header.version,
