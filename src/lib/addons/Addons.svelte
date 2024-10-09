@@ -4,7 +4,7 @@
   import Switch from "../Switch.svelte";
   import Collapse from "../Collapse.svelte";
   import Addon from "./Addon.svelte";
-  import { invoke } from "@tauri-apps/api/tauri";
+  import { invoke } from "@tauri-apps/api/core";
   export let addons;
 
 </script>

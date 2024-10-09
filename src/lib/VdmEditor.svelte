@@ -1,5 +1,5 @@
 <script>
-  import { invoke } from "@tauri-apps/api/tauri";
+  import { invoke } from "@tauri-apps/api/core";
   import { faPenFancy } from "@fortawesome/free-solid-svg-icons";
   import Modal from "./Modal.svelte";
   import Fa from "svelte-fa";

@@ -1,6 +1,6 @@
 <script>
   // @ts-ignore
-  import { invoke } from "@tauri-apps/api/tauri";
+  import { invoke } from "@tauri-apps/api/core";
   import Modal from "$lib/Modal.svelte";
   import { faGear } from "@fortawesome/free-solid-svg-icons";
   import Fa from "svelte-fa";

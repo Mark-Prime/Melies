@@ -1,5 +1,5 @@
 <script>
-  import { invoke } from "@tauri-apps/api/tauri";
+  import { invoke } from "@tauri-apps/api/core";
   import { createEventDispatcher } from "svelte";
   import { faFilePen } from "@fortawesome/free-solid-svg-icons";
   import DemoEdit from "$lib/home/demoEdit.svelte";

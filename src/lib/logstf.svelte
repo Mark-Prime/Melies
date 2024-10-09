@@ -4,7 +4,7 @@
   import Fa from "svelte-fa";
   import Modal from "./Modal.svelte";
 
-  import { invoke } from "@tauri-apps/api/tauri";
+  import { invoke } from "@tauri-apps/api/core";
   import { createEventDispatcher } from "svelte";
 
   const dispatch = createEventDispatcher();

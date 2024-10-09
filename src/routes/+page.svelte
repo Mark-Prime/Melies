@@ -4,7 +4,7 @@
   import Backups from "$lib/backups.svelte";
   import Logstf from "$lib/logstf.svelte";
   import Demos from "$lib/demos_parser/demos.svelte";
-  import { invoke } from "@tauri-apps/api/tauri";
+  import { invoke } from "@tauri-apps/api/core";
   import ErrViewer from "$lib/ErrViewer.svelte";
   import LogViewer from "$lib/LogViewer.svelte";
   import EditEvents from "$lib/EditEvents.svelte";

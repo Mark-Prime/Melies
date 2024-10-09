@@ -3,7 +3,7 @@
   import { faFileCircleMinus, faFileCirclePlus, faListCheck, faSquare, faSquareCheck, faTrash } from "@fortawesome/free-solid-svg-icons";
   import Modal from "./Modal.svelte";
   import Fa from "svelte-fa";
-  import { invoke } from "@tauri-apps/api/tauri";
+  import { invoke } from "@tauri-apps/api/core";
   import dayjs from "dayjs";
   import tickToTime from "$lib/composables/tickToTime.js";
   import { faCheck, faXmark } from "@fortawesome/free-solid-svg-icons";

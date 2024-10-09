@@ -1,6 +1,6 @@
 <script>
   import Collapse from "./Collapse.svelte";
-  import { invoke } from "@tauri-apps/api/tauri";
+  import { invoke } from "@tauri-apps/api/core";
 </script>
 <Collapse defaultOpen={false} title="Theme">
   <div class="setting">
