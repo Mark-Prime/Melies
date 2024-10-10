@@ -443,6 +443,8 @@
       redTeam.sort(sortByClass);
 
       console.log(parsed_demo);
+      console.log(bluTeam);
+      console.log(redTeam);
     } else {
       closeModal();
     }
@@ -458,10 +460,6 @@
   function isDemoPov() {
     let nick = parsed_demo.header.nick;
 
-    if (settings.pov_as_stv) {
-      return false;
-    }
-
     bluTeam = [];
     redTeam = [];
     povId = 0;
@@ -470,8 +468,10 @@
       let username = parsed_demo.data.users[user].name;
 
       if (username === nick) {
-        povId = user;
-        return true;
+        if (!settings.pov_as_stv) {
+          povId = user;
+          return true;
+        }
       }
 
       let team = parsed_demo.data.users[user].team;
