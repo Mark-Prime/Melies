@@ -341,7 +341,7 @@ impl MessageHandler for Analyser {
     }
 
     fn handle_message(&mut self, message: &Message, tick: DemoTick, _parser_state: &ParserState) {
-        self.state.end_tick = tick.0;
+        self.state.end_tick = tick.into();
         match message {
             Message::NetTick(msg) => {
                 if self.state.start_tick == 0 {
@@ -426,19 +426,22 @@ impl Analyser {
 
         match event {
             GameEvent::PlayerDeath(event) => {
+                let user_id = event.user_id.into();
+
                 self.state
                     .deaths
                     .push(Death::from_event(event, tick, &self.state));
 
                 self.state
                     .jump_status
-                    .entry(UserId(event.user_id))
+                    .entry(user_id)
                     .and_modify(|info| {
                         *info = false;
                     })
                     .or_insert_with(|| false);
             }
             GameEvent::PlayerSpawn(event) => {
+                let user_id = event.user_id.into();
                 let spawn = Spawn::from_event(event, tick);
 
                 if let Some(user_state) = self.state.users.get_mut(&spawn.user) {
@@ -450,7 +453,7 @@ impl Analyser {
 
                 self.state
                     .jump_status
-                    .entry(UserId(event.user_id))
+                    .entry(user_id)
                     .and_modify(|info| {
                         *info = false;
                     })
@@ -462,63 +465,78 @@ impl Analyser {
                 }
             }
             GameEvent::RocketJump(event) => {
+                let user_id = event.user_id.into();
+
                 self.state
                     .jump_status
-                    .entry(UserId(event.user_id))
+                    .entry(user_id)
                     .and_modify(|info| {
                         *info = true;
                     })
                     .or_insert_with(|| true);
             }
             GameEvent::RocketJumpLanded(event) => {
+                let user_id = event.user_id.into();
+
                 self.state
                     .jump_status
-                    .entry(UserId(event.user_id))
+                    .entry(user_id)
                     .and_modify(|info| {
                         *info = false;
                     })
                     .or_insert_with(|| false);
             }
             GameEvent::StickyJump(event) => {
+                let user_id = event.user_id.into();
+
                 self.state
                     .jump_status
-                    .entry(UserId(event.user_id))
+                    .entry(user_id)
                     .and_modify(|info| {
                         *info = true;
                     })
                     .or_insert_with(|| true);
             }
             GameEvent::StickyJumpLanded(event) => {
+                let user_id = event.user_id.into();
+
                 self.state
                     .jump_status
-                    .entry(UserId(event.user_id))
+                    .entry(user_id)
                     .and_modify(|info| {
                         *info = false;
                     })
                     .or_insert_with(|| false);
             }
             GameEvent::RocketPackLaunch(event) => {
+                let user_id = event.user_id.into();
+
                 self.state
                     .jump_status
-                    .entry(UserId(event.user_id))
+                    .entry(user_id)
                     .and_modify(|info| {
                         *info = true;
                     })
                     .or_insert_with(|| true);
             }
             GameEvent::RocketPackLanded(event) => {
+                let user_id = event.user_id.into();
+
                 self.state
                     .jump_status
-                    .entry(UserId(event.user_id))
+                    .entry(user_id)
                     .and_modify(|info| {
                         *info = false;
                     })
                     .or_insert_with(|| false);
             }
             GameEvent::Landed(event) => {
+                let player: u8 = event.player.into();
+                let user_id = (player as u32).into();
+                
                 self.state
                     .jump_status
-                    .entry(UserId(event.player.into()))
+                    .entry(user_id)
                     .and_modify(|info| {
                         *info = false;
                     })
@@ -541,7 +559,7 @@ impl Analyser {
                 break;
             }
 
-            deaths_this_tick.push(death.victim.0 as u32);
+            deaths_this_tick.push(death.victim.into());
             deaths_index.push(i);
         }
 
@@ -550,16 +568,13 @@ impl Analyser {
                 continue;
             }
 
-            if !deaths_this_tick.contains(
-                &self
-                    .state
-                    .id_map
-                    .get(&entity.entity_index)
-                    .unwrap()
-                    .0
-                    .try_into()
-                    .unwrap(),
-            ) {
+            let user_id: u32 = self
+                .state
+                .id_map
+                .get(&entity.entity_index)
+                .unwrap().to_owned().into();
+
+            if !deaths_this_tick.contains( &user_id ) {
                 continue;
             }
 
@@ -580,9 +595,11 @@ impl Analyser {
                     .get(self.state.id_map.get(&entity.entity_index).unwrap())
                     .unwrap();
 
+                let user_id: u32 = user.user_id.into();
+
                 let death = &mut deaths[deaths_index[deaths_this_tick
                     .iter()
-                    .position(|&x| x == user.user_id.0 as u32)
+                    .position(|&x| x == user_id)
                     .unwrap()]];
 
                 match propname.as_str() {

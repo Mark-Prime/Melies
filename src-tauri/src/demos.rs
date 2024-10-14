@@ -234,7 +234,7 @@ fn scan_folder_for_filetype(settings: &Value, path: &str, file_type: &str) -> Ve
                 file["hasVdm"] = serde_json::Value::Bool(vdm_path.exists());
 
                 let mut stream = demo.get_stream();
-
+                
                 let header = Header::read(&mut stream);
 
                 match header {
@@ -345,8 +345,9 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
     let mut user_classes: HashMap<u16, Vec<ClassSpawn>> = HashMap::new();
 
     for spawn in &state.spawns {
-        let user = user_events.entry(spawn.user.0.into()).or_insert(vec![]);
-        let user_class = user_classes.entry(spawn.user.0.into()).or_insert(vec![]);
+        let user_id: u16 = spawn.user.into();
+        let user = user_events.entry(user_id).or_insert(vec![]);
+        let user_class = user_classes.entry(user_id).or_insert(vec![]);
 
         user_class.push(ClassSpawn {
             class: spawn.class.clone(),
@@ -522,6 +523,8 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
             let mut last_kill_tick: i64 = 0;
 
             for (kill_index, kill) in life.kills.iter().enumerate() {
+                let kill_tick: u32 = kill.tick.into();
+
                 if kill_count == 0 {
                     life.killstreak_pointers.push(KillstreakPointer::new(
                         key.to_owned(),
@@ -529,10 +532,10 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
                         kill_index,
                         life.killstreak_pointers.len(),
                     ));
-                    last_kill_tick = kill.tick.0.into();
+                    last_kill_tick = kill_tick.into();
                     kill_count += 1;
                     streak_count += 1;
-                } else if (kill.tick.0 as i64)
+                } else if (kill_tick as i64)
                     < last_kill_tick
                         + settings["recording"]["before_killstreak_per_kill"]
                             .as_i64()
@@ -544,7 +547,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
                     kill_count += 1;
                 } else if kill_count < 3 {
                     kill_count = 1;
-                    last_kill_tick = kill.tick.0.into();
+                    last_kill_tick = kill_tick.into();
                     life.killstreak_pointers[streak_count - 1] = KillstreakPointer::new(
                         key.to_owned(),
                         life_index,
