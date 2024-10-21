@@ -5,9 +5,14 @@
     faCircleExclamation,
   } from "@fortawesome/free-solid-svg-icons";
   import Fa from "svelte-fa";
+  import { invoke } from "@tauri-apps/api/core";
 
   export let demo;
   export let settings;
+
+  async function loadSettings() {
+    settings = await invoke("load_settings");
+  }
 
   class Event {
     constructor(event) {
@@ -16,6 +21,18 @@
       this.tick = event.tick;
       this.event = event.event;
 
+      if (!settings.recording) {
+        loadSettings().then(() => {
+          this.setBounds(event);
+        });
+
+        return;
+      }
+
+      this.setBounds(event);
+    }
+
+    setBounds(event) {
       if (this.isKillstreak) {
         this.color = "tert";
         (this.value = event.value.Killstreak),
@@ -116,19 +133,23 @@
           {#if event.color === "err"}
             <Fa icon={faCircleExclamation} color={`var(--err)`} /> {event.event}
           {:else}
-            {event.isKillstreak ? `${event.value}ks` : `Bookmark "${event.value}"`}
-            from
-            <span
-              class="tick tooltip"
-              data-tooltip={`${tickToTime(event.start)}`}
-              style={`--kills: 0;`}>{event.start}</span
-            >
-            to
-            <span
-              class="tick tooltip"
-              data-tooltip={`${tickToTime(event.end)}`}
-              style={`--kills: 0;`}>{event.end}</span
-            >
+            {#if !event.value.includes("mls_rec_demo")}
+              {event.isKillstreak ? `${event.value}ks` : `Bookmark "${event.value}"`}
+              from
+              <span
+                class="tick tooltip"
+                data-tooltip={`${tickToTime(event.start)}`}
+                style={`--kills: 0;`}>{event.start}</span
+              >
+              to
+              <span
+                class="tick tooltip"
+                data-tooltip={`${tickToTime(event.end)}`}
+                style={`--kills: 0;`}>{event.end}</span
+              >
+            {:else}
+              Record Entire Demo
+            {/if}
           {/if}
         </div>
       {/each}

@@ -71,9 +71,7 @@ impl Clip {
                     long_clip: false,
                 };
 
-                let split_bm = bookmark_value.split(" ");
-
-                let split: Vec<&str> = split_bm.collect();
+                let split: Vec<&str> = bookmark_value.split(" ").collect();
 
                 if split.contains(&"spec_third") {
                     clip.spec_type = 3;
@@ -98,8 +96,7 @@ impl Clip {
     }
 
     fn push_bm_value(&mut self, bm_value: &str) {
-        let split_bm = self.bm_value.split(" ");
-        let mut split: Vec<&str> = split_bm.collect();
+        let mut split: Vec<&str> = self.bm_value.split(" ").collect();
 
         if split.contains(&bm_value) {
             return;
@@ -182,9 +179,7 @@ impl Clip {
                 new_end = &event.tick + settings["recording"]["after_bookmark"].as_i64().unwrap();
                 self.has_bookmark = true;
 
-                let split_bm = bm.split(" ");
-
-                let split: Vec<&str> = split_bm.collect();
+                let split: Vec<&str> = bm.split(" ").collect();
 
                 if split.contains(&"spec_third") {
                     self.spec_type = 3;

@@ -17,7 +17,7 @@ use vdm::action::ActionType;
 use vdm::VDM;
 
 use crate::clip::Clip;
-use crate::demos::{scan_demo, scan_for_demos, scan_for_vdms, validate_demos_folder};
+use crate::demos::{scan_demo, scan_for_demos, scan_for_vdms, validate_demos_folder, load_demo};
 use crate::event::Event;
 use crate::event::EventStyle::{Bookmark, Killstreak};
 use crate::logstf::parse;
@@ -528,6 +528,41 @@ fn ryukbot() -> Value {
         event_count = event_count + 1;
 
         let event = event::Event::new(event_capture).unwrap();
+
+        if event.contains(&"mls_skip") {
+            continue;
+        }
+
+        if event.contains(&"mls_rec_demo") {
+            let demo = load_demo(&settings, &event.demo_name);
+
+            println!("{}", demo);
+
+            if !demo["loaded"].as_bool().unwrap() {
+                continue;
+            }
+
+            if let Bookmark(val) = &event.value {
+                let mut start_event = event.clone();
+                let mut end_event = event.clone();
+
+                let start_val = val.replace("mls_rec_demo", "clip_start");
+                start_event.value = Bookmark(start_val);
+                start_event.tick = settings["recording"]["start_delay"].as_i64().unwrap();
+
+                end_event.value = Bookmark("clip_end".to_string());
+                end_event.tick = demo["header"]["ticks"].as_i64().unwrap() - 99;
+
+                let mut clip = Clip::new(start_event, &settings);
+
+                if clip.can_include(&end_event, &settings) {
+                    clip.include(end_event, &settings);
+                }
+
+                clips.push(clip);
+                continue;
+            }
+        }
 
         let clip_len = clips.len();
 

@@ -134,7 +134,7 @@
               {demo.name}
             </td>
             <td>{demo.header.nick}</td>
-            <td>{tickToTime(demo.header.ticks)}</td>
+            <td class="tooltip" data-tooltip={`${demo.header.ticks} ticks`} style="--kills: 0;">{tickToTime(demo.header.ticks)}</td>
             <td>{demo.header.server}</td>
             <td>{demo.header.map}</td>
             <td>{dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YYYY')}</td>

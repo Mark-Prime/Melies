@@ -87,6 +87,14 @@ impl Event {
             value,
         })
     }
+
+    pub fn contains(&self, name: &str) -> bool {
+        if let EventStyle::Bookmark(val) = &self.value {
+            return val.contains(name);
+        }
+
+        false
+    }
 }
 
 impl Display for Event {

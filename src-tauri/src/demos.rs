@@ -19,12 +19,6 @@ use self::new_analyser::Death;
 use self::new_analyser::Spawn;
 use tf_demo_parser::demo::data::DemoTick;
 
-// macro_rules! ifelse {
-//     ($c:expr, $v:expr, $v1:expr) => {
-//         if $c {$v} else {$v1}
-//     };
-// }
-
 mod new_analyser;
 
 #[derive(Debug, Serialize, Clone)]
@@ -197,6 +191,92 @@ pub(crate) fn scan_for_demos(settings: Value) -> Value {
     return resp;
 }
 
+pub(crate) fn load_demo(settings: &Value, demo_name: &String) -> Value {
+    let tf_folder = settings["tf_folder"].as_str().unwrap();
+
+    let path_str = format!("{}\\{}.dem", tf_folder, demo_name);
+
+    let path = Path::new(&path_str);
+
+    let demos_path_str = format!("{}\\demos\\{}.dem", tf_folder, demo_name);
+
+    let demos_path = Path::new(&demos_path_str);
+
+    let demo_path;
+
+    if path.exists() {
+        demo_path = path;
+    } else if demos_path.exists() {
+        demo_path = demos_path;
+    } else {
+        println!("{} does not exist", path_str);
+        println!("{} does not exist", demos_path_str);
+        return Value::from({
+            json!({
+                "loaded": false,
+                "error": "Demo does not exist"
+            })
+        });
+    }
+
+    let vdm_path = demo_path.with_extension("vdm");
+
+    let mut file = Value::from({});
+    let metadata = fs::metadata(demo_path).unwrap();
+    file["name"] = Value::from(demo_name.to_owned());
+    file["metadata"] = json!({
+        "modified": metadata.modified().unwrap(),
+        "created": metadata.created().unwrap(),
+    });
+
+    file["hasVdm"] = serde_json::Value::Bool(vdm_path.exists());
+
+    let mut demo_file = File::open(demo_path).unwrap();
+    let mut file_buf = [0u8; 1072];
+    demo_file.read_exact(&mut file_buf).unwrap();
+
+    let demo = Demo::new(&file_buf);
+
+    match get_demo_header(demo) {
+        Ok(val) => {
+            file["header"] = val;
+        }
+        Err(err) => {
+            println!("Corrupt demo: {}", demo_path.display());
+            println!("{}", err);
+
+            return Value::from({
+                json!({
+                    "loaded": false,
+                    "error": "Corrupt demo"
+                })
+            });
+        }
+    }
+
+    file["loaded"] = Value::from(true);
+
+    file
+}
+
+fn get_demo_header(demo: Demo) -> Result<Value, std::io::Error> {
+    let mut stream = demo.get_stream();
+                
+    let header = Header::read(&mut stream);
+
+    match header {
+        Ok(val) => {
+            return Ok(json!(val));
+        }
+        Err(err) => {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("{}", err),
+            ));
+        }
+    }
+}
+
 fn scan_folder_for_filetype(settings: &Value, path: &str, file_type: &str) -> Vec<Value> {
     let mut files: Vec<Value> = vec![];
 
@@ -233,17 +313,14 @@ fn scan_folder_for_filetype(settings: &Value, path: &str, file_type: &str) -> Ve
 
                 file["hasVdm"] = serde_json::Value::Bool(vdm_path.exists());
 
-                let mut stream = demo.get_stream();
-                
-                let header = Header::read(&mut stream);
-
-                match header {
+                match get_demo_header(demo) {
                     Ok(val) => {
-                        file["header"] = json!(val);
+                        file["header"] = val;
                     }
                     Err(err) => {
                         println!("Corrupt demo: {}", demo_path.display());
                         println!("{}", err);
+
                         continue;
                     }
                 }
