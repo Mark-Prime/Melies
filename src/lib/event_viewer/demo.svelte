@@ -52,8 +52,9 @@
       this.end = event.tick + settings.recording.after_bookmark;
     }
 
-    err() {
+    err(msg) {
       this.color = "err";
+      this.err = msg;
     }
   }
 
@@ -80,13 +81,13 @@
         event.start = element.tick;
 
         if (!(index + 1 < demo.length)) {
-          event.err();
+          event.err("???? Idk how you did this");
           events.push(event);
           continue;
         }
 
         if (!demo[index + 1].value.Bookmark?.includes("clip_end")) {
-          event.err();
+          event.err("No clip end found");
           events.push(event);
           continue;
         }
@@ -98,7 +99,7 @@
       }
 
       if (event.value.includes("clip_end")) {
-        event.err();
+        event.err("No clip start found");
       }
 
       event.value = event.value.replace("spec", "Spectate player");
@@ -131,7 +132,9 @@
       {#each organizeEvents() as event}
         <div class={`event event--${event.color}`}>
           {#if event.color === "err"}
-            <Fa icon={faCircleExclamation} color={`var(--err)`} /> {event.event}
+            <span class="tooltip" data-tooltip={event.err} style={`--kills: 0;`}>
+              <Fa icon={faCircleExclamation} color={`var(--err)`} /> {event.event}
+            </span>
           {:else}
             {#if !event.value.includes("mls_rec_demo")}
               {event.isKillstreak ? `${event.value}ks` : `Bookmark "${event.value}"`}
