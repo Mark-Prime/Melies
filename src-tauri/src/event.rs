@@ -88,6 +88,14 @@ impl Event {
         })
     }
 
+    pub fn commands(&self) -> Vec<&str> {
+        if let EventStyle::Bookmark(val) = &self.value {
+            return val.split_whitespace().collect();
+        }
+
+        vec![]
+    }
+
     pub fn contains(&self, name: &str) -> bool {
         if let EventStyle::Bookmark(val) = &self.value {
             return val.contains(name);

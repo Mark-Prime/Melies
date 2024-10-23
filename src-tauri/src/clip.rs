@@ -22,12 +22,12 @@ impl Clip {
     pub fn new(event: Event, settings: &Value) -> Clip {
         let demo_name = String::from(event.demo_name.clone());
         match &event.value {
-            Killstreak(killstreak_value) => {
+            Killstreak(val) => {
                 let mut start_tick = &event.tick
                     - settings["recording"]["before_killstreak_per_kill"]
                         .as_i64()
                         .unwrap()
-                        * killstreak_value;
+                        * val;
 
                 if start_tick < 0 {
                     start_tick = settings["recording"]["start_delay"].as_i64().unwrap();
@@ -38,7 +38,7 @@ impl Clip {
                     demo_name: demo_name.to_string(),
                     has_killstreak: true,
                     has_bookmark: false,
-                    ks_value: killstreak_value.to_owned(),
+                    ks_value: val.to_owned(),
                     bm_value: "".to_string(),
                     start_tick,
                     end_tick: &event.tick
@@ -48,7 +48,7 @@ impl Clip {
                     long_clip: false,
                 };
             }
-            Bookmark(bookmark_value) => {
+            Bookmark(val) => {
                 let mut start_tick =
                     &event.tick - settings["recording"]["before_bookmark"].as_i64().unwrap();
 
@@ -62,7 +62,7 @@ impl Clip {
                     has_killstreak: false,
                     has_bookmark: true,
                     ks_value: 0,
-                    bm_value: bookmark_value.to_string(),
+                    bm_value: val.to_string(),
                     start_tick,
                     end_tick: &event.tick
                         + settings["recording"]["after_bookmark"].as_i64().unwrap(),
@@ -71,17 +71,17 @@ impl Clip {
                     long_clip: false,
                 };
 
-                let split: Vec<&str> = bookmark_value.split(" ").collect();
+                let commands: Vec<&str> = event.commands();
 
-                if split.contains(&"spec_third") {
+                if commands.contains(&"spec_third") {
                     clip.spec_type = 3;
-                    clip.spec_player = split.last().unwrap().to_string();
-                } else if split.contains(&"spec") {
+                    clip.spec_player = commands.last().unwrap().to_string();
+                } else if commands.contains(&"spec") {
                     clip.spec_type = 1;
-                    clip.spec_player = split.last().unwrap().to_string();
+                    clip.spec_player = commands.last().unwrap().to_string();
                 }
 
-                if split.contains(&"clip_start") {
+                if commands.contains(&"clip_start") {
                     clip.long_clip = true;
                     clip.start_tick = event.tick;
 
@@ -179,17 +179,17 @@ impl Clip {
                 new_end = &event.tick + settings["recording"]["after_bookmark"].as_i64().unwrap();
                 self.has_bookmark = true;
 
-                let split: Vec<&str> = bm.split(" ").collect();
+                let commands: Vec<&str> = event.commands();
 
-                if split.contains(&"spec_third") {
+                if commands.contains(&"spec_third") {
                     self.spec_type = 3;
-                    self.spec_player = split.last().unwrap().to_string();
-                } else if split.contains(&"spec") {
+                    self.spec_player = commands.last().unwrap().to_string();
+                } else if commands.contains(&"spec") {
                     self.spec_type = 1;
-                    self.spec_player = split.last().unwrap().to_string();
+                    self.spec_player = commands.last().unwrap().to_string();
                 }
 
-                if split.contains(&"clip_start") {
+                if commands.contains(&"clip_start") {
                     self.long_clip = true;
                 }
 
@@ -198,7 +198,7 @@ impl Clip {
                     self.long_clip = false;
                 }
 
-                for val in split {
+                for val in commands {
                     self.push_bm_value(val);
                 }
             }
