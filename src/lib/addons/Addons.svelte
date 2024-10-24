@@ -1,8 +1,8 @@
 <script>
   // @ts-nocheck
-  import Input from "../Input.svelte";
-  import Switch from "../Switch.svelte";
-  import Collapse from "../Collapse.svelte";
+  import Input from "$lib/components/Input.svelte";
+  import Switch from "$lib/components/Switch.svelte";
+  import Collapse from "$lib/components/Collapse.svelte";
   import Addon from "./Addon.svelte";
   import { invoke } from "@tauri-apps/api/core";
   export let addons;

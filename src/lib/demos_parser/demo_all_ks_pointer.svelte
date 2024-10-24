@@ -1,6 +1,6 @@
 <script>
   // @ts-nocheck
-  import ClassLogo from "../classlogo.svelte";
+  import ClassLogo from "$lib/components/classlogo.svelte";
 
   export let killstreaks;
   export let parsed_demo;

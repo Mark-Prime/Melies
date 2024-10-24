@@ -2,7 +2,7 @@
   // @ts-nocheck
   import { useMousePosition } from "@svelteuidev/composables";
   import Slider2 from "./timeline_slider.svelte";
-  import ClassLogo from "$lib/classlogo.svelte";
+  import ClassLogo from "$lib/components/classlogo.svelte";
   import { onMount } from "svelte";
   import { median } from "mathjs";
 

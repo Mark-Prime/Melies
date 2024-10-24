@@ -1,14 +1,14 @@
 <script>
   import { createEventDispatcher } from "svelte";
   import { faFileCircleMinus, faFileCirclePlus, faListCheck, faSquare, faSquareCheck, faTrash } from "@fortawesome/free-solid-svg-icons";
-  import Modal from "./Modal.svelte";
+  import Modal from "$lib/components/Modal.svelte";
   import Fa from "svelte-fa";
   import { invoke } from "@tauri-apps/api/core";
   import dayjs from "dayjs";
   import tickToTime from "$lib/composables/tickToTime.js";
   import { faCheck, faXmark } from "@fortawesome/free-solid-svg-icons";
-  import Input from "./Input.svelte";
-  import Select from "./Select.svelte";
+  import Input from "$lib/components/Input.svelte";
+  import Select from "$lib/components/Select.svelte";
 
   let enabled = false;
   let resp = { loaded: false };

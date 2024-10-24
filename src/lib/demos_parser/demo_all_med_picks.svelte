@@ -1,5 +1,5 @@
 <script>
-  import ClassLogo from "../classlogo.svelte";
+  import ClassLogo from "$lib/components/classlogo.svelte";
 
   export let label;
   export let kills;

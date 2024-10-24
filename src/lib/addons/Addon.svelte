@@ -1,10 +1,10 @@
 <script>
   // @ts-nocheck
-  import Input from "../Input.svelte";
-  import Switch from "../Switch.svelte";
+  import Input from "$lib/components/Input.svelte";
+  import Switch from "$lib/components/Switch.svelte";
   import Setting from "./Setting.svelte";
   import Group from "./Group.svelte";
-  import addonTypeSort from "../composables/addonTypeSort";
+  import addonTypeSort from "$lib/composables/addonTypeSort";
   export let addon;
   export let addons;
 </script>

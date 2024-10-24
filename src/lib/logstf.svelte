@@ -2,7 +2,7 @@
   // @ts-nocheck
   import { faFlag } from "@fortawesome/free-solid-svg-icons";
   import Fa from "svelte-fa";
-  import Modal from "./Modal.svelte";
+  import Modal from "$lib/components/Modal.svelte";
 
   import { invoke } from "@tauri-apps/api/core";
   import { createEventDispatcher } from "svelte";

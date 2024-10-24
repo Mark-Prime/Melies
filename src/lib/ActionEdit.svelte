@@ -1,9 +1,9 @@
 <script>
-  import ColorSelect from "./ColorSelect.svelte";
-  import Input from "./Input.svelte";
-  import Range from "./Range.svelte";
-  import Select from "./Select.svelte";
-  import Switch from "./Switch.svelte";
+  import ColorSelect from "$lib/components/ColorSelect.svelte";
+  import Input from "$lib/components/Input.svelte";
+  import Range from "$lib/components/Range.svelte";
+  import Select from "$lib/components/Select.svelte";
+  import Switch from "$lib/components/Switch.svelte";
 
   export let action;
 

@@ -1,16 +1,16 @@
 <script>
   // @ts-ignore
   import { invoke } from "@tauri-apps/api/core";
-  import Modal from "$lib/Modal.svelte";
+  import Modal from "$lib/components/Modal.svelte";
   import { faGear } from "@fortawesome/free-solid-svg-icons";
   import Fa from "svelte-fa";
   import { createEventDispatcher } from "svelte";
-  import Input from "./Input.svelte";
-  import Switch from "./Switch.svelte";
-  import Select from "./Select.svelte";
-  import Collapse from "./Collapse.svelte";
-  import Addons from "./addons/Addons.svelte";
-  import Theme from "./Theme.svelte";
+  import Input from "$lib/components/Input.svelte";
+  import Switch from "$lib/components/Switch.svelte";
+  import Select from "$lib/components/Select.svelte";
+  import Collapse from "$lib/components/Collapse.svelte";
+  import Addons from "$lib/addons/Addons.svelte";
+  import Theme from "$lib/Theme.svelte";
   const dispatch = createEventDispatcher();
   let settings = {};
   let output_settings = {};

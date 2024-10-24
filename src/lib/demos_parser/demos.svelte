@@ -5,18 +5,19 @@
   import Fa from "svelte-fa";
   import { createEventDispatcher } from "svelte";
   import dayjs from "dayjs";
-  import tickToTime from "$lib/composables/tickToTime.js";
 
+  import tickToTime from "$lib/composables/tickToTime.js";
   import isAirshot from "$lib/composables/isAirshot.js";
+
+  import Modal from "$lib/components/Modal.svelte";
+  import Timeline from "./timeline/timeline.svelte";
+  import ClassLogo from "$lib/components/classlogo.svelte";
 
   const dispatch = createEventDispatcher();
 
   let index = 0,
     total = 0;
 
-  import Modal from "$lib/Modal.svelte";
-  import Timeline from "./timeline/timeline.svelte";
-  import ClassLogo from "../classlogo.svelte";
   import Life from "./demo_life.svelte";
   import KillstreakPointer from "./demo_ks_pointer.svelte";
   import AllKillstreaksPointer from "./demo_all_ks_pointer.svelte";

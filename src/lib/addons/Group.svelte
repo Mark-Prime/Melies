@@ -1,7 +1,7 @@
 <script>
   // @ts-nocheck
   import Setting from "./Setting.svelte";
-  import addonTypeSort from "../composables/addonTypeSort";
+  import addonTypeSort from "$lib/composables/addonTypeSort";
   export let group;
   export let defaultTitle;
   export let depth = 1;

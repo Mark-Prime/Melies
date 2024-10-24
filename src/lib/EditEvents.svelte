@@ -3,7 +3,7 @@
   import { createEventDispatcher } from "svelte";
   import { faFilePen } from "@fortawesome/free-solid-svg-icons";
   import DemoEdit from "$lib/home/demoEdit.svelte";
-  import Modal from "./Modal.svelte";
+  import Modal from "$lib/components/Modal.svelte";
   import Fa from "svelte-fa";
 
   const dispatch = createEventDispatcher();

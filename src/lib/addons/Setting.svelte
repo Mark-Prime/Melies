@@ -1,7 +1,7 @@
 <script>
   // @ts-nocheck
-  import Input from "../Input.svelte";
-  import Switch from "../Switch.svelte";
+  import Input from "$lib/components/Input.svelte";
+  import Switch from "$lib/components/Switch.svelte";
   export let setting;
   export let defaultTitle;
   export let depth = 0;

@@ -1,6 +1,6 @@
 <script>
   import EventViewer from "$lib/event_viewer/EventViewer.svelte";
-  import Hero from "$lib/hero.svelte";
+  import Hero from "$lib/components/hero.svelte";
   import Backups from "$lib/backups.svelte";
   import Logstf from "$lib/logstf.svelte";
   import Demos from "$lib/demos_parser/demos.svelte";
@@ -9,9 +9,9 @@
   import LogViewer from "$lib/LogViewer.svelte";
   import EditEvents from "$lib/EditEvents.svelte";
   import Settings from "$lib/settings.svelte";
-  import VdmEditor from "../lib/VdmEditor.svelte";
-  import DemoManager from "../lib/DemoManager.svelte";
-  import RemuxFootage from "../lib/RemuxFootage.svelte";
+  import VdmEditor from "$lib/VdmEditor.svelte";
+  import DemoManager from "$lib/DemoManager.svelte";
+  import RemuxFootage from "$lib/RemuxFootage.svelte";
   import { onMount } from "svelte";
 
   let resp = { vdms: 0, clips: 0, events: 0, code: 0 };

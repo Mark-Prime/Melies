@@ -1,7 +1,7 @@
 <script>
     import { createEventDispatcher } from "svelte";
     import { faTimeline } from "@fortawesome/free-solid-svg-icons";
-    import Modal from "./Modal.svelte";
+    import Modal from "$lib/components/Modal.svelte";
     import Fa from "svelte-fa";
   
     const dispatch = createEventDispatcher();

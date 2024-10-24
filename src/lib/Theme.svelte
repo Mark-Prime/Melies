@@ -1,5 +1,5 @@
 <script>
-  import Collapse from "./Collapse.svelte";
+  import Collapse from "$lib/components/Collapse.svelte";
   import { invoke } from "@tauri-apps/api/core";
 </script>
 <Collapse defaultOpen={false} title="Theme">

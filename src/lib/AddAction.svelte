@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher } from "svelte";
-  import Modal from "./Modal.svelte";
+  import Modal from "$lib/components/Modal.svelte";
   import { invoke } from "@tauri-apps/api/core";
 
   const dispatch = createEventDispatcher();
