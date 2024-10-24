@@ -78,7 +78,7 @@
                 parsed_demo.data.users[ks_pointer.owner_id]?.name
               }`}
               data-tooltip="Jump To Player"
-              style="width: 100%; --kills: 0;"
+              style="width: 100%;"
               class={parsed_demo.data.users[ks_pointer.owner_id]["team"] +
                 " tooltip"}
             >
