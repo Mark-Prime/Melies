@@ -13,11 +13,11 @@
     settings = await invoke("load_settings");
   }
 
-  function setEvents(event_list = {}) {
+  function setEvents(eventList = {}) {
     demos = [];
 
-    if (event_list.code === 200) {
-      event_list.events.forEach(
+    if (eventList.code === 200) {
+      eventList.events.forEach(
         (/** @type {{ demo_name: any; }} */ event, /** @type {number} */ i) => {
           event.isKillstreak = false;
 
@@ -27,7 +27,7 @@
 
           if (
             i === 0 ||
-            event_list.events[i - 1].demo_name != event.demo_name
+            eventList.events[i - 1].demo_name != event.demo_name
           ) {
             demos.push([event]);
             return;
@@ -45,9 +45,9 @@
 
   async function loadEvents() {
     loading = true;
-    let event_list = await invoke("load_events");
+    let eventList = await invoke("load_events");
 
-    setEvents(event_list);
+    setEvents(eventList);
   }
 
   onMount(async () => {

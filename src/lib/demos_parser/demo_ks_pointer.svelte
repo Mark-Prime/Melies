@@ -1,29 +1,29 @@
 <script>
   // @ts-nocheck
-  import ClassLogo from "$lib/components/classlogo.svelte";
+  import ClassLogo from "$lib/components/ClassLogo.svelte";
 
   export let classConverter;
   export let toggleSelected;
-  export let parsed_demo;
+  export let parsedDemo;
   export let tickToTime;
-  export let ks_pointer;
+  export let ksPointer;
   export let toggleBookmarkSelected;
   export let isPovDemo;
 
   function getLife() {
-    return parsed_demo.data.player_lives[ks_pointer.owner_id][
-      ks_pointer.life_index
+    return parsedDemo.data.player_lives[ksPointer.owner_id][
+      ksPointer.life_index
     ];
   }
 
   function getKills() {
-    if (!ks_pointer.kills) {
+    if (!ksPointer.kills) {
       return [];
     }
 
     let kills = [];
 
-    ks_pointer.kills?.forEach((element) => {
+    ksPointer.kills?.forEach((element) => {
       kills.push(getLife().kills[element]);
     });
 
@@ -33,26 +33,26 @@
 
 <div
   class={"demo demo__killstreak " +
-    ((ks_pointer.selected ||
-      ks_pointer.selected_as_bookmark ||
+    ((ksPointer.selected ||
+      ksPointer.selected_as_bookmark ||
       getLife().selected) &&
       "demo--selected")}
 >
   <div class="player_classes">
-    {#each getLife().classes as player_class}
+    {#each getLife().classes as playerClass}
       <ClassLogo
-        player_class={classConverter(player_class)}
+        player_class={classConverter(playerClass)}
         tooltip={`Kills: ${
           getKills().filter(
-            (kill) => kill.killer_class === classConverter(player_class)
+            (kill) => kill.killer_class === classConverter(playerClass)
           ).length
         }`}
       />
     {/each}
   </div>
   <button
-    on:click={toggleBookmarkSelected(ks_pointer)}
-    on:keydown={toggleBookmarkSelected(ks_pointer)}
+    on:click={toggleBookmarkSelected(ksPointer)}
+    on:keydown={toggleBookmarkSelected(ksPointer)}
     on:keyup={() => {}}
     tabindex="-1"
     aria-disabled="true"
@@ -69,13 +69,13 @@
         <ClassLogo player_class={classConverter(kill.killer_class)} />
         killed
         <a
-          href={`#player-${parsed_demo.data.users[kill.victim].name}`}
-          class={parsed_demo.data.users[kill.victim]["team"] + " tooltip"}
+          href={`#player-${parsedDemo.data.users[kill.victim].name}`}
+          class={parsedDemo.data.users[kill.victim]["team"] + " tooltip"}
           style="--kills: 0;"
           data-tooltip="Jump To Player"
         >
           <ClassLogo player_class={classConverter(kill.victim_class)} />
-          {parsed_demo.data.users[kill.victim].name}
+          {parsedDemo.data.users[kill.victim].name}
         </a>
         with {kill.weapon}
         {#if kill.crit_type}
@@ -118,7 +118,7 @@
       data-tooltip="Entire Life"
       style={`--kills: 0;`}
     >
-      {#if parsed_demo.data.player_lives[ks_pointer.owner_id][ks_pointer.life_index].selected}
+      {#if parsedDemo.data.player_lives[ksPointer.owner_id][ksPointer.life_index].selected}
         <button class="cancel-btn" on:click={toggleSelected(getLife())}
           >-</button
         >
@@ -132,13 +132,12 @@
         data-tooltip="As Killstreak"
         style={`--kills: 0;`}
       >
-        {#if ks_pointer.selected}
-          <button
-            class="cancel-btn"
-            on:click={toggleSelected(ks_pointer, false)}>-</button
+        {#if ksPointer.selected}
+          <button class="cancel-btn" on:click={toggleSelected(ksPointer, false)}
+            >-</button
           >
         {:else}
-          <button on:click={toggleSelected(ks_pointer, false)}>+</button>
+          <button on:click={toggleSelected(ksPointer, false)}>+</button>
         {/if}
       </div>
     {/if}
@@ -147,13 +146,13 @@
       data-tooltip="As Bookmarks"
       style={`--kills: 0;`}
     >
-      {#if ks_pointer.selected_as_bookmark}
+      {#if ksPointer.selected_as_bookmark}
         <button
           class="cancel-btn"
-          on:click={toggleBookmarkSelected(ks_pointer, false)}>-</button
+          on:click={toggleBookmarkSelected(ksPointer, false)}>-</button
         >
       {:else}
-        <button on:click={toggleBookmarkSelected(ks_pointer, false)}>+</button>
+        <button on:click={toggleBookmarkSelected(ksPointer, false)}>+</button>
       {/if}
     </div>
   </div>

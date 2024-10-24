@@ -1,7 +1,11 @@
 <script>
   // @ts-nocheck
   import { invoke } from "@tauri-apps/api/core";
-  import { faWandMagicSparkles, faCheck, faXmark } from "@fortawesome/free-solid-svg-icons";
+  import {
+    faWandMagicSparkles,
+    faCheck,
+    faXmark,
+  } from "@fortawesome/free-solid-svg-icons";
   import Fa from "svelte-fa";
   import { createEventDispatcher } from "svelte";
   import dayjs from "dayjs";
@@ -11,7 +15,7 @@
 
   import Modal from "$lib/components/Modal.svelte";
   import Timeline from "./timeline/timeline.svelte";
-  import ClassLogo from "$lib/components/classlogo.svelte";
+  import ClassLogo from "$lib/components/ClassLogo.svelte";
 
   const dispatch = createEventDispatcher();
 
@@ -28,7 +32,7 @@
   let toggle = () => (enabled = !enabled);
 
   let resp = { loaded: false, loading: false };
-  let parsed_demo = { loaded: false, loading: false };
+  let parsedDemo = { loaded: false, loading: false };
   let selected = [];
   let bluTeam = [];
   let redTeam = [];
@@ -39,14 +43,14 @@
   let isPovDemo = false;
   let displayChat = false;
   let povId = 0;
-  let last_selected = 0;
+  let lastSelected = 0;
 
-  let current_demo = "";
+  let currentDemo = "";
 
   let settings = {};
-  let recording_settings = {};
+  let recordingSettings = {};
 
-  let filterAirshots = (k) => isAirshot(parsed_demo, k, settings);
+  let filterAirshots = (k) => isAirshot(parsedDemo, k, settings);
 
   function filterLife(lives, valKey) {
     let validLives = lives.filter((life) => life[valKey].length > 0);
@@ -67,11 +71,11 @@
   }
 
   async function loadEvents() {
-    let event_list = await invoke("load_events");
+    let eventList = await invoke("load_events");
     let demos = [];
 
-    if (event_list.code === 200) {
-      event_list.events.forEach(
+    if (eventList.code === 200) {
+      eventList.events.forEach(
         (/** @type {{ demo_name: any; }} */ event, /** @type {number} */ i) => {
           event.isKillstreak = false;
 
@@ -81,7 +85,7 @@
 
           if (
             i === 0 ||
-            event_list.events[i - 1].demo_name != event.demo_name
+            eventList.events[i - 1].demo_name != event.demo_name
           ) {
             demos.push([event]);
             return;
@@ -102,18 +106,18 @@
     console.log("events", events);
 
     let demos = await loadEvents();
-    let new_demo = [];
+    let newDemo = [];
 
     let settings = await invoke("load_settings");
-    let recording_settings = settings.recording;
+    let recordingSettings = settings.recording;
 
-    let spec_mode = recording_settings["third_person"] ? "spec_third" : "spec";
+    let specMode = recordingSettings["third_person"] ? "spec_third" : "spec";
 
     for (let event of events) {
-      let spectate = `${spec_mode} ${event.steamid64}`;
+      let spectate = `${specMode} ${event.steamid64}`;
 
       if (event.start) {
-        new_demo.push({
+        newDemo.push({
           value: {
             Bookmark: `clip_start ${event.steamid64 !== undefined ? spectate : ""}`,
           },
@@ -127,7 +131,7 @@
       }
 
       if (event.bookmark) {
-        new_demo.push({
+        newDemo.push({
           value: {
             Bookmark: event.steamid64 !== undefined ? spectate : "General",
           },
@@ -141,7 +145,7 @@
       }
 
       if (event.killstreak) {
-        new_demo.push({
+        newDemo.push({
           value: {
             Killstreak: event.kills,
           },
@@ -154,7 +158,7 @@
         continue;
       }
 
-      new_demo.push({
+      newDemo.push({
         value: {
           Bookmark: `clip_end`,
         },
@@ -165,7 +169,7 @@
       });
     }
 
-    demos.push(new_demo);
+    demos.push(newDemo);
 
     for (let demo of demos) {
       demo.sort((a, b) => a.tick - b.tick);
@@ -177,7 +181,7 @@
 
   async function loadSettings() {
     settings = await invoke("load_settings");
-    recording_settings = settings.recording;
+    recordingSettings = settings.recording;
   }
 
   async function loadDemos() {
@@ -190,8 +194,8 @@
 
   function closeModal() {
     selected = [];
-    current_demo = "";
-    parsed_demo = { loaded: false, loading: false };
+    currentDemo = "";
+    parsedDemo = { loaded: false, loading: false };
 
     for (let demo of resp.demos) {
       demo.selected = false;
@@ -224,7 +228,7 @@
       return chat.name;
     }
 
-    return parsed_demo.data?.users[chat.from]?.name;
+    return parsedDemo.data?.users[chat.from]?.name;
   }
 
   function toggleSelected(demo, isKillstreak = null, i = null) {
@@ -234,15 +238,15 @@
       if (isShiftDown) {
         for (let index in resp.demos) {
           if (
-            index > Math.min(i, last_selected) &&
-            index < Math.max(i, last_selected)
+            index > Math.min(i, lastSelected) &&
+            index < Math.max(i, lastSelected)
           ) {
             resp.demos[index].selected = !resp.demos[index].selected;
           }
         }
       }
 
-      last_selected = i;
+      lastSelected = i;
     }
 
     if (demo.selected_as_bookmark) {
@@ -250,7 +254,7 @@
     }
 
     if (isKillstreak) {
-      let player = parsed_demo.data.player_lives[demo.kills[0].killer];
+      let player = parsedDemo.data.player_lives[demo.kills[0].killer];
       for (let life of player) {
         for (let killstreak of life.killstreak_pointers) {
           if (
@@ -263,7 +267,7 @@
         }
       }
     } else if (isKillstreak === false) {
-      for (let killstreak of parsed_demo.data.killstreak_pointers) {
+      for (let killstreak of parsedDemo.data.killstreak_pointers) {
         if (
           JSON.stringify(killstreak.kills[0]) === JSON.stringify(demo.kills[0])
         ) {
@@ -274,7 +278,7 @@
     }
 
     resp = resp;
-    parsed_demo = parsed_demo;
+    parsedDemo = parsedDemo;
   }
 
   function toggleKillsSelected(kills, isKillstreak = null, i = null) {
@@ -288,7 +292,7 @@
     }
 
     resp = resp;
-    parsed_demo = parsed_demo;
+    parsedDemo = parsedDemo;
   }
 
   function toggleBookmarkSelected(demo, isKillstreak = null) {
@@ -299,7 +303,7 @@
     }
 
     resp = resp;
-    parsed_demo = parsed_demo;
+    parsedDemo = parsedDemo;
   }
 
   function parseDemos() {
@@ -318,18 +322,18 @@
   async function nextDemo(skipScan = false) {
     index += 1;
 
-    if (current_demo != "" && skipScan !== true) {
+    if (currentDemo != "" && skipScan !== true) {
       let events = [];
 
-      for (let i in parsed_demo.data.player_lives) {
-        let player = parsed_demo.data.player_lives[i];
+      for (let i in parsedDemo.data.player_lives) {
+        let player = parsedDemo.data.player_lives[i];
 
         for (let life of player) {
           if (life.selected) {
             events.push({
               time: life.start + 20,
               label: `${life.kills.length}k-${life.assists.length}a_start`,
-              steamid64: parsed_demo.data.users[i].steamId64,
+              steamid64: parsedDemo.data.users[i].steamId64,
               kills: life.kills.length,
               start: true,
             });
@@ -345,7 +349,7 @@
               events.push({
                 time: kill.tick + 20,
                 label: `k-${kill.killer_class}_v-${kill.victim_class}`,
-                steamid64: parsed_demo.data.users[i].steamId64,
+                steamid64: parsedDemo.data.users[i].steamId64,
                 bookmark: true,
               });
             }
@@ -357,7 +361,7 @@
                 time: life.kills[ks_pointer.kills[ks_pointer.kills.length - 1]]
                   .tick,
                 label: `${ks_pointer.kills.length}ks`,
-                steamid64: parsed_demo.data.users[i].steamId64,
+                steamid64: parsedDemo.data.users[i].steamId64,
                 kills: ks_pointer.kills.length,
                 killstreak: true,
               });
@@ -368,10 +372,10 @@
             if (ks_pointer.selected_as_bookmark) {
               let start_time =
                 life.kills[ks_pointer.kills[0]].tick -
-                recording_settings.before_killstreak_per_kill;
+                recordingSettings.before_killstreak_per_kill;
               let end_time =
                 life.kills[ks_pointer.kills[ks_pointer.kills.length - 1]].tick +
-                recording_settings.after_killstreak;
+                recordingSettings.after_killstreak;
 
               if (life.start + 20 > start_time) {
                 start_time = life.start + 20;
@@ -384,7 +388,7 @@
               events.push({
                 time: start_time,
                 label: `${ks_pointer.kills.length}ks_start`,
-                steamid64: parsed_demo.data.users[i].steamId64,
+                steamid64: parsedDemo.data.users[i].steamId64,
                 kills: ks_pointer.kills.length,
                 start: true,
               });
@@ -398,11 +402,11 @@
         }
       }
 
-      for (let i in parsed_demo.data.chat) {
-        let message = parsed_demo.data.chat[i];
+      for (let i in parsedDemo.data.chat) {
+        let message = parsedDemo.data.chat[i];
 
         if (message.selected) {
-          let steamid64 = parsed_demo.data.users[message.from]?.steamId64;
+          let steamid64 = parsedDemo.data.users[message.from]?.steamId64;
 
           events.push({
             time: message.tick,
@@ -413,7 +417,7 @@
         }
       }
 
-      let demo_name = current_demo.replace(".dem", "").substring(1);
+      let demo_name = currentDemo.replace(".dem", "").substring(1);
 
       if (!settings.absolute_file_paths) {
         demo_name = demo_name.replace("demos\\", "");
@@ -428,14 +432,14 @@
     }
 
     if (selected.length !== 0) {
-      parsed_demo = { loaded: false, loading: true };
-      current_demo = selected.shift();
-      parsed_demo = await invoke("parse_demo", { path: current_demo });
+      parsedDemo = { loaded: false, loading: true };
+      currentDemo = selected.shift();
+      parsedDemo = await invoke("parse_demo", { path: currentDemo });
 
       verifyTicks();
       isPovDemo = isDemoPov();
 
-      console.log(settings)
+      console.log(settings);
       console.log("isPovDemo", isPovDemo);
       console.log("povId", povId);
 
@@ -443,7 +447,7 @@
       bluTeam.sort(sortByClass);
       redTeam.sort(sortByClass);
 
-      console.log(parsed_demo);
+      console.log(parsedDemo);
       console.log(bluTeam);
       console.log(redTeam);
     } else {
@@ -459,14 +463,14 @@
   }
 
   function isDemoPov() {
-    let nick = parsed_demo.header.nick;
+    let nick = parsedDemo.header.nick;
 
     bluTeam = [];
     redTeam = [];
     povId = 0;
 
-    for (let user in parsed_demo.data.users) {
-      let username = parsed_demo.data.users[user].name;
+    for (let user in parsedDemo.data.users) {
+      let username = parsedDemo.data.users[user].name;
 
       if (username === nick) {
         if (!settings.pov_as_stv) {
@@ -475,7 +479,7 @@
         }
       }
 
-      let team = parsed_demo.data.users[user].team;
+      let team = parsedDemo.data.users[user].team;
 
       if (team === "other") {
         continue;
@@ -501,11 +505,11 @@
       return true;
     }
 
-    if (parsed_demo.data?.users[player]?.team !== team) {
+    if (parsedDemo.data?.users[player]?.team !== team) {
       return false;
     }
 
-    if (parsed_demo.data.player_lives[player].length == 0) {
+    if (parsedDemo.data.player_lives[player].length == 0) {
       return false;
     }
 
@@ -513,7 +517,7 @@
       return true;
     }
 
-    for (let life of parsed_demo.data.player_lives[player]) {
+    for (let life of parsedDemo.data.player_lives[player]) {
       if (life.kills.length > 0) {
         return true;
       }
@@ -532,23 +536,23 @@
     let events = [
       {
         time: settings.recording.start_delay,
-        label: parsed_demo.data?.users[userId].steamId64,
-        steamid64: parsed_demo.data?.users[userId].steamId64,
+        label: parsedDemo.data?.users[userId].steamId64,
+        steamid64: parsedDemo.data?.users[userId].steamId64,
         kills: 0,
         start: true,
       },
       {
         time: Math.max(
-          parsed_demo.header?.ticks - 99,
+          parsedDemo.header?.ticks - 99,
           settings.recording.start_delay + 66
         ),
-        label: parsed_demo.data?.users[userId].steamId64,
-        steamid64: parsed_demo.data?.users[userId].steamId64,
+        label: parsedDemo.data?.users[userId].steamId64,
+        steamid64: parsedDemo.data?.users[userId].steamId64,
       },
     ];
 
-    let demo_name = current_demo.replace(".dem", "").substring(1);
-    
+    let demo_name = currentDemo.replace(".dem", "").substring(1);
+
     if (!settings.absolute_file_paths) {
       demo_name = demo_name.replace("demos\\", "");
     }
@@ -567,10 +571,10 @@
     demo_count,
     isPovDemo
   ) {
-    let name = demo_name
+    let name = demo_name;
 
     if (!isPovDemo) {
-      name = name + "_" + demo_count
+      name = name + "_" + demo_count;
     }
 
     return {
@@ -579,41 +583,48 @@
       },
       tick: tick,
       demo_name: name,
-      event: `[demo_${parsed_demo.data?.users[userId].steamId64}] ${label} ${isPovDemo ? "" : spectate + " "}(\"${name}\" at ${tick})`,
+      event: `[demo_${parsedDemo.data?.users[userId].steamId64}] ${label} ${isPovDemo ? "" : spectate + " "}(\"${name}\" at ${tick})`,
       isKillstreak: false,
     };
   }
 
-  function bookmarkLife(spectate, demo_name, userId, life, demo_count, isPovDemo) {
-    let new_demo = [];
+  function bookmarkLife(
+    spectate,
+    demo_name,
+    userId,
+    life,
+    demo_count,
+    isPovDemo
+  ) {
+    let newDemo = [];
 
-    let name = demo_name
+    let name = demo_name;
 
     if (!isPovDemo) {
-      name = name + "_" + demo_count
+      name = name + "_" + demo_count;
     }
 
-    new_demo.push({
+    newDemo.push({
       value: {
         Bookmark: `clip_start${isPovDemo ? "" : " " + spectate}`,
       },
       tick: life.start + 20,
       demo_name: name,
-      event: `[demo_${parsed_demo.data?.users[userId].steamId64}] clip_start ${isPovDemo ? "" : spectate + " "}(\"${name}\" at ${life.start + 20})`,
+      event: `[demo_${parsedDemo.data?.users[userId].steamId64}] clip_start ${isPovDemo ? "" : spectate + " "}(\"${name}\" at ${life.start + 20})`,
       isKillstreak: false,
     });
 
-    new_demo.push({
+    newDemo.push({
       value: {
         Bookmark: `clip_end`,
       },
       tick: life.end + 132,
       demo_name: name,
-      event: `[demo_${parsed_demo.data?.users[userId].steamId64}] clip_end (\"${name}\" at ${life.end + 132})`,
+      event: `[demo_${parsedDemo.data?.users[userId].steamId64}] clip_end (\"${name}\" at ${life.end + 132})`,
       isKillstreak: false,
     });
 
-    return new_demo;
+    return newDemo;
   }
 
   function shouldRecordLife(life) {
@@ -637,36 +648,36 @@
   async function recordAllHighlights() {
     let demos = await loadEvents();
     let settings = await invoke("load_settings");
-    let recording_settings = settings.recording;
+    let recordingSettings = settings.recording;
 
-    let spec_mode = recording_settings["third_person"] ? "spec_third" : "spec";
+    let specMode = recordingSettings["third_person"] ? "spec_third" : "spec";
 
     let demo_count = 1;
 
-    for (let userId in parsed_demo.data.users) {
+    for (let userId in parsedDemo.data.users) {
       if (isPovDemo) {
         if (povId != userId) {
           continue;
         }
       }
 
-      let new_demo = [];
+      let newDemo = [];
 
-      let name_split = current_demo.replace(".dem", "").split("\\");
+      let name_split = currentDemo.replace(".dem", "").split("\\");
 
       let demo_name = name_split[name_split.length - 1];
 
-      let spectate = `${spec_mode} ${parsed_demo.data?.users[userId].steamId64}`;
+      let spectate = `${specMode} ${parsedDemo.data?.users[userId].steamId64}`;
 
       if (
-        !parsed_demo.data.player_lives[userId] ||
-        parsed_demo.data.player_lives[userId].length == 0
+        !parsedDemo.data.player_lives[userId] ||
+        parsedDemo.data.player_lives[userId].length == 0
       ) {
         continue;
       }
 
-      for (let i in parsed_demo.data.player_lives[userId]) {
-        let player = parsed_demo.data.player_lives[userId][i];
+      for (let i in parsedDemo.data.player_lives[userId]) {
+        let player = parsedDemo.data.player_lives[userId][i];
 
         if (player.kills.length == 0) {
           continue;
@@ -687,9 +698,16 @@
 
               life.selected = true;
 
-              new_demo = [
-                ...new_demo,
-                ...bookmarkLife(spectate, demo_name, userId, life, demo_count, isPovDemo),
+              newDemo = [
+                ...newDemo,
+                ...bookmarkLife(
+                  spectate,
+                  demo_name,
+                  userId,
+                  life,
+                  demo_count,
+                  isPovDemo
+                ),
               ];
 
               continue;
@@ -712,7 +730,7 @@
                 label = `${label} MP`;
               }
 
-              new_demo.push(
+              newDemo.push(
                 bookmarkHighlight(
                   spectate,
                   userId,
@@ -740,9 +758,16 @@
 
               life.selected = true;
 
-              new_demo = [
-                ...new_demo,
-                ...bookmarkLife(spectate, demo_name, userId, life, demo_count, isPovDemo),
+              newDemo = [
+                ...newDemo,
+                ...bookmarkLife(
+                  spectate,
+                  demo_name,
+                  userId,
+                  life,
+                  demo_count,
+                  isPovDemo
+                ),
               ];
 
               continue;
@@ -766,7 +791,7 @@
               label = `${label} AS`;
             }
 
-            new_demo.push(
+            newDemo.push(
               bookmarkHighlight(
                 spectate,
                 userId,
@@ -791,9 +816,16 @@
 
               life.selected = true;
 
-              new_demo = [
-                ...new_demo,
-                ...bookmarkLife(spectate, demo_name, userId, life, demo_count, isPovDemo),
+              newDemo = [
+                ...newDemo,
+                ...bookmarkLife(
+                  spectate,
+                  demo_name,
+                  userId,
+                  life,
+                  demo_count,
+                  isPovDemo
+                ),
               ];
 
               continue;
@@ -815,7 +847,7 @@
 
             kill.selected = true;
 
-            new_demo.push(
+            newDemo.push(
               bookmarkHighlight(
                 spectate,
                 userId,
@@ -830,13 +862,13 @@
         }
       }
 
-      if (new_demo.length == 0) {
+      if (newDemo.length == 0) {
         continue;
       }
 
       demo_count += 1;
 
-      demos.push(new_demo);
+      demos.push(newDemo);
     }
 
     await invoke("save_events", { newEvents: demos });
@@ -852,55 +884,55 @@
   async function recordAll() {
     let demos = await loadEvents();
     let settings = await invoke("load_settings");
-    let recording_settings = settings.recording;
+    let recordingSettings = settings.recording;
 
-    let spec_mode = recording_settings["third_person"] ? "spec_third" : "spec";
+    let specMode = recordingSettings["third_person"] ? "spec_third" : "spec";
 
-    for (let userId in parsed_demo.data.users) {
-      let new_demo = [];
+    for (let userId in parsedDemo.data.users) {
+      let newDemo = [];
 
-      let name_split = current_demo.replace(".dem", "").split("\\");
+      let name_split = currentDemo.replace(".dem", "").split("\\");
 
       let demo_name = name_split[name_split.length - 1];
 
-      let spectate = `${spec_mode} ${parsed_demo.data?.users[userId].steamId64}`;
+      let spectate = `${specMode} ${parsedDemo.data?.users[userId].steamId64}`;
 
       console.log("spec", spectate);
 
       if (
-        !parsed_demo.data.player_lives[userId] ||
-        parsed_demo.data.player_lives[userId].length == 0
+        !parsedDemo.data.player_lives[userId] ||
+        parsedDemo.data.player_lives[userId].length == 0
       ) {
         continue;
       }
 
-      new_demo.push({
+      newDemo.push({
         value: {
           Bookmark: `clip_start ${spectate}`,
         },
-        tick: parsed_demo.data.player_lives[userId][0].start + 20,
+        tick: parsedDemo.data.player_lives[userId][0].start + 20,
         demo_name: demo_name + "_" + userId,
-        event: `[demo_${parsed_demo.data?.users[userId].steamId64}] clip_start  ${spectate} (\"${demo_name}\" at ${settings.recording.start_delay})`,
+        event: `[demo_${parsedDemo.data?.users[userId].steamId64}] clip_start  ${spectate} (\"${demo_name}\" at ${settings.recording.start_delay})`,
         isKillstreak: false,
       });
 
-      new_demo.push({
+      newDemo.push({
         value: {
           Bookmark: `clip_end`,
         },
         tick: Math.max(
-          parsed_demo.header?.ticks - 99,
+          parsedDemo.header?.ticks - 99,
           settings.recording.start_delay + 66
         ),
         demo_name: demo_name + "_" + userId,
-        event: `[demo_${parsed_demo.data?.users[userId].steamId64}] clip_end (\"${demo_name}\" at ${Math.max(
-          parsed_demo.header?.ticks - 99,
+        event: `[demo_${parsedDemo.data?.users[userId].steamId64}] clip_end (\"${demo_name}\" at ${Math.max(
+          parsedDemo.header?.ticks - 99,
           settings.recording.start_delay + 66
         )})`,
         isKillstreak: false,
       });
 
-      demos.push(new_demo);
+      demos.push(newDemo);
     }
 
     await invoke("save_events", { newEvents: demos });
@@ -912,7 +944,7 @@
   }
 
   function getClasses(playerId) {
-    let player = parsed_demo.data.users[playerId];
+    let player = parsedDemo.data.users[playerId];
     let playerClasses;
     try {
       playerClasses = Object.keys(player.classes);
@@ -947,7 +979,7 @@
 
   function getKillstreaks() {
     if (!isPovDemo) {
-      return parsed_demo.data.killstreak_pointers;
+      return parsedDemo.data.killstreak_pointers;
     }
 
     return [];
@@ -1004,7 +1036,7 @@
   }
 
   function getLifeFromKillstreak(ks) {
-    for (let life of parsed_demo.data.player_lives[ks.kills[0].killer]) {
+    for (let life of parsedDemo.data.player_lives[ks.kills[0].killer]) {
       if (life.killstreak_pointers.length === 0) {
         continue;
       }
@@ -1032,11 +1064,11 @@
       "engineer",
     ];
 
-    if (parsed_demo.data.users[player].hide) {
+    if (parsedDemo.data.users[player].hide) {
       return;
     }
 
-    for (let life of parsed_demo.data.player_lives[player]) {
+    for (let life of parsedDemo.data.player_lives[player]) {
       if (!life.classes.includes(class_mapping[Number(player_class) - 1])) {
         continue;
       }
@@ -1074,16 +1106,16 @@
   }
 
   function verifyTicks() {
-    if (parsed_demo?.header?.ticks > 0) {
+    if (parsedDemo?.header?.ticks > 0) {
       return;
     }
 
-    if (parsed_demo.err_text) {
+    if (parsedDemo.err_text) {
       return;
     }
 
-    // parsed_demo.header.ticks = parsed_demo.data.end_tick - parsed_demo.data.start_tick;
-    parsed_demo.header.ticks = parsed_demo.data.start_tick;
+    // parsedDemo.header.ticks = parsedDemo.data.end_tick - parsedDemo.data.start_tick;
+    parsedDemo.header.ticks = parsedDemo.data.start_tick;
   }
 
   function refreshList() {
@@ -1091,7 +1123,7 @@
     displayAssists = displayAssists;
     displayPlayers = displayPlayers;
     resp = resp;
-    parsed_demo = parsed_demo;
+    parsedDemo = parsedDemo;
   }
 
   function on_key_down(event) {
@@ -1138,17 +1170,15 @@
   {toggle}
   {enabled}
   grow
-  wide={resp.loaded && current_demo !== ""}
+  wide={resp.loaded && currentDemo !== ""}
 >
   {#if resp.loaded}
-    {#if current_demo === ""}
+    {#if currentDemo === ""}
       <h1>Demos</h1>
       <table>
         <thead>
           <tr>
-            <th>
-              Name
-            </th>
+            <th> Name </th>
             <th>Length</th>
             <th>Map</th>
             <th
@@ -1163,11 +1193,16 @@
         </thead>
         <tbody>
           {#each resp.demos as demo, i}
-            <tr class={"table_row " + (demo.hasVdm && "demo--hasvdm") + " " + (demo.selected && "demo--selected")}>
-              <td 
+            <tr
+              class={"table_row " +
+                (demo.hasVdm && "demo--hasvdm") +
+                " " +
+                (demo.selected && "demo--selected")}
+            >
+              <td
                 class="tooltip"
                 data-tooltip={`nickname: ${demo.header.nick}
-created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YYYY')}`}
+created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YYYY")}`}
                 style="--kills: 1;"
               >
                 {demo.name}
@@ -1176,16 +1211,13 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YY
               <td>{demo.header.map}</td>
               <td class="table__has-vdm">
                 {#if demo.hasVdm}
-                <span
-                  class="tooltip tooltip--left"
-                  data-tooltip={`This demo has a VDM.`}
-                  style="--kills: 0;"
-                >
-                  <Fa 
-                    icon={faCheck}
-                    color={`var(--sec)`}
-                  />
-                </span>
+                  <span
+                    class="tooltip tooltip--left"
+                    data-tooltip={`This demo has a VDM.`}
+                    style="--kills: 0;"
+                  >
+                    <Fa icon={faCheck} color={`var(--sec)`} />
+                  </span>
                 {:else}
                   <span
                     class="tooltip tooltip--left"
@@ -1210,10 +1242,10 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YY
           {/each}
         </tbody>
       </table>
-    {:else if !parsed_demo.err_text}
-      <h1>{current_demo}</h1>
-      {#if !parsed_demo.loading}
-        <h4 class="centered full-width">{parsed_demo.header.map}</h4>
+    {:else if !parsedDemo.err_text}
+      <h1>{currentDemo}</h1>
+      {#if !parsedDemo.loading}
+        <h4 class="centered full-width">{parsedDemo.header.map}</h4>
         <div class="flex-between flex-wrap">
           <div class="settings__switch">
             <label class="switch">
@@ -1266,10 +1298,10 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YY
               {#each getTeam(team) as player}
                 {#if displayPlayer(player, team)}
                   <div class="flex-start align-center">
-                    {#if parsed_demo.data.users[player].hide}
+                    {#if parsedDemo.data.users[player].hide}
                       <button
                         on:click={() =>
-                          (parsed_demo.data.users[player].hide = false)}
+                          (parsedDemo.data.users[player].hide = false)}
                         class="hide-toggle"
                       >
                         +
@@ -1277,7 +1309,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YY
                     {:else}
                       <button
                         on:click={() =>
-                          (parsed_demo.data.users[player].hide = true)}
+                          (parsedDemo.data.users[player].hide = true)}
                         class="cancel-btn hide-toggle"
                       >
                         -
@@ -1285,35 +1317,35 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YY
                     {/if}
                     <h3 class="player__header">
                       <a
-                        href={`https://logs.tf/profile/${parsed_demo.data.users[player]["steamId64"]}`}
-                        class={parsed_demo.data.users[player]["team"] +
+                        href={`https://logs.tf/profile/${parsedDemo.data.users[player]["steamId64"]}`}
+                        class={parsedDemo.data.users[player]["team"] +
                           " player"}
                         data-tooltip="Open logs.tf profile"
                         target="_blank"
                         rel="noopener noreferrer"
-                        id={`player-${parsed_demo.data.users[player].name}`}
+                        id={`player-${parsedDemo.data.users[player].name}`}
                       >
-                        {parsed_demo.data.users[player].name}
+                        {parsedDemo.data.users[player].name}
                       </a>
                       {#each getClasses(player) as player_class}
                         <ClassLogo
                           player_class={classConverter(player_class)}
-                          tooltip={`Lives: ${parsed_demo.data.users[player]["classes"][player_class]}`}
+                          tooltip={`Lives: ${parsedDemo.data.users[player]["classes"][player_class]}`}
                           click={toggleClass}
                           args={[player, player_class]}
                         />
                       {/each}
                     </h3>
                   </div>
-                  {#if !parsed_demo.data.users[player].hide}
-                    {#each parsed_demo.data.player_lives[player] as life}
+                  {#if !parsedDemo.data.users[player].hide}
+                    {#each parsedDemo.data.player_lives[player] as life}
                       {#if life.start != 0}
                         {#if displayLives || life.kills.length > 0 || (displayAssists && life.assists.length > 0)}
                           <Life
                             {life}
                             {classConverter}
                             {toggleSelected}
-                            {parsed_demo}
+                            {parsedDemo}
                             {tickToTime}
                             {toggleKillsSelected}
                             {allKillsSelected}
@@ -1332,11 +1364,11 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YY
                       label="Med Picks"
                       valKey="med_picks"
                       {classConverter}
-                      {parsed_demo}
+                      {parsedDemo}
                       {tickToTime}
                       {toggleSelected}
                       {toggleKillsSelected}
-                      lives={parsed_demo.data.player_lives[player].filter(
+                      lives={parsedDemo.data.player_lives[player].filter(
                         (life) => life.med_picks.length > 0
                       )}
                     />
@@ -1344,23 +1376,23 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YY
                       label="Air Shots"
                       valKey="airshots"
                       {classConverter}
-                      {parsed_demo}
+                      {parsedDemo}
                       {tickToTime}
                       {toggleKillsSelected}
                       {toggleSelected}
                       lives={filterLife(
-                        parsed_demo.data.player_lives[player],
+                        parsedDemo.data.player_lives[player],
                         "airshots"
                       )}
                     />
-                    {#if parsed_demo.data.player_lives[player].filter((life) => life.killstreak_pointers.length > 0).length > 0}
+                    {#if parsedDemo.data.player_lives[player].filter((life) => life.killstreak_pointers.length > 0).length > 0}
                       <h4 class="centered">Killstreaks</h4>
-                      {#each parsed_demo.data.player_lives[player].filter((life) => life.killstreak_pointers.length > 0) as life}
+                      {#each parsedDemo.data.player_lives[player].filter((life) => life.killstreak_pointers.length > 0) as life}
                         {#each life.killstreak_pointers as ks_pointer}
                           <KillstreakPointer
                             {classConverter}
                             {toggleSelected}
-                            {parsed_demo}
+                            {parsedDemo}
                             {tickToTime}
                             {ks_pointer}
                             {toggleBookmarkSelected}
@@ -1380,15 +1412,15 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YY
             <AllKillPointers
               label="Med Picks"
               {classConverter}
-              {parsed_demo}
+              {parsedDemo}
               {tickToTime}
               {toggleKillsSelected}
               {toggleSelected}
-              kills={parsed_demo.data.med_picks}
+              kills={parsedDemo.data.med_picks}
             />
             <AllKillstreaksPointer
-              killstreaks={parsed_demo.data.killstreak_pointers}
-              {parsed_demo}
+              killstreaks={parsedDemo.data.killstreak_pointers}
+              {parsedDemo}
               {limitStringLength}
               {classConverter}
               {toggleBookmarkSelected}
@@ -1398,15 +1430,15 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YY
             <AllKillPointers
               label="Air Shots"
               {classConverter}
-              {parsed_demo}
+              {parsedDemo}
               {tickToTime}
               {toggleKillsSelected}
               {toggleSelected}
-              kills={parsed_demo.data.airshots.filter((k) => filterAirshots(k))}
+              kills={parsedDemo.data.airshots.filter((k) => filterAirshots(k))}
             />
           </div>
         {/if}
-        {#if parsed_demo.data.chat.length > 0}
+        {#if parsedDemo.data.chat.length > 0}
           <div class="section-title-toggle chat__title">
             {#if displayChat}
               <button
@@ -1424,11 +1456,11 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YY
           </div>
           {#if displayChat}
             <div class="chat">
-              {#each parsed_demo.data.chat as chat}
+              {#each parsedDemo.data.chat as chat}
                 {#if chat.selected}
-                  <button class="cancel-btn" on:click={toggleSelected(chat)}
-                    >-</button
-                  >
+                  <button class="cancel-btn" on:click={toggleSelected(chat)}>
+                    -
+                  </button>
                 {:else}
                   <button on:click={toggleSelected(chat)}>+</button>
                 {/if}
@@ -1439,7 +1471,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YY
                   <a
                     href={`#player-${chat.name}`}
                     class={`chat__name ${
-                      parsed_demo.data?.users[chat.from]?.team
+                      parsedDemo.data?.users[chat.from]?.team
                     }`}
                   >
                     {getMessageName(chat)}{getMessageType(chat.kind)}:
@@ -1451,7 +1483,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YY
           {/if}
         {/if}
         <Timeline
-          {parsed_demo}
+          {parsedDemo}
           {tickToTime}
           {displayPlayer}
           {toggleSelected}
@@ -1471,26 +1503,25 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format('MMM DD, YY
           <h4>Loading {index}/{total}...</h4>
         </div>
       {/if}
-    {:else if parsed_demo.err_text}
-      <h1>Error: {parsed_demo.code}</h1>
-      <h2 class="centered">{parsed_demo.err_text}</h2>
+    {:else if parsedDemo.err_text}
+      <h1>Error: {parsedDemo.code}</h1>
+      <h2 class="centered">{parsedDemo.err_text}</h2>
     {/if}
   {:else}
     <h1>LOADING DEMOS</h1>
   {/if}
 
-
   <div class="buttons" slot="footer">
     {#if resp.loaded}
-      {#if current_demo === ""}
+      {#if currentDemo === ""}
         <button class="cancel-btn" on:click={closeModal}>Cancel</button>
         <button on:click={parseDemos}>Parse</button>
-      {:else if !parsed_demo.err_text}
-        {#if !parsed_demo.loading}
+      {:else if !parsedDemo.err_text}
+        {#if !parsedDemo.loading}
           <button class="cancel-btn" on:click={closeModal}>Cancel</button>
           <button on:click={nextDemo}>Save</button>
         {/if}
-      {:else if parsed_demo.err_text}
+      {:else if parsedDemo.err_text}
         <button class="cancel-btn" on:click={closeModal}>Cancel</button>
         <button on:click={nextDemo}>Skip</button>
       {/if}

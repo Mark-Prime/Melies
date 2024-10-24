@@ -14,7 +14,7 @@
   let resp = { loading: false };
 
   let ubers = [],
-    med_deaths = [],
+    medDeaths = [],
     killstreaks = [],
     logs = [];
 
@@ -104,7 +104,7 @@
     }
 
     ubers = [];
-    med_deaths = [];
+    medDeaths = [];
     killstreaks = [];
     index += 1;
 
@@ -121,7 +121,7 @@
 
     for (let [i, round] of resp["rounds"].entries()) {
       ubers.push([]);
-      med_deaths.push([]);
+      medDeaths.push([]);
 
       for (let [index, event] of round["events"].entries()) {
         switch (event.type) {
@@ -133,7 +133,7 @@
               event.isDrop = true;
             }
 
-            med_deaths[i].push(event);
+            medDeaths[i].push(event);
             continue;
           }
           default:
@@ -181,7 +181,7 @@
     event.selected = !event.selected;
     killstreaks = killstreaks;
     ubers = ubers;
-    med_deaths = med_deaths;
+    medDeaths = medDeaths;
   }
 
   function saveSelected() {
@@ -197,7 +197,7 @@
       }
     }
 
-    for (let round of med_deaths) {
+    for (let round of medDeaths) {
       for (let event of round) {
         if (event.selected) {
           events.push({
@@ -227,7 +227,7 @@
     );
 
     ubers = [];
-    med_deaths = [];
+    medDeaths = [];
     killstreaks = [];
 
     if (logs.length === 0) {
@@ -328,7 +328,7 @@
       {/each}
 
       <h2 class="section_header">Medic Kills</h2>
-      {#each med_deaths as round, index}
+      {#each medDeaths as round, index}
         {#if round.length > 1}
           <h4 class="round">Round {index + 1}</h4>
           {#each round as event}

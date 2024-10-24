@@ -1,10 +1,10 @@
-export default function isAirshot(parsed_demo, k, settings) {
-  if (!parsed_demo.data.player_lives[k.owner_id][k.life_index]?.kills) {
+export default function isAirshot(parsedDemo, k, settings) {
+  if (!parsedDemo.data.player_lives[k.owner_id][k.life_index]?.kills) {
     return false;
   }
 
   let kill =
-    parsed_demo.data.player_lives[k.owner_id][k.life_index].kills[
+    parsedDemo.data.player_lives[k.owner_id][k.life_index].kills[
       k.kill_index
     ];
 
@@ -12,11 +12,11 @@ export default function isAirshot(parsed_demo, k, settings) {
     return true;
   }
 
-  let airshot_settings = settings.advanced.airshots;
+  let airshotSettings = settings.advanced.airshots;
 
   let isAirshot = null;
 
-  switch (airshot_settings.killer[kill.killer_class]) {
+  switch (airshotSettings.killer[kill.killer_class]) {
     case "Never":
       return false;
     case "CriticalHit":
@@ -32,7 +32,7 @@ export default function isAirshot(parsed_demo, k, settings) {
       return true;
   }
 
-  switch (airshot_settings.victim[kill.victim_class]) {
+  switch (airshotSettings.victim[kill.victim_class]) {
     case "Never":
       return false;
     case "CriticalHit":
@@ -49,7 +49,7 @@ export default function isAirshot(parsed_demo, k, settings) {
   }
 
   if (isAirshot === null) {
-    return airshot_settings.default;
+    return airshotSettings.default;
   }
 
   return isAirshot;

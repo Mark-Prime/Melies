@@ -1,22 +1,22 @@
 <script>
-  import ClassLogo from "$lib/components/classlogo.svelte";
+  import ClassLogo from "$lib/components/ClassLogo.svelte";
 
   export let lives;
   export let label;
   export let valKey;
   export let classConverter;
-  export let parsed_demo;
+  export let parsedDemo;
   export let tickToTime;
   export let toggleKillsSelected;
   export let toggleSelected;
 
   function getKill(pointer) {
-    return parsed_demo.data.player_lives[pointer.owner_id][pointer.life_index]
+    return parsedDemo.data.player_lives[pointer.owner_id][pointer.life_index]
       .kills[pointer.kill_index];
   }
 
   function getLife(pointer) {
-    return parsed_demo.data.player_lives[pointer.owner_id][pointer.life_index];
+    return parsedDemo.data.player_lives[pointer.owner_id][pointer.life_index];
   }
 </script>
 
@@ -31,8 +31,8 @@
               player_class={classConverter(getKill(pointer).killer_class)}
             /> killed
             <a
-              href={`#player-${parsed_demo.data.users[getKill(pointer).victim].name}`}
-              class={parsed_demo.data.users[getKill(pointer).victim]["team"] +
+              href={`#player-${parsedDemo.data.users[getKill(pointer).victim].name}`}
+              class={parsedDemo.data.users[getKill(pointer).victim]["team"] +
                 " tooltip"}
               style="--kills: 0;"
               data-tooltip="Jump To Player"
@@ -40,7 +40,7 @@
               <ClassLogo
                 player_class={classConverter(getKill(pointer).victim_class)}
               />
-              {parsed_demo.data.users[getKill(pointer).victim].name}
+              {parsedDemo.data.users[getKill(pointer).victim].name}
             </a>
             with {getKill(pointer).weapon}
             {#if getKill(pointer).crit_type}

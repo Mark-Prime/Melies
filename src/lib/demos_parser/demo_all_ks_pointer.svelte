@@ -1,9 +1,9 @@
 <script>
   // @ts-nocheck
-  import ClassLogo from "$lib/components/classlogo.svelte";
+  import ClassLogo from "$lib/components/ClassLogo.svelte";
 
   export let killstreaks;
-  export let parsed_demo;
+  export let parsedDemo;
   export let limitStringLength;
   export let classConverter;
   export let toggleBookmarkSelected;
@@ -11,23 +11,23 @@
   export let toggleSelected;
 
   function getLife(index) {
-    let ks_pointer = killstreaks[index];
+    let ksPointer = killstreaks[index];
 
-    return parsed_demo.data.player_lives[ks_pointer.owner_id][
-      ks_pointer.life_index
+    return parsedDemo.data.player_lives[ksPointer.owner_id][
+      ksPointer.life_index
     ];
   }
 
   function getKills(index) {
-    let ks_pointer = killstreaks[index];
+    let ksPointer = killstreaks[index];
 
-    if (!ks_pointer.kills) {
+    if (!ksPointer.kills) {
       return [];
     }
 
     let kills = [];
 
-    ks_pointer.kills?.forEach((element) => {
+    ksPointer.kills?.forEach((element) => {
       kills.push(getLife(index).kills[element]);
     });
 
@@ -35,9 +35,9 @@
   }
 
   function getKs(index) {
-    let ks_pointer = killstreaks[index];
+    let ksPointer = killstreaks[index];
 
-    return getLife(index).killstreak_pointers[ks_pointer.index];
+    return getLife(index).killstreak_pointers[ksPointer.index];
   }
 </script>
 
@@ -45,18 +45,18 @@
   <div class="kill_container">
     <h2 class="centered chat__title">All Killstreaks</h2>
     <div class="killstreaks">
-      {#each killstreaks as ks_pointer, index}
-        {#if parsed_demo.data.users[ks_pointer.owner_id]}
+      {#each killstreaks as ksPointer, index}
+        {#if parsedDemo.data.users[ksPointer.owner_id]}
           <div
             class={"demo demo__killstreaks " +
-              ((parsed_demo.data.player_lives[ks_pointer.owner_id][
-                ks_pointer.life_index
-              ].killstreak_pointers[ks_pointer.index].selected ||
-                parsed_demo.data.player_lives[ks_pointer.owner_id][
-                  ks_pointer.life_index
-                ].killstreak_pointers[ks_pointer.index].selected_as_bookmark ||
-                parsed_demo.data.player_lives[ks_pointer.owner_id][
-                  ks_pointer.life_index
+              ((parsedDemo.data.player_lives[ksPointer.owner_id][
+                ksPointer.life_index
+              ].killstreak_pointers[ksPointer.index].selected ||
+                parsedDemo.data.player_lives[ksPointer.owner_id][
+                  ksPointer.life_index
+                ].killstreak_pointers[ksPointer.index].selected_as_bookmark ||
+                parsedDemo.data.player_lives[ksPointer.owner_id][
+                  ksPointer.life_index
                 ].selected) &&
                 "demo--selected")}
           >
@@ -75,15 +75,15 @@
             </div>
             <a
               href={`#player-${
-                parsed_demo.data.users[ks_pointer.owner_id]?.name
+                parsedDemo.data.users[ksPointer.owner_id]?.name
               }`}
               data-tooltip="Jump To Player"
               style="width: 100%;"
-              class={parsed_demo.data.users[ks_pointer.owner_id]["team"] +
+              class={parsedDemo.data.users[ksPointer.owner_id]["team"] +
                 " tooltip"}
             >
               {limitStringLength(
-                parsed_demo.data.users[ks_pointer.owner_id]?.name ||
+                parsedDemo.data.users[ksPointer.owner_id]?.name ||
                   "Name Error",
                 16
               )}
@@ -93,11 +93,11 @@
               on:keydown={toggleBookmarkSelected(getKs(index), true)}
               on:keyup={() => {}}
               class={`demo__kill-count ` +
-                (ks_pointer.kills.length >= 3 && " killstreak ") +
-                (ks_pointer.kills.length >= 5 && " killstreak--large ") +
-                (ks_pointer.kills.length >= 10 && " killstreak--massive ")}
+                (ksPointer.kills.length >= 3 && " killstreak ") +
+                (ksPointer.kills.length >= 5 && " killstreak--large ") +
+                (ksPointer.kills.length >= 10 && " killstreak--massive ")}
             >
-              Kills: {ks_pointer.kills.length}
+              Kills: {ksPointer.kills.length}
             </button>
             <div class="demo__kills">
               {#each getKills(index) as kill}
@@ -105,8 +105,8 @@
                   <ClassLogo player_class={classConverter(kill.killer_class)} />
                   killed
                   <a
-                    href={`#player-${parsed_demo.data.users[kill.victim].name}`}
-                    class={parsed_demo.data.users[kill.victim]["team"] +
+                    href={`#player-${parsedDemo.data.users[kill.victim].name}`}
+                    class={parsedDemo.data.users[kill.victim]["team"] +
                       " tooltip"}
                     style="--kills: 0;"
                     data-tooltip="Jump To Player"
@@ -114,7 +114,7 @@
                     <ClassLogo
                       player_class={classConverter(kill.victim_class)}
                     />
-                    {parsed_demo.data.users[kill.victim].name}
+                    {parsedDemo.data.users[kill.victim].name}
                   </a>
                   with {kill.weapon}
                   {#if kill.crit_type}
@@ -164,7 +164,7 @@
                 data-tooltip="Entire Life"
                 style={`--kills: 0;`}
               >
-                {#if parsed_demo.data.player_lives[ks_pointer.owner_id][ks_pointer.life_index].selected}
+                {#if parsedDemo.data.player_lives[ksPointer.owner_id][ksPointer.life_index].selected}
                   <button
                     class="cancel-btn"
                     on:click={toggleSelected(getLife(index))}>-</button
@@ -178,7 +178,7 @@
                 data-tooltip="As Bookmarks"
                 style={`--kills: 0;`}
               >
-                {#if parsed_demo.data.player_lives[ks_pointer.owner_id][ks_pointer.life_index].killstreak_pointers[ks_pointer.index].selected_as_bookmark}
+                {#if parsedDemo.data.player_lives[ksPointer.owner_id][ksPointer.life_index].killstreak_pointers[ksPointer.index].selected_as_bookmark}
                   <button
                     class="cancel-btn"
                     on:click={toggleBookmarkSelected(getKs(index), true)}

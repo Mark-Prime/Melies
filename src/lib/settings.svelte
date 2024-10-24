@@ -13,9 +13,9 @@
   import Theme from "$lib/Theme.svelte";
   const dispatch = createEventDispatcher();
   let settings = {};
-  let output_settings = {};
-  let recording_settings = {};
-  let automation_settings = {};
+  let outputSettings = {};
+  let recordingSettings = {};
+  let automationSettings = {};
   let addons = {};
   let enabled = false;
 
@@ -23,9 +23,9 @@
 
   async function loadSettings() {
     settings = await invoke("load_settings");
-    output_settings = settings.output;
-    recording_settings = settings.recording;
-    automation_settings = settings.automation;
+    outputSettings = settings.output;
+    recordingSettings = settings.recording;
+    automationSettings = settings.automation;
     addons = settings.addons;
     console.log(settings)
   }
@@ -66,10 +66,10 @@
     <div class="settings__input-group settings__span">
       <Input
         title="Output Folder"
-        bind:value={output_settings.folder}
+        bind:value={outputSettings.folder}
         tooltip="The full filepath to the folder you want to output to.
 If left blank, the output folder will default to your sparklyfx settings."
-        display={output_settings.method === "sparklyfx"}
+        display={outputSettings.method === "sparklyfx"}
       />
     </div>
     <Switch
@@ -89,7 +89,7 @@ If left blank, the output folder will default to your sparklyfx settings."
     />
     <Switch
       title="Display Automation Tools"
-      bind:value={automation_settings.enabled}
+      bind:value={automationSettings.enabled}
       tooltip="Shows extra buttons useful for quickly grabbing clips
 in the demo scanner."
     />
@@ -109,28 +109,28 @@ on all players in POV demos."
     />
   </div>
 
-  {#if automation_settings.enabled}
+  {#if automationSettings.enabled}
     <Collapse defaultOpen={true} title="Automation Tools">
       <div class="bordered bordered--pri ">
         <div class="setting">
           <Switch
             title="Airshots"
-            bind:value={automation_settings.airshots}
+            bind:value={automationSettings.airshots}
             tooltip="Bookmark anytime a player hits an airshot."
           />
           <Switch
             title="Med Picks"
-            bind:value={automation_settings.med_picks}
+            bind:value={automationSettings.med_picks}
             tooltip="Bookmark anytime a player kills a Medic."
           />
           <Switch
             title="Killstreaks"
-            bind:value={automation_settings.killstreaks}
+            bind:value={automationSettings.killstreaks}
             tooltip="Bookmark anytime a player gets a killstreak."
           />
           <Switch
             title="Record Entire Life"
-            bind:value={automation_settings.whole_life}
+            bind:value={automationSettings.whole_life}
             tooltip="Record the entire life. Will use standard bookmarks if disabled."
           />
         </div>
@@ -138,11 +138,11 @@ on all players in POV demos."
         <h4>Classes</h4>
 
         <div class="setting">
-          {#each Object.keys(automation_settings.classes) as class_name}
+          {#each Object.keys(automationSettings.classes) as class_name}
             
             <Switch
               title="Record {class_name[0].toUpperCase() + class_name.slice(1)}"
-              bind:value={automation_settings.classes[class_name]}
+              bind:value={automationSettings.classes[class_name]}
               tooltip="Record clips of {class_name}."
             />
           {/each}
@@ -157,7 +157,7 @@ on all players in POV demos."
     <div class="settings__input-group settings__span">
       <Input
         title="Clip name format"
-        bind:value={output_settings.clip_name_template}
+        bind:value={outputSettings.clip_name_template}
         tooltip={`How you want clips to be titled by default.
         {demo_name} - The name of the demo
         {start_tick} - The start tick of the clip
@@ -170,7 +170,7 @@ on all players in POV demos."
     </div>
     <Select
       title="Recording Method"
-      bind:value={output_settings.method}
+      bind:value={outputSettings.method}
       tooltip={`The method you want to use to record each clip:
         h264 - QuickTime encoding to .mp4 (requires you to launch the 32bit tf.exe)
         tga - generates .tga image sequence
@@ -195,49 +195,49 @@ on all players in POV demos."
     </Select>
     <Input
       title="Framerate"
-      bind:value={output_settings.framerate}
+      bind:value={outputSettings.framerate}
       color="sec"
-      display={!["sparklyfx", "svr", "svr.mov", "svr.mp4", "lawena"].includes(output_settings.method)}
+      display={!["sparklyfx", "svr", "svr.mov", "svr.mp4", "lawena"].includes(outputSettings.method)}
     />
-    {#if ["sparklyfx", "svr", "svr.mov", "svr.mp4", "lawena"].includes(output_settings.method)}
+    {#if ["sparklyfx", "svr", "svr.mov", "svr.mp4", "lawena"].includes(outputSettings.method)}
       <div></div>
     {/if}
     <Switch
       title="Enable Text Chat"
-      bind:value={output_settings.text_chat}
+      bind:value={outputSettings.text_chat}
       color="sec"
     />
     <Switch
       title="Display Crosshair"
-      bind:value={output_settings.crosshair}
+      bind:value={outputSettings.crosshair}
       color="sec"
     />
     <Switch
       title="Enable Voice Chat"
-      bind:value={output_settings.voice_chat}
+      bind:value={outputSettings.voice_chat}
       color="sec"
     />
-    <Switch title="Display HUD" bind:value={output_settings.hud} color="sec" />
+    <Switch title="Display HUD" bind:value={outputSettings.hud} color="sec" />
     <Switch
       title="Attempt to fix sound issues"
-      bind:value={output_settings.snd_fix}
+      bind:value={outputSettings.snd_fix}
       tooltip="Reset games audio when clip is starting to undo demo glitches."
       color="sec"
     />
     <Switch
       title="Display Viewmodel"
-      bind:value={output_settings.viewmodel}
+      bind:value={outputSettings.viewmodel}
       color="sec"
     />
     <!-- <Switch
       title="Prevent in-game settings from changing"
-      bind:value={output_settings.lock}
+      bind:value={outputSettings.lock}
       tooltip="Disables commands from certain configs that could overwrite these settings when played."
       color="sec"
     /> -->
     <Switch
       title="Minmode Viewmodels"
-      bind:value={output_settings.minmode}
+      bind:value={outputSettings.minmode}
       color="sec"
     />
   </div>
@@ -247,87 +247,87 @@ on all players in POV demos."
   <div class="setting">
     <Input
       title="Commands"
-      bind:value={recording_settings.commands}
+      bind:value={recordingSettings.commands}
       tooltip="Commands to run before each clip is recorded."
       color="tert"
     />
     <Input
       title="End Commands"
-      bind:value={recording_settings.end_commands}
+      bind:value={recordingSettings.end_commands}
       tooltip={"Commands to run after every clip is done recording.\nUseful for resetting configs to in game settings."}
       color="tert"
     />
     <Input
       title="Delay before initial skip"
-      bind:value={recording_settings.start_delay}
+      bind:value={recordingSettings.start_delay}
       tooltip={"How long to wait at the start of the demo before skipping ahead.\n1 second = 66 ticks"}
       color="tert"
       type="number"
     />
     <Input
       title="Minimum ticks between clips"
-      bind:value={recording_settings.minimum_ticks_between_clips}
+      bind:value={recordingSettings.minimum_ticks_between_clips}
       tooltip={"If clips are closer than this, combine them into a single clip.\n1 second = 66 ticks"}
       color="tert"
       type="number"
     />
     <Input
       title="Ticks before bookmarks"
-      bind:value={recording_settings.before_bookmark}
+      bind:value={recordingSettings.before_bookmark}
       tooltip={"How far before each bookmark to start recording.\n1 second = 66 ticks"}
       color="tert"
       type="number"
     />
     <Input
       title="Ticks after bookmarks"
-      bind:value={recording_settings.after_bookmark}
+      bind:value={recordingSettings.after_bookmark}
       tooltip={"How far after each bookmark to record.\n1 second = 66 ticks"}
       color="tert"
       type="number"
     />
     <Input
       title="Minimum Kills in Killstreak"
-      bind:value={recording_settings.minimum_kills_in_streak}
+      bind:value={recordingSettings.minimum_kills_in_streak}
       tooltip={"Used by the demo scanner to determine what a killstreak is."}
       color="tert"
       type="number"
     />
     <Input
       title="Ticks before killstreak per kill in streak"
-      bind:value={recording_settings.before_killstreak_per_kill}
+      bind:value={recordingSettings.before_killstreak_per_kill}
       tooltip={"The average time between kills.\nShould match ds_kill_delay times 66.\n1 second = 66 ticks"}
       color="tert"
       type="number"
     />
     <Input
       title="Ticks after killstreak"
-      bind:value={recording_settings.after_killstreak}
+      bind:value={recordingSettings.after_killstreak}
       tooltip={"How far after each killstreak to record.\n1 second = 66 ticks"}
       color="tert"
       type="number"
     />
     <Input
       title="Interval for rewind double tapscc"
-      bind:value={recording_settings.interval_for_rewind_double_taps}
+      bind:value={recordingSettings.interval_for_rewind_double_taps}
       tooltip={"How close bookmarks need to be to be considered a double tap.\n1 second = 66 ticks"}
       color="tert"
       type="number"
     />
     <Input
       title="FOV"
-      bind:value={recording_settings.fov}
+      bind:value={recordingSettings.fov}
       color="tert"
       type="number"
     />
     <Input
       title="Viewmodel FOV"
-      bind:value={recording_settings.viewmodel_fov}
+      bind:value={recordingSettings.viewmodel_fov}
       color="tert"
       type="number"
     />
     <Input
       title="Rewind amount upon double tap"
-      bind:value={recording_settings.rewind_amount}
+      bind:value={recordingSettings.rewind_amount}
       tooltip={"How far back it records when a double tap happens.\nUseful for if you missed a clip due to being too busy in game.\n1 second = 66 ticks"}
       color="tert"
       type="number"
@@ -335,31 +335,31 @@ on all players in POV demos."
     <div></div>
     <Switch
       title="Automatically record next demo"
-      bind:value={recording_settings.record_continuous}
+      bind:value={recordingSettings.record_continuous}
       tooltip="If multiple demos are in a row, automatically record the next one."
       color="tert"
     />
     <Switch
       title="Prevent idle hours"
-      bind:value={recording_settings.auto_close}
+      bind:value={recordingSettings.auto_close}
       tooltip="Automatically close TF2 when the last clip is finished recording."
       color="tert"
     />
     <Switch
       title="Automatically label videos"
-      bind:value={recording_settings.auto_suffix}
+      bind:value={recordingSettings.auto_suffix}
       tooltip="Add a label to the end of each clip with information from the bookmarks."
       color="tert"
     />
     <Switch
       title="Default to Third Person"
-      bind:value={recording_settings.third_person}
+      bind:value={recordingSettings.third_person}
       tooltip={`Changes default recording to third person.\nWhen disabled always records in First Person`}
       color="tert"
     />
     <!-- <Switch
       title="Prevent Taunt Menu Bug"
-      bind:value={recording_settings.prevent_taunt}
+      bind:value={recordingSettings.prevent_taunt}
       tooltip="Disabled the taunt command to prevent the menu from opening."
       color="tert"
     /> -->

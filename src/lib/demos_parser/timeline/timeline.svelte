@@ -31,21 +31,21 @@
   let startTick = parsed_demo.data?.start_tick;
   let totalTicks = parsed_demo?.header?.ticks;
 
-  function getLife(ks_pointer) {
-    return parsed_demo.data.player_lives[ks_pointer.owner_id][
-      ks_pointer.life_index
+  function getLife(ksPointer) {
+    return parsed_demo.data.player_lives[ksPointer.owner_id][
+      ksPointer.life_index
     ];
   }
 
-  function getKills(ks_pointer, index) {
-    if (!ks_pointer.kills) {
+  function getKills(ksPointer, index) {
+    if (!ksPointer.kills) {
       return [];
     }
 
     let kills = [];
 
-    ks_pointer.kills?.forEach((element) => {
-      kills.push(getLife(ks_pointer).kills[element]);
+    ksPointer.kills?.forEach((element) => {
+      kills.push(getLife(ksPointer).kills[element]);
     });
 
     return kills;
@@ -481,7 +481,7 @@
                       </div>
                     {/if}
                   {/each}
-                  {#each life.killstreak_pointers as ks_pointer, index}
+                  {#each life.killstreak_pointers as ksPointer, index}
                     <div
                       class={`timeline__ks
                           ${
@@ -492,7 +492,7 @@
                           ${x > divWidth * 0.7 && "timeline__ks--left"}
                       `}
                       data-tooltip={`${`Players Killed in Killstreak: `}\n\r${getKills(
-                        ks_pointer,
+                        ksPointer,
                         index
                       )
                         .map((kill) => {
@@ -507,30 +507,30 @@
                       style={`
                         --position: ${Math.max(
                           calcTimelineMarker(
-                            getKills(ks_pointer, index)[0].tick,
+                            getKills(ksPointer, index)[0].tick,
                             life,
                             leftPos,
                             rightPos
                           ),
                           0
                         )}px;
-                        --kills: ${getKills(ks_pointer, index).length};
+                        --kills: ${getKills(ksPointer, index).length};
                         --length: ${
-                          (getKills(ks_pointer, index)[
-                            getKills(ks_pointer, index).length - 1
+                          (getKills(ksPointer, index)[
+                            getKills(ksPointer, index).length - 1
                           ].tick -
                             life.start) /
                             scale -
-                          (getKills(ks_pointer, index)[0].tick - life.start) /
+                          (getKills(ksPointer, index)[0].tick - life.start) /
                             scale +
                           (calcTimelineMarker(
-                            getKills(ks_pointer, index)[0].tick,
+                            getKills(ksPointer, index)[0].tick,
                             life,
                             leftPos,
                             rightPos
                           ) < 0
                             ? calcTimelineMarker(
-                                getKills(ks_pointer, index)[0].tick,
+                                getKills(ksPointer, index)[0].tick,
                                 life,
                                 leftPos,
                                 rightPos

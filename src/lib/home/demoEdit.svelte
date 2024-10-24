@@ -3,23 +3,23 @@
   export let event;
   export let demos;
   export let demo;
-  export let demo_i;
+  export let demoIndex;
   export let i;
   export let refresh;
 
-  function deleteEvent(demo_i, i) {
-    demos[demo_i].splice(i, 1);
+  function deleteEvent(demoIndex, i) {
+    demos[demoIndex].splice(i, 1);
 
-    if (demos[demo_i].length === 0) {
-      demos.splice(demo_i, 1);
+    if (demos[demoIndex].length === 0) {
+      demos.splice(demoIndex, 1);
     }
 
     demos = demos;
     refresh();
   }
 
-  function editDemoName(demo_i, new_name) {
-    for (let event of demos[demo_i]) {
+  function editDemoName(demoIndex, new_name) {
+    for (let event of demos[demoIndex]) {
       event.demo_name = new_name;
     }
 
@@ -27,13 +27,13 @@
     refresh();
   }
 
-  function addEvent(demo_i) {
-    demos[demo_i].push({
+  function addEvent(demoIndex) {
+    demos[demoIndex].push({
       value: {
         Bookmark: "General",
       },
       tick: 0,
-      demo_name: demos[demo_i][0].demo_name,
+      demo_name: demos[demoIndex][0].demo_name,
       event: `[_] Bookmark _ (\"_\" at 0)`,
       isKillstreak: false,
     });
@@ -42,15 +42,15 @@
     refresh();
   }
 
-  function deleteDemo(demo_i) {
-    demos.splice(demo_i, 1);
+  function deleteDemo(demoIndex) {
+    demos.splice(demoIndex, 1);
 
     demos = demos;
     refresh();
   }
 
-  function toggleKillstreak(demo_i, i) {
-    let event = demos[demo_i][i];
+  function toggleKillstreak(demoIndex, i) {
+    let event = demos[demoIndex][i];
 
     if (event.isKillstreak) {
       event.isKillstreak = false;
@@ -82,9 +82,9 @@
         class="demo__header-input"
         data-tooltip="Edit Demo Name"
         value={event.demo_name}
-        on:change={(e) => editDemoName(demo_i, e.target.value)}
+        on:change={(e) => editDemoName(demoIndex, e.target.value)}
       />
-      <a class="demo-delete" href="/" on:click={() => deleteDemo(demo_i)}>
+      <a class="demo-delete" href="/" on:click={() => deleteDemo(demoIndex)}>
         Remove
       </a>
     </div>
@@ -95,7 +95,7 @@
         <a
           class="demo__event-link"
           data-tooltip="Change to Killstreak"
-          on:click={() => toggleKillstreak(demo_i, i)}
+          on:click={() => toggleKillstreak(demoIndex, i)}
           href="/"
         >
           Bookmark
@@ -109,7 +109,7 @@
         <a
           class="demo__event-link"
           data-tooltip="Change to Bookmark"
-          on:click={() => toggleKillstreak(demo_i, i)}
+          on:click={() => toggleKillstreak(demoIndex, i)}
           href="/"
         >
           Killstreak
@@ -132,7 +132,7 @@
         data-tooltip="Delete Event"
         style={"--kills: 0"}
         href="/"
-        on:click={() => deleteEvent(demo_i, i)}
+        on:click={() => deleteEvent(demoIndex, i)}
       >
         -
       </a>
@@ -140,7 +140,7 @@
   </div>
   {#if i === demo.length - 1}
     <div class="demo demo__new-event">
-      <a on:click={() => addEvent(demo_i)} href="/"> Add new event to demo </a>
+      <a on:click={() => addEvent(demoIndex)} href="/"> Add new event to demo </a>
     </div>
     <div class="demo demo__bottom">
       {demo.length} event{#if demo.length > 1}s{/if}

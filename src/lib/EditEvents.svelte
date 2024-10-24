@@ -31,11 +31,11 @@
     demos = demos;
   }
 
-  function setEvents(event_list = []) {
+  function setEvents(eventList = []) {
     demos = [];
 
-    if (event_list.code === 200) {
-      event_list.events.forEach(
+    if (eventList.code === 200) {
+      eventList.events.forEach(
         (/** @type {{ demo_name: any; }} */ event, /** @type {number} */ i) => {
           event.isKillstreak = false;
 
@@ -45,7 +45,7 @@
 
           if (
             i === 0 ||
-            event_list.events[i - 1].demo_name != event.demo_name
+            eventList.events[i - 1].demo_name != event.demo_name
           ) {
             demos.push([event]);
             return;
@@ -60,9 +60,9 @@
   }
 
   async function loadEvents() {
-    let event_list = await invoke("load_events");
+    let eventList = await invoke("load_events");
 
-    setEvents(event_list);
+    setEvents(eventList);
   }
 
   function addDemo() {
@@ -88,9 +88,9 @@
 </button>
 
 <Modal color="pri" {toggle} {enabled} on:open={loadEvents}>
-  {#each demos as demo, demo_i}
-    {#each demo as event, i (`${demo_i}__${i}`)}
-      <DemoEdit {demo_i} {i} {demo} {demos} {event} {refresh} />
+  {#each demos as demo, demoIndex}
+    {#each demo as event, i (`${demoIndex}__${i}`)}
+      <DemoEdit {demoIndex} {i} {demo} {demos} {event} {refresh} />
     {/each}
   {/each}
   <div slot="footer">

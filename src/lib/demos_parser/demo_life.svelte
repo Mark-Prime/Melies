@@ -1,11 +1,11 @@
 <script>
   // @ts-nocheck
-  import ClassLogo from "$lib/components/classlogo.svelte";
+  import ClassLogo from "$lib/components/ClassLogo.svelte";
 
   export let life;
   export let classConverter;
   export let toggleSelected;
-  export let parsed_demo;
+  export let parsedDemo;
   export let tickToTime;
   export let toggleKillsSelected;
   export let allKillsSelected;
@@ -13,12 +13,12 @@
 
 <div class={"demo demo__life " + (life.selected && "demo--selected")}>
   <div class="player_classes">
-    {#each life.classes as player_class}
+    {#each life.classes as playerClass}
       <ClassLogo
-        player_class={classConverter(player_class)}
+        player_class={classConverter(playerClass)}
         tooltip={`Kills: ${
           life.kills.filter(
-            (kill) => kill.killer_class === classConverter(player_class)
+            (kill) => kill.killer_class === classConverter(playerClass)
           ).length
         }`}
       />
@@ -40,13 +40,13 @@
         <div class="demo__kill-text">
           <ClassLogo player_class={classConverter(kill.killer_class)} /> killed
           <a
-            href={`#player-${parsed_demo.data.users[kill.victim].name}`}
-            class={parsed_demo.data.users[kill.victim]["team"] + " tooltip"}
+            href={`#player-${parsedDemo.data.users[kill.victim].name}`}
+            class={parsedDemo.data.users[kill.victim]["team"] + " tooltip"}
             style="--kills: 0;"
             data-tooltip="Jump To Player"
           >
             <ClassLogo player_class={classConverter(kill.victim_class)} />
-            {parsed_demo.data.users[kill.victim].name}
+            {parsedDemo.data.users[kill.victim].name}
           </a>
           with {kill.weapon}
           {#if kill.crit_type}

@@ -14,12 +14,12 @@
   let resp = { loaded: false };
   let mapList = [];
 
-  let search_filter = "";
-  let map_filter = "";
-  let vdm_filter = null;
+  let searchFilter = "";
+  let mapFilter = "";
+  let vdmFilter = null;
 
   $: {
-    let filters = {map: map_filter, search: search_filter, vdm: vdm_filter};
+    let filters = {map: mapFilter, search: searchFilter, vdm: vdmFilter};
       
     resp = resp;
   }
@@ -64,17 +64,17 @@
   }
 
   function filter(demo) {
-    if (map_filter && demo.header.map != map_filter) {
+    if (mapFilter && demo.header.map != mapFilter) {
       return false;
     }
 
-    console.log(vdm_filter, demo.hasVdm)
+    console.log(vdmFilter, demo.hasVdm)
 
-    if (vdm_filter != null && vdm_filter != demo.hasVdm) {
+    if (vdmFilter != null && vdmFilter != demo.hasVdm) {
       return false;
     }
 
-    let search = search_filter.toLowerCase();
+    let search = searchFilter.toLowerCase();
 
     let isInName = demo.name.toLowerCase().includes(search);
     let isInNick = demo.header.nick.toLowerCase().includes(search);
@@ -95,14 +95,14 @@
   {#if resp.loaded}
     <h4>Filters</h4>
     <div class="filters">
-      <Input title="Search" color="sec" bind:value={search_filter}/>
-      <Select title="Map" color="sec" bind:value={map_filter}>
+      <Input title="Search" color="sec" bind:value={searchFilter}/>
+      <Select title="Map" color="sec" bind:value={mapFilter}>
         <option value=""></option>
         {#each mapList as map}
           <option value="{map}">{map}</option>
         {/each}
       </Select>
-      <Select title="VDM Status" color="sec" bind:value={vdm_filter}>
+      <Select title="VDM Status" color="sec" bind:value={vdmFilter}>
         <option value={null}></option>
         <option value={true}>Has VDM</option>
         <option value={false}>Doesn't have VDM</option>
