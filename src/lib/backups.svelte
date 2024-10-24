@@ -1,5 +1,4 @@
 <script>
-  // @ts-nocheck
   import { invoke } from "@tauri-apps/api/core";
   import { faFloppyDisk } from "@fortawesome/free-solid-svg-icons";
   import Fa from "svelte-fa";
