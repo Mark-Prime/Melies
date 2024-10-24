@@ -1,5 +1,4 @@
 <script>
-  // @ts-nocheck
   import { invoke } from "@tauri-apps/api/core";
   import {
     faWandMagicSparkles,
@@ -12,10 +11,11 @@
 
   import tickToTime from "$lib/composables/tickToTime.js";
   import isAirshot from "$lib/composables/isAirshot.js";
-
   import Modal from "$lib/components/Modal.svelte";
-  import Timeline from "./timeline/timeline.svelte";
   import ClassLogo from "$lib/components/ClassLogo.svelte";
+  import Toggle from "$lib/components/ToggleSelected.svelte";
+
+  import Timeline from "./timeline/timeline.svelte";
 
   const dispatch = createEventDispatcher();
 
@@ -355,26 +355,26 @@
             }
           }
 
-          for (let ks_pointer of life.killstreak_pointers) {
-            if (ks_pointer.selected) {
+          for (let ksPointer of life.killstreak_pointers) {
+            if (ksPointer.selected) {
               events.push({
-                time: life.kills[ks_pointer.kills[ks_pointer.kills.length - 1]]
+                time: life.kills[ksPointer.kills[ksPointer.kills.length - 1]]
                   .tick,
-                label: `${ks_pointer.kills.length}ks`,
+                label: `${ksPointer.kills.length}ks`,
                 steamid64: parsedDemo.data.users[i].steamId64,
-                kills: ks_pointer.kills.length,
+                kills: ksPointer.kills.length,
                 killstreak: true,
               });
 
               continue;
             }
 
-            if (ks_pointer.selected_as_bookmark) {
+            if (ksPointer.selected_as_bookmark) {
               let start_time =
-                life.kills[ks_pointer.kills[0]].tick -
+                life.kills[ksPointer.kills[0]].tick -
                 recordingSettings.before_killstreak_per_kill;
               let end_time =
-                life.kills[ks_pointer.kills[ks_pointer.kills.length - 1]].tick +
+                life.kills[ksPointer.kills[ksPointer.kills.length - 1]].tick +
                 recordingSettings.after_killstreak;
 
               if (life.start + 20 > start_time) {
@@ -387,15 +387,15 @@
 
               events.push({
                 time: start_time,
-                label: `${ks_pointer.kills.length}ks_start`,
+                label: `${ksPointer.kills.length}ks_start`,
                 steamid64: parsedDemo.data.users[i].steamId64,
-                kills: ks_pointer.kills.length,
+                kills: ksPointer.kills.length,
                 start: true,
               });
 
               events.push({
                 time: end_time,
-                label: `${ks_pointer.kills.length}ks_end`,
+                label: `${ksPointer.kills.length}ks_end`,
               });
             }
           }
@@ -985,8 +985,8 @@
     return [];
   }
 
-  function classConverter(player_class) {
-    switch (player_class) {
+  function classConverter(playerClass) {
+    switch (playerClass) {
       case "1":
         return "scout";
       case "3":
@@ -1006,12 +1006,12 @@
       case "8":
         return "spy";
       default:
-        return player_class;
+        return playerClass;
     }
   }
 
-  function classNumConverter(player_class) {
-    switch (player_class) {
+  function classNumConverter(playerClass) {
+    switch (playerClass) {
       case "1":
         return 1;
       case "3":
@@ -1031,7 +1031,7 @@
       case "8":
         return 9;
       default:
-        return player_class;
+        return playerClass;
     }
   }
 
@@ -1051,7 +1051,7 @@
     }
   }
 
-  function toggleClass(player, player_class) {
+  function toggleClass(player, playerClass) {
     let class_mapping = [
       "scout",
       "sniper",
@@ -1069,7 +1069,7 @@
     }
 
     for (let life of parsedDemo.data.player_lives[player]) {
-      if (!life.classes.includes(class_mapping[Number(player_class) - 1])) {
+      if (!life.classes.includes(class_mapping[Number(playerClass) - 1])) {
         continue;
       }
 
@@ -1229,14 +1229,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                 {/if}
               </td>
               <td class="add_demo">
-                {#if demo.selected}
-                  <button
-                    class="cancel-btn"
-                    on:click={toggleSelected(demo, null, i)}>-</button
-                  >
-                {:else}
-                  <button on:click={toggleSelected(demo, null, i)}>+</button>
-                {/if}
+                <Toggle value={demo.selected} on:click={toggleSelected(demo, null, i)} />
               </td>
             </tr>
           {/each}
@@ -1327,12 +1320,12 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                       >
                         {parsedDemo.data.users[player].name}
                       </a>
-                      {#each getClasses(player) as player_class}
+                      {#each getClasses(player) as playerClass}
                         <ClassLogo
-                          player_class={classConverter(player_class)}
-                          tooltip={`Lives: ${parsedDemo.data.users[player]["classes"][player_class]}`}
+                          player_class={classConverter(playerClass)}
+                          tooltip={`Lives: ${parsedDemo.data.users[player]["classes"][playerClass]}`}
                           click={toggleClass}
-                          args={[player, player_class]}
+                          args={[player, playerClass]}
                         />
                       {/each}
                     </h3>
@@ -1388,13 +1381,13 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                     {#if parsedDemo.data.player_lives[player].filter((life) => life.killstreak_pointers.length > 0).length > 0}
                       <h4 class="centered">Killstreaks</h4>
                       {#each parsedDemo.data.player_lives[player].filter((life) => life.killstreak_pointers.length > 0) as life}
-                        {#each life.killstreak_pointers as ks_pointer}
+                        {#each life.killstreak_pointers as ksPointer}
                           <KillstreakPointer
                             {classConverter}
                             {toggleSelected}
                             {parsedDemo}
                             {tickToTime}
-                            {ks_pointer}
+                            {ksPointer}
                             {toggleBookmarkSelected}
                             {isPovDemo}
                           />
@@ -1457,13 +1450,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
           {#if displayChat}
             <div class="chat">
               {#each parsedDemo.data.chat as chat}
-                {#if chat.selected}
-                  <button class="cancel-btn" on:click={toggleSelected(chat)}>
-                    -
-                  </button>
-                {:else}
-                  <button on:click={toggleSelected(chat)}>+</button>
-                {/if}
+                <Toggle value={chat.selected} on:click={toggleSelected(chat)} />
                 <div class="chat__tick">
                   {chat.tick}
                 </div>
@@ -1627,14 +1614,6 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
 
     &__title {
       margin-top: 3rem;
-    }
-
-    & > button {
-      height: 25px;
-      width: 25px;
-      padding: 0 0 0 1px;
-      display: table-cell;
-      vertical-align: middle;
     }
   }
 
@@ -1968,15 +1947,6 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
     align-items: center;
     justify-content: flex-end;
     gap: 1px;
-
-    & > button {
-      font-size: 12px;
-      padding: 0.3rem 0.7rem;
-      margin: 0;
-      // height: 100%;
-      border-radius: 5px;
-      width: fit-content;
-    }
 
     &--disabled {
       opacity: 0.75;

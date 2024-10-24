@@ -1,5 +1,6 @@
 <script>
   import ClassLogo from "$lib/components/ClassLogo.svelte";
+  import Toggle from "$lib/components/ToggleSelected.svelte";
 
   export let lives;
   export let label;
@@ -70,18 +71,7 @@
               data-tooltip="Entire Life"
               style={`--kills: 0;`}
             >
-              {#if getLife(pointer).selected}
-                <button
-                  class="add_demo cancel-btn"
-                  on:click={toggleSelected(getLife(pointer))}>-</button
-                >
-              {:else}
-                <div class="add_demo">
-                  <button on:click={toggleSelected(getLife(pointer))}>
-                    +
-                  </button>
-                </div>
-              {/if}
+              <Toggle value={getLife(pointer).selected} on:click={toggleSelected(getLife(pointer))} />
             </div>
 
             <div
@@ -89,18 +79,7 @@
               data-tooltip="As Bookmark"
               style={`--kills: 0;`}
             >
-              {#if getKill(pointer).selected}
-                <button
-                  class="add_demo cancel-btn"
-                  on:click={toggleKillsSelected([getKill(pointer)])}>-</button
-                >
-              {:else}
-                <div class="add_demo">
-                  <button on:click={toggleKillsSelected([getKill(pointer)])}>
-                    +
-                  </button>
-                </div>
-              {/if}
+              <Toggle value={getKill(pointer).selected} on:click={toggleKillsSelected([getKill(pointer)])} />
             </div>
           </div>
         </div>
@@ -132,12 +111,6 @@
     justify-content: flex-end;
     gap: 1px;
     width: fit-content;
-
-    & > button {
-      font-size: 12px;
-      padding: 0.3rem 0.7rem;
-      border-radius: 5px;
-    }
   }
 
   .card {

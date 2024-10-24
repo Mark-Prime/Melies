@@ -1,6 +1,6 @@
 <script>
-  // @ts-nocheck
   import ClassLogo from "$lib/components/ClassLogo.svelte";
+  import Toggle from "$lib/components/ToggleSelected.svelte";
 
   export let classConverter;
   export let toggleSelected;
@@ -17,7 +17,7 @@
   }
 
   function getKills() {
-    if (!ksPointer.kills) {
+    if (!ksPointer?.kills) {
       return [];
     }
 
@@ -113,48 +113,26 @@
     Last: {getKills()[getKills().length - 1].tick}
   </div>
   <div class="killstreak__buttons">
-    <div
-      class="add_demo tooltip tooltip--left"
-      data-tooltip="Entire Life"
-      style={`--kills: 0;`}
-    >
-      {#if parsedDemo.data.player_lives[ksPointer.owner_id][ksPointer.life_index].selected}
-        <button class="cancel-btn" on:click={toggleSelected(getLife())}
-          >-</button
-        >
-      {:else}
-        <button on:click={toggleSelected(getLife())}>+</button>
-      {/if}
-    </div>
+    <Toggle 
+      value={parsedDemo.data.player_lives[ksPointer.owner_id][ksPointer.life_index].selected}
+      on:click={toggleSelected(getLife())}
+      tooltip="Entire Life"
+      tooltipDirection="left"
+    />
     {#if isPovDemo}
-      <div
-        class="add_demo tooltip tooltip--left"
-        data-tooltip="As Killstreak"
-        style={`--kills: 0;`}
-      >
-        {#if ksPointer.selected}
-          <button class="cancel-btn" on:click={toggleSelected(ksPointer, false)}
-            >-</button
-          >
-        {:else}
-          <button on:click={toggleSelected(ksPointer, false)}>+</button>
-        {/if}
-      </div>
+      <Toggle 
+        value={ksPointer.selected}
+        on:click={toggleSelected(ksPointer, false)}
+        tooltip="As Killstreak"
+        tooltipDirection="left"
+      />
     {/if}
-    <div
-      class="add_demo tooltip tooltip--left"
-      data-tooltip="As Bookmarks"
-      style={`--kills: 0;`}
-    >
-      {#if ksPointer.selected_as_bookmark}
-        <button
-          class="cancel-btn"
-          on:click={toggleBookmarkSelected(ksPointer, false)}>-</button
-        >
-      {:else}
-        <button on:click={toggleBookmarkSelected(ksPointer, false)}>+</button>
-      {/if}
-    </div>
+    <Toggle 
+      value={ksPointer.selected_as_bookmark}
+      on:click={toggleBookmarkSelected(ksPointer, false)}
+      tooltip="As Bookmarks"
+      tooltipDirection="left"
+    />
   </div>
 </div>
 

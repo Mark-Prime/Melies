@@ -6,7 +6,7 @@
   import { onMount } from "svelte";
   import { median } from "mathjs";
 
-  export let parsed_demo;
+  export let parsedDemo;
   export let tickToTime;
   export let displayPlayer;
   export let toggleSelected;
@@ -28,11 +28,11 @@
   let divWidth;
   let divHeight;
   let oldDivWidth;
-  let startTick = parsed_demo.data?.start_tick;
-  let totalTicks = parsed_demo?.header?.ticks;
+  let startTick = parsedDemo.data?.start_tick;
+  let totalTicks = parsedDemo?.header?.ticks;
 
   function getLife(ksPointer) {
-    return parsed_demo.data.player_lives[ksPointer.owner_id][
+    return parsedDemo.data.player_lives[ksPointer.owner_id][
       ksPointer.life_index
     ];
   }
@@ -145,15 +145,15 @@
   }
 
   function pauseAdjust(tick) {
-    if (!parsed_demo.data.pause_tick) {
+    if (!parsedDemo.data.pause_tick) {
       return tick;
     }
 
-    if (tick < parsed_demo.data.pause_tick) {
+    if (tick < parsedDemo.data.pause_tick) {
       return tick;
     }
 
-    return tick + parsed_demo.data.pause_length;
+    return tick + parsedDemo.data.pause_length;
   }
 
   function calcTick(tick) {
@@ -285,11 +285,11 @@
         {#if displayPlayer(player, team)}
           <a
             class={`timeline__label tooltip tooltip--align-right ${team}`}
-            href={`#player-${parsed_demo.data?.users[player]?.name}`}
+            href={`#player-${parsedDemo.data?.users[player]?.name}`}
             style={`--kills: 0`}
             data-tooltip="Jump To Player"
           >
-            {parsed_demo.data?.users[player]?.name}
+            {parsedDemo.data?.users[player]?.name}
           </a>
         {/if}
       {/each}
@@ -307,7 +307,7 @@
       {#each getTeam(team) as player}
         {#if displayPlayer(player, team)}
           <div class="timeline__lives">
-            {#each parsed_demo.data?.player_lives[player] as life}
+            {#each parsedDemo.data?.player_lives[player] as life}
               {#if life.start != 0 && (displayLives || life.kills.length > 0 || (displayAssists && life.assists.length > 0)) && isLifeVisible(life, leftPos, rightPos)}
                 <button
                   class={`timeline__life timeline__life--${team} ${
@@ -328,7 +328,7 @@
                     class={`
                         timeline__data-tooltip tooltip 
                         ${
-                          parsed_demo.data?.users[player]?.team == "blue"
+                          parsedDemo.data?.users[player]?.team == "blue"
                             ? "tooltip__lower"
                             : ""
                         }
@@ -348,7 +348,7 @@
                       .map((kill) => {
                         let crit_types = ["", " Mini-Crit", " CRITICAL HIT!"];
                         return `${
-                          parsed_demo.data?.users[kill.victim].name
+                          parsedDemo.data?.users[kill.victim].name
                         } (tick: ${calcTick(kill.tick)})${
                           crit_types[kill.crit_type]
                         }`;
@@ -391,7 +391,7 @@
                       class={`
                           timeline__marker 
                           ${
-                            parsed_demo.data?.users[player]?.team == "blue"
+                            parsedDemo.data?.users[player]?.team == "blue"
                               ? "timeline__marker--lower"
                               : ""
                           }
@@ -415,7 +415,7 @@
                     <div
                       class={`timeline__marker 
                         ${
-                          parsed_demo.data?.users[player]?.team == "blue"
+                          parsedDemo.data?.users[player]?.team == "blue"
                             ? "timeline__marker--lower"
                             : ""
                         }
@@ -444,14 +444,14 @@
                       <div
                         class={`timeline__marker 
                             ${
-                              parsed_demo.data?.users[player]?.team == "blue"
+                              parsedDemo.data?.users[player]?.team == "blue"
                                 ? "timeline__marker--lower"
                                 : ""
                             }
                             ${x > divWidth * 0.7 && "timeline__marker--left"}
                         `}
                         data-tooltip={`Killed: ${
-                          parsed_demo.data?.users[kill.victim].name
+                          parsedDemo.data?.users[kill.victim].name
                         }\r\nTick: ${calcTick(
                           kill.tick
                         )}\r\nTimecode: ${tickToTime(calcTick(kill.tick))}`}
@@ -468,11 +468,11 @@
                           <div>
                             Killed:
                             <ClassLogo
-                              player_class={parsed_demo.data?.users[
+                              player_class={parsedDemo.data?.users[
                                 kill.victim_class
                               ]}
                             />
-                            {parsed_demo.data?.users[kill.victim].name} ({kill.victim_class})
+                            {parsedDemo.data?.users[kill.victim].name} ({kill.victim_class})
                           </div>
                           Weapon: {kill.weapon} <br />
                           Tick: {calcTick(kill.tick)} <br />
@@ -485,7 +485,7 @@
                     <div
                       class={`timeline__ks
                           ${
-                            parsed_demo.data?.users[player]?.team == "blue"
+                            parsedDemo.data?.users[player]?.team == "blue"
                               ? "timeline__ks--lower"
                               : ""
                           }
@@ -498,7 +498,7 @@
                         .map((kill) => {
                           let crit_types = ["", " Mini-Crit", " CRITICAL HIT!"];
                           return `${
-                            parsed_demo.data?.users[kill.victim].name
+                            parsedDemo.data?.users[kill.victim].name
                           } (tick: ${calcTick(kill.tick)})${
                             crit_types[kill.crit_type]
                           }`;
@@ -551,11 +551,11 @@
       class="timeline__rounds"
       style={`width: ${divWidth + "px"}; height: ${divHeight + "px"}`}
     >
-      {#each parsed_demo.data?.rounds as round, index}
+      {#each parsedDemo.data?.rounds as round, index}
         <div
           class="timeline__round"
           style={`
-          --start: ${(Math.max(parsed_demo.data?.rounds[index - 1]?.end_tick || 0, leftPos) - leftPos) / scale}px;
+          --start: ${(Math.max(parsedDemo.data?.rounds[index - 1]?.end_tick || 0, leftPos) - leftPos) / scale}px;
           --end: ${(Math.max(round.end_tick, leftPos) - leftPos) / scale}px;
           height: ${divHeight}px;
         `}

@@ -1,6 +1,6 @@
 <script>
-  // @ts-nocheck
   import ClassLogo from "$lib/components/ClassLogo.svelte";
+  import Toggle from "$lib/components/ToggleSelected.svelte";
 
   export let killstreaks;
   export let parsedDemo;
@@ -159,37 +159,18 @@
               Last: {getKills(index)[getKills(index).length - 1].tick}
             </div>
             <div class="killstreak__buttons">
-              <div
-                class="add_demo tooltip tooltip--left"
-                data-tooltip="Entire Life"
-                style={`--kills: 0;`}
-              >
-                {#if parsedDemo.data.player_lives[ksPointer.owner_id][ksPointer.life_index].selected}
-                  <button
-                    class="cancel-btn"
-                    on:click={toggleSelected(getLife(index))}>-</button
-                  >
-                {:else}
-                  <button on:click={toggleSelected(getLife(index))}>+</button>
-                {/if}
-              </div>
-              <div
-                class="add_demo tooltip tooltip--left"
-                data-tooltip="As Bookmarks"
-                style={`--kills: 0;`}
-              >
-                {#if parsedDemo.data.player_lives[ksPointer.owner_id][ksPointer.life_index].killstreak_pointers[ksPointer.index].selected_as_bookmark}
-                  <button
-                    class="cancel-btn"
-                    on:click={toggleBookmarkSelected(getKs(index), true)}
-                    >-</button
-                  >
-                {:else}
-                  <button on:click={toggleBookmarkSelected(getKs(index), true)}
-                    >+</button
-                  >
-                {/if}
-              </div>
+              <Toggle 
+                value={parsedDemo.data.player_lives[ksPointer.owner_id][ksPointer.life_index].selected} 
+                on:click={toggleSelected(getLife(index))} 
+                tooltip="Entire Life" 
+                tooltipDirection="left"
+              />
+              <Toggle 
+                value={parsedDemo.data.player_lives[ksPointer.owner_id][ksPointer.life_index].killstreak_pointers[ksPointer.index].selected_as_bookmark} 
+                on:click={toggleBookmarkSelected(getKs(index), true)} 
+                tooltip="As Bookmarks"
+                tooltipDirection="left"
+              />
             </div>
           </div>
         {/if}

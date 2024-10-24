@@ -1,6 +1,6 @@
 <script>
-  // @ts-nocheck
   import ClassLogo from "$lib/components/ClassLogo.svelte";
+  import Toggle from "$lib/components/ToggleSelected.svelte";
 
   export let life;
   export let classConverter;
@@ -66,20 +66,7 @@
           </span>
         </div>
 
-        {#if kill.selected}
-          <button
-            class="add_demo cancel-btn"
-            on:click={toggleKillsSelected([kill])}>-</button
-          >
-        {:else}
-          <div
-            class="add_demo tooltip tooltip--left"
-            data-tooltip="As Bookmark"
-            style={`--kills: 0;`}
-          >
-            <button on:click={toggleKillsSelected([kill])}>+</button>
-          </div>
-        {/if}
+        <Toggle value={kill.selected} on:click={toggleKillsSelected([kill])} tooltip="As Bookmark" tooltipDirection="left"/>
       </div>
     {/each}
   </div>
@@ -105,21 +92,7 @@
     End: {life.end}
   </div>
   <div class="killstreak__buttons">
-    <div
-      class="add_demo tooltip tooltip--left"
-      data-tooltip="Entire Life"
-      style={`--kills: 0;`}
-    >
-      {#if life.selected}
-        <button class="cancel-btn add_demo" on:click={toggleSelected(life)}
-          >-</button
-        >
-      {:else}
-        <div class="add_demo">
-          <button on:click={toggleSelected(life)}>+</button>
-        </div>
-      {/if}
-    </div>
+    <Toggle value={life.selected} on:click={toggleSelected(life)} tooltip="Entire Life" tooltipDirection="left"/>
     <div class="add_demo">
       {#if life.kills.length == 0}
         <div
@@ -137,8 +110,10 @@
         >
           <button
             class="auto-height cancel-btn"
-            on:click={toggleKillsSelected(life.kills)}>-</button
+            on:click={toggleKillsSelected(life.kills)}
           >
+            -
+          </button>
         </div>
       {:else}
         <div
@@ -308,7 +283,7 @@
       color: inherit;
       filter: unset;
       padding-left: 0.5rem;
-      padding-top: 0;
+      padding-top: 0.3rem;
       margin-right: 0.5rem;
 
       &:hover {
