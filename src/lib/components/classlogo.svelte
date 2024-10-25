@@ -1,12 +1,11 @@
 <script>
-  // @ts-nocheck
-  export let playerClass;
+  export let player_class;
   export let tooltip = false;
   export let click = () => {};
   export let args = [];
 
-  function getImgUrl(playerClass) {
-    switch (playerClass) {
+  function getImgUrl(player_class) {
+    switch (player_class) {
       case "scout":
         return "https://wiki.teamfortress.com/w/images/a/ad/Leaderboard_class_scout.png";
       case "soldier":
@@ -31,7 +30,7 @@
   }
 </script>
 
-{#if getImgUrl(playerClass)}
+{#if getImgUrl(player_class)}
   <button
     class:tooltip={tooltip}
     data-tooltip={tooltip}
@@ -39,7 +38,7 @@
     on:click={click(...args)}
     on:keydown={click(...args)}
   >
-    <img src={getImgUrl(playerClass)} alt={`${playerClass} Icon`} />
+    <img src={getImgUrl(player_class)} alt={`${player_class} Icon`} />
   </button>
 {/if}
 

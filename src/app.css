@@ -593,18 +593,15 @@ input:checked + .slider--tert:before {
   left: calc(var(--pos) + 1rem);
 }
 .tooltip:hover,
-.tooltip:active,
-.tooltip:focus {
+.tooltip:active {
   color: var(--sec);
 }
 .tooltip:hover::before,
-.tooltip:active::before,
-.tooltip:focus::before {
+.tooltip:active::before {
   display: block;
 }
 .tooltip:hover::after,
-.tooltip:active::after,
-.tooltip:focus::after {
+.tooltip:active::after {
   display: block;
 }
 

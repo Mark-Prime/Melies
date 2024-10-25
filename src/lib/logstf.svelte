@@ -6,6 +6,7 @@
 
   import { invoke } from "@tauri-apps/api/core";
   import { createEventDispatcher } from "svelte";
+  import ToggleSelected from "./components/ToggleSelected.svelte";
 
   const dispatch = createEventDispatcher();
 
@@ -304,7 +305,7 @@
                 href={`https://logs.tf/profile/${
                   getPlayerStats(killstreak.steamid)?.steamid64
                 }`}
-                class={getPlayerStats(killstreak.steamid)?.team + " player"}
+                class={getPlayerStats(killstreak.steamid)?.team.toLowerCase() + " player"}
                 data-tooltip={parseClasses(
                   getPlayerStats(killstreak.steamid).class_stats
                 )}
@@ -315,13 +316,7 @@
               </a>got a {killstreak.streak}ks at {killstreak.time * 66}
             </p>
             <div class="add_event">
-              {#if killstreak.selected}
-                <button class="cancel-btn" on:click={toggleSelected(killstreak)}
-                  >Remove</button
-                >
-              {:else}
-                <button on:click={toggleSelected(killstreak)}>Add</button>
-              {/if}
+              <ToggleSelected value={killstreak.selected} on:click={toggleSelected(killstreak)} />
             </div>
           </div>
         {/if}
@@ -369,13 +364,7 @@
                   </a>at {event.time * 66}
                 </p>
                 <div class="add_event">
-                  {#if event.selected}
-                    <button class="cancel-btn" on:click={toggleSelected(event)}
-                      >Remove</button
-                    >
-                  {:else}
-                    <button on:click={toggleSelected(event)}>Add</button>
-                  {/if}
+                  <ToggleSelected value={event.selected} on:click={toggleSelected(event)} />
                 </div>
               </div>
             {/if}
@@ -408,13 +397,7 @@
                   </a>used Übercharge ({event.medigun}) at {event.time * 66}
                 </p>
                 <div class="add_event">
-                  {#if event.selected}
-                    <button class="cancel-btn" on:click={toggleSelected(event)}
-                      >Remove</button
-                    >
-                  {:else}
-                    <button on:click={toggleSelected(event)}>Add</button>
-                  {/if}
+                  <ToggleSelected value={event.selected} on:click={toggleSelected(event)} />
                 </div>
               </div>
             {/if}
@@ -490,22 +473,6 @@
     align-items: end;
     justify-content: end;
     gap: 1px;
-
-    & > button {
-      padding: 0 0.7rem;
-      margin: 0;
-      height: 100%;
-      border-radius: 5px;
-      width: fit-content;
-    }
-  }
-
-  .Red {
-    color: var(--red);
-  }
-
-  .Blue {
-    color: var(--blu);
   }
 
   .round {

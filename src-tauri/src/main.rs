@@ -1286,6 +1286,16 @@ fn open_themes_folder() {
     Command::new("explorer").arg(addons_path).spawn().unwrap();
 }
 
+#[command]
+fn rename_file(old_path: &str, new_path: &str) {
+    println!("{} -> {}", old_path, new_path);
+    
+    let path = Path::new(old_path);
+    let new_path = Path::new(new_path);
+
+    fs::rename(path, new_path).unwrap();
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -1309,7 +1319,8 @@ fn main() {
             delete_vdm,
             create_vdm,
             load_theme,
-            open_themes_folder
+            open_themes_folder,
+            rename_file
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

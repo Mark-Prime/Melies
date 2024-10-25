@@ -3,7 +3,7 @@
 
   export let value;
   export let title = null;
-  export let key = title.toLowerCase().replace(/ /g, "_") || "input";
+  export let key = title?.toLowerCase().replace(/ /g, "_") || "input";
   export let color = "pri";
   export let display = true;
   export let tooltip = "";
