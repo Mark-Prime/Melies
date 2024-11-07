@@ -123,6 +123,10 @@ pub(crate) fn default_settings() -> Value {
             "spy": true,
         }
       },
+      "demo_manager": {
+        "default_name": "{date}_{time}_{map}_{ticks}",
+        "confirm_delete": true
+      },
       "advanced": {
         "airshots": {
           "default": true,

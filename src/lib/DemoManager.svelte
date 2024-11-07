@@ -43,6 +43,8 @@
   async function loadDemos() {
     settings = await invoke("load_settings");
 
+    renameDefault = settings.demo_manager?.default_name || "{date}_{time}_{map}_{ticks}";
+
     try {
       resp = await invoke("load_demos");
       let collator = new Intl.Collator(undefined, {
@@ -75,17 +77,17 @@
   }
 
   async function delete_demo(fileName, hasVdm) {
-    let answer = confirm(
+    let answer = !settings.demo_manager.confirm_deletion || await confirm(
       `Are you sure you want to delete this demo?${hasVdm ? `\nThis will also deleted the associated vdm.` : ``}`
     );
 
-    answer.then(async (resp) => {
-      if (resp) {
-        await invoke("delete_demo", { fileName: fileName });
+    if (!answer) {
+      return;
+    }
 
-        loadDemos();
-      }
-    });
+    await invoke("delete_demo", { fileName: fileName });
+
+    loadDemos();
   }
 
   function filter(demo) {
@@ -169,21 +171,23 @@
   }
 
   async function deleteDemos() {
-    let answer = await confirm(
+    let answer = !settings.demo_manager.confirm_deletion || await confirm(
       `Are you sure you want to delete these demos?\nThis will also deleted the associated vdms.`
     );
 
-    if (answer) {
-      let selected = resp.demos.filter((demo) => demo.selected);
-
-      for (let demo of selected) {
-        await invoke("delete_demo", { fileName: demo.name });
-      }
-
-      loadDemos();
-
-      anySelected = false;
+    if (!answer) {
+      return;
     }
+
+    let selected = resp.demos.filter((demo) => demo.selected);
+
+    for (let demo of selected) {
+      await invoke("delete_demo", { fileName: demo.name });
+    }
+
+    loadDemos();
+
+    anySelected = false;
   }
 
   function openRenameModal(demo = null) {
@@ -325,7 +329,7 @@
       </thead>
       <tbody>
         {#each resp.demos.filter(filter) as demo}
-          <tr class={"table_row " + (demo.hasVdm && "demo--hasvdm")}>
+          <tr class={"table_row " + (demo.hasVdm && "demo--hasvdm") + (demo.selected ? " demo--selected" : "")}>
             <td id={demo.name}>
               {demo.name}
             </td>
@@ -573,17 +577,25 @@
 
     background-color: var(--bg2);
 
-    &.demo--hasvdm .tooltip:hover {
-      color: var(--sec);
+    &.demo--hasvdm {
+      & .tooltip:hover {
+        color: var(--sec);
+      }
+
+      & > td {
+        color: var(--sec-con-text);
+        border-color: var(--sec-con);
+      }
     }
 
-    &:not(.demo--hasvdm) .tooltip:hover {
-      color: var(--tert);
+    &:not(.demo--hasvdm){
+      & .tooltip:hover {
+        color: var(--tert);
+      }
     }
 
-    &.demo--hasvdm > td {
-      color: var(--sec-con-text);
-      border-color: var(--sec-con);
+    &.demo--selected > td {
+      border-color: var(--pri);
     }
 
     &:hover {
