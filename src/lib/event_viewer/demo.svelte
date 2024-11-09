@@ -136,7 +136,7 @@
               <Fa icon={faCircleExclamation} color={`var(--err)`} /> {event.event}
             </span>
           {:else}
-            {#if !event.value.includes("mls_rec_demo")}
+            {#if !event.value?.includes("mls_rec_demo")}
               {event.isKillstreak ? `${event.value}ks` : `Bookmark "${event.value}"`}
               from
               <span
