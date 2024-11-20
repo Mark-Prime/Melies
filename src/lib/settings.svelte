@@ -167,7 +167,7 @@ on all players in POV demos."
     </div>
     <Switch
       title="Confirm before deleting demos"
-      bind:value={settings.pov_as_stv}
+      bind:value={settings.confirm_delete}
       tooltip="Gives a confirmation prompt before deleting demos."
     />
   </div>

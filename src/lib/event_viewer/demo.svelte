@@ -77,7 +77,7 @@
         continue;
       }
 
-      if (event.value.includes("clip_start")) {
+      if (event.value?.includes("clip_start")) {
         event.start = element.tick;
 
         if (!(index + 1 < demo.length)) {
@@ -98,7 +98,7 @@
         index++;
       }
 
-      if (event.value.includes("clip_end")) {
+      if (event.value?.includes("clip_end")) {
         event.err("No clip start found");
       }
 
@@ -106,6 +106,8 @@
 
       events.push(event);
     }
+
+    console.log(events);
 
     return events;
   }
@@ -136,7 +138,7 @@
               <Fa icon={faCircleExclamation} color={`var(--err)`} /> {event.event}
             </span>
           {:else}
-            {#if !event.value?.includes("mls_rec_demo")}
+            {#if typeof event.value !== "string" || !event.value?.includes("mls_rec_demo")}
               {event.isKillstreak ? `${event.value}ks` : `Bookmark "${event.value}"`}
               from
               <span
