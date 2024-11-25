@@ -256,7 +256,7 @@ pub struct Death {
 }
 
 impl Death {
-    pub fn from_event(event: &PlayerDeathEvent, tick: DemoTick, state: &MatchState) -> Self {
+    pub fn from_event(event: &PlayerDeathEvent, tick: DemoTick) -> Self {
         let assister = if event.assister < 16 * 1024 {
             Some(UserId::from(event.assister))
         } else {
@@ -268,11 +268,8 @@ impl Death {
         } else {
             false
         };
-        let mut is_airborne = event.rocket_jump;
 
-        if state.jump_status.contains_key(&UserId::from(event.user_id)) {
-            is_airborne = state.jump_status[&UserId::from(event.user_id)];
-        }
+        let is_airborne = event.rocket_jump;
 
         Death {
             assister,
@@ -453,22 +450,11 @@ impl Analyser {
 
         match event {
             GameEvent::PlayerDeath(event) => {
-                let user_id = event.user_id.into();
-
                 self.state
                     .deaths
-                    .push(Death::from_event(event, tick, &self.state));
-
-                self.state
-                    .jump_status
-                    .entry(user_id)
-                    .and_modify(|info| {
-                        *info = false;
-                    })
-                    .or_insert_with(|| false);
+                    .push(Death::from_event(event, tick));
             }
             GameEvent::PlayerSpawn(event) => {
-                let user_id = event.user_id.into();
                 let spawn = Spawn::from_event(event, tick);
 
                 if let Some(user_state) = self.state.users.get_mut(&spawn.user) {
@@ -477,17 +463,8 @@ impl Analyser {
                 }
 
                 self.state.spawns.push(spawn);
-
-                self.state
-                    .jump_status
-                    .entry(user_id)
-                    .and_modify(|info| {
-                        *info = false;
-                    })
-                    .or_insert_with(|| false);
             }
             GameEvent::TeamPlayRoundWin(event) => {
-                println!("Round end: {:?} at tick {}", event, tick);
                 if event.win_reason != WIN_REASON_TIME_LIMIT {
                     if self.state.rounds.is_empty() {
                         self.state.rounds.push(Round::start(tick));
@@ -505,8 +482,7 @@ impl Analyser {
                     });
                 }
             }
-            GameEvent::TeamPlayRoundStart(event) => {
-                println!("Round start: {:?}", event);
+            GameEvent::TeamPlayRoundStart(_) => {
                 if self.state.rounds.is_empty() {
                     self.state.rounds.push(Round {
                         winner: Team::new(0),
@@ -642,6 +618,5 @@ pub struct MatchState {
     pub interval_per_tick: f32,
     pub pauses: Vec<Pause>,
     pub ubers: Vec<Uber>,
-    pub jump_status: BTreeMap<UserId, bool>,
     id_map: HashMap<EntityId, UserId>,
 }
