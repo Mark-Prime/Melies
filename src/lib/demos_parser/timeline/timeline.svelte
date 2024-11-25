@@ -561,7 +561,7 @@
         `}
         >
           <p class="timeline__round--text">
-            Round {index + 1}
+            { round.label }
           </p>
         </div>
       {/each}

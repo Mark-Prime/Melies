@@ -437,21 +437,48 @@
       parsedDemo = await invoke("parse_demo", { path: currentDemo });
 
       verifyTicks();
+      labelRounds();
       isPovDemo = isDemoPov();
 
       console.log(settings);
-      console.log("isPovDemo", isPovDemo);
-      console.log("povId", povId);
 
       // Sort the team order by class
       bluTeam.sort(sortByClass);
       redTeam.sort(sortByClass);
 
       console.log(parsedDemo);
-      console.log(bluTeam);
-      console.log(redTeam);
     } else {
       closeModal();
+    }
+  }
+
+  function labelRounds() {
+    let roundNum = 1;
+
+    for (let i = 0; i < parsedDemo.data.rounds.length; i++) {
+      const round = parsedDemo.data.rounds[i];
+
+      if (round.is_pregame) {
+        if (i === 0) {
+          round.label = `Pregame`;
+          continue;
+        }
+
+        if (i === parsedDemo.data.rounds.length - 1) {
+          round.label = `Postgame`;
+          continue;
+        }
+
+        if (round.end_tick - round.start_tick < 1000) {
+          round.label = `Humiliation`;
+          continue;
+        }
+
+        round.label = `Halftime`;
+        continue;
+      }
+
+      round.label = `Round ${roundNum++}`;
     }
   }
 

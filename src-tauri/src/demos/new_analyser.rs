@@ -1,6 +1,6 @@
 use tf_demo_parser::demo::data::{DemoTick, ServerTick};
 use tf_demo_parser::demo::gameevent_gen::{
-    GameEvent, PlayerDeathEvent, PlayerSpawnEvent, TeamPlayRoundWinEvent,
+    GameEvent, PlayerChargeDeployedEvent, PlayerDeathEvent, PlayerSpawnEvent, TeamPlayRoundWinEvent
 };
 use tf_demo_parser::demo::message::packetentities::{EntityId, PacketEntitiesMessage};
 use tf_demo_parser::demo::message::usermessage::{ChatMessageKind, SayText2Message, UserMessage};
@@ -293,16 +293,26 @@ impl Death {
 pub struct Round {
     pub winner: Team,
     pub length: f32,
+    pub start_tick: DemoTick,
     pub end_tick: DemoTick,
+    pub is_pregame: bool,
 }
 
 impl Round {
-    pub fn from_event(event: &TeamPlayRoundWinEvent, tick: DemoTick) -> Self {
+    pub fn start(tick: DemoTick) -> Self {
         Round {
-            winner: Team::new(event.team),
-            length: event.round_time,
-            end_tick: tick,
+            winner: Team::new(0),
+            length: 0.0,
+            start_tick: tick,
+            end_tick: DemoTick::from(0),
+            is_pregame: false,
         }
+    }
+
+    pub fn end(&mut self, event: &TeamPlayRoundWinEvent, tick: DemoTick) {
+        self.winner = Team::new(event.team);
+        self.length = event.round_time;
+        self.end_tick = tick;
     }
 }
 
@@ -317,6 +327,23 @@ pub struct Analyser {
     state: MatchState,
     pause_start: Option<DemoTick>,
     user_id_map: HashMap<EntityId, UserId>,
+}
+
+#[derive(Default, Debug, Serialize, Deserialize, PartialEq, Clone)]
+pub struct Uber {
+    pub tick: DemoTick,
+    pub user_id: UserId,
+    pub target_id: UserId,
+}
+
+impl Uber {
+    pub fn from_event(event: &PlayerChargeDeployedEvent, tick: DemoTick) -> Self {
+        Uber {
+            tick,
+            user_id: UserId::from(event.user_id),
+            target_id: UserId::from(event.target_id),
+        }
+    }
 }
 
 #[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
@@ -460,91 +487,48 @@ impl Analyser {
                     .or_insert_with(|| false);
             }
             GameEvent::TeamPlayRoundWin(event) => {
+                println!("Round end: {:?} at tick {}", event, tick);
                 if event.win_reason != WIN_REASON_TIME_LIMIT {
-                    self.state.rounds.push(Round::from_event(event, tick))
+                    if self.state.rounds.is_empty() {
+                        self.state.rounds.push(Round::start(tick));
+                    }
+
+                    let last_round = self.state.rounds.last_mut().unwrap();
+                    last_round.end(event, tick);
+
+                    self.state.rounds.push(Round {
+                        winner: Team::new(0),
+                        length: 0.0,
+                        start_tick: tick,
+                        end_tick: DemoTick::from(0),
+                        is_pregame: true,
+                    });
                 }
             }
-            GameEvent::RocketJump(event) => {
-                let user_id = event.user_id.into();
+            GameEvent::TeamPlayRoundStart(event) => {
+                println!("Round start: {:?}", event);
+                if self.state.rounds.is_empty() {
+                    self.state.rounds.push(Round {
+                        winner: Team::new(0),
+                        length: 0.0,
+                        start_tick: DemoTick::from(0),
+                        end_tick: tick - 1,
+                        is_pregame: true,
+                    });
+                } else {
+                    let last_round = self.state.rounds.last_mut().unwrap();
 
-                self.state
-                    .jump_status
-                    .entry(user_id)
-                    .and_modify(|info| {
-                        *info = true;
-                    })
-                    .or_insert_with(|| true);
-            }
-            GameEvent::RocketJumpLanded(event) => {
-                let user_id = event.user_id.into();
+                    if last_round.end_tick == DemoTick::from(0) {
+                        last_round.end_tick = tick - 1;
+                        last_round.is_pregame = true;
+                    }
+                }
 
-                self.state
-                    .jump_status
-                    .entry(user_id)
-                    .and_modify(|info| {
-                        *info = false;
-                    })
-                    .or_insert_with(|| false);
+                self.state.rounds.push(Round::start(tick));
             }
-            GameEvent::StickyJump(event) => {
-                let user_id = event.user_id.into();
-
-                self.state
-                    .jump_status
-                    .entry(user_id)
-                    .and_modify(|info| {
-                        *info = true;
-                    })
-                    .or_insert_with(|| true);
+            GameEvent::PlayerChargeDeployed(event) => {
+                self.state.ubers.push(Uber::from_event(event, tick));
             }
-            GameEvent::StickyJumpLanded(event) => {
-                let user_id = event.user_id.into();
-
-                self.state
-                    .jump_status
-                    .entry(user_id)
-                    .and_modify(|info| {
-                        *info = false;
-                    })
-                    .or_insert_with(|| false);
-            }
-            GameEvent::RocketPackLaunch(event) => {
-                let user_id = event.user_id.into();
-
-                self.state
-                    .jump_status
-                    .entry(user_id)
-                    .and_modify(|info| {
-                        *info = true;
-                    })
-                    .or_insert_with(|| true);
-            }
-            GameEvent::RocketPackLanded(event) => {
-                let user_id = event.user_id.into();
-
-                self.state
-                    .jump_status
-                    .entry(user_id)
-                    .and_modify(|info| {
-                        *info = false;
-                    })
-                    .or_insert_with(|| false);
-            }
-            GameEvent::Landed(event) => {
-                let player: u8 = event.player.into();
-                let user_id = (player as u32).into();
-                
-                self.state
-                    .jump_status
-                    .entry(user_id)
-                    .and_modify(|info| {
-                        *info = false;
-                    })
-                    .or_insert_with(|| false);
-            }
-            // GameEvent::PlayerChargeDeployed(event) => {
-            //     println!("{:?} at {}", event, tick.0);
-            // }
             _ => {}
         }
     }
@@ -657,6 +641,7 @@ pub struct MatchState {
     pub start_tick: ServerTick,
     pub interval_per_tick: f32,
     pub pauses: Vec<Pause>,
+    pub ubers: Vec<Uber>,
     pub jump_status: BTreeMap<UserId, bool>,
     id_map: HashMap<EntityId, UserId>,
 }

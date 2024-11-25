@@ -472,6 +472,14 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
         }
     }
 
+    if !state.rounds.is_empty() {
+        let round = state.rounds.last_mut().unwrap();
+    
+        if round.end_tick == DemoTick::from(0) {
+            round.end_tick = DemoTick::from(header.ticks);
+        }
+    }
+
     let mut sorted_events: HashMap<u16, Vec<Event>> = HashMap::new();
     let mut player_lives: HashMap<u16, Vec<Life>> = HashMap::new();
     let mut killstreak_pointers: Vec<KillstreakPointer> = vec![];
@@ -690,7 +698,8 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
             "med_picks": med_picks,
             "airshots": airshots,
             "killstreak_pointers": killstreak_pointers,
-            "pauses": state.pauses
+            "pauses": state.pauses,
+            "ubers": state.ubers
         },
         "loaded": true,
         "loading": false
