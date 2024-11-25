@@ -30,6 +30,7 @@ parse-display = "0.8.0"
 tauri-plugin-store = { version = "2" }
 tauri-plugin-dialog = "2"
 tauri-plugin-shell = "2"
+sanitize-filename = "0.6.0"
 
 [features]
 # by default Tauri runs in production mode

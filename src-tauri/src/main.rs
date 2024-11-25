@@ -9,12 +9,13 @@ use regex::Regex;
 use serde_json::{self, json, Value};
 use std::fs::{DirEntry, File};
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{env, fs};
 use tauri::command;
 use vdm::action::ActionType;
 use vdm::VDM;
+use sanitize_filename::sanitize;
 
 use crate::clip::Clip;
 use crate::demos::{scan_demo, scan_for_demos, scan_for_vdms, validate_demos_folder, load_demo};
@@ -1288,12 +1289,27 @@ fn open_themes_folder() {
 
 #[command]
 fn rename_file(old_path: &str, new_path: &str) {
-    println!("{} -> {}", old_path, new_path);
-    
     let path = Path::new(old_path);
     let new_path = Path::new(new_path);
 
-    fs::rename(path, new_path).unwrap();
+    let sanitized_path = sanitize_name(new_path);
+
+    fs::rename(path, sanitized_path).unwrap();
+}
+
+fn sanitize_name(path: &Path) -> PathBuf {
+    let mut result = path.to_owned();
+
+    let file_name = path.file_name().unwrap().to_str().unwrap();
+    let sanitized = sanitize(file_name);
+
+    result.set_file_name(sanitized);
+
+    if let Some(ext) = path.extension() {
+        result.set_extension(ext);
+    }
+
+    result
 }
 
 fn main() {
