@@ -161,7 +161,7 @@
       display: grid;
       grid-template-columns: 0.5fr 1fr 1fr 1fr 1fr min-content;
       height: auto;
-      max-height: 35.75px;
+      max-height: 100%;
       transition: all 0.2s;
 
       &:hover {
