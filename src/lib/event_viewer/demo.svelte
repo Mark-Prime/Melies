@@ -98,7 +98,11 @@
         index++;
       }
 
-      if (event.value?.includes("clip_end")) {
+      if (!event.value) {
+        continue;
+      }
+
+      if (event.value.includes("clip_end")) {
         event.err("No clip start found");
       }
 
@@ -106,8 +110,6 @@
 
       events.push(event);
     }
-
-    console.log(events);
 
     return events;
   }
