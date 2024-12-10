@@ -396,9 +396,13 @@ fn get_player_class(
 }
 
 pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
-    println!("{}{}", settings["tf_folder"].as_str().unwrap(), path);
+    let mut file_path = path.clone();
 
-    let file_path = format!("{}{}", settings["tf_folder"].as_str().unwrap(), path);
+    if path.starts_with("\\") {
+        file_path = format!("{}{}", settings["tf_folder"].as_str().unwrap(), path);
+    }
+    
+    println!("{}", file_path);
 
     let file = fs::read(file_path).unwrap();
 

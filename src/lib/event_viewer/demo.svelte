@@ -6,9 +6,12 @@
   } from "@fortawesome/free-solid-svg-icons";
   import Fa from "svelte-fa";
   import { invoke } from "@tauri-apps/api/core";
+  import { onMount } from "svelte";
 
   export let demo;
   export let settings;
+
+  let demoEvents = [];
 
   async function loadSettings() {
     settings = await invoke("load_settings");
@@ -67,10 +70,14 @@
   function organizeEvents() {
     let events = [];
 
+    console.log(demo);
+
     for (let index = 0; index < demo.length; index++) {
       const element = demo[index];
 
       let event = new Event(element, false);
+
+      console.log(event);
 
       if (event.isKillstreak) {
         events.push(event);
@@ -111,6 +118,8 @@
       events.push(event);
     }
 
+    console.log(events)
+
     return events;
   }
 
@@ -119,6 +128,10 @@
       Math.round(ticks / 66) % 60
     }s`;
   }
+
+  onMount(() => {
+    demoEvents = organizeEvents();
+  })
 </script>
 
 <div class="demo-display">
@@ -133,7 +146,7 @@
 
   {#if open}
     <div class="events">
-      {#each organizeEvents() as event}
+      {#each demoEvents as event}
         <div class={`event event--${event.color}`}>
           {#if event.color === "err"}
             <span class="tooltip" data-tooltip={event.err} style={`--kills: 0;`}>

@@ -17,6 +17,8 @@
 
   import Timeline from "./timeline/timeline.svelte";
 
+  import { getCurrentWebview } from "@tauri-apps/api/webview";
+
   const dispatch = createEventDispatcher();
 
   let index = 0,
@@ -28,8 +30,36 @@
   import KillPointerList from "./demo_med_picks.svelte";
   import AllKillPointers from "./demo_all_med_picks.svelte";
 
+  let isDragging = false;
   let enabled = false;
   let toggle = () => (enabled = !enabled);
+
+  getCurrentWebview().onDragDropEvent((e) => {
+    switch (e.event) {
+      case "tauri://drag-over":
+        enabled = true;
+        isDragging = true;
+        break;
+      case "tauri://drag-drop":
+        isDragging = false;
+
+        console.log(settings);
+        
+        for (let file of e.payload.paths) {
+          if (file.endsWith(".dem")) {
+            selected.push(file.replace(settings.tf_folder, ""));
+          }
+        }
+        
+        if (currentDemo === "") {
+          total = selected.length;
+          nextDemo();
+        }
+        break;
+      default:
+        break;
+    }
+  })
 
   let resp = { loaded: false, loading: false };
   let parsedDemo = { loaded: false, loading: false };
@@ -313,6 +343,8 @@
       }
     }
 
+    console.log(selected);
+
     total = selected.length;
     index = 0;
 
@@ -435,6 +467,10 @@
       parsedDemo = { loaded: false, loading: true };
       currentDemo = selected.shift();
       parsedDemo = await invoke("parse_demo", { path: currentDemo });
+
+      if (currentDemo[0] !== "\\") {
+        currentDemo = "\\" + currentDemo.split("\\").pop();
+      }
 
       verifyTicks();
       labelRounds();
@@ -1199,7 +1235,11 @@
   grow
   wide={resp.loaded && currentDemo !== ""}
 >
-  {#if resp.loaded}
+  {#if isDragging}
+    <div class="dropzone">
+      <h1>Drag .dem Files Here</h1>
+    </div>
+  {:else if resp.loaded}
     {#if currentDemo === ""}
       <h1>Demos</h1>
       <table>
@@ -1526,7 +1566,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
   {/if}
 
   <div class="buttons" slot="footer">
-    {#if resp.loaded}
+    {#if resp.loaded && !isDragging}
       {#if currentDemo === ""}
         <button class="cancel-btn" on:click={closeModal}>Cancel</button>
         <button on:click={parseDemos}>Parse</button>
@@ -1544,6 +1584,16 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
 </Modal>
 
 <style lang="scss">
+  .dropzone {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5rem;
+    margin: 2rem 2rem 0 2rem;
+    border: 2px dashed var(--sec);
+    border-radius: 8px;
+  }
+
   .demo-labels {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr 1fr 3rem;
