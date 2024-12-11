@@ -6,6 +6,7 @@
 use addons::compile_addons;
 use chrono::prelude::*;
 use regex::Regex;
+use sanitize_filename::sanitize;
 use serde_json::{self, json, Value};
 use std::fs::{DirEntry, File};
 use std::io::Write;
@@ -15,10 +16,9 @@ use std::{env, fs};
 use tauri::command;
 use vdm::action::ActionType;
 use vdm::VDM;
-use sanitize_filename::sanitize;
 
 use crate::clip::Clip;
-use crate::demos::{scan_demo, scan_for_demos, scan_for_vdms, validate_demos_folder, load_demo};
+use crate::demos::{load_demo, scan_demo, scan_for_demos, scan_for_vdms, validate_demos_folder};
 use crate::event::Event;
 use crate::event::EventStyle::{Bookmark, Killstreak};
 use crate::logstf::parse;
@@ -1314,6 +1314,7 @@ fn sanitize_name(path: &Path) -> PathBuf {
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![

@@ -17,6 +17,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.5.2",
     "@svelteuidev/composables": "^0.14.0",
     "@tauri-apps/api": "^2.0.0",
+    "@tauri-apps/plugin-clipboard-manager": "^2.2.0",
     "@tauri-apps/plugin-dialog": "^2.0.0",
     "@tauri-apps/plugin-shell": "^2.0.0",
     "dayjs": "^1.11.13",

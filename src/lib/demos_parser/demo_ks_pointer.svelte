@@ -1,9 +1,11 @@
 <script>
   import ClassLogo from "$lib/components/ClassLogo.svelte";
   import Toggle from "$lib/components/ToggleSelected.svelte";
+  import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 
   export let classConverter;
   export let toggleSelected;
+  export let steamid64;
   export let parsedDemo;
   export let tickToTime;
   export let ksPointer;
@@ -89,7 +91,12 @@
           style={`--kills: 0;`}
           data-tooltip={`Timecode: ${tickToTime(kill.tick)}`}
         >
-          {kill.tick}
+          <button
+            class="tick"
+            on:click={() => writeText(`demo_gototick ${kill.tick}; wait 10; spec_player ${steamid64}`)}
+          >
+            {kill.tick}
+          </button>
         </span>
       </div>
     {/each}
@@ -101,7 +108,12 @@
       Math.round(getKills()[0].tick / 66) / 60
     )}m ${Math.round(getKills()[0].tick / 66) % 60}s`}
   >
-    First: {getKills()[0].tick}
+    <button
+      class="tick"
+      on:click={() => writeText(`demo_gototick ${getKills()[0].tick}; wait 10; spec_player ${steamid64}`)}
+    >
+      First: {getKills()[0].tick}
+    </button>
   </div>
   <div
     class="tooltip"
@@ -110,7 +122,12 @@
       getKills()[getKills().length - 1].tick - getKills()[0].tick
     )}`}
   >
+    <button
+      class="tick"
+      on:click={() => writeText(`demo_gototick ${getKills()[getKills().length - 1].tick}; wait 10; spec_player ${steamid64}`)}
+    >
     Last: {getKills()[getKills().length - 1].tick}
+    </button>
   </div>
   <div class="killstreak__buttons">
     <Toggle 
@@ -137,6 +154,11 @@
 </div>
 
 <style lang="scss">
+  .tick {
+    all: unset;
+    position: relative;
+  }
+
   .demo {
     background-color: var(--bg2);
     font-size: small;

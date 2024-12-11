@@ -1,8 +1,10 @@
 <script>
   import ClassLogo from "$lib/components/ClassLogo.svelte";
   import Toggle from "$lib/components/ToggleSelected.svelte";
+  import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 
   export let life;
+  export let steamid64;
   export let classConverter;
   export let toggleSelected;
   export let parsedDemo;
@@ -62,7 +64,12 @@
             style={`--kills: 0;`}
             data-tooltip={`Timecode: ${tickToTime(kill.tick)}`}
           >
-            {kill.tick}
+            <button
+              class="tick"
+              on:click={() => writeText(`demo_gototick ${kill.tick}; wait 10; spec_player ${steamid64}`)}
+            >
+              {kill.tick}
+            </button>
           </span>
         </div>
 
@@ -82,14 +89,24 @@
     style={`--kills: 0;`}
     data-tooltip={`Timecode: ${tickToTime(life.start)}`}
   >
-    Start: {life.start}
+    <button
+      class="tick"
+      on:click={() => writeText(`demo_gototick ${life.start}; wait 10; spec_player ${steamid64}`)}
+    >
+      Start: {life.start}
+    </button>
   </div>
   <div
     class="tooltip"
     style={`--kills: 0;`}
     data-tooltip={`Length: ${tickToTime(life.end - life.start)}`}
   >
-    End: {life.end}
+    <button
+      class="tick"
+      on:click={() => writeText(`demo_gototick ${life.end}; wait 10; spec_player ${steamid64}`)}
+    >
+      End: {life.end}
+    </button>
   </div>
   <div class="killstreak__buttons">
     <Toggle value={life.selected} on:click={toggleSelected(life)} tooltip="Entire Life" tooltipDirection="left"/>
@@ -139,6 +156,11 @@
     gap: 0.5rem;
     justify-content: end;
     grid-column: 6;
+  }
+  
+  .tick {
+    all: unset;
+    position: relative;
   }
 
   .demo {

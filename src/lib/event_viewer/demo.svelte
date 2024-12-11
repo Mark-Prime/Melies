@@ -8,6 +8,8 @@
   import { invoke } from "@tauri-apps/api/core";
   import { onMount } from "svelte";
 
+  import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+
   export let demo;
   export let settings;
 
@@ -156,17 +158,33 @@
             {#if typeof event.value !== "string" || !event.value?.includes("mls_rec_demo")}
               {event.isKillstreak ? `${event.value}ks` : `Bookmark "${event.value}"`}
               from
-              <span
-                class="tick tooltip"
+              <button
+                class="tick"
                 data-tooltip={`${tickToTime(event.start)}`}
-                style={`--kills: 0;`}>{event.start}</span
+                style={`--kills: 0;`}
+                on:click={() => writeText(`demo_gototick ${event.start}`)}
               >
+                <span
+                  class="tooltip"
+                  data-tooltip={`${tickToTime(event.start)}`}
+                  style={`--kills: 0;`}
+                >
+                  {event.start}
+                </span>
+              </button>
               to
-              <span
-                class="tick tooltip"
-                data-tooltip={`${tickToTime(event.end)}`}
-                style={`--kills: 0;`}>{event.end}</span
+              <button
+                class="tick"
+                on:click={() => writeText(`demo_gototick ${event.end}`)}
               >
+                <span
+                  class="tooltip"
+                  data-tooltip={`${tickToTime(event.end)}`}
+                  style={`--kills: 0;`}
+                >
+                  {event.end}
+                </span>
+              </button>
             {:else}
               Record Entire Demo
             {/if}
@@ -178,6 +196,11 @@
 </div>
 
 <style lang="scss">
+  .tick {
+    all: unset;
+    position: relative;
+  }
+
   .demo-display {
     padding: 0 1rem;
 
@@ -202,6 +225,8 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+
+    cursor: pointer;
 
     color: var(--pri-con-text);
   }

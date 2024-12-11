@@ -1,6 +1,6 @@
 use tf_demo_parser::demo::data::{DemoTick, ServerTick};
 use tf_demo_parser::demo::gameevent_gen::{
-    GameEvent, PlayerChargeDeployedEvent, PlayerDeathEvent, PlayerSpawnEvent, TeamPlayRoundWinEvent
+    GameEvent, PlayerChargeDeployedEvent, PlayerDeathEvent, PlayerSpawnEvent, TeamPlayRoundWinEvent,
 };
 use tf_demo_parser::demo::message::packetentities::{EntityId, PacketEntitiesMessage};
 use tf_demo_parser::demo::message::usermessage::{ChatMessageKind, SayText2Message, UserMessage};
@@ -450,9 +450,7 @@ impl Analyser {
 
         match event {
             GameEvent::PlayerDeath(event) => {
-                self.state
-                    .deaths
-                    .push(Death::from_event(event, tick));
+                self.state.deaths.push(Death::from_event(event, tick));
             }
             GameEvent::PlayerSpawn(event) => {
                 let spawn = Spawn::from_event(event, tick);
@@ -532,9 +530,11 @@ impl Analyser {
                 .state
                 .id_map
                 .get(&entity.entity_index)
-                .unwrap().to_owned().into();
+                .unwrap()
+                .to_owned()
+                .into();
 
-            if !deaths_this_tick.contains( &user_id ) {
+            if !deaths_this_tick.contains(&user_id) {
                 continue;
             }
 
@@ -557,10 +557,8 @@ impl Analyser {
 
                 let user_id: u32 = user.user_id.into();
 
-                let death = &mut deaths[deaths_index[deaths_this_tick
-                    .iter()
-                    .position(|&x| x == user_id)
-                    .unwrap()]];
+                let death = &mut deaths
+                    [deaths_index[deaths_this_tick.iter().position(|&x| x == user_id).unwrap()]];
 
                 match propname.as_str() {
                     "m_flFallVelocity" => {

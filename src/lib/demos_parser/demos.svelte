@@ -1403,6 +1403,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                         {#if displayLives || life.kills.length > 0 || (displayAssists && life.assists.length > 0)}
                           <Life
                             {life}
+                            steamid64={parsedDemo.data.users[player].steamId64}
                             {classConverter}
                             {toggleSelected}
                             {parsedDemo}
@@ -1423,6 +1424,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                     <KillPointerList
                       label="Med Picks"
                       valKey="med_picks"
+                      steamid64={parsedDemo.data.users[player].steamId64}
                       {classConverter}
                       {parsedDemo}
                       {tickToTime}
@@ -1435,6 +1437,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                     <KillPointerList
                       label="Air Shots"
                       valKey="airshots"
+                      steamid64={parsedDemo.data.users[player].steamId64}
                       {classConverter}
                       {parsedDemo}
                       {tickToTime}
@@ -1450,6 +1453,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                       {#each parsedDemo.data.player_lives[player].filter((life) => life.killstreak_pointers.length > 0) as life}
                         {#each life.killstreak_pointers as ksPointer}
                           <KillstreakPointer
+                            steamid64={parsedDemo.data.users[player].steamId64}
                             {classConverter}
                             {toggleSelected}
                             {parsedDemo}

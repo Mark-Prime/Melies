@@ -29,7 +29,7 @@ pub(crate) fn parse(url: Value) -> Value {
     }
 
     let mut info: Value = json_data.unwrap();
-    
+
     let players = &info["players"].as_object().unwrap().to_owned();
 
     let mut demo_api = "https://api.demos.tf/demos/?".to_owned();

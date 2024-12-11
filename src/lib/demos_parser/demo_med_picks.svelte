@@ -1,8 +1,10 @@
 <script>
   import ClassLogo from "$lib/components/ClassLogo.svelte";
   import Toggle from "$lib/components/ToggleSelected.svelte";
+  import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 
   export let lives;
+  export let steamid64;
   export let label;
   export let valKey;
   export let classConverter;
@@ -61,7 +63,12 @@
               style={`--kills: 0;`}
               data-tooltip={`Timecode: ${tickToTime(getKill(pointer).tick)}`}
             >
-              {getKill(pointer).tick}
+              <button
+                class="tick"
+                on:click={() => writeText(`demo_gototick ${getKill(pointer).tick}; wait 10; spec_player ${steamid64}`)}
+              >
+                {getKill(pointer).tick}
+              </button>
             </span>
           </div>
 
@@ -92,6 +99,11 @@
   .pointer__label {
     margin-top: 0.7rem;
     margin-bottom: 0.5rem;
+  }
+  
+  .tick {
+    all: unset;
+    position: relative;
   }
 
   .buttons {

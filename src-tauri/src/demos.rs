@@ -261,7 +261,7 @@ pub(crate) fn load_demo(settings: &Value, demo_name: &String) -> Value {
 
 fn get_demo_header(demo: Demo) -> Result<Value, std::io::Error> {
     let mut stream = demo.get_stream();
-                
+
     let header = Header::read(&mut stream);
 
     match header {
@@ -401,7 +401,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
     if path.starts_with("\\") {
         file_path = format!("{}{}", settings["tf_folder"].as_str().unwrap(), path);
     }
-    
+
     println!("{}", file_path);
 
     let file = fs::read(file_path).unwrap();
@@ -478,7 +478,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
 
     if !state.rounds.is_empty() {
         let round = state.rounds.last_mut().unwrap();
-    
+
         if round.end_tick == DemoTick::from(0) {
             round.end_tick = DemoTick::from(header.ticks);
         }

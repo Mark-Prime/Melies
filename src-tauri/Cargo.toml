@@ -31,6 +31,7 @@ tauri-plugin-store = { version = "2" }
 tauri-plugin-dialog = "2"
 tauri-plugin-shell = "2"
 sanitize-filename = "0.6.0"
+tauri-plugin-clipboard-manager = "2.2.0"
 
 [features]
 # by default Tauri runs in production mode

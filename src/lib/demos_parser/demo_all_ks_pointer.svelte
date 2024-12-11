@@ -1,6 +1,7 @@
 <script>
   import ClassLogo from "$lib/components/ClassLogo.svelte";
   import Toggle from "$lib/components/ToggleSelected.svelte";
+  import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 
   export let killstreaks;
   export let parsedDemo;
@@ -100,7 +101,7 @@
               Kills: {ksPointer.kills.length}
             </button>
             <div class="demo__kills">
-              {#each getKills(index) as kill}
+              {#each getKills(index) as kill, i}
                 <div class="demo__kill">
                   <ClassLogo player_class={classConverter(kill.killer_class)} />
                   killed
@@ -134,7 +135,12 @@
                     style={`--kills: 0;`}
                     data-tooltip={`Timecode: ${tickToTime(kill.tick)}`}
                   >
-                    {kill.tick}
+                    <button
+                      class="tick"
+                      on:click={() => writeText(`demo_gototick ${kill.tick}; wait 10; spec_player ${parsedDemo.data.users[ksPointer.owner_id].steamId64}`)}
+                    >
+                      {kill.tick}
+                    </button>
                   </span>
                 </div>
               {/each}
@@ -146,7 +152,12 @@
                 Math.round(getKills(index)[0].tick / 66) / 60
               )}m ${Math.round(getKills(index)[0].tick / 66) % 60}s`}
             >
-              First: {getKills(index)[0].tick}
+              <button
+                class="tick"
+                on:click={() => writeText(`demo_gototick ${getKills(index)[0].tick}; wait 10; spec_player ${parsedDemo.data.users[getKills(index)[0].killer].steamId64}`)}
+              >
+                First: {getKills(index)[0].tick}
+              </button>
             </div>
             <div
               class="tooltip"
@@ -156,7 +167,12 @@
                   getKills(index)[0].tick
               )}`}
             >
-              Last: {getKills(index)[getKills(index).length - 1].tick}
+              <button
+                class="tick"
+                on:click={() => writeText(`demo_gototick ${getKills(index)[getKills(index).length - 1].tick}; wait 10; spec_player ${parsedDemo.data.users[getKills(index)[getKills(index).length - 1].killer].steamId64}`)}
+              >
+                Last: {getKills(index)[getKills(index).length - 1].tick}
+              </button>
             </div>
             <div class="killstreak__buttons">
               <Toggle 
@@ -180,6 +196,11 @@
 {/if}
 
 <style lang="scss">
+  .tick {
+    all: unset;
+    position: relative;
+  }
+
   @media (min-width: 1500px) {
     .kill_container:nth-child(odd):last-child {
       grid-column: span 2;
