@@ -1,5 +1,19 @@
 <script>
+  import { faCopy } from '@fortawesome/free-solid-svg-icons';
+  import Fa from "svelte-fa";
+  import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+
   export let resp;
+
+  let copyText = "";
+
+  function copy() {
+    writeText(`playdemo ${resp.first_demo};`)
+    copyText = "Copied to clipboard";
+    setTimeout(() => {
+      copyText = "";
+    }, 1000);
+  }
 </script>
 
 <div class="event-viewer">
@@ -11,9 +25,41 @@
       Backup saved to: {resp.backup_location}
     </p>
   {/if}
+  {#if resp.first_demo}
+    <p>
+      To start the automation, load the first demo by opening tf2 and using the command:
+      <br />
+      <button
+        class="tick"
+        on:click={() => copy()}
+      >
+        <code>
+          playdemo {resp.first_demo};
+        </code>
+        <Fa icon={faCopy} />
+      </button>
+    </p>
+    {#if copyText}
+      <p>Copied to clipboard</p>
+    {/if}
+  {/if}
 </div>
 
 <style lang="scss">
+  .tick {
+    all: unset;
+    position: relative;
+    cursor: pointer;
+    background-color: var(--bg);
+    width: 100%;
+    padding: 1rem 0;
+  }
+
+  code {
+    font-family: "Source Code Pro", monospace;
+    padding: 1rem;
+  }
+
   .event-viewer {
     background-color: var(--bg2);
     width: 100%;

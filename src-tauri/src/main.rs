@@ -602,6 +602,8 @@ fn ryukbot() -> Value {
 
     vdms.push(vdm);
 
+    let first_demo = vdms[0].name.clone();
+
     let vdm_count = &vdms.len();
 
     for (i, vdm) in vdms.iter().enumerate() {
@@ -658,7 +660,8 @@ fn ryukbot() -> Value {
         "events": event_count,
         "vdms": vdm_count,
         "code": 200,
-        "backup_location": backup_location
+        "backup_location": backup_location,
+        "first_demo": first_demo
     })
 }
 
