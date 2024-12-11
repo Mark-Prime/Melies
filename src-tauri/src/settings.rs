@@ -127,6 +127,13 @@ pub(crate) fn default_settings() -> Value {
         "default_name": "{date}_{time}_{map}_{ticks}",
         "confirm_delete": true
       },
+      "hlae": {
+        "sparklyfx_path": "",
+        "hlae_path": "",
+        "launch_options": "-insecure -game tf -novid",
+        "use_64bit": true,
+        "playdemo": true
+      },
       "advanced": {
         "airshots": {
           "default": true,

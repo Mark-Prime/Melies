@@ -17,6 +17,7 @@
   let recordingSettings = {};
   let automationSettings = {};
   let demoManagerSettings = {};
+  let hlaeSettings = {};
   let addons = {};
   let enabled = false;
 
@@ -28,6 +29,7 @@
     recordingSettings = settings.recording;
     automationSettings = settings.automation;
     demoManagerSettings = settings.demo_manager;
+    hlaeSettings = settings.hlae;
     addons = settings.addons;
     console.log(settings)
   }
@@ -426,6 +428,48 @@ on all players in POV demos."
       tooltip="Disabled the taunt command to prevent the menu from opening."
       color="tert"
     /> -->
+  </div>
+
+  <h2>
+    {#if outputSettings.method === "sparklyfx"}
+      HLAE
+    {:else if outputSettings.method !== "svr"}
+      TF2
+    {/if}
+  </h2>
+
+  <div class="setting">
+    {#if outputSettings.method === "sparklyfx"}
+      <Input
+        title="HLAE .exe Path"
+        bind:value={hlaeSettings.hlae_path}
+        color="pri"
+      />
+      <Input
+        title="SparklyFX .dll Path"
+        bind:value={hlaeSettings.sparklyfx_path}
+        color="pri"
+      />
+    {/if}
+    <div class="settings__input-group settings__span">
+      <Input
+        title="TF2 Launch Options"
+        bind:value={hlaeSettings.launch_options}
+        color="pri"
+      />
+    </div>
+    <Switch
+      title="64Bit"
+      bind:value={hlaeSettings.use_64bit}
+      tooltip="Launches with 64Bit TF2."
+      color="pri"
+    />
+    <Switch
+      title="Automatically playdemo"
+      bind:value={hlaeSettings.playdemo}
+      tooltip="Plays first demo on list as soon as it launches."
+      color="pri"
+    />
   </div>
 
   <Addons bind:addons={addons} />
