@@ -507,18 +507,4 @@ on all players in POV demos."
     align-items: center;
     justify-content: center;
   }
-
-  .settings {
-    &__input-group {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      width: 100%;
-    }
-
-    &__span {
-      grid-column-start: 1;
-      grid-column-end: span 2;
-    }
-  }
 </style>

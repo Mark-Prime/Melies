@@ -21,6 +21,7 @@ tauri = { version = "2", features = [] }
 vdm = "1.0.8"
 reqwest = { version = "0.11", features = ["blocking", "json"] }
 steamid-ng = "1.0.0"
+sysinfo = "0.32.1"
 tf-demo-parser = { path = "../parser" }
 human-sort = "0.2.2"
 fnv = "1.0.7"

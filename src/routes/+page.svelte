@@ -13,6 +13,7 @@
   import DemoManager from "$lib/DemoManager.svelte";
   import RemuxFootage from "$lib/RemuxFootage.svelte";
   import { onMount } from "svelte";
+  import Tf2 from "$lib/TF2.svelte";
 
   let resp = { vdms: 0, clips: 0, events: 0, code: 0 };
   let theme = { has_theme: false };
@@ -92,9 +93,12 @@
           <RemuxFootage on:reload={() => forceReload(true)} />
         </div>
 
-        <div class="homepage__run">
-          <button class="btn" on:click={runMelies}> Run </button>
-          <Settings on:close={() => forceReload(true)} />
+        <div class="homepage__bottom">
+          <Tf2 on:reload={() => forceReload(true)} />
+          <div class="homepage__run">
+            <button class="btn" on:click={runMelies}> Run </button>
+            <Settings on:close={() => forceReload(true)} />
+          </div>
         </div>
       </div>
     </div>
@@ -169,6 +173,14 @@
       display: flex;
       gap: 0.5rem;
       flex-direction: column;
+    }
+
+    &__bottom {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      justify-content: space-between;
+      width: 100%;
     }
 
     &__run {

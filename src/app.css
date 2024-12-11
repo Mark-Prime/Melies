@@ -154,6 +154,18 @@ h1 {
   padding: 0rem 1rem;
 }
 
+.settings__input-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.settings__span {
+  grid-column-start: 1;
+  grid-column-end: span 2;
+}
+
 .setting > .input-group:nth-child(odd):last-of-type {
   grid-column: 1 / span 2;
 }

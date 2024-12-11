@@ -1315,6 +1315,22 @@ fn sanitize_name(path: &Path) -> PathBuf {
     result
 }
 
+#[command]
+fn is_steam_running() -> bool {
+    use sysinfo::System;
+
+    let s = System::new_all();
+
+    let mut process_found = false;
+
+    for _process in s.processes_by_name("steam".as_ref()) {
+        process_found = true;
+        break;
+    }
+
+    process_found
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -1340,7 +1356,8 @@ fn main() {
             create_vdm,
             load_theme,
             open_themes_folder,
-            rename_file
+            rename_file,
+            is_steam_running
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
