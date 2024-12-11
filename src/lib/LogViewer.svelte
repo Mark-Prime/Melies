@@ -33,15 +33,16 @@
         class="tick"
         on:click={() => copy()}
       >
-        <code>
-          playdemo {resp.first_demo};
-        </code>
-        <Fa icon={faCopy} />
+        {#if copyText}
+          <code>Copied to clipboard</code>
+        {:else}
+          <code>
+            playdemo {resp.first_demo};
+          </code>
+          <Fa icon={faCopy} />
+        {/if}
       </button>
     </p>
-    {#if copyText}
-      <p>Copied to clipboard</p>
-    {/if}
   {/if}
 </div>
 
@@ -57,7 +58,7 @@
 
   code {
     font-family: "Source Code Pro", monospace;
-    padding: 1rem;
+    padding: 0 1rem;
   }
 
   .event-viewer {
