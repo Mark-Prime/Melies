@@ -33,6 +33,7 @@ mod logstf;
 mod macros;
 mod settings;
 mod vdms;
+mod tf2;
 
 fn setting_as_bin(setting: &Value) -> i64 {
     if !setting.is_boolean() {
@@ -1331,6 +1332,11 @@ fn is_steam_running() -> bool {
     process_found
 }
 
+#[command]
+fn launch_tf2(demo_name: &str) {
+    tf2::run_tf2(demo_name, &load_settings());
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -1357,7 +1363,8 @@ fn main() {
             load_theme,
             open_themes_folder,
             rename_file,
-            is_steam_running
+            is_steam_running,
+            launch_tf2
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

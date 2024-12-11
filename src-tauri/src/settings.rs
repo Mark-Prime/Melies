@@ -6,10 +6,6 @@ use std::{
     path::Path,
 };
 
-// pub(crate) fn get_settings() -> Value {
-
-// }
-
 #[derive(Debug, Serialize)]
 pub enum RecordToggle {
     // * 0 = off, 1 = on critical hit, 2 = weapon dependant, 3 = ranged only,  4 = melee only, 5 = always
