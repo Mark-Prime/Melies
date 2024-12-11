@@ -56,7 +56,7 @@
   }
 </script>
 
-<button class="btn btn--tert" on:click={toggle}>
+<button class="btn btn--tert btn__launch" on:click={toggle}>
   <Fa icon={faPlay} color={`var(--tert)`} />
   Launch TF2
 </button>
@@ -124,11 +124,16 @@
 </Modal>
 
 <style lang="scss">
-  
   .buttons {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
     padding-top: 1rem;
+  }
+
+  .btn__launch {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 </style>
