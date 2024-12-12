@@ -1337,6 +1337,11 @@ fn launch_tf2(demo_name: &str) {
     tf2::run_tf2(demo_name, &load_settings());
 }
 
+#[command]
+fn batch_record(demo_name: &str) -> Value {
+    tf2::batch_record(demo_name, &load_settings())
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -1364,7 +1369,8 @@ fn main() {
             open_themes_folder,
             rename_file,
             is_steam_running,
-            launch_tf2
+            launch_tf2,
+            batch_record
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

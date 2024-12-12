@@ -60,6 +60,33 @@
     isRunning = false;
   }
 
+  async function batchRecord() {
+    isRunning = true;
+
+    console.log("saving settings", settings);
+
+    await invoke("save_settings", {
+      newSettings: JSON.stringify(settings),
+    });
+
+    console.log("launching tf2", settings);
+
+    while (true) {
+      let resp = await invoke("batch_record", { demoName: startingDemo });
+
+      console.log(resp)
+
+      if (resp === null || resp.complete) {
+        break;
+      }
+
+      startingDemo = resp.next_demo;
+      console.log("next demo", resp.next_demo);
+    }
+
+    isRunning = false;
+  }
+
   onMount(() => {
     loadSettings();
   })
@@ -147,7 +174,7 @@
       {#if isSteamRunning}
         <button on:click={toggle} class="cancel-btn">Cancel</button>
         <button on:click={launchOnce} class="btn btn--sec"> Launch Once </button>
-        <button on:click={() => isRunning = false} class="btn btn--pri" disabled> Batch Record </button>
+        <button on:click={batchRecord} class="btn btn--pri" disabled={outputSettings.method !== "sparklyfx"}> Batch Record </button>
       {/if}
     </div>
   </Modal>
