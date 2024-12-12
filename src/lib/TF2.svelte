@@ -60,6 +60,10 @@
     isRunning = false;
   }
 
+  onMount(() => {
+    loadSettings();
+  })
+
   $: {
     if (enabled) {
       loadSettings();
@@ -73,79 +77,81 @@
   }
 </script>
 
-<button class="btn btn--tert btn__launch" on:click={toggle}>
-  <Fa icon={faPlay} color={`var(--tert)`} />
-  Launch TF2
-</button>
+{#if !["svr", "svr.mov", "svr.mp4"].includes(outputSettings.method)}
+  <button class="btn btn--tert btn__launch" on:click={toggle}>
+    <Fa icon={faPlay} color={`var(--tert)`} />
+    Launch TF2
+  </button>
 
-<Modal color="tert" {toggle} {enabled}>
-  {#if isSteamRunning}
-    {#if !isRunning}
-      <h1>Launch TF2</h1>
-      <div class="setting">
-        <div class="settings__input-group settings__span">
-          <Select
-            title="Starting Demo"
-            bind:value={startingDemo}
-            tooltip={`The first demo to record.`}
-            color="tert"
-          >
-            {#each demos as demo}
-              <option value={demo}>{demo}</option>
-            {/each}
-          </Select>
-        </div>
-        {#if outputSettings.method === "sparklyfx"}
-          <Input
-            title="HLAE .exe Path"
-            bind:value={hlaeSettings.hlae_path}
-            color="tert"
-          />
-          <Input
-            title="SparklyFX .dll Path"
-            bind:value={hlaeSettings.sparklyfx_path}
-            color="tert"
-          />
-        {/if}
-        <div class="settings__input-group settings__span">
-          <Input
-            title="TF2 Launch Options"
-            bind:value={hlaeSettings.launch_options}
-            color="tert"
-          />
-        </div>
-        <Switch
-          title="64Bit"
-          bind:value={hlaeSettings.use_64bit}
-          tooltip="Launches with 64Bit TF2."
-          color="tert"
-        />
-        <Switch
-          title="Automatically playdemo"
-          bind:value={hlaeSettings.playdemo}
-          tooltip="Plays first demo on list as soon as it launches."
-          color="tert"
-        />
-      </div>
-    {:else}
-      <h1>Running Team Fortress 2</h1>
-      {#if hlaeSettings.playdemo}
-        <p>Playing demo: {startingDemo}</p>
-      {/if}
-    {/if}
-  {:else}
-    <h1>Steam is not running</h1>
-    <p>Open Steam before launching TF2.</p>
-  {/if}
-
-  <div class="buttons" slot="footer">
+  <Modal color="tert" {toggle} {enabled}>
     {#if isSteamRunning}
-      <button on:click={toggle} class="cancel-btn">Cancel</button>
-      <button on:click={launchOnce} class="btn btn--sec"> Launch Once </button>
-      <button on:click={() => isRunning = false} class="btn btn--pri" disabled> Batch Record </button>
+      {#if !isRunning}
+        <h1>Launch TF2</h1>
+        <div class="setting">
+          <div class="settings__input-group settings__span">
+            <Select
+              title="Starting Demo"
+              bind:value={startingDemo}
+              tooltip={`The first demo to record.`}
+              color="tert"
+            >
+              {#each demos as demo}
+                <option value={demo}>{demo}</option>
+              {/each}
+            </Select>
+          </div>
+          {#if outputSettings.method === "sparklyfx"}
+            <Input
+              title="HLAE .exe Path"
+              bind:value={hlaeSettings.hlae_path}
+              color="tert"
+            />
+            <Input
+              title="SparklyFX .dll Path"
+              bind:value={hlaeSettings.sparklyfx_path}
+              color="tert"
+            />
+          {/if}
+          <div class="settings__input-group settings__span">
+            <Input
+              title="TF2 Launch Options"
+              bind:value={hlaeSettings.launch_options}
+              color="tert"
+            />
+          </div>
+          <Switch
+            title="64Bit"
+            bind:value={hlaeSettings.use_64bit}
+            tooltip="Launches with 64Bit TF2."
+            color="tert"
+          />
+          <Switch
+            title="Automatically playdemo"
+            bind:value={hlaeSettings.playdemo}
+            tooltip="Plays first demo on list as soon as it launches."
+            color="tert"
+          />
+        </div>
+      {:else}
+        <h1>Running Team Fortress 2</h1>
+        {#if hlaeSettings.playdemo}
+          <p>Playing demo: {startingDemo}</p>
+        {/if}
+      {/if}
+    {:else}
+      <h1>Steam is not running</h1>
+      <p>Open Steam before launching TF2.</p>
     {/if}
-  </div>
-</Modal>
+
+    <div class="buttons" slot="footer">
+      {#if isSteamRunning}
+        <button on:click={toggle} class="cancel-btn">Cancel</button>
+        <button on:click={launchOnce} class="btn btn--sec"> Launch Once </button>
+        <button on:click={() => isRunning = false} class="btn btn--pri" disabled> Batch Record </button>
+      {/if}
+    </div>
+  </Modal>
+{/if}
 
 <style lang="scss">
   .buttons {

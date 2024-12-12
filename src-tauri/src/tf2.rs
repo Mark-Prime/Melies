@@ -24,27 +24,41 @@ pub(crate) fn run_tf2(demo_name: &str, settings: &Value) {
 
   let tf2_str = tf2_path.to_str().unwrap();
 
-  let mut args = vec![
-    "-customLoader",
-    "-noGui",
-    "-autoStart",
-  ];
+  match settings["output"]["method"].as_str().unwrap() {
+    "sparklyfx" => {
+      let args = vec![
+        "-customLoader",
+        "-noGui",
+        "-autoStart",
+        "-hookDllPath",
+        settings["hlae"]["sparklyfx_path"].as_str().unwrap(),
+        "-programPath",
+        tf2_str,
+        "-cmdLine",
+        launch_options.as_str()
+      ];
 
-  if settings["output"]["method"] == "sparklyfx" {
-    args.push("-hookDllPath");
-    args.push(settings["hlae"]["sparklyfx_path"].as_str().unwrap());
+      Command::new(settings["hlae"]["hlae_path"].as_str().unwrap())
+        .args(args)
+        .spawn()
+        .expect("failed to execute process");
+    }
+    "svr" => {
+      return;
+    }
+    "svr.mov" => {
+      return;
+    }
+    "svr.mp4" => {
+      return;
+    }
+    _ => {
+      Command::new(tf2_path)
+        .args(launch_options.as_str().split(" ").collect::<Vec<_>>())
+        .spawn()
+        .expect("failed to execute process");
+    }
   }
-
-  args.push("-programPath");
-  args.push(tf2_str);
-
-  args.push("-cmdLine");
-  args.push(launch_options.as_str());
-
-  Command::new(settings["hlae"]["hlae_path"].as_str().unwrap())
-    .args(args)
-    .spawn()
-    .expect("failed to execute process");
 
   wait_for_tf2(settings);
 }

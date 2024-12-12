@@ -94,7 +94,9 @@
         </div>
 
         <div class="homepage__bottom">
-          <Tf2 on:reload={() => forceReload(true)} />
+          {#key reload}
+            <Tf2 on:reload={() => forceReload(true)} />
+          {/key}
           <div class="homepage__run">
             <button class="btn" on:click={runMelies}> Run </button>
             <Settings on:close={() => forceReload(true)} />
