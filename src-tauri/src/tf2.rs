@@ -1,4 +1,4 @@
-use std::{path::PathBuf, process::Command};
+use std::{path::PathBuf, process::Command, thread};
 use serde_json::{json, Value};
 
 pub(crate) fn run_tf2(demo_name: &str, settings: &Value) {
@@ -115,6 +115,10 @@ fn last_modified_folder(videos_folder: &str) -> Option<std::fs::DirEntry> {
 fn has_audio(path: &PathBuf) -> bool {
     let take_path = format!("{}/take0000", path.to_str().unwrap());
 
+    if !std::fs::metadata(take_path.clone()).is_ok() {
+        return false;
+    }
+
     for entry in std::fs::read_dir(take_path).unwrap() {
         let entry = entry.unwrap();
         if entry.path().extension().unwrap() == "wav" {
@@ -140,6 +144,20 @@ fn get_demo_name(path: &PathBuf) -> String {
     return caps["name"].to_string();
 }
 
+fn delete_folder(path: &PathBuf, try_count: i32) {
+  if std::fs::remove_dir_all(path).is_err() {
+    println!("Failed to delete folder");
+
+    if try_count > 5 {
+      return;
+    }
+    
+    println!("Trying to delete folder again");
+    thread::sleep(std::time::Duration::from_secs(1));
+    delete_folder(path, try_count + 1);
+  }
+}
+
 pub(crate) fn batch_record(demo_name: &str, settings: &Value) -> Value {
   use vdm::VDM;
 
@@ -155,7 +173,8 @@ pub(crate) fn batch_record(demo_name: &str, settings: &Value) -> Value {
 
   if !has_audio(&last_modified) {
     println!("Audio not in recording, deleting");
-    std::fs::remove_dir_all(last_modified).unwrap();
+
+    delete_folder(&last_modified, 0);
 
     last_modified = last_modified_folder(output_folder).unwrap().path();
     clip_name = format!("{}", last_modified.file_name().unwrap().to_str().unwrap());

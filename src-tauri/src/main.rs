@@ -180,6 +180,8 @@ fn end_vdm(vdm: &mut VDM, settings: &Value, next_demoname: String) -> VDM {
 }
 
 fn check_spec(clip: &Clip, commands: String) -> String {
+    let settings = load_settings();
+
     if clip.spec_type == 0 {
         return commands;
     }
@@ -187,8 +189,9 @@ fn check_spec(clip: &Clip, commands: String) -> String {
     let mut new_commands = commands;
 
     new_commands = format!(
-        "{}; spec_player {}; spec_mode {};",
+        "{}; {} {}; spec_mode {};",
         new_commands,
+        ifelse!(settings["recording"]["use_CE_spec"].as_bool().unwrap(), "ce_cameratools_spec_steamid", "spec_player"),
         clip.spec_player,
         ifelse!(clip.spec_type == 1, 4, 5)
     );
@@ -376,8 +379,6 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
             }
             _ => {}
         }
-
-        commands = format!("{} spec_mode 7;", commands);
 
         end_record.start_tick = Some(clip.end_tick);
         end_record.name = "Stop Recording".to_string();

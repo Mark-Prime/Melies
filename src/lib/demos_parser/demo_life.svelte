@@ -42,7 +42,8 @@
         <div class="demo__kill-text">
           <ClassLogo player_class={classConverter(kill.killer_class)} /> killed
           <a
-            href={`#player-${parsedDemo.data.users[kill.victim].name}`}
+            href={`https://rgl.gg/Public/PlayerProfile?p=${parsedDemo.data.users[kill.victim]["steamId64"]}`}
+            target="_blank"
             class={parsedDemo.data.users[kill.victim]["team"] + " tooltip"}
             style="--kills: 0;"
             data-tooltip="Jump To Player"

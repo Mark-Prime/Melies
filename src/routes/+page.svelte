@@ -11,7 +11,7 @@
   import Settings from "$lib/Settings.svelte";
   import VdmEditor from "$lib/VdmEditor/VdmEditor.svelte";
   import DemoManager from "$lib/DemoManager.svelte";
-  import RemuxFootage from "$lib/RemuxFootage.svelte";
+  import SortFootage from "$lib/SortFootage.svelte";
   import { onMount } from "svelte";
   import Tf2 from "$lib/TF2.svelte";
 
@@ -90,7 +90,7 @@
           <br />Advanced Tools
           <VdmEditor on:reload={() => forceReload(true)} />
           <DemoManager on:reload={() => forceReload(true)} />
-          <RemuxFootage on:reload={() => forceReload(true)} />
+          <SortFootage on:reload={() => forceReload(true)} />
         </div>
 
         <div class="homepage__bottom">

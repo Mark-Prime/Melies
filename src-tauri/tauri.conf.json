@@ -41,7 +41,7 @@
   },
   "productName": "Méliès",
   "mainBinaryName": "Méliès",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "identifier": "Méliès",
   "plugins": {},
   "app": {
@@ -56,7 +56,11 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "http://asset.localhost",
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["**"]
+      }
     }
   }
 }

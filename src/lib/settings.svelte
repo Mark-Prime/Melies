@@ -430,47 +430,49 @@ on all players in POV demos."
     /> -->
   </div>
 
-  <h2>
-    {#if outputSettings.method === "sparklyfx"}
-      HLAE
-    {:else if outputSettings.method !== "svr"}
-      TF2
-    {/if}
-  </h2>
+  {#if !["svr", "svr.mov", "svr.mp4"].includes(outputSettings.method)}
+    <h2>
+      {#if outputSettings.method === "sparklyfx"}
+        HLAE
+      {:else}
+        TF2
+      {/if}
+    </h2>
 
-  <div class="setting">
-    {#if outputSettings.method === "sparklyfx"}
-      <Input
-        title="HLAE .exe Path"
-        bind:value={hlaeSettings.hlae_path}
+    <div class="setting">
+      {#if outputSettings.method === "sparklyfx"}
+        <Input
+          title="HLAE .exe Path"
+          bind:value={hlaeSettings.hlae_path}
+          color="pri"
+        />
+        <Input
+          title="SparklyFX .dll Path"
+          bind:value={hlaeSettings.sparklyfx_path}
+          color="pri"
+        />
+      {/if}
+      <div class="settings__input-group settings__span">
+        <Input
+          title="TF2 Launch Options"
+          bind:value={hlaeSettings.launch_options}
+          color="pri"
+        />
+      </div>
+      <Switch
+        title="64Bit"
+        bind:value={hlaeSettings.use_64bit}
+        tooltip="Launches with 64Bit TF2."
         color="pri"
       />
-      <Input
-        title="SparklyFX .dll Path"
-        bind:value={hlaeSettings.sparklyfx_path}
-        color="pri"
-      />
-    {/if}
-    <div class="settings__input-group settings__span">
-      <Input
-        title="TF2 Launch Options"
-        bind:value={hlaeSettings.launch_options}
+      <Switch
+        title="Automatically playdemo"
+        bind:value={hlaeSettings.playdemo}
+        tooltip="Plays first demo on list as soon as it launches."
         color="pri"
       />
     </div>
-    <Switch
-      title="64Bit"
-      bind:value={hlaeSettings.use_64bit}
-      tooltip="Launches with 64Bit TF2."
-      color="pri"
-    />
-    <Switch
-      title="Automatically playdemo"
-      bind:value={hlaeSettings.playdemo}
-      tooltip="Plays first demo on list as soon as it launches."
-      color="pri"
-    />
-  </div>
+  {/if}
 
   <Addons bind:addons={addons} />
 
