@@ -294,12 +294,6 @@ on all players in POV demos."
       bind:value={outputSettings.viewmodel}
       color="sec"
     />
-    <!-- <Switch
-      title="Prevent in-game settings from changing"
-      bind:value={outputSettings.lock}
-      tooltip="Disables commands from certain configs that could overwrite these settings when played."
-      color="sec"
-    /> -->
     <Switch
       title="Minmode Viewmodels"
       bind:value={outputSettings.minmode}
@@ -420,6 +414,13 @@ on all players in POV demos."
       title="Default to Third Person"
       bind:value={recordingSettings.third_person}
       tooltip={`Changes default recording to third person.\nWhen disabled always records in First Person`}
+      color="tert"
+    />
+    <Switch
+      title="Prefer Casting Essentials spec commands"
+      bind:value={recordingSettings.use_ce_spec}
+      tooltip="Using Casting Essentials commands instead of the default ones.
+Useful in STVs when the player could be dead."
       color="tert"
     />
     <!-- <Switch
