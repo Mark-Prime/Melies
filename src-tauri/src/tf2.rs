@@ -1,10 +1,20 @@
 use std::{path::PathBuf, process::Command, thread};
 use serde_json::{json, Value};
 
-pub(crate) fn run_tf2(demo_name: &str, settings: &Value) {
-  println!("Running TF2");
+fn get_tf2_path(settings: &Value) -> PathBuf {
+  let mut tf2_path = PathBuf::from(settings["tf_folder"].as_str().unwrap()).parent().unwrap().to_path_buf();
 
-  let mut launch_options = settings["hlae"]["launch_options"].to_string();
+  if settings["hlae"]["use_64bit"] == true {
+    tf2_path.push("tf_win64.exe");
+  } else {
+    tf2_path.push("tf.exe");
+  }
+
+  return tf2_path;
+}
+
+fn build_launch_options(settings: &Value, demo_name: &str, install: &str) -> String {
+  let mut launch_options = settings["hlae"]["launch_options"].to_string().replace("\"", "").replace("-game tf", "");
 
   if demo_name != "" && settings["hlae"]["playdemo"] == true {
     let mut trimmed_name = demo_name.to_string().replace(".dem", "");
@@ -17,15 +27,27 @@ pub(crate) fn run_tf2(demo_name: &str, settings: &Value) {
     launch_options = format!("{} +playdemo {}", launch_options, trimmed_name);
   }
 
-  let mut tf2_path = PathBuf::from(settings["tf_folder"].as_str().unwrap()).parent().unwrap().to_path_buf();
+  if install != settings["tf_folder"].as_str().unwrap() {
+    let tf2_path = PathBuf::from(settings["tf_folder"].as_str().unwrap()).parent().unwrap().to_path_buf();
+    let tf2_str = tf2_path.to_str().unwrap().to_owned() + "\\";
 
-  if settings["hlae"]["use_64bit"] == true {
-    tf2_path.push("tf_win64.exe");
-  } else {
-    tf2_path.push("tf.exe");
+    let game = install.replace(&tf2_str, "");
+    launch_options = format!("{} -game {}", launch_options, game);
+  } else if settings["hlae"]["use_64bit"] == true {
+    launch_options = format!("{} -game tf", launch_options);
   }
 
-  let tf2_str = tf2_path.to_str().unwrap();
+  return launch_options;
+}
+
+pub(crate) fn run_tf2(demo_name: &str, settings: &Value, install: &str) {
+  println!("Running TF2");
+
+  let launch_options = build_launch_options(settings, demo_name, install);
+
+  println!("Launch options: {}", launch_options);
+
+  let tf2_path = get_tf2_path(settings);
 
   match settings["output"]["method"].as_str().unwrap() {
     "sparklyfx" => {
@@ -36,7 +58,7 @@ pub(crate) fn run_tf2(demo_name: &str, settings: &Value) {
         "-hookDllPath",
         settings["hlae"]["sparklyfx_path"].as_str().unwrap(),
         "-programPath",
-        tf2_str,
+        tf2_path.to_str().unwrap(),
         "-cmdLine",
         launch_options.as_str()
       ];
@@ -158,10 +180,10 @@ fn delete_folder(path: &PathBuf, try_count: i32) {
   }
 }
 
-pub(crate) fn batch_record(demo_name: &str, settings: &Value) -> Value {
+pub(crate) fn batch_record(demo_name: &str, settings: &Value, install: &str) -> Value {
   use vdm::VDM;
 
-  run_tf2(demo_name, settings);
+  run_tf2(demo_name, settings, install);
 
   let output_folder = settings["output"]["folder"].as_str().unwrap();
   let tf_folder = settings["tf_folder"].as_str().unwrap();

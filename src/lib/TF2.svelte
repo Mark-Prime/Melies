@@ -19,6 +19,7 @@
   let outputSettings = {};
 
   let startingDemo = "";
+  let install = "";
 
   let demos = [];
 
@@ -28,6 +29,7 @@
     settings = await invoke("load_settings");
     hlaeSettings = settings.hlae;
     outputSettings = settings.output;
+    install = settings.tf_folder;
   }
 
   async function loadDemos() {
@@ -55,7 +57,7 @@
 
     console.log("launching tf2", settings);
 
-    await invoke("launch_tf2", { demoName: startingDemo });
+    await invoke("launch_tf2", { demoName: startingDemo, install: install });
 
     isRunning = false;
   }
@@ -72,7 +74,7 @@
     console.log("launching tf2", settings);
 
     while (true) {
-      let resp = await invoke("batch_record", { demoName: startingDemo });
+      let resp = await invoke("batch_record", { demoName: startingDemo, install: install });
 
       console.log(resp)
 
@@ -115,17 +117,31 @@
       {#if !isRunning}
         <h1>Launch TF2</h1>
         <div class="setting">
-          <div class="settings__input-group settings__span">
+          <div class={settings.alt_installs.length > 0 ? "settings__input-group settings__span custom-install" : "settings__input-group settings__span"}>
             <Select
               title="Starting Demo"
               bind:value={startingDemo}
               tooltip={`The first demo to record.`}
               color="tert"
             >
+              <option value={""}>None</option>
               {#each demos as demo}
                 <option value={demo}>{demo}</option>
               {/each}
             </Select>
+            {#if settings.alt_installs.length > 0}
+              <Select
+                title="TF2 Install"
+                bind:value={install}
+                tooltip={`The install you want to launch.`}
+                color="tert"
+              >
+                <option value={settings.tf_folder}>Default</option>
+                {#each settings.alt_installs as install}
+                  <option value={install.tf_folder}>{install.name}</option>
+                {/each}
+              </Select>
+            {/if}
           </div>
           {#if outputSettings.method === "sparklyfx"}
             <Input
@@ -192,5 +208,11 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+  }
+
+  .custom-install {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
   }
 </style>

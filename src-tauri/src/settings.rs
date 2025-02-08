@@ -62,6 +62,7 @@ pub(crate) fn build_settings() -> Value {
 pub(crate) fn default_settings() -> Value {
     let defaults = json!({
       "tf_folder": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Team Fortress 2\\tf",
+      "alt_installs": [],
       "clear_events": true,
       "save_backups": true,
       "safe_mode": true,

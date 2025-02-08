@@ -1340,13 +1340,13 @@ fn is_steam_running() -> bool {
 }
 
 #[command]
-fn launch_tf2(demo_name: &str) {
-    tf2::run_tf2(demo_name, &load_settings());
+fn launch_tf2(demo_name: &str, install: &str) {
+    tf2::run_tf2(demo_name, &load_settings(), install);
 }
 
 #[command]
-fn batch_record(demo_name: &str) -> Value {
-    tf2::batch_record(demo_name, &load_settings())
+fn batch_record(demo_name: &str, install: &str) -> Value {
+    tf2::batch_record(demo_name, &load_settings(), install)
 }
 
 fn main() {
