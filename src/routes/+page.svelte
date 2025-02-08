@@ -90,7 +90,7 @@
           <br />Advanced Tools
           <VdmEditor on:reload={() => forceReload(true)} />
           <DemoManager on:reload={() => forceReload(true)} />
-          <SortFootage on:reload={() => forceReload(true)} />
+          <!-- <SortFootage on:reload={() => forceReload(true)} /> -->
         </div>
 
         <div class="homepage__bottom">
