@@ -16,6 +16,7 @@ use std::{env, fs};
 use tauri::command;
 use vdm::action::ActionType;
 use vdm::VDM;
+use trash;
 
 use crate::clip::Clip;
 use crate::demos::{load_demo, scan_demo, scan_for_demos, scan_for_vdms, validate_demos_folder};
@@ -188,10 +189,15 @@ fn check_spec(clip: &Clip, commands: String) -> String {
 
     let mut new_commands = commands;
 
+    let use_ce_spec: bool = match settings["recording"]["use_ce_spec"].as_bool() {
+        Some(val) => val,
+        None => false,
+    };
+
     new_commands = format!(
         "{}; {} {}; spec_mode {};",
         new_commands,
-        ifelse!(settings["recording"]["use_CE_spec"].as_bool().unwrap(), "ce_cameratools_spec_steamid", "spec_player"),
+        ifelse!(use_ce_spec, "ce_cameratools_spec_steamid", "spec_player"),
         clip.spec_player,
         ifelse!(clip.spec_type == 1, 4, 5)
     );
@@ -1188,11 +1194,11 @@ fn delete_demo(file_name: Value) {
     let vdm_path = Path::new(&vdm_file_path);
 
     if path.exists() {
-        fs::remove_file(path).unwrap();
+        trash::delete(path).unwrap();
     }
 
     if vdm_path.exists() {
-        fs::remove_file(vdm_path).unwrap();
+        trash::delete(vdm_path).unwrap();
     }
 }
 
@@ -1209,7 +1215,7 @@ fn delete_vdm(file_name: Value) {
     let path = Path::new(&file_path);
 
     if path.exists() {
-        fs::remove_file(path).unwrap();
+        trash::delete(path).unwrap();
     }
 }
 
