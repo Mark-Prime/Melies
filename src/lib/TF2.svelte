@@ -5,6 +5,7 @@
   import { faPlay } from "@fortawesome/free-solid-svg-icons";
   import { onMount } from "svelte";
   import Select from "$lib/components/Select.svelte";
+  import Datalist from "$lib/components/Datalist.svelte";
   import Input from "$lib/components/Input.svelte";
   import Switch from "$lib/components/Switch.svelte";
   import Fa from "svelte-fa";
@@ -118,7 +119,7 @@
         <h1>Launch TF2</h1>
         <div class="setting">
           <div class={settings.alt_installs.length > 0 ? "settings__input-group settings__span custom-install" : "settings__input-group settings__span"}>
-            <Select
+            <Datalist
               title="Starting Demo"
               bind:value={startingDemo}
               tooltip={`The first demo to record.`}
@@ -128,7 +129,7 @@
               {#each demos as demo}
                 <option value={demo}>{demo}</option>
               {/each}
-            </Select>
+            </Datalist>
             {#if settings.alt_installs.length > 0}
               <Select
                 title="TF2 Install"
