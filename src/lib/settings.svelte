@@ -2,7 +2,7 @@
   // @ts-ignore
   import { invoke } from "@tauri-apps/api/core";
   import Modal from "$lib/components/Modal.svelte";
-  import { faGear } from "@fortawesome/free-solid-svg-icons";
+  import { faGear, faPlus, faMinus } from "@fortawesome/free-solid-svg-icons";
   import Fa from "svelte-fa";
   import { createEventDispatcher } from "svelte";
   import Input from "$lib/components/Input.svelte";
@@ -43,6 +43,19 @@
     toggle();
   }
 
+  function addInstall() {
+    settings.alt_installs = [...settings.alt_installs, {
+      name: "",
+      tf_folder: "",
+    }]
+  }
+
+function removeInstall(install) {
+  settings.alt_installs.splice(install, 1);
+
+  settings.alt_installs = settings.alt_installs
+}
+
   $: {
     if (enabled) {
       loadSettings();
@@ -66,6 +79,30 @@
         bind:value={settings.tf_folder}
         tooltip="The full filepath to your \tf folder within the Team Fortress 2 game files."
       />
+    </div>
+    {#each settings.alt_installs || [] as install, index}
+      <div class="settings__input-group settings__span install-group">
+        <Input
+          title="Install Name"
+          bind:value={install.name}
+          tooltip="The full filepath to your \tf folder within the Team Fortress 2 game files."
+        />
+      <Input
+          title="Custom \tf Folder Path"
+          bind:value={install.tf_folder}
+          tooltip="The full filepath to your \tf folder within the Team Fortress 2 game files."
+        />
+        <button class="cancel-btn" on:click={() => removeInstall(index)}>
+          <Fa icon={faMinus} color={`var(--pri)`} />
+        </button>
+      </div>
+    {/each}
+    <div class="btn-container">
+      <button class="btn-custom-install" on:click={addInstall}>
+        <Fa icon={faPlus} color={`var(--pri)`} />
+        Add Custom Install
+      </button>
+      <a href="https://www.youtube.com/watch?v=lH4scK3uB_s" target="_blank">What's this?</a>
     </div>
     <div class="settings__input-group settings__span">
       <Input
@@ -204,7 +241,6 @@ on all players in POV demos."
 
         <div class="setting">
           {#each Object.keys(automationSettings.classes) as class_name}
-            
             <Switch
               title="Record {class_name[0].toUpperCase() + class_name.slice(1)}"
               bind:value={automationSettings.classes[class_name]}
@@ -509,5 +545,36 @@ Useful in STVs when the player could be dead."
     display: flex;
     align-items: center;
     justify-content: center;
+
+    &-custom-install {
+      padding: 0.3rem 0.5rem;
+      height: 100%;
+      width: fit-content;
+
+      gap: .5rem;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    &-container {
+      width: fit-content;
+
+      gap: .5rem;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+    }
+  }
+
+  .install-group {
+    display: grid;
+    grid-template-columns: .5fr 1fr max-content;
+    gap: 1rem;
+    
+    align-items: end;
   }
 </style>
