@@ -1349,6 +1349,69 @@ fn batch_record(demo_name: &str, install: &str) -> Value {
     tf2::batch_record(demo_name, &load_settings(), install)
 }
 
+#[tauri::command]
+fn load_files(folder: &str) -> Value {
+    let path = std::path::Path::new(folder);
+    if !path.exists() {
+        return json!({});
+    }
+
+    let entries = std::fs::read_dir(path).unwrap();
+
+    let mut videos: Vec<Value> = vec![];
+
+    for entry in entries {
+        let path = entry.unwrap().path();
+        if !path.is_dir() {
+            continue;
+        }
+
+        let has_layers = std::fs::read_dir(path.to_str().unwrap().to_string() + "\\take0000");
+
+        let layers = match has_layers {
+            Ok(layers) => layers,
+            Err(_) => continue
+        };
+
+        let mut video_layers = json!({});
+
+        for layer in layers {
+            let path = layer.unwrap().path();
+            if path.is_dir() {
+                continue;
+            }
+
+            let file_name = path.file_name().unwrap().to_str().unwrap();
+
+            if !matches!(file_name.rsplit('.').next(), Some("mp4" | "avi" | "mkv")) {
+                continue;
+            }
+
+            video_layers[file_name.replace(".mp4", "").replace(".avi", "").replace(".mkv", "")] = json!(path.to_str().unwrap().to_string());
+        }
+
+        let video: Value = json!({
+            "name": path.file_name().unwrap().to_str().unwrap(),
+            "path": path.to_str().unwrap(),
+            "layers": video_layers
+        });
+
+        videos.push(video);
+    }
+
+    json!(videos)
+}
+
+#[tauri::command]
+fn open_file(path: &str) {
+    opener::open(path).unwrap();
+}
+
+#[tauri::command]
+fn delete_file(path: &str) {
+    trash::delete(path).unwrap();
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -1377,7 +1440,10 @@ fn main() {
             rename_file,
             is_steam_running,
             launch_tf2,
-            batch_record
+            batch_record,
+            load_files,
+            open_file,
+            delete_file
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

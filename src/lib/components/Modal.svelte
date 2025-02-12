@@ -10,6 +10,7 @@
   export let small = false;
   export let grow = false;
   export let wide = false;
+  export let max_width = null;
 
   $: {
     if (enabled) {
@@ -32,7 +33,7 @@
       class:modal__card--tall={tall}
       class:modal__card--grow={grow}
       class:modal__card--wide={wide}
-      style={`--color: var(--${color}); --color-con: var(--${color}-con);`}
+      style={`--color: var(--${color}); --color-con: var(--${color}-con); ${max_width && `max-width: ${max_width}`};`}
     >
       {#if $$slots.header}
         <div class="modal__header">
