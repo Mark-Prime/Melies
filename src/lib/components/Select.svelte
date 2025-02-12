@@ -27,7 +27,7 @@
     </label>
     <select
       bind:value
-      id="method"
+      id={key}
       class={`settings__input input--${color}`}
       on:change={change}
       on:input={change}
