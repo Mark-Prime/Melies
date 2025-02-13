@@ -1,4 +1,4 @@
-use std::{path::PathBuf, process::Command, thread};
+use std::{path::{Path, PathBuf}, process::Command, thread};
 use serde_json::{json, Value};
 
 fn get_tf2_path(settings: &Value) -> PathBuf {
@@ -49,21 +49,34 @@ pub(crate) fn run_tf2(demo_name: &str, settings: &Value, install: &str) {
 
   let tf2_path = get_tf2_path(settings);
 
+  let sparkly_path = match settings["hlae"]["use_64bit"].as_bool().unwrap() {
+    true => settings["hlae"]["sparklyfx_path"].as_str().unwrap().replace("xsdk-base.dll", "xsdk-base64.dll"),
+    false => settings["hlae"]["sparklyfx_path"].as_str().unwrap().replace("xsdk-base64.dll", "xsdk-base.dll"),
+  };
+
+  let hlae = settings["hlae"]["hlae_path"].as_str().unwrap();
+  let hlae_dll = hlae.to_owned().replace("HLAE.exe", "AfxHookSource.dll");
+
   match settings["output"]["method"].as_str().unwrap() {
     "sparklyfx" => {
-      let args = vec![
+      let mut args = vec![
         "-customLoader",
         "-noGui",
         "-autoStart",
         "-hookDllPath",
-        settings["hlae"]["sparklyfx_path"].as_str().unwrap(),
+        &sparkly_path,
         "-programPath",
         tf2_path.to_str().unwrap(),
         "-cmdLine",
         launch_options.as_str()
       ];
 
-      Command::new(settings["hlae"]["hlae_path"].as_str().unwrap())
+      if !settings["hlae"]["use_64bit"].as_bool().unwrap() && Path::new(&hlae_dll).exists() {
+        args.push("-hookDllPath");
+        args.push(&hlae_dll);
+      }
+
+      Command::new(hlae)
         .args(args)
         .spawn()
         .expect("failed to execute process");
@@ -93,9 +106,9 @@ fn wait_for_tf2(settings: &Value) -> bool {
   use std::{thread, time};
 
   loop {
-    let five_sec = time::Duration::from_secs(1);
+    let wait_time = time::Duration::from_secs(1);
 
-    thread::sleep(five_sec);
+    thread::sleep(wait_time);
 
     let s = System::new_all();
 
