@@ -30,21 +30,12 @@
     >
       {title}
     </label>
-    <!-- <input
-      list={key + '_list'} 
-      id={key} 
-      name={key} 
-      class={`settings__input input--${color}`}
-      bind:value
-      onchange={change}
-      oninput={change}
-    />
-    <datalist id={key + '_list'}>
-      {@render children?.()}
-    </datalist> -->
-    
     <div class={`autocomplete--${color}`}>
-      <AutoComplete {items} bind:selectedItem={value} />
+      <AutoComplete 
+        {items} 
+        bind:selectedItem={value} 
+        onChange={change}
+      />
     </div>
   </div>
 {/if}
