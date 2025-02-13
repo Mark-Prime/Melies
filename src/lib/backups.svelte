@@ -8,8 +8,8 @@
 
   const dispatch = createEventDispatcher();
 
-  let enabled = false;
-  let resp = {};
+  let enabled = $state(false);
+  let resp = $state({});
   let toggle = () => (enabled = !enabled);
 
   async function loadBackups() {
@@ -27,7 +27,7 @@
   }
 </script>
 
-<button class="btn btn--sec" on:click={toggle}>
+<button class="btn btn--sec" onclick={toggle}>
   <Fa icon={faFloppyDisk} color={`var(--sec)`} />
   Load Backup
 </button>
@@ -42,7 +42,7 @@
         <p>{backup.file_name}</p>
         <p>{dayjs.unix(backup.created.secs_since_epoch).format('MMM DD, YYYY')}</p>
         <div class="add_demo">
-          <button on:click={reloadBackup(backup)}>Load</button>
+          <button onclick={reloadBackup(backup)}>Load</button>
         </div>
       </div>
     {/each}

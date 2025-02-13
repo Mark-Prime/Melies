@@ -1,12 +1,17 @@
 <script>
-  export let value;
-  export let title = null;
-  export let key = title.toLowerCase().replace(/ /g, "_") || "select";
-  export let color = "pri";
-  export let display = true;
-  export let tooltip = "";
-
+  import AutoComplete from "simple-svelte-autocomplete"
   import { createEventDispatcher } from "svelte";
+  /** @type {{value: any, title?: any, key?: any, color?: string, display?: boolean, tooltip?: string, children?: import('svelte').Snippet}} */
+  let {
+    value = $bindable(),
+    title = null,
+    key = title.toLowerCase().replace(/ /g, "_") || "select",
+    color = "pri",
+    display = true,
+    tooltip = "",
+    children,
+    items = []
+  } = $props();
 
   const dispatch = createEventDispatcher();
 
@@ -25,18 +30,22 @@
     >
       {title}
     </label>
-    <input
+    <!-- <input
       list={key + '_list'} 
       id={key} 
       name={key} 
       class={`settings__input input--${color}`}
       bind:value
-      on:change={change}
-      on:input={change}
+      onchange={change}
+      oninput={change}
     />
     <datalist id={key + '_list'}>
-      <slot></slot>
-    </datalist>
+      {@render children?.()}
+    </datalist> -->
+    
+    <div class={`autocomplete--${color}`}>
+      <AutoComplete {items} bind:selectedItem={value} />
+    </div>
   </div>
 {/if}
 

@@ -4,10 +4,10 @@
 
   import Demo from "./demo.svelte";
 
-  let settings = {};
-  let demos = [];
+  let settings = $state({});
+  let demos = $state([]);
   let resp = "";
-  let loading = true;
+  let loading = $state(true);
 
   async function loadSettings() {
     settings = await invoke("load_settings");

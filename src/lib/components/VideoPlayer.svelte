@@ -2,8 +2,9 @@
   import { convertFileSrc } from "@tauri-apps/api/core";
   import { onMount } from 'svelte';
 
-  export let video;
-  let videoElement;
+  /** @type {{video: any}} */
+  let { video } = $props();
+  let videoElement = $state();
 
   onMount(() => {
     videoElement?.play()

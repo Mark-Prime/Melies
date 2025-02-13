@@ -1,4 +1,6 @@
 <script>
+  import { run } from 'svelte/legacy';
+
   import { invoke } from "@tauri-apps/api/core";
   import { createEventDispatcher } from "svelte";
   import Modal from "$lib/components/Modal.svelte";
@@ -12,17 +14,17 @@
 
   const dispatch = createEventDispatcher();
 
-  let enabled = false;
-  let isSteamRunning = false;
-  let isRunning = false;
-  let settings = {};
-  let hlaeSettings = {};
-  let outputSettings = {};
+  let enabled = $state(false);
+  let isSteamRunning = $state(false);
+  let isRunning = $state(false);
+  let settings = $state({});
+  let hlaeSettings = $state({});
+  let outputSettings = $state({});
 
-  let startingDemo = "";
-  let install = "";
+  let startingDemo = $state("");
+  let install = $state("");
 
-  let demos = [];
+  let demos = $state([]);
 
   let toggle = () => (enabled = !enabled);
 
@@ -94,7 +96,7 @@
     loadSettings();
   })
 
-  $: {
+  run(() => {
     if (enabled) {
       loadSettings();
       loadDemos();
@@ -104,11 +106,11 @@
     if (!enabled) {
       dispatch("close");
     }
-  }
+  });
 </script>
 
 {#if !["svr", "svr.mov", "svr.mp4"].includes(outputSettings.method)}
-  <button class="btn btn--tert btn__launch" on:click={toggle}>
+  <button class="btn btn--tert btn__launch" onclick={toggle}>
     <Fa icon={faPlay} color={`var(--tert)`} />
     Launch TF2
   </button>
@@ -124,12 +126,8 @@
               bind:value={startingDemo}
               tooltip={`The first demo to record.`}
               color="tert"
-            >
-              <option value={""}>None</option>
-              {#each demos as demo}
-                <option value={demo}>{demo}</option>
-              {/each}
-            </Datalist>
+              items={demos}
+            ></Datalist>
             {#if settings.alt_installs.length > 0}
               <Select
                 title="TF2 Install"
@@ -187,13 +185,15 @@
       <p>Open Steam before launching TF2.</p>
     {/if}
 
-    <div class="buttons" slot="footer">
-      {#if isSteamRunning}
-        <button on:click={toggle} class="cancel-btn">Cancel</button>
-        <button on:click={launchOnce} class="btn btn--sec"> Launch Once </button>
-        <button on:click={batchRecord} class="btn btn--pri" disabled={outputSettings.method !== "sparklyfx"}> Batch Record </button>
-      {/if}
-    </div>
+    {#snippet footer()}
+        <div class="buttons" >
+        {#if isSteamRunning}
+          <button onclick={toggle} class="cancel-btn">Cancel</button>
+          <button onclick={launchOnce} class="btn btn--sec"> Launch Once </button>
+          <button onclick={batchRecord} class="btn btn--pri" disabled={outputSettings.method !== "sparklyfx"}> Batch Record </button>
+        {/if}
+      </div>
+    {/snippet}
   </Modal>
 {/if}
 

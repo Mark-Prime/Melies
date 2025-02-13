@@ -3,9 +3,10 @@
   import Fa from "svelte-fa";
   import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 
-  export let resp;
+  /** @type {{resp: any}} */
+  let { resp } = $props();
 
-  let copyText = "";
+  let copyText = $state("");
 
   function copy() {
     writeText(`playdemo ${resp.first_demo};`)
@@ -31,7 +32,7 @@
       <br />
       <button
         class="tick"
-        on:click={() => copy()}
+        onclick={() => copy()}
       >
         {#if copyText}
           <code>Copied to clipboard</code>

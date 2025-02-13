@@ -10,10 +10,10 @@
 
   import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 
-  export let demo;
-  export let settings;
+  /** @type {{demo: any, settings: any}} */
+  let { demo, settings = $bindable() } = $props();
 
-  let demoEvents = [];
+  let demoEvents = $state([]);
 
   async function loadSettings() {
     settings = await invoke("load_settings");
@@ -63,7 +63,7 @@
     }
   }
 
-  let open = true;
+  let open = $state(true);
 
   function toggle() {
     open = !open;
@@ -137,7 +137,7 @@
 </script>
 
 <div class="demo-display">
-  <button class="demo" on:click={toggle}>
+  <button class="demo" onclick={toggle}>
     {#if open}
       <Fa icon={faMinus} color={`var(--err)`} />
     {:else}
@@ -162,7 +162,7 @@
                 class="tick"
                 data-tooltip={`${tickToTime(event.start)}`}
                 style={`--kills: 0;`}
-                on:click={() => writeText(`demo_gototick ${event.start}`)}
+                onclick={() => writeText(`demo_gototick ${event.start}`)}
               >
                 <span
                   class="tooltip"
@@ -175,7 +175,7 @@
               to
               <button
                 class="tick"
-                on:click={() => writeText(`demo_gototick ${event.end}`)}
+                onclick={() => writeText(`demo_gototick ${event.end}`)}
               >
                 <span
                   class="tooltip"

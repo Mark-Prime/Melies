@@ -57,7 +57,7 @@
     </div>
   </div>
   <p>To install a new theme, click the button below and drag a theme.json file into this folder.</p>
-  <button on:click={() => invoke("open_themes_folder")}>Install Theme</button>
+  <button onclick={() => invoke("open_themes_folder")}>Install Theme</button>
 </Collapse>
 
 <style>

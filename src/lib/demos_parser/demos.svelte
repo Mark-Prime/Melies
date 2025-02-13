@@ -1,4 +1,6 @@
 <script>
+  import { run } from 'svelte/legacy';
+
   import { invoke } from "@tauri-apps/api/core";
   import {
     faWandMagicSparkles,
@@ -21,8 +23,8 @@
 
   const dispatch = createEventDispatcher();
 
-  let index = 0,
-    total = 0;
+  let index = $state(0),
+    total = $state(0);
 
   import Life from "./demo_life.svelte";
   import KillstreakPointer from "./demo_ks_pointer.svelte";
@@ -30,8 +32,8 @@
   import KillPointerList from "./demo_med_picks.svelte";
   import AllKillPointers from "./demo_all_med_picks.svelte";
 
-  let isDragging = false;
-  let enabled = false;
+  let isDragging = $state(false);
+  let enabled = $state(false);
   let toggle = () => (enabled = !enabled);
 
   getCurrentWebview().onDragDropEvent((e) => {
@@ -61,23 +63,23 @@
     }
   })
 
-  let resp = { loaded: false, loading: false };
-  let parsedDemo = { loaded: false, loading: false };
+  let resp = $state({ loaded: false, loading: false });
+  let parsedDemo = $state({ loaded: false, loading: false });
   let selected = [];
   let bluTeam = [];
   let redTeam = [];
-  let displayLives = false;
-  let displayAssists = false;
-  let displayPlayers = false;
+  let displayLives = $state(false);
+  let displayAssists = $state(false);
+  let displayPlayers = $state(false);
   let isShiftDown = false;
-  let isPovDemo = false;
-  let displayChat = false;
+  let isPovDemo = $state(false);
+  let displayChat = $state(false);
   let povId = 0;
   let lastSelected = 0;
 
-  let currentDemo = "";
+  let currentDemo = $state("");
 
-  let settings = {};
+  let settings = $state({});
   let recordingSettings = {};
 
   let filterAirshots = (k) => isAirshot(parsedDemo, k, settings);
@@ -235,11 +237,11 @@
     toggle();
   }
 
-  $: {
+  run(() => {
     console.log("Modal Enabled:", enabled);
     loadDemos();
     loadSettings();
-  }
+  });
 
   function limitStringLength(str, len) {
     if (str.length < len) {
@@ -1222,9 +1224,9 @@
   }
 </script>
 
-<svelte:window on:keydown={on_key_down} on:keyup={on_key_up} />
+<svelte:window onkeydown={on_key_down} onkeyup={on_key_up} />
 
-<button class="btn btn--tert" on:click={toggle}>
+<button class="btn btn--tert" onclick={toggle}>
   <Fa icon={faWandMagicSparkles} color={`var(--tert)`} />
   Scan Demos
 </button>
@@ -1312,7 +1314,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
               <input
                 type="checkbox"
                 bind:checked={displayLives}
-                on:changed={refreshList}
+                onchanged={refreshList}
               />
               <span class="slider round slider--tert"></span>
             </label>
@@ -1323,7 +1325,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
               <input
                 type="checkbox"
                 bind:checked={displayAssists}
-                on:changed={refreshList}
+                onchanged={refreshList}
               />
               <span class="slider round slider--tert"></span>
             </label>
@@ -1334,7 +1336,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
               <input
                 type="checkbox"
                 bind:checked={displayPlayers}
-                on:changed={refreshList}
+                onchanged={refreshList}
               />
               <span class="slider round slider--tert"></span>
             </label>
@@ -1343,8 +1345,8 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
         </div>
         {#if settings.automation.enabled}
           <div class="buttons">
-            <button class="btn" on:click={recordAll}> Record All Lives </button>
-            <button class="btn" on:click={recordAllHighlights}>
+            <button class="btn" onclick={recordAll}> Record All Lives </button>
+            <button class="btn" onclick={recordAllHighlights}>
               Record All Highlights
             </button>
           </div>
@@ -1360,7 +1362,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                   <div class="flex-start align-center">
                     {#if parsedDemo.data.users[player].hide}
                       <button
-                        on:click={() =>
+                        onclick={() =>
                           (parsedDemo.data.users[player].hide = false)}
                         class="hide-toggle"
                       >
@@ -1368,7 +1370,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                       </button>
                     {:else}
                       <button
-                        on:click={() =>
+                        onclick={() =>
                           (parsedDemo.data.users[player].hide = true)}
                         class="cancel-btn hide-toggle"
                       >
@@ -1416,7 +1418,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                     {/each}
                     <button
                       class="full_demo"
-                      on:click={() => recordEntireDemo(player)}
+                      onclick={() => recordEntireDemo(player)}
                     >
                       Record entire demo
                     </button>
@@ -1506,13 +1508,13 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
           <div class="section-title-toggle chat__title">
             {#if displayChat}
               <button
-                on:click={() => (displayChat = false)}
+                onclick={() => (displayChat = false)}
                 class="cancel-btn hide-toggle"
               >
                 -
               </button>
             {:else}
-              <button on:click={() => (displayChat = true)} class="hide-toggle">
+              <button onclick={() => (displayChat = true)} class="hide-toggle">
                 +
               </button>
             {/if}
@@ -1569,22 +1571,24 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
     <h1>LOADING DEMOS</h1>
   {/if}
 
-  <div class="buttons" slot="footer">
-    {#if resp.loaded && !isDragging}
-      {#if currentDemo === ""}
-        <button class="cancel-btn" on:click={closeModal}>Cancel</button>
-        <button on:click={parseDemos}>Parse</button>
-      {:else if !parsedDemo.err_text}
-        {#if !parsedDemo.loading}
-          <button class="cancel-btn" on:click={closeModal}>Cancel</button>
-          <button on:click={nextDemo}>Save</button>
+  {#snippet footer()}
+    <div class="buttons" >
+      {#if resp.loaded && !isDragging}
+        {#if currentDemo === ""}
+          <button class="cancel-btn" onclick={closeModal}>Cancel</button>
+          <button onclick={parseDemos}>Parse</button>
+        {:else if !parsedDemo.err_text}
+          {#if !parsedDemo.loading}
+            <button class="cancel-btn" onclick={closeModal}>Cancel</button>
+            <button onclick={nextDemo}>Save</button>
+          {/if}
+        {:else if parsedDemo.err_text}
+          <button class="cancel-btn" onclick={closeModal}>Cancel</button>
+          <button onclick={nextDemo}>Skip</button>
         {/if}
-      {:else if parsedDemo.err_text}
-        <button class="cancel-btn" on:click={closeModal}>Cancel</button>
-        <button on:click={nextDemo}>Skip</button>
       {/if}
-    {/if}
-  </div>
+    </div>
+  {/snippet}
 </Modal>
 
 <style lang="scss">

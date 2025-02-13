@@ -1,4 +1,6 @@
 <script>
+  import { run } from 'svelte/legacy';
+
   import { createEventDispatcher } from "svelte";
   import {
     faFileCircleMinus,
@@ -20,25 +22,20 @@
 
   let settings = {};
 
-  let enabled = false;
-  let renameModalEnabled = false;
-  let resp = { loaded: false };
-  let mapList = [];
-  let anySelected = false;
+  let enabled = $state(false);
+  let renameModalEnabled = $state(false);
+  let resp = $state({ loaded: false });
+  let mapList = $state([]);
+  let anySelected = $state(false);
 
-  let renameNameInput;
-  let renameDemo = null;
+  let renameNameInput = $state();
+  let renameDemo = $state(null);
   let renameDefault = "{date}_{time}_{map}_{ticks}";
 
-  let searchFilter = "";
-  let mapFilter = "";
-  let vdmFilter = null;
+  let searchFilter = $state("");
+  let mapFilter = $state("");
+  let vdmFilter = $state(null);
 
-  $: {
-    let filters = { map: mapFilter, search: searchFilter, vdm: vdmFilter };
-
-    refreshList();
-  }
 
   async function loadDemos() {
     settings = await invoke("load_settings");
@@ -259,9 +256,14 @@
       loadDemos();
     });
   }
+  run(() => {
+    let filters = { map: mapFilter, search: searchFilter, vdm: vdmFilter };
+
+    refreshList();
+  });
 </script>
 
-<button class="btn btn--sec" on:click={toggle}>
+<button class="btn btn--sec" onclick={toggle}>
   <Fa icon={faListCheck} color={`var(--sec)`} />
   Demo Manager
 </button>
@@ -284,25 +286,25 @@
       </Select>
     </div>
     <div>
-      <button on:click={selectAll}> Select All </button>
-      <button disabled={!anySelected} on:click={() => selectAll(false)}>
+      <button onclick={selectAll}> Select All </button>
+      <button disabled={!anySelected} onclick={() => selectAll(false)}>
         Deselect All
       </button>
-      <button disabled={!anySelected} on:click={createVdms}>
+      <button disabled={!anySelected} onclick={createVdms}>
         <Fa icon={faFileCirclePlus} color={`var(--pri)`} />
         Create VDMs
       </button>
-      <button disabled={!anySelected} on:click={deleteVdms}>
+      <button disabled={!anySelected} onclick={deleteVdms}>
         <Fa icon={faFileCircleMinus} color={`var(--pri)`} />
         Delete VDMs
       </button>
-      <button disabled={!anySelected} on:click={deleteDemos}>
+      <button disabled={!anySelected} onclick={deleteDemos}>
         <Fa icon={faTrash} color={`var(--pri)`} />
         Delete Demos
       </button>
       <button
         disabled={!anySelected}
-        on:click={() => (openRenameModal())}
+        onclick={() => (openRenameModal())}
       >
         <Fa icon={faPen} color={`var(--pri)`} />
         Mass Rename
@@ -372,10 +374,11 @@
                 name="#{demo.name}-select"
                 class="icon checkbox tooltip tooltip--left"
                 data-tooltip={`Select demo.`}
-                on:click={() => toggleSelected(demo)}
-                on:keydown={() => toggleSelected(demo)}
+                onclick={() => toggleSelected(demo)}
+                onkeydown={() => toggleSelected(demo)}
                 tabindex="-1"
                 role="button"
+                href="/"
               >
                 {#if demo.selected}
                   <Fa icon={faSquareCheck} color={`var(--pri)`} />
@@ -390,10 +393,11 @@
                 name="#{demo.name}-rename"
                 class="icon checkbox tooltip tooltip--left"
                 data-tooltip={`Rename demo.`}
-                on:click={() => openRenameModal(demo)}
-                on:keydown={() => openRenameModal(demo)}
+                onclick={() => openRenameModal(demo)}
+                onkeydown={() => openRenameModal(demo)}
                 tabindex="-1"
                 role="button"
+                href="/"
               >
                 <Fa
                   icon={faPen}
@@ -405,10 +409,11 @@
                   name="#{demo.name}-delete_vdm"
                   class="icon checkbox tooltip tooltip--left"
                   data-tooltip={`Delete VDM.`}
-                  on:click={async () => await delete_vdm(demo.name)}
-                  on:keydown={async () => await delete_vdm(demo.name)}
+                  onclick={async () => await delete_vdm(demo.name)}
+                  onkeydown={async () => await delete_vdm(demo.name)}
                   tabindex="-1"
                   role="button"
+                  href="/"
                 >
                   <Fa icon={faFileCircleMinus} color={`var(--err)`} />
                 </a>
@@ -417,10 +422,11 @@
                   name="#{demo.name}-create_vdm"
                   class="icon checkbox tooltip tooltip--left"
                   data-tooltip={`Create blank VDM.`}
-                  on:click={async () => await create_vdm(demo.name)}
-                  on:keydown={async () => await create_vdm(demo.name)}
+                  onclick={async () => await create_vdm(demo.name)}
+                  onkeydown={async () => await create_vdm(demo.name)}
                   tabindex="-1"
                   role="button"
+                  href="/"
                 >
                   <Fa icon={faFileCirclePlus} color="var(--pri)" />
                 </a>
@@ -430,11 +436,12 @@
                 class="icon checkbox tooltip tooltip--left"
                 data-tooltip={`Delete this demo.`}
                 style="--kills: 0;"
-                on:click={async () => await delete_demo(demo.name, demo.hasVdm)}
-                on:keydown={async () =>
+                onclick={async () => await delete_demo(demo.name, demo.hasVdm)}
+                onkeydown={async () =>
                   await delete_demo(demo.name, demo.hasVdm)}
                 tabindex="-1"
                 role="button"
+                href="/"
               >
                 <Fa icon={faTrash} color={`var(--err)`} />
               </a>
@@ -503,11 +510,11 @@
       <div class="buttons">
         <button
           class="cancel-btn"
-          on:click={() => (renameModalEnabled = !renameModalEnabled)}
+          onclick={() => (renameModalEnabled = !renameModalEnabled)}
         >
           Cancel
         </button>
-        <button on:click={renameDemos} disabled={!renameNameInput}>
+        <button onclick={renameDemos} disabled={!renameNameInput}>
           {renameDemo ? `Rename` : `Mass Rename`}
         </button>
       </div>

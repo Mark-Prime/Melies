@@ -5,7 +5,7 @@
 
   const dispatch = createEventDispatcher();
 
-  let enabled = false;
+  let enabled = $state(false);
 
   function toggle() {
     enabled = !enabled;
@@ -222,18 +222,18 @@
   }
 </script>
 
-<button on:click={toggle}> Add Action </button>
+<button onclick={toggle}> Add Action </button>
 <Modal color="sec" {toggle} {enabled} small>
   <h4>Basic</h4>
   <div class="buttons">
     {#each ["SkipAhead", "StopPlayback", "PlayCommands", "ScreenFadeStart", "TextMessageStart", "PlayCDTrackStart", "PlaySoundStart", "Pause", "ChangePlaybackRate", "ZoomFov"] as factory}
-      <button class="btn" on:click={() => add(factory)}>{factory}</button>
+      <button class="btn" onclick={() => add(factory)}>{factory}</button>
     {/each}
   </div>
   <h4>Presets</h4>
   <div class="buttons">
     {#each ["Record Clip", "Play Demo"] as factory}
-      <button class="btn" on:click={() => add(factory)}>{factory}</button>
+      <button class="btn" onclick={() => add(factory)}>{factory}</button>
     {/each}
   </div>
 </Modal>

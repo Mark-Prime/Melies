@@ -9,16 +9,16 @@
   import { filter } from "mathjs";
 
   let settings = {};
-  let videos = [];
+  let videos = $state([]);
   let deleted = [];
   let saved = [];
-  let index = 0;
-  let folder = "";
+  let index = $state(0);
+  let folder = $state("");
 
   const dispatch = createEventDispatcher();
 
   const forceUpdate = async (_) => {};
-	let doRerender = 0;
+	let doRerender = $state(0);
 
   async function load_files() {
     videos = await invoke("load_files", { folder });
@@ -37,7 +37,7 @@
     await invoke("open_file", { path })
   }
 
-  let enabled = false;
+  let enabled = $state(false);
 
   function toggle() {
     enabled = !enabled;
@@ -101,7 +101,7 @@
   let videoElement;
 </script>
   
-<button class="btn btn--tert" on:click={toggle}>
+<button class="btn btn--tert" onclick={toggle}>
   <Fa icon={faFileVideo} color={`var(--tert)`} />
   Sort Footage
 </button>
@@ -114,7 +114,7 @@
         color="tert"
         bind:value={folder}
       />
-      <button class="btn btn--tert" on:click={load_files}>
+      <button class="btn btn--tert" onclick={load_files}>
         Open
       </button>
     </div>
@@ -126,23 +126,23 @@
           <div class="side-buttons">
             <div class="layers">
               Open Layer
-              <button on:click={() => open_file(videos[index].layers.video)} class="btn">Video</button>
+              <button onclick={() => open_file(videos[index].layers.video)} class="btn">Video</button>
               {#each Object.keys(videos[index]?.layers).filter((layer) => layer !== "video") as layer}
-                <button on:click={() => open_file(videos[index].layers[layer])} class="btn btn--sec">{layer}</button>
+                <button onclick={() => open_file(videos[index].layers[layer])} class="btn btn--sec">{layer}</button>
               {/each} 
 
               <div class="buttons">
-                <button class="btn btn--tert" on:click={() => increment(-1)}>Prev</button>
-                <button class="btn btn--tert" on:click={() => increment(1)}>Next</button>
+                <button class="btn btn--tert" onclick={() => increment(-1)}>Prev</button>
+                <button class="btn btn--tert" onclick={() => increment(1)}>Next</button>
               </div>
 
               <div>{index + 1}/{videos.length}</div>
             </div>
 
             <div class="layers">
-              <button class="btn" on:click={() => save_files(videos[index])}>Save</button>
-              <button class="cancel-btn" on:click={() => delete_files(videos[index])}>Delete</button>
-              <button class="cancel-btn" on:click={() => close()}>Cancel</button>
+              <button class="btn" onclick={() => save_files(videos[index])}>Save</button>
+              <button class="cancel-btn" onclick={() => delete_files(videos[index])}>Delete</button>
+              <button class="cancel-btn" onclick={() => close()}>Cancel</button>
             </div>
           </div>
         </div>
@@ -150,11 +150,13 @@
     {/await}
   </div>
 
-  <div slot="footer">
-    {#if videos.length == 0}
-      <button on:click={toggle} class="cancel-btn">Cancel</button>
-    {/if}
-  </div>
+  {#snippet footer()}
+    <div >
+      {#if videos.length == 0}
+        <button onclick={toggle} class="cancel-btn">Cancel</button>
+      {/if}
+    </div>
+  {/snippet}
 </Modal>
 
 <style lang="scss">

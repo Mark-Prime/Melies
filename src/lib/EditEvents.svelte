@@ -8,8 +8,8 @@
 
   const dispatch = createEventDispatcher();
 
-  let enabled = false;
-  let demos = [];
+  let enabled = $state(false);
+  let demos = $state([]);
   let toggle = () => (enabled = !enabled);
 
   function cancel() {
@@ -82,7 +82,7 @@
   }
 </script>
 
-<button class="btn" on:click={toggle}>
+<button class="btn" onclick={toggle}>
   <Fa icon={faFilePen} color={`var(--pri)`} />
   Edit Events
 </button>
@@ -93,15 +93,17 @@
       <DemoEdit {demoIndex} {i} {demo} {demos} {event} {refresh} />
     {/each}
   {/each}
-  <div slot="footer">
-    <div class="new-demo">
-      <a href="/" class="new-demo__1" on:click={addDemo}> Add Event Manually </a>
+  {#snippet footer()}
+    <div >
+      <div class="new-demo">
+        <a href="/" class="new-demo__1" onclick={addDemo}> Add Event Manually </a>
+      </div>
+      <div class="new-demo">
+        <a href="/" class="new-demo__2" onclick={cancel}> Cancel </a>
+        <a href="/" class="new-demo__3" onclick={saveEvents}> Save Events </a>
+      </div>
     </div>
-    <div class="new-demo">
-      <a href="/" class="new-demo__2" on:click={cancel}> Cancel </a>
-      <a href="/" class="new-demo__3" on:click={saveEvents}> Save Events </a>
-    </div>
-  </div>
+  {/snippet}
 </Modal>
 
 <style lang="scss">

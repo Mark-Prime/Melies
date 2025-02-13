@@ -1,7 +1,7 @@
 <script>
   // @ts-nocheck
-  export let left;
-  export let right;
+  /** @type {{left: any, right: any}} */
+  let { left, right } = $props();
 </script>
 
 <div class="settings__input-group">

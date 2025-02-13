@@ -3,14 +3,17 @@
 
   const dispatch = createEventDispatcher();
 
-  export let value;
-  export let title = null;
-  export let key = title.toLowerCase().replace(/ /g, "_") || "range";
 
-  export let min = 0;
-  export let max = 255;
 
-  export let color = "pri";
+  /** @type {{value: any, title?: any, key?: any, min?: number, max?: number, color?: string}} */
+  let {
+    value = $bindable(),
+    title = null,
+    key = title.toLowerCase().replace(/ /g, "_") || "range",
+    min = 0,
+    max = 255,
+    color = "pri"
+  } = $props();
 
   const change = () => dispatch("change", value);
 </script>
@@ -24,7 +27,7 @@
     type="range"
     id={key}
     bind:value
-    on:change={change}
+    onchange={change}
     {min}
     {max}
     style={`--color: var(--${color}); --color-con: var(--${color}-con);`}

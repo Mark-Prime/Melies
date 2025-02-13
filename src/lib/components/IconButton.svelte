@@ -1,8 +1,7 @@
 <script>
-  export let icon;
-  export let label;
-  export let color;
   import Fa from "svelte-fa";
+  /** @type {{icon: any, label: any, color: any}} */
+  let { icon, label, color } = $props();
 </script>
 
 <button class="card" style="{`--color: var(${color}-con);`}">

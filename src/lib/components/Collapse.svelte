@@ -1,13 +1,15 @@
 <script>
+  import { run } from 'svelte/legacy';
+
   import { createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
 
-  export let defaultOpen = false;
-  export let title;
+  /** @type {{defaultOpen?: boolean, title: any, children?: import('svelte').Snippet}} */
+  let { defaultOpen = false, title, children } = $props();
 
-  let enabled = defaultOpen;
+  let enabled = $state(defaultOpen);
 
-  $: {
+  run(() => {
     if (enabled) {
       dispatch("open");
     }
@@ -15,26 +17,26 @@
     if (!enabled) {
       dispatch("close");
     }
-  }
+  });
 </script>
 
 <div class="toggle">
   {#if enabled}
     <button
-      on:click={() => (enabled = false)}
+      onclick={() => (enabled = false)}
       class="cancel-btn hide-toggle"
     >
       -
     </button>
   {:else}
-    <button on:click={() => (enabled = true)} class="hide-toggle">
+    <button onclick={() => (enabled = true)} class="hide-toggle">
       +
     </button>
   {/if}
   <h2 class="centered">{title}</h2>
 </div>
 {#if enabled}
-  <slot />
+  {@render children?.()}
 {/if}
 
 <style>

@@ -1,12 +1,16 @@
 <script>
-  export let value;
-  export let title = null;
-  export let key = title.toLowerCase().replace(/ /g, "_") || "select";
-  export let color = "pri";
-  export let display = true;
-  export let tooltip = "";
 
   import { createEventDispatcher } from "svelte";
+  /** @type {{value: any, title?: any, key?: any, color?: string, display?: boolean, tooltip?: string, children?: import('svelte').Snippet}} */
+  let {
+    value = $bindable(),
+    title = null,
+    key = title.toLowerCase().replace(/ /g, "_") || "select",
+    color = "pri",
+    display = true,
+    tooltip = "",
+    children
+  } = $props();
 
   const dispatch = createEventDispatcher();
 
@@ -29,10 +33,10 @@
       bind:value
       id={key}
       class={`settings__input input--${color}`}
-      on:change={change}
-      on:input={change}
+      onchange={change}
+      oninput={change}
     >
-      <slot></slot>
+      {@render children?.()}
     </select>
   </div>
 {/if}

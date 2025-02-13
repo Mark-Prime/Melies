@@ -1,9 +1,8 @@
 <script>
-  export let action;
-  export let index;
-  export let selected;
 
   import { createEventDispatcher } from "svelte";
+  /** @type {{action: any, index: any, selected: any}} */
+  let { action = $bindable(), index, selected } = $props();
   const dispatch = createEventDispatcher();
 
   function update(value) {
@@ -13,12 +12,12 @@
   }
 </script>
 
-<button class="action" class:selected={selected} on:click={() => dispatch("select")}>
+<button class="action" class:selected={selected} onclick={() => dispatch("select")}>
   <p>{index + 1}: {action.name}</p>
 
   <p class="tick">{action.start_tick || action.start_time || ""}</p>
 
-  <select value={action.factory} class="select" on:change={(e) => update(e.target.value)}>
+  <select value={action.factory} class="select" onchange={(e) => update(e.target.value)}>
     <option value="SkipAhead">SkipAhead</option>
     <option value="StopPlayback">StopPlayback</option>
     <option value="PlayCommands">PlayCommands</option>

@@ -15,9 +15,9 @@
   import { onMount } from "svelte";
   import Tf2 from "$lib/TF2.svelte";
 
-  let resp = { vdms: 0, clips: 0, events: 0, code: 0 };
-  let theme = { has_theme: false };
-  let reload = false;
+  let resp = $state({ vdms: 0, clips: 0, events: 0, code: 0 });
+  let theme = $state({ has_theme: false });
+  let reload = $state(false);
   let forceReload = (full) => {
     reload = !reload;
     if (full) {
@@ -98,7 +98,7 @@
             <Tf2 on:reload={() => forceReload(true)} />
           {/key}
           <div class="homepage__run">
-            <button class="btn" on:click={runMelies}> Run </button>
+            <button class="btn" onclick={runMelies}> Run </button>
             <Settings on:close={() => forceReload(true)} />
           </div>
         </div>

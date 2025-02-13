@@ -8,12 +8,12 @@
   import AddAction from "./AddAction.svelte";
   import dayjs from "dayjs";
 
-  let enabled = false;
-  let resp = {};
-  let vdm = [];
-  let vdmName = "";
+  let enabled = $state(false);
+  let resp = $state({});
+  let vdm = $state([]);
+  let vdmName = $state("");
 
-  let selectedAction = 0;
+  let selectedAction = $state(0);
 
   function toggle() {
     enabled = !enabled;
@@ -65,25 +65,27 @@
   }
 </script>
 
-<button class="btn" on:click={toggle}>
+<button class="btn" onclick={toggle}>
   <Fa icon={faPenFancy} color={`var(--pri)`} />
   VDM Editor
 </button>
 
 <Modal color="pri" {toggle} {enabled} tall grow on:open={loadVdms}>
-  <div slot="footer">
-    {#if resp.loaded && resp.vdms && !vdmName}
-      <div class="buttons">
-        <button class="btn btn--cancel" on:click={toggle}>Cancel</button>
-        <button class="btn" disabled>New VDM</button>
-      </div>
-    {:else if vdm}
-      <div class="buttons">
-        <button class="btn btn--cancel" on:click={toggle}>Cancel</button>
-        <button class="btn" on:click={() => saveVdm(vdmName)}>Save</button>
-      </div>
-    {/if}
-  </div>
+  {#snippet footer()}
+    <div >
+      {#if resp.loaded && resp.vdms && !vdmName}
+        <div class="buttons">
+          <button class="btn btn--cancel" onclick={toggle}>Cancel</button>
+          <button class="btn" disabled>New VDM</button>
+        </div>
+      {:else if vdm}
+        <div class="buttons">
+          <button class="btn btn--cancel" onclick={toggle}>Cancel</button>
+          <button class="btn" onclick={() => saveVdm(vdmName)}>Save</button>
+        </div>
+      {/if}
+    </div>
+  {/snippet}
   {#if resp.loaded && resp.vdms && !vdmName}
     <h1>Load VDM</h1>
     {#each resp.vdms as vdm}
@@ -91,7 +93,7 @@
         <p>{vdm.name}</p>
         <p>{dayjs.unix(vdm.metadata.created.secs_since_epoch).format('MMM DD, YYYY')}</p>
         <div class="add_demo">
-          <button class="btn" on:click={() => loadVdm(vdm.name)}> Edit </button>
+          <button class="btn" onclick={() => loadVdm(vdm.name)}> Edit </button>
         </div>
       </div>
     {/each}

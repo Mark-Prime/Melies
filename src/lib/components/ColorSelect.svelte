@@ -1,14 +1,14 @@
 <script>
   import { createEventDispatcher } from "svelte";
 
-  export let value;
-  export let title = "Color";
+  /** @type {{value: any, title?: string}} */
+  let { value = $bindable(), title = "Color" } = $props();
 
   const dispatch = createEventDispatcher();
 </script>
 
 <div>
-  <input type="color" id="color" on:change={e => dispatch("change", e.target.value)} bind:value={value}/>
+  <input type="color" id="color" onchange={e => dispatch("change", e.target.value)} bind:value={value}/>
   <label for="color">{title}</label>
 </div>
 

@@ -1,18 +1,26 @@
 <script>
+  import { run } from 'svelte/legacy';
+
   import { createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
 
-  export let color = "pri";
-  export let enabled;
-  export let toggle;
-  export let large = false;
-  export let tall = false;
-  export let small = false;
-  export let grow = false;
-  export let wide = false;
-  export let max_width = null;
+  /** @type {{color?: string, enabled: any, toggle: any, large?: boolean, tall?: boolean, small?: boolean, grow?: boolean, wide?: boolean, max_width?: any, header?: import('svelte').Snippet, children?: import('svelte').Snippet, footer?: import('svelte').Snippet}} */
+  let {
+    color = "pri",
+    enabled,
+    toggle,
+    large = false,
+    tall = false,
+    small = false,
+    grow = false,
+    wide = false,
+    max_width = null,
+    header,
+    children,
+    footer
+  } = $props();
 
-  $: {
+  run(() => {
     if (enabled) {
       dispatch("open");
     }
@@ -20,12 +28,12 @@
     if (!enabled) {
       dispatch("close");
     }
-  }
+  });
 </script>
 
 {#if enabled}
   <div class="modal">
-    <a class="modal__background" on:click={() => toggle()} href="/"> </a>
+    <a class="modal__background" onclick={() => toggle()} href="/" aria-label="Close"> </a>
     <div
       class="modal__card"
       class:modal__card--large={large}
@@ -35,17 +43,17 @@
       class:modal__card--wide={wide}
       style={`--color: var(--${color}); --color-con: var(--${color}-con); ${max_width && `max-width: ${max_width}`};`}
     >
-      {#if $$slots.header}
+      {#if header}
         <div class="modal__header">
-          <slot name="header" />
+          {@render header?.()}
         </div>
       {/if}
       <div class="modal__content">
-        <slot />
+        {@render children?.()}
       </div>
-      {#if $$slots.footer}
+      {#if footer}
         <div class="modal__footer">
-          <slot name="footer" />
+          {@render footer?.()}
         </div>
       {/if}
     </div>

@@ -1,10 +1,13 @@
 <script>
-  export let value = false;
-  export let tooltip = "";
-  export let style = "";
-  export let tooltipDirection = "right";
 
   import { createEventDispatcher } from "svelte";
+  /** @type {{value?: boolean, tooltip?: string, style?: string, tooltipDirection?: string}} */
+  let {
+    value = false,
+    tooltip = "",
+    style = "",
+    tooltipDirection = "right"
+  } = $props();
 
   const dispatch = createEventDispatcher();
 
@@ -20,13 +23,13 @@
   {#if value}
     <button
       class="cancel-btn"
-      on:click={click}
+      onclick={click}
     >
       -
     </button>
   {:else}
     <button
-      on:click={click}
+      onclick={click}
     >
       +
     </button>

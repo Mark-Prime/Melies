@@ -1,5 +1,6 @@
 <script>
-  export let resp;
+  /** @type {{resp: any}} */
+  let { resp } = $props();
 </script>
 
 <div class="event-viewer">

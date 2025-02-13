@@ -1,12 +1,15 @@
 <script>
   import { createEventDispatcher } from "svelte";
 
-  export let value;
-  export let title = null;
-  export let key = title.toLowerCase().replace(/ /g, "_") || "switch";
-  export let color = "pri";
-  export let display = true;
-  export let tooltip = "";
+  /** @type {{value: any, title?: any, key?: any, color?: string, display?: boolean, tooltip?: string}} */
+  let {
+    value = $bindable(),
+    title = null,
+    key = title.toLowerCase().replace(/ /g, "_") || "switch",
+    color = "pri",
+    display = true,
+    tooltip = ""
+  } = $props();
 
   const dispatch = createEventDispatcher();
 
@@ -16,7 +19,7 @@
 {#if display}
   <div class="input__switch" id="{key}">
     <label class="switch">
-      <input type="checkbox" bind:checked={value} on:change={change} />
+      <input type="checkbox" bind:checked={value} onchange={change} />
       <span class={`slider round slider--${color}`}></span>
     </label>
     <div

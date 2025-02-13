@@ -1,14 +1,17 @@
 <script>
   import { createEventDispatcher } from "svelte";
 
-  export let value;
-  export let title = null;
-  export let key = title?.toLowerCase().replace(/ /g, "_") || "input";
-  export let color = "pri";
-  export let display = true;
-  export let tooltip = "";
-  export let type = "text";
-  export let disabled = false;
+  /** @type {{value: any, title?: any, key?: any, color?: string, display?: boolean, tooltip?: string, type?: string, disabled?: boolean}} */
+  let {
+    value = $bindable(),
+    title = null,
+    key = title?.toLowerCase().replace(/ /g, "_") || "input",
+    color = "pri",
+    display = true,
+    tooltip = "",
+    type = "text",
+    disabled = false
+  } = $props();
 
   const dispatch = createEventDispatcher();
 
@@ -32,8 +35,8 @@
     {#if type === "number"}
       <input
         bind:value
-        on:change={change}
-        on:input={change}
+        onchange={change}
+        oninput={change}
         type="number"
         id={key}
         class={`input input--${color}`}
@@ -42,8 +45,8 @@
     {:else}
       <input
         bind:value
-        on:change={change}
-        on:input={change}
+        onchange={change}
+        oninput={change}
         id={key}
         class={`input input--${color}`}
         disabled={disabled}

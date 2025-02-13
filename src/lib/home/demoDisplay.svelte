@@ -1,8 +1,8 @@
 <script>
   // @ts-nocheck
 
-  export let i;
-  export let event;
+  /** @type {{i: any, event: any}} */
+  let { i, event } = $props();
 </script>
 
 {#if !i}

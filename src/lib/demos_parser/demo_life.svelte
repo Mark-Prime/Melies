@@ -3,14 +3,17 @@
   import Toggle from "$lib/components/ToggleSelected.svelte";
   import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 
-  export let life;
-  export let steamid64;
-  export let classConverter;
-  export let toggleSelected;
-  export let parsedDemo;
-  export let tickToTime;
-  export let toggleKillsSelected;
-  export let allKillsSelected;
+  /** @type {{life: any, steamid64: any, classConverter: any, toggleSelected: any, parsedDemo: any, tickToTime: any, toggleKillsSelected: any, allKillsSelected: any}} */
+  let {
+    life,
+    steamid64,
+    classConverter,
+    toggleSelected,
+    parsedDemo,
+    tickToTime,
+    toggleKillsSelected,
+    allKillsSelected
+  } = $props();
 </script>
 
 <div class={"demo demo__life " + (life.selected && "demo--selected")}>
@@ -27,8 +30,8 @@
     {/each}
   </div>
   <button
-    on:click={toggleSelected(life)}
-    on:keydown={toggleSelected(life)}
+    onclick={toggleSelected(life)}
+    onkeydown={toggleSelected(life)}
     class={"demo__kill-count " +
       (life.kills.length >= 3 && " killstreak ") +
       (life.kills.length >= 5 && " killstreak--large ") +
@@ -67,7 +70,7 @@
           >
             <button
               class="tick"
-              on:click={() => writeText(`demo_gototick ${kill.tick}; wait 10; spec_player ${steamid64}`)}
+              onclick={() => writeText(`demo_gototick ${kill.tick}; wait 10; spec_player ${steamid64}`)}
             >
               {kill.tick}
             </button>
@@ -92,7 +95,7 @@
   >
     <button
       class="tick"
-      on:click={() => writeText(`demo_gototick ${life.start}; wait 10; spec_player ${steamid64}`)}
+      onclick={() => writeText(`demo_gototick ${life.start}; wait 10; spec_player ${steamid64}`)}
     >
       Start: {life.start}
     </button>
@@ -104,7 +107,7 @@
   >
     <button
       class="tick"
-      on:click={() => writeText(`demo_gototick ${life.end}; wait 10; spec_player ${steamid64}`)}
+      onclick={() => writeText(`demo_gototick ${life.end}; wait 10; spec_player ${steamid64}`)}
     >
       End: {life.end}
     </button>
@@ -128,7 +131,7 @@
         >
           <button
             class="auto-height cancel-btn"
-            on:click={toggleKillsSelected(life.kills)}
+            onclick={toggleKillsSelected(life.kills)}
           >
             -
           </button>
@@ -139,7 +142,7 @@
           data-tooltip="Toggle Kills as Bookmarks"
           style={`--kills: 0;`}
         >
-          <button on:click={toggleKillsSelected(life.kills)}>+</button>
+          <button onclick={toggleKillsSelected(life.kills)}>+</button>
         </div>
       {/if}
     </div>

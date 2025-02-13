@@ -1,4 +1,6 @@
 <script>
+  import { run } from 'svelte/legacy';
+
   // @ts-nocheck
   import { useMousePosition } from "@svelteuidev/composables";
   import Slider2 from "./timeline_slider.svelte";
@@ -6,28 +8,31 @@
   import { onMount } from "svelte";
   import { median } from "mathjs";
 
-  export let parsedDemo;
-  export let tickToTime;
-  export let displayPlayer;
-  export let toggleSelected;
-  export let displayLives;
-  export let displayAssists;
-  export let getTeam;
+  /** @type {{parsedDemo: any, tickToTime: any, displayPlayer: any, toggleSelected: any, displayLives: any, displayAssists: any, getTeam: any}} */
+  let {
+    parsedDemo,
+    tickToTime,
+    displayPlayer,
+    toggleSelected,
+    displayLives,
+    displayAssists,
+    getTeam
+  } = $props();
 
-  let scale = 1.0;
-  let scalePerc = 1.0;
-  let maxScale = 1.0;
-  let timeline;
-  let left = 0;
-  let right = 1;
-  let leftPos = 0;
-  let rightPos = 1;
-  let width = 1;
-  let minimum = 1;
+  let scale = $state(1.0);
+  let scalePerc = $state(1.0);
+  let maxScale = $state(1.0);
+  let timeline = $state();
+  let left = $state(0);
+  let right = $state(1);
+  let leftPos = $state(0);
+  let rightPos = $state(1);
+  let width = $state(1);
+  let minimum = $state(1);
 
-  let divWidth;
-  let divHeight;
-  let oldDivWidth;
+  let divWidth = $state();
+  let divHeight = $state();
+  let oldDivWidth = $state();
   let startTick = parsedDemo.data?.start_tick;
   let totalTicks = parsedDemo?.header?.ticks;
 
@@ -62,26 +67,26 @@
     right = 100;
   });
 
-  $: {
+  run(() => {
     scalePerc = (right - left) / 100;
     scale = scalePerc * maxScale;
     leftPos = (left / 100) * totalTicks;
     rightPos = (right / 100) * totalTicks;
     width = rightPos - leftPos;
-  }
+  });
 
   const [global_pos, global_ref] = useMousePosition();
-  $: global_x = $global_pos.x;
+  let global_x = $derived($global_pos.x);
 
-  let isDragging = false;
-  let dragTarget = "";
-  let startingPos = 0;
-  let relativePos = 0;
+  let isDragging = $state(false);
+  let dragTarget = $state("");
+  let startingPos = $state(0);
+  let relativePos = $state(0);
 
-  let startingLeft = 0;
-  let startingRight = 1;
+  let startingLeft = $state(0);
+  let startingRight = $state(1);
 
-  $: {
+  run(() => {
     if (isDragging) {
       let padding = startingPos - relativePos;
       let paddingPerc = relativePos / divWidth;
@@ -119,30 +124,34 @@
           break;
       }
     }
-  }
+  });
 
   let is_shift_down = false;
 
   const [position, ref] = useMousePosition();
-  $: ({ x } = $position);
+  let { x } = $derived($position);
 
-  $: if (scale > totalTicks / divWidth) {
-    scale = totalTicks / divWidth;
-  }
+  run(() => {
+    if (scale > totalTicks / divWidth) {
+      scale = totalTicks / divWidth;
+    }
+  });
 
-  $: {
+  run(() => {
     scale =
       scale < 1
         ? 1
         : scale > totalTicks / divWidth
           ? totalTicks / divWidth
           : scale;
-  }
+  });
 
-  $: if (divWidth != oldDivWidth) {
-    oldDivWidth = divWidth;
-    calcMaxScale();
-  }
+  run(() => {
+    if (divWidth != oldDivWidth) {
+      oldDivWidth = divWidth;
+      calcMaxScale();
+    }
+  });
 
   function pauseAdjust(tick) {
     if (!parsedDemo.data.pause_tick) {
@@ -271,10 +280,10 @@
 </script>
 
 <svelte:window
-  on:keydown={on_key_down}
-  on:keyup={on_key_up}
-  on:mousedown={on_mouse_down}
-  on:mouseup={on_mouse_up}
+  onkeydown={on_key_down}
+  onkeyup={on_key_up}
+  onmousedown={on_mouse_down}
+  onmouseup={on_mouse_up}
 />
 
 <h2 class="centered chat__title">Timeline</h2>
@@ -301,7 +310,7 @@
     bind:clientHeight={divHeight}
     bind:this={timeline}
     use:ref
-    on:wheel={timelineMousewheel}
+    onwheel={timelineMousewheel}
   >
     {#each ["blue", "red"] as team}
       {#each getTeam(team) as player}
@@ -313,8 +322,8 @@
                   class={`timeline__life timeline__life--${team} ${
                     life.selected ? "timeline--selected" : ""
                   }`}
-                  on:click={toggleSelected(life)}
-                  on:keydown={toggleSelected(life)}
+                  onclick={toggleSelected(life)}
+                  onkeydown={toggleSelected(life)}
                   style={`
                       --length: ${calcTimelineLength(
                         life,

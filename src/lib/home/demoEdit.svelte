@@ -1,11 +1,14 @@
 <script>
   // @ts-nocheck
-  export let event;
-  export let demos;
-  export let demo;
-  export let demoIndex;
-  export let i;
-  export let refresh;
+  /** @type {{event: any, demos: any, demo: any, demoIndex: any, i: any, refresh: any}} */
+  let {
+    event = $bindable(),
+    demos = $bindable(),
+    demo,
+    demoIndex,
+    i,
+    refresh
+  } = $props();
 
   function deleteEvent(demoIndex, i) {
     demos[demoIndex].splice(i, 1);
@@ -82,9 +85,9 @@
         class="demo__header-input"
         data-tooltip="Edit Demo Name"
         value={event.demo_name}
-        on:change={(e) => editDemoName(demoIndex, e.target.value)}
+        onchange={(e) => editDemoName(demoIndex, e.target.value)}
       />
-      <a class="demo-delete" href="/" on:click={() => deleteDemo(demoIndex)}>
+      <a class="demo-delete" href="/" onclick={() => deleteDemo(demoIndex)}>
         Remove
       </a>
     </div>
@@ -95,7 +98,7 @@
         <a
           class="demo__event-link"
           data-tooltip="Change to Killstreak"
-          on:click={() => toggleKillstreak(demoIndex, i)}
+          onclick={() => toggleKillstreak(demoIndex, i)}
           href="/"
         >
           Bookmark
@@ -109,7 +112,7 @@
         <a
           class="demo__event-link"
           data-tooltip="Change to Bookmark"
-          on:click={() => toggleKillstreak(demoIndex, i)}
+          onclick={() => toggleKillstreak(demoIndex, i)}
           href="/"
         >
           Killstreak
@@ -132,7 +135,7 @@
         data-tooltip="Delete Event"
         style={"--kills: 0"}
         href="/"
-        on:click={() => deleteEvent(demoIndex, i)}
+        onclick={() => deleteEvent(demoIndex, i)}
       >
         -
       </a>
@@ -140,7 +143,7 @@
   </div>
   {#if i === demo.length - 1}
     <div class="demo demo__new-event">
-      <a on:click={() => addEvent(demoIndex)} href="/"> Add new event to demo </a>
+      <a onclick={() => addEvent(demoIndex)} href="/"> Add new event to demo </a>
     </div>
     <div class="demo demo__bottom">
       {demo.length} event{#if demo.length > 1}s{/if}

@@ -3,15 +3,18 @@
   import Toggle from "$lib/components/ToggleSelected.svelte";
   import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 
-  export let lives;
-  export let steamid64;
-  export let label;
-  export let valKey;
-  export let classConverter;
-  export let parsedDemo;
-  export let tickToTime;
-  export let toggleKillsSelected;
-  export let toggleSelected;
+  /** @type {{lives: any, steamid64: any, label: any, valKey: any, classConverter: any, parsedDemo: any, tickToTime: any, toggleKillsSelected: any, toggleSelected: any}} */
+  let {
+    lives,
+    steamid64,
+    label,
+    valKey,
+    classConverter,
+    parsedDemo,
+    tickToTime,
+    toggleKillsSelected,
+    toggleSelected
+  } = $props();
 
   function getKill(pointer) {
     return parsedDemo.data.player_lives[pointer.owner_id][pointer.life_index]
@@ -65,7 +68,7 @@
             >
               <button
                 class="tick"
-                on:click={() => writeText(`demo_gototick ${getKill(pointer).tick}; wait 10; spec_player ${steamid64}`)}
+                onclick={() => writeText(`demo_gototick ${getKill(pointer).tick}; wait 10; spec_player ${steamid64}`)}
               >
                 {getKill(pointer).tick}
               </button>

@@ -3,13 +3,16 @@
   import Toggle from "$lib/components/ToggleSelected.svelte";
   import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 
-  export let killstreaks;
-  export let parsedDemo;
-  export let limitStringLength;
-  export let classConverter;
-  export let toggleBookmarkSelected;
-  export let tickToTime;
-  export let toggleSelected;
+  /** @type {{killstreaks: any, parsedDemo: any, limitStringLength: any, classConverter: any, toggleBookmarkSelected: any, tickToTime: any, toggleSelected: any}} */
+  let {
+    killstreaks,
+    parsedDemo,
+    limitStringLength,
+    classConverter,
+    toggleBookmarkSelected,
+    tickToTime,
+    toggleSelected
+  } = $props();
 
   function getLife(index) {
     let ksPointer = killstreaks[index];
@@ -90,9 +93,9 @@
               )}
             </a>
             <button
-              on:click={toggleBookmarkSelected(getKs(index), true)}
-              on:keydown={toggleBookmarkSelected(getKs(index), true)}
-              on:keyup={() => {}}
+              onclick={toggleBookmarkSelected(getKs(index), true)}
+              onkeydown={toggleBookmarkSelected(getKs(index), true)}
+              onkeyup={() => {}}
               class={`demo__kill-count ` +
                 (ksPointer.kills.length >= 3 && " killstreak ") +
                 (ksPointer.kills.length >= 5 && " killstreak--large ") +
@@ -137,7 +140,7 @@
                   >
                     <button
                       class="tick"
-                      on:click={() => writeText(`demo_gototick ${kill.tick}; wait 10; spec_player ${parsedDemo.data.users[ksPointer.owner_id].steamId64}`)}
+                      onclick={() => writeText(`demo_gototick ${kill.tick}; wait 10; spec_player ${parsedDemo.data.users[ksPointer.owner_id].steamId64}`)}
                     >
                       {kill.tick}
                     </button>
@@ -154,7 +157,7 @@
             >
               <button
                 class="tick"
-                on:click={() => writeText(`demo_gototick ${getKills(index)[0].tick}; wait 10; spec_player ${parsedDemo.data.users[getKills(index)[0].killer].steamId64}`)}
+                onclick={() => writeText(`demo_gototick ${getKills(index)[0].tick}; wait 10; spec_player ${parsedDemo.data.users[getKills(index)[0].killer].steamId64}`)}
               >
                 First: {getKills(index)[0].tick}
               </button>
@@ -169,7 +172,7 @@
             >
               <button
                 class="tick"
-                on:click={() => writeText(`demo_gototick ${getKills(index)[getKills(index).length - 1].tick}; wait 10; spec_player ${parsedDemo.data.users[getKills(index)[getKills(index).length - 1].killer].steamId64}`)}
+                onclick={() => writeText(`demo_gototick ${getKills(index)[getKills(index).length - 1].tick}; wait 10; spec_player ${parsedDemo.data.users[getKills(index)[getKills(index).length - 1].killer].steamId64}`)}
               >
                 Last: {getKills(index)[getKills(index).length - 1].tick}
               </button>

@@ -1,22 +1,25 @@
 <script>
+  import { run } from 'svelte/legacy';
+
   import ColorSelect from "$lib/components/ColorSelect.svelte";
   import Input from "$lib/components/Input.svelte";
   import Range from "$lib/components/Range.svelte";
   import Select from "$lib/components/Select.svelte";
   import Switch from "$lib/components/Switch.svelte";
 
-  export let action;
 
-  let startTimeType = "tick";
-  let skipToTimeType = "tick";
-  let prevStartTimeType = "tick";
-  let prevSkipToTimeType = "tick";
+  let startTimeType = $state("tick");
+  let skipToTimeType = $state("tick");
+  let prevStartTimeType = $state("tick");
+  let prevSkipToTimeType = $state("tick");
 
   function deleteAction() {
     dispatch("delete");
   }
 
   import { createEventDispatcher } from "svelte";
+  /** @type {{action: any}} */
+  let { action = $bindable() } = $props();
   const dispatch = createEventDispatcher();
 
   function rgbToHex(r, g, b) {
@@ -34,32 +37,10 @@
       : null;
   }
 
-  let color1 = "#ffffff";
-  let color2 = "#ffffff";
+  let color1 = $state("#ffffff");
+  let color2 = $state("#ffffff");
 
-  $: switch (action?.factory) {
-    case "ScreenFadeStart":
-      color1 =
-        rgbToHex(action.rgba1[0], action.rgba1[1], action.rgba1[2]) ||
-        "#ffffff";
-      break;
-    case "TextMessageStart":
-      color1 =
-        rgbToHex(action.rgba1[0], action.rgba1[1], action.rgba1[2]) ||
-        "#ffffff";
-      color2 =
-        rgbToHex(action.rgba2[0], action.rgba2[1], action.rgba2[2]) ||
-        "#ffffff";
-      break;
-    default:
-      break;
-  }
 
-  $: {
-    if (action) {
-      calcTickTypes();
-    }
-  }
 
   function calcTickTypes() {
     if (action?.start_tick !== null) {
@@ -93,21 +74,6 @@
     dispatch("change", action);
   }
 
-  $: {
-    if (prevStartTimeType !== startTimeType && action) {
-      onStartTimeChange();
-      prevStartTimeType = startTimeType;
-
-      dispatch("change", action);
-    }
-
-    if (prevSkipToTimeType !== skipToTimeType && action) {
-      onSkipToTimeChange();
-      prevSkipToTimeType = skipToTimeType;
-
-      dispatch("change", action);
-    }
-  }
 
   function onStartTimeChange() {
     switch (startTimeType) {
@@ -142,6 +108,45 @@
         break;
     }
   }
+  run(() => {
+    switch (action?.factory) {
+      case "ScreenFadeStart":
+        color1 =
+          rgbToHex(action.rgba1[0], action.rgba1[1], action.rgba1[2]) ||
+          "#ffffff";
+        break;
+      case "TextMessageStart":
+        color1 =
+          rgbToHex(action.rgba1[0], action.rgba1[1], action.rgba1[2]) ||
+          "#ffffff";
+        color2 =
+          rgbToHex(action.rgba2[0], action.rgba2[1], action.rgba2[2]) ||
+          "#ffffff";
+        break;
+      default:
+        break;
+    }
+  });
+  run(() => {
+    if (action) {
+      calcTickTypes();
+    }
+  });
+  run(() => {
+    if (prevStartTimeType !== startTimeType && action) {
+      onStartTimeChange();
+      prevStartTimeType = startTimeType;
+
+      dispatch("change", action);
+    }
+
+    if (prevSkipToTimeType !== skipToTimeType && action) {
+      onSkipToTimeChange();
+      prevSkipToTimeType = skipToTimeType;
+
+      dispatch("change", action);
+    }
+  });
 </script>
 
 <div class="action">
@@ -406,7 +411,7 @@
         />
       </div>
     {/if}
-    <button class="cancel-btn" on:click={deleteAction}>Delete</button>
+    <button class="cancel-btn" onclick={deleteAction}>Delete</button>
   {:else}
     <p>Nothing Selected</p>
   {/if}

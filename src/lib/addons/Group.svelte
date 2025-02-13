@@ -1,29 +1,30 @@
 <script>
+  import Group from './Group.svelte';
   // @ts-nocheck
   import Setting from "./Setting.svelte";
   import addonTypeSort from "$lib/composables/addonTypeSort";
-  export let group;
-  export let defaultTitle;
-  export let depth = 1;
+  /** @type {{group: any, defaultTitle: any, depth?: number}} */
+  let { group = $bindable(), defaultTitle, depth = 1 } = $props();
 
-  let open = true;
+  let open = $state(true);
+  let addonTypeSorted = $derived(addonTypeSort(group.settings));
 
   let title = group.title || defaultTitle;
 </script>
 
 {#if Object.keys(group.settings).length > 0}
   <div class={`bordered group bordered--${['pri', 'sec', 'tert'][depth % 3]}`} >
-    <button on:click={() => open = !open} class:open ><h4>{open ? '-' : '+'} {title}</h4></button>
+    <button onclick={() => open = !open} class:open ><h4>{open ? '-' : '+'} {title}</h4></button>
     {#if group.description}
       <p>{group.description}</p>
     {/if}
     {#if open}
       <div class="setting">
-        {#each addonTypeSort(group.settings) as setting}
+        {#each addonTypeSorted as setting, i}
           {#if group.settings[setting].type === "group"}
-            <svelte:self group={group.settings[setting]} defaultTitle={setting} depth={depth + 1}/>
+            <Group group={group.settings[setting]} defaultTitle={setting} depth={depth + 1}/>
           {:else}
-            <Setting bind:setting={group.settings[setting]} bind:defaultTitle={setting} depth={depth}/>
+            <Setting bind:setting={group.settings[setting]} bind:defaultTitle={addonTypeSorted[i]} depth={depth}/>
           {/if}
         {/each}
       </div>

@@ -2,9 +2,8 @@
   // @ts-nocheck
   import Input from "$lib/components/Input.svelte";
   import Switch from "$lib/components/Switch.svelte";
-  export let setting;
-  export let defaultTitle;
-  export let depth = 0;
+  /** @type {{setting: any, defaultTitle: any, depth?: number}} */
+  let { setting = $bindable(), defaultTitle, depth = 0 } = $props();
 
   let title = setting.title || defaultTitle;
 </script>

@@ -3,14 +3,17 @@
   import Toggle from "$lib/components/ToggleSelected.svelte";
   import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 
-  export let classConverter;
-  export let toggleSelected;
-  export let steamid64;
-  export let parsedDemo;
-  export let tickToTime;
-  export let ksPointer;
-  export let toggleBookmarkSelected;
-  export let isPovDemo;
+  /** @type {{classConverter: any, toggleSelected: any, steamid64: any, parsedDemo: any, tickToTime: any, ksPointer: any, toggleBookmarkSelected: any, isPovDemo: any}} */
+  let {
+    classConverter,
+    toggleSelected,
+    steamid64,
+    parsedDemo,
+    tickToTime,
+    ksPointer,
+    toggleBookmarkSelected,
+    isPovDemo
+  } = $props();
 
   function getLife() {
     return parsedDemo.data.player_lives[ksPointer.owner_id][
@@ -53,9 +56,9 @@
     {/each}
   </div>
   <button
-    on:click={toggleBookmarkSelected(ksPointer)}
-    on:keydown={toggleBookmarkSelected(ksPointer)}
-    on:keyup={() => {}}
+    onclick={toggleBookmarkSelected(ksPointer)}
+    onkeydown={toggleBookmarkSelected(ksPointer)}
+    onkeyup={() => {}}
     tabindex="-1"
     aria-disabled="true"
     class={`demo__kill-count ` +
@@ -93,7 +96,7 @@
         >
           <button
             class="tick"
-            on:click={() => writeText(`demo_gototick ${kill.tick}; wait 10; spec_player ${steamid64}`)}
+            onclick={() => writeText(`demo_gototick ${kill.tick}; wait 10; spec_player ${steamid64}`)}
           >
             {kill.tick}
           </button>
@@ -110,7 +113,7 @@
   >
     <button
       class="tick"
-      on:click={() => writeText(`demo_gototick ${getKills()[0].tick}; wait 10; spec_player ${steamid64}`)}
+      onclick={() => writeText(`demo_gototick ${getKills()[0].tick}; wait 10; spec_player ${steamid64}`)}
     >
       First: {getKills()[0].tick}
     </button>
@@ -124,7 +127,7 @@
   >
     <button
       class="tick"
-      on:click={() => writeText(`demo_gototick ${getKills()[getKills().length - 1].tick}; wait 10; spec_player ${steamid64}`)}
+      onclick={() => writeText(`demo_gototick ${getKills()[getKills().length - 1].tick}; wait 10; spec_player ${steamid64}`)}
     >
     Last: {getKills()[getKills().length - 1].tick}
     </button>

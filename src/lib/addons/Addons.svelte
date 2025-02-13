@@ -5,7 +5,10 @@
   import Collapse from "$lib/components/Collapse.svelte";
   import Addon from "./Addon.svelte";
   import { invoke } from "@tauri-apps/api/core";
-  export let addons;
+  /** @type {{addons: any}} */
+  let { addons = $bindable() } = $props();
+
+  let keys = $derived(Object.keys(addons));
 
 </script>
 
@@ -17,14 +20,14 @@
       </div>
     {/if}
 
-    {#each Object.keys(addons) as addon}
-      <Addon bind:addon={addon} bind:addons={addons} />
+    {#each keys as addon, i}
+      <Addon bind:addon={keys[i]} bind:addons={addons} />
     {/each}
     <div>
-      <button on:click={() => window.open("https://github.com/Mark-Prime/awesome-Melies-addons")}>
+      <button onclick={() => window.open("https://github.com/Mark-Prime/awesome-Melies-addons")}>
         Get Addons
       </button>
-      <button on:click={() => invoke("open_addons_folder")}>
+      <button onclick={() => invoke("open_addons_folder")}>
         Open Addons Folder
       </button>
     </div>

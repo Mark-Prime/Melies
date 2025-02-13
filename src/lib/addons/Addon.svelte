@@ -5,8 +5,8 @@
   import Setting from "./Setting.svelte";
   import Group from "./Group.svelte";
   import addonTypeSort from "$lib/composables/addonTypeSort";
-  export let addon;
-  export let addons;
+  /** @type {{addon: any, addons: any}} */
+  let { addon, addons = $bindable() } = $props();
 </script>
 
 <div class="bordered bordered--pri addon">
@@ -16,7 +16,7 @@
       {#if addons[addon][addonSetting].type === "group"}
         <Group bind:group={addons[addon][addonSetting]} defaultTitle={addonSetting} />
       {:else}
-        <Setting bind:setting={addons[addon][addonSetting]} bind:defaultTitle={addonSetting} />
+        <Setting bind:setting={addons[addon][addonSetting]} defaultTitle={addonSetting} />
       {/if}
     {/each}
   </div>
