@@ -1,8 +1,11 @@
 <script>
-  export let player_class;
-  export let tooltip = false;
-  export let click = () => {};
-  export let args = [];
+  /** @type {{player_class: any, tooltip?: boolean, click?: any, args?: any}} */
+  let {
+    player_class,
+    tooltip = false,
+    click = () => {},
+    args = []
+  } = $props();
 
   function getImgUrl(player_class) {
     switch (player_class) {
@@ -35,8 +38,8 @@
     class:tooltip={tooltip}
     data-tooltip={tooltip}
     style="--kills: 0"
-    on:click={click(...args)}
-    on:keydown={click(...args)}
+    onclick={click(...args)}
+    onkeydown={click(...args)}
   >
     <img src={getImgUrl(player_class)} alt={`${player_class} Icon`} />
   </button>

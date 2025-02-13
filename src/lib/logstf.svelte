@@ -10,17 +10,17 @@
 
   const dispatch = createEventDispatcher();
 
-  let enabled = false;
-  let url = "";
-  let resp = { loading: false };
+  let enabled = $state(false);
+  let url = $state("");
+  let resp = $state({ loading: false });
 
-  let ubers = [],
-    medDeaths = [],
-    killstreaks = [],
+  let ubers = $state([]),
+    medDeaths = $state([]),
+    killstreaks = $state([]),
     logs = [];
 
-  let index = 0,
-    total = 0;
+  let index = $state(0),
+    total = $state(0);
 
   function parseUrls() {
     logs = url.split(",");
@@ -252,7 +252,7 @@
   }
 </script>
 
-<button class="btn btn--sec" on:click={toggle}>
+<button class="btn btn--sec" onclick={toggle}>
   <Fa icon={faFlag} color={`var(--sec)`} />
   Load from Logs.tf
 </button>
@@ -417,20 +417,22 @@
       />
     </div>
     <div class="buttons">
-      <button class="cancel-btn" on:click={closeModal}>Cancel</button>
-      <button on:click={parseUrls}>Parse</button>
+      <button class="cancel-btn" onclick={closeModal}>Cancel</button>
+      <button onclick={parseUrls}>Parse</button>
     </div>
   {/if}
-  <div slot="footer">
-    {#if resp.loaded}
-      <h3 class="centered padding-0">Ticks may be inaccurate</h3>
-      <p class="centered padding-0">(logs.tf doesn't store them well)</p>
-      <div class="buttons">
-        <button class="cancel-btn" on:click={closeModal}>Cancel</button>
-        <button on:click={saveSelected}>Save</button>
-      </div>
-    {/if}
-  </div>
+  {#snippet footer()}
+    <div >
+      {#if resp.loaded}
+        <h3 class="centered padding-0">Ticks may be inaccurate</h3>
+        <p class="centered padding-0">(logs.tf doesn't store them well)</p>
+        <div class="buttons">
+          <button class="cancel-btn" onclick={closeModal}>Cancel</button>
+          <button onclick={saveSelected}>Save</button>
+        </div>
+      {/if}
+    </div>
+  {/snippet}
 </Modal>
 
 <style lang="scss">

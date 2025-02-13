@@ -1,4 +1,6 @@
 <script>
+  import { run } from 'svelte/legacy';
+
   // @ts-ignore
   import { invoke } from "@tauri-apps/api/core";
   import Modal from "$lib/components/Modal.svelte";
@@ -12,14 +14,14 @@
   import Addons from "$lib/addons/Addons.svelte";
   import Theme from "$lib/Theme.svelte";
   const dispatch = createEventDispatcher();
-  let settings = {};
-  let outputSettings = {};
-  let recordingSettings = {};
-  let automationSettings = {};
-  let demoManagerSettings = {};
-  let hlaeSettings = {};
-  let addons = {};
-  let enabled = false;
+  let settings = $state({});
+  let outputSettings = $state({});
+  let recordingSettings = $state({});
+  let automationSettings = $state({});
+  let demoManagerSettings = $state({});
+  let hlaeSettings = $state({});
+  let addons = $state({});
+  let enabled = $state(false);
 
   let toggle = () => (enabled = !enabled);
 
@@ -56,7 +58,7 @@ function removeInstall(install) {
   settings.alt_installs = settings.alt_installs
 }
 
-  $: {
+  run(() => {
     if (enabled) {
       loadSettings();
     }
@@ -64,10 +66,10 @@ function removeInstall(install) {
     if (!enabled) {
       dispatch("close");
     }
-  }
+  });
 </script>
 
-<button class="btn btn--sec" on:click={toggle}>
+<button class="btn btn--sec" onclick={toggle}>
   <Fa icon={faGear} color={`var(--sec)`} />
 </button>
 <Modal color="sec" {toggle} {enabled}>
@@ -92,13 +94,13 @@ function removeInstall(install) {
           bind:value={install.tf_folder}
           tooltip="The full filepath to your \tf folder within the Team Fortress 2 game files."
         />
-        <button class="cancel-btn" on:click={() => removeInstall(index)}>
+        <button class="cancel-btn" onclick={() => removeInstall(index)}>
           <Fa icon={faMinus} color={`var(--pri)`} />
         </button>
       </div>
     {/each}
     <div class="btn-container">
-      <button class="btn-custom-install" on:click={addInstall}>
+      <button class="btn-custom-install" onclick={addInstall}>
         <Fa icon={faPlus} color={`var(--pri)`} />
         Add Custom Install
       </button>
@@ -515,10 +517,12 @@ Useful in STVs when the player could be dead."
 
   <Theme />
 
-  <div class="buttons" slot="footer">
-    <button on:click={toggle} class="cancel-btn">Cancel</button>
-    <button on:click={saveSettings} class="Save"> Save </button>
-  </div>
+  {#snippet footer()}
+    <div class="buttons" >
+      <button onclick={toggle} class="cancel-btn">Cancel</button>
+      <button onclick={saveSettings} class="Save"> Save </button>
+    </div>
+  {/snippet}
 </Modal>
 
 <style lang="scss">
