@@ -192,8 +192,6 @@
 
     renameDemo = demo;
     renameNameInput = renameDefault;
-
-    console.log(demo);
   }
 
   function replaceInputName(demo) {
@@ -220,8 +218,6 @@
       oldPath: demoPath,
       newPath: newPath,
     };
-
-    console.log({demo, payload});
     
     await invoke("rename_file", payload);
 

@@ -52,13 +52,9 @@
   async function launchOnce() {
     isRunning = true;
 
-    console.log("saving settings", settings);
-
     await invoke("save_settings", {
       newSettings: JSON.stringify(settings),
     });
-
-    console.log("launching tf2", settings);
 
     await invoke("launch_tf2", { demoName: startingDemo, install: install });
 
@@ -68,25 +64,18 @@
   async function batchRecord() {
     isRunning = true;
 
-    console.log("saving settings", settings);
-
     await invoke("save_settings", {
       newSettings: JSON.stringify(settings),
     });
 
-    console.log("launching tf2", settings);
-
     while (true) {
       let resp = await invoke("batch_record", { demoName: startingDemo, install: install });
-
-      console.log(resp)
 
       if (resp === null || resp.complete) {
         break;
       }
 
       startingDemo = resp.next_demo;
-      console.log("next demo", resp.next_demo);
     }
 
     isRunning = false;
