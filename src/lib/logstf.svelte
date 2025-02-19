@@ -120,6 +120,10 @@
       url = url.split("#")[0];
     }
 
+    if (!resp["rounds"]) {
+      return parseLog();
+    } 
+
     for (let [i, round] of resp["rounds"].entries()) {
       ubers.push([]);
       medDeaths.push([]);
@@ -269,9 +273,9 @@
       </div>
       <h4>Loading {index}/{total}...</h4>
     </div>
-  {:else if resp.loaded}
+  {:else if resp.loaded && resp.info}
     <div>
-      <h1>{resp.info.title}</h1>
+      <h1>{resp.info?.title}</h1>
       <h4 class="centered">{resp.info.map}</h4>
       <div class="buttons">
         <a
