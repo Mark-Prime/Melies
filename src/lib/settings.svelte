@@ -23,7 +23,17 @@
   let addons = $state({});
   let enabled = $state(false);
 
-  let toggle = () => (enabled = !enabled);
+  let toggle = () => {
+    enabled = !enabled
+  
+    if (enabled) {
+      loadSettings();
+    }
+
+    if (!enabled) {
+      dispatch("close");
+    }
+  };
 
   async function loadSettings() {
     settings = await invoke("load_settings");
@@ -33,7 +43,7 @@
     demoManagerSettings = settings.demo_manager;
     hlaeSettings = settings.hlae;
     addons = settings.addons;
-    console.log(settings)
+    $state.snapshot(settings);
   }
 
   async function saveSettings() {
@@ -52,21 +62,11 @@
     }]
   }
 
-function removeInstall(install) {
-  settings.alt_installs.splice(install, 1);
+  function removeInstall(install) {
+    settings.alt_installs.splice(install, 1);
 
-  settings.alt_installs = settings.alt_installs
-}
-
-  run(() => {
-    if (enabled) {
-      loadSettings();
-    }
-
-    if (!enabled) {
-      dispatch("close");
-    }
-  });
+    settings.alt_installs = settings.alt_installs
+  }
 </script>
 
 <button class="btn btn--sec" onclick={toggle}>
