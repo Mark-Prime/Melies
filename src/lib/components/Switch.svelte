@@ -8,7 +8,8 @@
     key = title.toLowerCase().replace(/ /g, "_") || "switch",
     color = "pri",
     display = true,
-    tooltip = ""
+    tooltip = "",
+    disabled = false
   } = $props();
 
   const dispatch = createEventDispatcher();
@@ -17,9 +18,9 @@
 </script>
 
 {#if display}
-  <div class="input__switch" id="{key}">
+  <div class={`input__switch ${disabled ? "disabled" : ""}`} id="{key}">
     <label class="switch">
-      <input type="checkbox" bind:checked={value} onchange={change} />
+      <input type="checkbox" bind:checked={value} onchange={change} disabled={disabled}/>
       <span class={`slider round slider--${color}`}></span>
     </label>
     <div
@@ -33,3 +34,9 @@
     </div>
   </div>
 {/if}
+
+<style>
+  .disabled {
+    opacity: 0.5;
+  }
+</style>

@@ -161,12 +161,21 @@
               color="tert"
             />
           </div>
-          <Switch
-            title="64Bit"
-            bind:value={hlaeSettings.use_64bit}
-            tooltip="Launches with 64Bit TF2."
-            color="tert"
-          />
+          {#if install != settings.tf_folder}
+            <Switch
+              title="64Bit"
+              bind:value={hlaeSettings.use_64bit}
+              tooltip="Launches with 64Bit TF2."
+              color="tert"
+            />
+          {:else}
+            <Switch
+              title="64Bit (Forced on with default install)"
+              value={true}
+              color="tert"
+              disabled={true}
+            />
+          {/if}
           <Switch
             title="Automatically playdemo"
             bind:value={hlaeSettings.playdemo}
