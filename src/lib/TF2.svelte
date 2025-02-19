@@ -173,6 +173,11 @@
             tooltip="Plays first demo on list as soon as it launches."
             color="tert"
           />
+          {#if outputSettings.method === "sparklyfx" && install != settings.tf_folder && !hlaeSettings.use_64bit}
+            <div class="settings__span">
+              HLAE will be automatically injected into TF2.
+            </div>
+          {/if}
         </div>
       {:else}
         <h1>Running Team Fortress 2</h1>
