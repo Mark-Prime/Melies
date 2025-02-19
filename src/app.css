@@ -674,7 +674,6 @@ input:checked + .slider--tert:before {
   background-color: var(--bg2) !important;
   border-radius: 8px;
   padding: 0 !important;
-  max-width: 364px;
 }
 
 .autocomplete--sec .autocomplete-list-item {
@@ -730,7 +729,6 @@ input:checked + .slider--tert:before {
   background-color: var(--bg2) !important;
   border-radius: 8px;
   padding: 0 !important;
-  max-width: 364px;
 }
 
 .autocomplete--tert .autocomplete-list-item {

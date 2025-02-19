@@ -120,7 +120,7 @@
       {#if !isRunning}
         <h1>Launch TF2</h1>
         <div class="setting">
-          <div class={settings.alt_installs.length > 0 ? "settings__input-group settings__span custom-install" : "settings__input-group settings__span"}>
+          <div class={`datalist ${settings.alt_installs.length == 0 ? "settings__span" : ""}`}>
             <Datalist
               title="Starting Demo"
               bind:value={startingDemo}
@@ -128,20 +128,20 @@
               color="tert"
               items={demos}
             ></Datalist>
-            {#if settings.alt_installs.length > 0}
-              <Select
-                title="TF2 Install"
-                bind:value={install}
-                tooltip={`The install you want to launch.`}
-                color="tert"
-              >
-                <option value={settings.tf_folder}>Default</option>
-                {#each settings.alt_installs as install}
-                  <option value={install.tf_folder}>{install.name}</option>
-                {/each}
-              </Select>
-            {/if}
           </div>
+          {#if settings.alt_installs.length > 0}
+            <Select
+              title="TF2 Install"
+              bind:value={install}
+              tooltip={`The install you want to launch.`}
+              color="tert"
+            >
+              <option value={settings.tf_folder}>Default</option>
+              {#each settings.alt_installs as install}
+                <option value={install.tf_folder}>{install.name}</option>
+              {/each}
+            </Select>
+          {/if}
           {#if outputSettings.method === "sparklyfx"}
             <Input
               title="HLAE .exe Path"
@@ -211,9 +211,8 @@
     gap: 0.5rem;
   }
 
-  .custom-install {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+  .datalist {
+    min-width: 0;
+    min-height: 0;
   }
 </style>
