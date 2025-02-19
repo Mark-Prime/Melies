@@ -137,19 +137,38 @@ fn write_cfg(settings: &Value) -> Result<(), String> {
         None => return Err("tf_folder setting is not a string".to_string()),
     };
 
-    if !Path::new(&format!("{}\\cfg", tf_folder)).exists() {
-        std::fs::create_dir_all(format!("{}\\cfg", tf_folder)).unwrap();
+    let base_folder = Path::new(tf_folder).parent().unwrap();
+    let base_folder_str = base_folder.to_str().unwrap();
+
+    let mut installs: Vec<String> = vec!["tf".to_string()];
+
+    for install in settings["alt_installs"].as_array().unwrap() {
+        let mut install_folder = install["tf_folder"].as_str().unwrap().replace(base_folder_str, "");
+
+        if install_folder.starts_with("\\") {
+            install_folder.remove(0);
+        }
+
+        installs.push(install_folder);
     }
 
-    let mut file = match File::create(format!("{}\\cfg\\melies.cfg", tf_folder)) {
-        Ok(file) => file,
-        Err(why) => return Err(format!("Couldn't create melies.cfg: {}", why)),
-    };
+    for install in installs {
+        let install_folder_str = format!("{}\\{}", base_folder_str, install);
 
-    match file.write_all(cfg.as_bytes()) {
-        Ok(_) => {}
-        Err(why) => return Err(format!("Couldn't write melies.cfg: {}", why)),
-    };
+        if !Path::new(&format!("{}\\cfg", install_folder_str)).exists() {
+            std::fs::create_dir_all(format!("{}\\cfg", install_folder_str)).unwrap();
+        }
+    
+        let mut file = match File::create(format!("{}\\cfg\\melies.cfg", install_folder_str)) {
+            Ok(file) => file,
+            Err(why) => return Err(format!("Couldn't create melies.cfg: {}", why)),
+        };
+    
+        match file.write_all(cfg.as_bytes()) {
+            Ok(_) => {}
+            Err(why) => return Err(format!("Couldn't write melies.cfg: {}", why)),
+        };
+    }
 
     Ok(())
 }

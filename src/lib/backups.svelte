@@ -15,6 +15,7 @@
   async function loadBackups() {
     try {
       resp = await invoke("load_backups");
+      resp = resp.sort( (a, b) => b.file_name.localeCompare(a.file_name) )
     } catch (error) {
       alert(error);
     }
@@ -37,12 +38,12 @@
     <h4 class="centered">
       Loading will completely override your current events.
     </h4>
-    {#each resp.sort( (a, b) => b.file_name.localeCompare(a.file_name) ) as backup}
+    {#each resp as backup}
       <div class="demo">
         <p>{backup.file_name}</p>
         <p>{dayjs.unix(backup.created.secs_since_epoch).format('MMM DD, YYYY')}</p>
         <div class="add_demo">
-          <button onclick={reloadBackup(backup)}>Load</button>
+          <button onclick={() => reloadBackup(backup)}>Load</button>
         </div>
       </div>
     {/each}
