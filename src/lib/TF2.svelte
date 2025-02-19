@@ -172,7 +172,7 @@
             color="tert"
           />
           {#if outputSettings.method === "sparklyfx" && install != settings.tf_folder && !hlaeSettings.use_64bit}
-            <div class="settings__span">
+            <div class="settings__span no_margin">
               HLAE will be automatically injected into TF2.
             </div>
           {/if}
@@ -212,6 +212,10 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+  }
+
+  .no_margin {
+    margin: 0;
   }
 
   .datalist {
