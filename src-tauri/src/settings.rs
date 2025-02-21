@@ -127,7 +127,7 @@ pub(crate) fn default_settings() -> Value {
       },
       "hlae": {
         "sparklyfx_path": "",
-        "hlae_path": "",
+        "hlae_path": "C:\\Program Files (x86)\\HLAE\\HLAE.exe",
         "launch_options": "-insecure -game tf -novid",
         "use_64bit": true,
         "playdemo": true
