@@ -1,5 +1,6 @@
 <script>
   import { run } from 'svelte/legacy';
+  import { untrack } from 'svelte'
 
   // @ts-nocheck
   import { useMousePosition } from "@svelteuidev/composables";
@@ -19,16 +20,17 @@
     getTeam
   } = $props();
 
-  let scale = $state(1.0);
-  let scalePerc = $state(1.0);
   let maxScale = $state(1.0);
   let timeline = $state();
   let left = $state(0);
   let right = $state(1);
-  let leftPos = $state(0);
-  let rightPos = $state(1);
-  let width = $state(1);
-  let minimum = $state(1);
+  let leftPos = $derived((left / 100) * totalTicks);
+  let rightPos = $derived((right / 100) * totalTicks);
+  let width = $derived(rightPos - leftPos);
+  let minimum = $derived(Math.max(1, (divWidth / totalTicks) * 100));
+
+  let scalePerc = $derived((right - left) / 100);
+  let scale = $derived(scalePerc * maxScale);
 
   let divWidth = $state();
   let divHeight = $state();
@@ -61,18 +63,8 @@
   }
 
   onMount(() => {
-    right = Math.max(1, (divWidth / totalTicks) * 100);
-    minimum = right;
     calcMaxScale();
     right = 100;
-  });
-
-  run(() => {
-    scalePerc = (right - left) / 100;
-    scale = scalePerc * maxScale;
-    leftPos = (left / 100) * totalTicks;
-    rightPos = (right / 100) * totalTicks;
-    width = rightPos - leftPos;
   });
 
   const [global_pos, global_ref] = useMousePosition();
@@ -83,10 +75,10 @@
   let startingPos = $state(0);
   let relativePos = $state(0);
 
-  let startingLeft = $state(0);
-  let startingRight = $state(1);
+  let startingLeft = 0;
+  let startingRight = 1;
 
-  run(() => {
+  $effect(() => {
     if (isDragging) {
       let padding = startingPos - relativePos;
       let paddingPerc = relativePos / divWidth;
@@ -97,30 +89,30 @@
         case "range":
           let difference = right - left;
 
-          left = median(
+          untrack(() => left = median(
             0,
             startingLeft + distancePerc * 100 - paddingPerc * 100,
             100 - difference
-          );
-          right = median(
+          ));
+          untrack(() => right = median(
             difference,
             startingRight + distancePerc * 100 - paddingPerc * 100,
             100
-          );
+          ));
           break;
         case "left":
-          left = median(
+          untrack(() => left = median(
             0,
             startingLeft + distancePerc * 100 - paddingPerc * 100,
             right - minimum
-          );
+          ));
           break;
         case "right":
-          right = median(
+          untrack(() => right = median(
             left + minimum,
             startingRight + distancePerc * 100 - paddingPerc * 100,
             100
-          );
+          ));
           break;
       }
     }
@@ -131,22 +123,7 @@
   const [position, ref] = useMousePosition();
   let { x } = $derived($position);
 
-  run(() => {
-    if (scale > totalTicks / divWidth) {
-      scale = totalTicks / divWidth;
-    }
-  });
-
-  run(() => {
-    scale =
-      scale < 1
-        ? 1
-        : scale > totalTicks / divWidth
-          ? totalTicks / divWidth
-          : scale;
-  });
-
-  run(() => {
+  $effect(() => {
     if (divWidth != oldDivWidth) {
       oldDivWidth = divWidth;
       calcMaxScale();
@@ -316,14 +293,17 @@
       {#each getTeam(team) as player}
         {#if displayPlayer(player, team)}
           <div class="timeline__lives">
-            {#each parsedDemo.data?.player_lives[player] as life}
+            {#each parsedDemo.data?.player_lives[player] as life, index}
               {#if life.start != 0 && (displayLives || life.kills.length > 0 || (displayAssists && life.assists.length > 0)) && isLifeVisible(life, leftPos, rightPos)}
-                <button
+                <div
                   class={`timeline__life timeline__life--${team} ${
                     life.selected ? "timeline--selected" : ""
                   }`}
-                  onclick={toggleSelected(life)}
-                  onkeydown={toggleSelected(life)}
+                  role="button"
+                  aria-pressed="false"
+                  tabindex={index}
+                  onclick={() => toggleSelected(life)}
+                  onkeydown={() => toggleSelected(life)}
                   style={`
                       --length: ${calcTimelineLength(
                         life,
@@ -414,7 +394,7 @@
                           --kills: 1;
                       `}
                     >
-                      <div class="timeline__marker__text">
+                      <div class="timeline__marker__text" style="--lines: 2">
                         Start: {calcTick(life.start)} <br />
                         Timecode: {tickToTime(calcTick(life.start))}
                       </div>
@@ -442,7 +422,7 @@
                         )}px;
                     `}
                     >
-                      <div class="timeline__marker__text">
+                      <div class="timeline__marker__text" style="--lines: 2">
                         End: {calcTick(life.end)} <br />
                         Timecode: {tickToTime(calcTick(life.end))}
                       </div>
@@ -473,7 +453,7 @@
                             )}px;
                         `}
                       >
-                        <div class="timeline__marker__text">
+                        <div class="timeline__marker__text" style="--lines: 4">
                           <div>
                             Killed:
                             <ClassLogo
@@ -549,7 +529,7 @@
                     `}
                     ></div>
                   {/each}
-                </button>
+                </div>
               {/if}
             {/each}
           </div>
@@ -558,7 +538,7 @@
     {/each}
     <div
       class="timeline__rounds"
-      style={`width: ${divWidth + "px"}; height: ${divHeight + "px"}`}
+      style={`width: ${divWidth + "px"}; height: ${divHeight - 3 + "px"}`}
     >
       {#each parsedDemo.data?.rounds as round, index}
         <div
@@ -566,7 +546,7 @@
           style={`
           --start: ${(Math.max(parsedDemo.data?.rounds[index - 1]?.end_tick || 0, leftPos) - leftPos) / scale}px;
           --end: ${(Math.max(round.end_tick, leftPos) - leftPos) / scale}px;
-          height: ${divHeight}px;
+          height: ${divHeight - 3}px;
         `}
         >
           <p class="timeline__round--text">
@@ -577,7 +557,7 @@
     </div>
   </div>
   <div></div>
-  <Slider2 {left} {right} />
+  <Slider2 bind:left bind:right />
   <div></div>
   <div class="timeline__states">
     <div>
@@ -587,7 +567,7 @@
       Range: {Math.round(leftPos)} - {Math.round(rightPos)}
     </div>
     <div>
-      Pos: {median(0, Math.round(leftPos + (x / divWidth) * width), totalTicks)}
+      Mouse Pos: {median(0, Math.round(leftPos + (x / divWidth) * width), totalTicks)}
     </div>
   </div>
 </div>
@@ -605,12 +585,13 @@
     top: 0;
     left: var(--start);
     width: calc(var(--end) - var(--start));
-    border: var(--tert-con) 1px dashed;
+    border: color-mix(in srgb, var(--tert-con) 40%, transparent) 1px dashed;
     border-left: 0;
     border-top: 0;
     border-bottom: 0;
     opacity: 1;
     text-align: center;
+    z-index: -10;
 
     &:nth-of-type(2n) {
       background: color-mix(in srgb, var(--bg) 60%, transparent);
@@ -675,15 +656,18 @@
       padding-top: 1rem;
       background-color: var(--bg2);
       border-radius: 5px;
-      z-index: 1000;
+      z-index: 1005;
+      position: relative;
     }
 
     &__states {
       width: 100%;
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
-      gap: 1rem;
-      text-align: left;
+      gap: 2rem;
+      text-align: center;
+      justify-content: center;
+      align-items: center;
     }
 
     &__life {
@@ -743,7 +727,7 @@
       gap: 1rem;
       grid-template-columns: min-content min-content min-content;
       overflow: hidden;
-      z-index: 10000;
+      z-index: -10;
     }
 
     &__icons {
@@ -769,9 +753,9 @@
       }
 
       &__text {
-        z-index: 1002;
+        z-index: 1;
         position: absolute;
-        top: calc(-2.2rem - (1.72rem * 3));
+        top: calc(-2.2rem - (1.72rem * calc(var(--lines) - 1)));
         left: -0.4rem;
         display: none;
         background-color: var(--bg);
@@ -788,7 +772,7 @@
       }
 
       &::before {
-        z-index: 1002;
+        z-index: 1;
         content: attr(data-tooltip);
         position: absolute;
         top: calc(-2.2rem - (1.72rem * var(--kills)));
@@ -859,10 +843,6 @@
         color: var(--sec);
         z-index: 1003;
 
-        // &::before {
-        //     display: block;
-        // }
-
         &::after {
           display: block;
           background-color: var(--outline);
@@ -886,7 +866,7 @@
       overflow: visible;
 
       &::before {
-        z-index: 1000;
+        z-index: 1005;
         content: attr(data-tooltip);
         position: absolute;
         top: calc(-2.2rem - (1.72rem * var(--kills)));
@@ -922,7 +902,7 @@
         &::before {
           top: 3px;
           background-color: var(--bg);
-          z-index: 1000;
+          z-index: 1005;
         }
       }
 

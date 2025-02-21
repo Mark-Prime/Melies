@@ -22,6 +22,17 @@
 </div>
 
 <style lang="scss">
+  #input-left {
+    left: 0;
+  }
+
+  #input-right {
+    left: 0;
+  }
+  .multi-range-slider {
+    width: 100%;
+  }
+
   .mr-slider {
     position: relative;
     z-index: 1;

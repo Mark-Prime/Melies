@@ -34,12 +34,20 @@
 
   let isDragging = $state(false);
   let enabled = $state(false);
-  let toggle = () => (enabled = !enabled);
+  let toggle = () => {
+    enabled = !enabled
+  
+    loadDemos();
+    loadSettings();
+  };
 
   getCurrentWebview().onDragDropEvent((e) => {
     switch (e.event) {
       case "tauri://drag-over":
-        enabled = true;
+        if (!enabled) {
+          toggle();
+        }
+
         isDragging = true;
         break;
       case "tauri://drag-drop":
@@ -84,22 +92,23 @@
 
   let filterAirshots = (k) => isAirshot(parsedDemo, k, settings);
 
-  function filterLife(lives, valKey) {
-    let validLives = lives.filter((life) => life[valKey].length > 0);
+  function filterLife(player, valKey) {
+    let lives = parsedDemo.data.player_lives[player]
+    let validLives = [ ...lives ].filter((life) => life[valKey].length > 0);
 
-    for (let life of validLives) {
+    for (let playerLife of validLives) {
       let validKills = [];
 
-      for (let kill of life[valKey]) {
+      for (let kill of playerLife[valKey]) {
         if (filterAirshots(kill)) {
           validKills.push(kill);
         }
       }
 
-      life[valKey] = validKills;
+      playerLife[valKey] = validKills;
     }
 
-    return validLives.filter((life) => life[valKey].length > 0);
+    return [ ...validLives ].filter((playerLife) => playerLife[valKey].length > 0);
   }
 
   async function loadEvents() {
@@ -237,12 +246,6 @@
     toggle();
   }
 
-  run(() => {
-    console.log("Modal Enabled:", enabled);
-    loadDemos();
-    loadSettings();
-  });
-
   function limitStringLength(str, len) {
     if (str.length < len) {
       return str;
@@ -313,18 +316,24 @@
     parsedDemo = parsedDemo;
   }
 
-  function toggleKillsSelected(kills, isKillstreak = null, i = null) {
-    for (let kill of kills) {
-      if (kill.selected) {
-        kill.selected = false;
-        continue;
-      }
+  function toggleKillsSelected(kills) {
+    let newKills = [ ...kills ];
+    let selected = false;
 
-      kill.selected = true;
+    for (let kill of newKills) {
+      if (!kill.selected) {
+        selected = true;
+        break;
+      }
+    }
+
+    for (let kill of newKills) {
+      kill.selected = selected;
     }
 
     resp = resp;
     parsedDemo = parsedDemo;
+    kills = newKills;
   }
 
   function toggleBookmarkSelected(demo, isKillstreak = null) {
@@ -334,8 +343,19 @@
       demo.selected = false;
     }
 
+    if (isKillstreak) {
+      let kills = parsedDemo.data.player_lives[demo.owner_id][demo.life_index].kills;
+      for (let killIndex of demo.kills) {
+        let kill = kills[killIndex];
+        kill.selected = demo.selected_as_bookmark;
+      }
+
+      parsedDemo.data.player_lives[demo.owner_id][demo.life_index].kills = kills;
+    }
+
     resp = resp;
     parsedDemo = parsedDemo;
+    demo = demo;
   }
 
   function parseDemos() {
@@ -1298,7 +1318,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                 {/if}
               </td>
               <td class="add_demo">
-                <Toggle value={demo.selected} on:click={toggleSelected(demo, null, i)} />
+                <Toggle value={demo.selected} on:click={() => toggleSelected(demo, null, i)} />
               </td>
             </tr>
           {/each}
@@ -1445,8 +1465,8 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                       {tickToTime}
                       {toggleKillsSelected}
                       {toggleSelected}
-                      lives={filterLife(
-                        parsedDemo.data.player_lives[player],
+                      lives={() => filterLife(
+                        player,
                         "airshots"
                       )}
                     />
@@ -1523,7 +1543,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
           {#if displayChat}
             <div class="chat">
               {#each parsedDemo.data.chat as chat}
-                <Toggle value={chat.selected} on:click={toggleSelected(chat)} />
+                <Toggle value={chat.selected} on:click={() => toggleSelected(chat)} />
                 <div class="chat__tick">
                   {chat.tick}
                 </div>

@@ -540,7 +540,7 @@ input:checked + .slider--tert:before {
 }
 
 .tooltip::before {
-  z-index: 1000;
+  z-index: 99999;
   content: attr(data-tooltip);
   position: absolute;
   top: calc(-2.4rem - (1.72rem * var(--kills)));
@@ -560,7 +560,7 @@ input:checked + .slider--tert:before {
   text-align: left;
 }
 .tooltip::after {
-  z-index: 1000;
+  z-index: 99999;
   content: "";
   display: none;
   position: absolute;
@@ -575,11 +575,11 @@ input:checked + .slider--tert:before {
 .tooltip__lower::before {
   top: 1.9rem;
   background-color: var(--bg);
-  z-index: 1000;
+  z-index: 99999;
 }
 .tooltip__lower::after {
   top: 1.45rem;
-  z-index: 1000;
+  z-index: 99999;
   clip-path: polygon(50% 0, 0 100%, 100% 100%);
 }
 .tooltip--left::before {

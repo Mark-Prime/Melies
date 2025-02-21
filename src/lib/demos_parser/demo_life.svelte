@@ -30,8 +30,8 @@
     {/each}
   </div>
   <button
-    onclick={toggleSelected(life)}
-    onkeydown={toggleSelected(life)}
+    onclick={() => toggleSelected(life)}
+    onkeydown={() => toggleSelected(life)}
     class={"demo__kill-count " +
       (life.kills.length >= 3 && " killstreak ") +
       (life.kills.length >= 5 && " killstreak--large ") +
@@ -77,7 +77,7 @@
           </span>
         </div>
 
-        <Toggle value={kill.selected} on:click={toggleKillsSelected([kill])} tooltip="As Bookmark" tooltipDirection="left"/>
+        <Toggle value={kill.selected} on:click={() => toggleKillsSelected([kill])} tooltip="As Bookmark" tooltipDirection="left"/>
       </div>
     {/each}
   </div>
@@ -113,7 +113,7 @@
     </button>
   </div>
   <div class="killstreak__buttons">
-    <Toggle value={life.selected} on:click={toggleSelected(life)} tooltip="Entire Life" tooltipDirection="left"/>
+    <Toggle value={life.selected} on:click={() => toggleSelected(life)} tooltip="Entire Life" tooltipDirection="left"/>
     <div class="add_demo">
       {#if life.kills.length == 0}
         <div
@@ -131,7 +131,7 @@
         >
           <button
             class="auto-height cancel-btn"
-            onclick={toggleKillsSelected(life.kills)}
+            onclick={() => toggleKillsSelected(life.kills)}
           >
             -
           </button>
@@ -142,7 +142,7 @@
           data-tooltip="Toggle Kills as Bookmarks"
           style={`--kills: 0;`}
         >
-          <button onclick={toggleKillsSelected(life.kills)}>+</button>
+          <button onclick={() => toggleKillsSelected(life.kills)}>+</button>
         </div>
       {/if}
     </div>

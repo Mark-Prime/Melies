@@ -81,7 +81,7 @@
               data-tooltip="Entire Life"
               style={`--kills: 0;`}
             >
-              <Toggle value={getLife(pointer).selected} on:click={toggleSelected(getLife(pointer))} />
+              <Toggle value={getLife(pointer).selected} on:click={() => toggleSelected(getLife(pointer))} />
             </div>
 
             <div
@@ -89,7 +89,7 @@
               data-tooltip="As Bookmark"
               style={`--kills: 0;`}
             >
-              <Toggle value={getKill(pointer).selected} on:click={toggleKillsSelected([getKill(pointer)])} />
+              <Toggle value={getKill(pointer).selected} on:click={() => toggleKillsSelected([getKill(pointer)])} />
             </div>
           </div>
         </div>

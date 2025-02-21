@@ -38,8 +38,8 @@
     class:tooltip={tooltip}
     data-tooltip={tooltip}
     style="--kills: 0"
-    onclick={click(...args)}
-    onkeydown={click(...args)}
+    onclick={() => click(...args)}
+    onkeydown={() => click(...args)}
   >
     <img src={getImgUrl(player_class)} alt={`${player_class} Icon`} />
   </button>

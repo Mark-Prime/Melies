@@ -28,13 +28,15 @@
   function getLife(pointer) {
     return parsedDemo.data.player_lives[pointer.owner_id][pointer.life_index];
   }
+
+  let sortedKills = $derived([...kills].sort((a, b) => getKill(a).tick - getKill(b).tick));
 </script>
 
 {#if kills.length > 0}
   <div class="kill_container">
     <h2 class="centered chat__title">All {label}</h2>
     <div class="killstreaks card demo__kills">
-      {#each kills.sort((a, b) => getKill(a).tick - getKill(b).tick) as pointer}
+      {#each sortedKills as pointer}
         {#if getKill(pointer).tick !== 0}
           <div class="demo__kill">
             <div class="demo__kill-text">
@@ -92,13 +94,13 @@
             <div class="buttons">
               <Toggle 
                 value={getLife(pointer).selected}
-                on:click={toggleSelected(getLife(pointer))}
+                on:click={() => toggleSelected(getLife(pointer))}
                 tooltip="Entire Life"
                 tooltipDirection="left"
               />
               <Toggle 
                 value={getKill(pointer).selected}
-                on:click={toggleKillsSelected([getKill(pointer)])}
+                on:click={() => toggleKillsSelected([getKill(pointer)])}
                 tooltip="As Bookmark"
                 tooltipDirection="left"
               />

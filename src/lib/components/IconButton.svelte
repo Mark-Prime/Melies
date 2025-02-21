@@ -5,7 +5,7 @@
 </script>
 
 <button class="card" style="{`--color: var(${color}-con);`}">
-    <span><Fa {icon} size="4x" color="{`var(${color})`}" /></span>
+    <span><Fa {icon} size="4x" color={`var(${color})`} /></span>
     <div class="label" style="{`--color: var(${color});`}">{label}</div>
 </button>
 

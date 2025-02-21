@@ -93,8 +93,8 @@
               )}
             </a>
             <button
-              onclick={toggleBookmarkSelected(getKs(index), true)}
-              onkeydown={toggleBookmarkSelected(getKs(index), true)}
+              onclick={() => toggleBookmarkSelected(getKs(index), true)}
+              onkeydown={() => toggleBookmarkSelected(getKs(index), true)}
               onkeyup={() => {}}
               class={`demo__kill-count ` +
                 (ksPointer.kills.length >= 3 && " killstreak ") +
@@ -180,13 +180,13 @@
             <div class="killstreak__buttons">
               <Toggle 
                 value={parsedDemo.data.player_lives[ksPointer.owner_id][ksPointer.life_index].selected} 
-                on:click={toggleSelected(getLife(index))} 
+                on:click={() => toggleSelected(getLife(index))} 
                 tooltip="Entire Life" 
                 tooltipDirection="left"
               />
               <Toggle 
                 value={parsedDemo.data.player_lives[ksPointer.owner_id][ksPointer.life_index].killstreak_pointers[ksPointer.index].selected_as_bookmark} 
-                on:click={toggleBookmarkSelected(getKs(index), true)} 
+                on:click={() => toggleBookmarkSelected(getKs(index), true)} 
                 tooltip="As Bookmarks"
                 tooltipDirection="left"
               />

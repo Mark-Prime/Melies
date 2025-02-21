@@ -56,8 +56,8 @@
     {/each}
   </div>
   <button
-    onclick={toggleBookmarkSelected(ksPointer)}
-    onkeydown={toggleBookmarkSelected(ksPointer)}
+    onclick={() => toggleBookmarkSelected(ksPointer)}
+    onkeydown={() => toggleBookmarkSelected(ksPointer)}
     onkeyup={() => {}}
     tabindex="-1"
     aria-disabled="true"
@@ -135,21 +135,21 @@
   <div class="killstreak__buttons">
     <Toggle 
       value={parsedDemo.data.player_lives[ksPointer.owner_id][ksPointer.life_index].selected}
-      on:click={toggleSelected(getLife())}
+      on:click={() => toggleSelected(getLife())}
       tooltip="Entire Life"
       tooltipDirection="left"
     />
     {#if isPovDemo}
       <Toggle 
         value={ksPointer.selected}
-        on:click={toggleSelected(ksPointer, false)}
+        on:click={() => toggleSelected(ksPointer, false)}
         tooltip="As Killstreak"
         tooltipDirection="left"
       />
     {/if}
     <Toggle 
       value={ksPointer.selected_as_bookmark}
-      on:click={toggleBookmarkSelected(ksPointer, false)}
+      on:click={() => toggleBookmarkSelected(ksPointer, true)}
       tooltip="As Bookmarks"
       tooltipDirection="left"
     />
