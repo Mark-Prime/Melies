@@ -150,28 +150,19 @@
               color="tert"
             />
           </div>
-          {#if install != settings.tf_folder}
-            <Switch
-              title="64Bit"
-              bind:value={hlaeSettings.use_64bit}
-              tooltip="Launches with 64Bit TF2."
-              color="tert"
-            />
-          {:else}
-            <Switch
-              title="64Bit (Forced on with default install)"
-              value={true}
-              color="tert"
-              disabled={true}
-            />
-          {/if}
+          <Switch
+            title="64Bit"
+            bind:value={hlaeSettings.use_64bit}
+            tooltip="Launches with 64Bit TF2."
+            color="tert"
+          />
           <Switch
             title="Automatically playdemo"
             bind:value={hlaeSettings.playdemo}
             tooltip="Plays first demo on list as soon as it launches."
             color="tert"
           />
-          {#if outputSettings.method === "sparklyfx" && install != settings.tf_folder && !hlaeSettings.use_64bit}
+          {#if outputSettings.method === "sparklyfx" && !hlaeSettings.use_64bit}
             <div class="settings__span no_margin">
               HLAE will be automatically injected into TF2.
             </div>
@@ -179,7 +170,7 @@
         </div>
       {:else}
         <h1>Running Team Fortress 2</h1>
-        {#if hlaeSettings.playdemo}
+        {#if hlaeSettings.playdemo && startingDemo}
           <p>Playing demo: {startingDemo}</p>
         {/if}
       {/if}

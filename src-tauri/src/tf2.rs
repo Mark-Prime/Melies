@@ -14,7 +14,14 @@ fn get_tf2_path(settings: &Value) -> PathBuf {
 }
 
 fn build_launch_options(settings: &Value, demo_name: &str, install: &str) -> String {
-  let mut launch_options = settings["hlae"]["launch_options"].to_string().replace("\"", "").replace("-game tf", "");
+  let mut launch_options = settings["hlae"]["launch_options"]
+    .to_string()
+    .replace("\"", "")
+    .replace("-game tf", "");
+
+  if !launch_options.contains("-insecure") {
+    launch_options = format!("{} -insecure", launch_options);
+  }
 
   if demo_name != "" && settings["hlae"]["playdemo"] == true {
     let mut trimmed_name = demo_name.to_string().replace(".dem", "");
@@ -35,6 +42,10 @@ fn build_launch_options(settings: &Value, demo_name: &str, install: &str) -> Str
     launch_options = format!("{} -game {}", launch_options, game);
   } else if settings["hlae"]["use_64bit"] == true {
     launch_options = format!("{} -game tf", launch_options);
+  }
+
+  if settings["hlae"]["use_64bit"] != true {
+    launch_options = format!("{} -force32bit", launch_options);
   }
 
   return launch_options;
