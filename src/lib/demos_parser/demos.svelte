@@ -53,7 +53,7 @@
       case "tauri://drag-drop":
         isDragging = false;
 
-        console.log(settings);
+        $inspect(settings);
         
         for (let file of e.payload.paths) {
           if (file.endsWith(".dem")) {

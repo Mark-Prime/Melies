@@ -72,7 +72,7 @@
   function organizeEvents() {
     let events = [];
 
-    console.log(demo);
+    $inspect(demo);
 
     for (let index = 0; index < demo.length; index++) {
       const element = demo[index];

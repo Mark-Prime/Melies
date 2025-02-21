@@ -31,12 +31,12 @@
   async function loadVdm(name) {
     vdmName = name;
     vdm = await invoke("load_vdm", { name });
-    console.log(vdm);
+    $inspect(vdm);
   }
 
   async function saveVdm(name) {
     resp = await invoke("save_vdm", { name, vdm });
-    console.log(resp);
+    $inspect(resp);
     toggle();
   }
 
