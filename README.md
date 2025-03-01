@@ -18,8 +18,7 @@ A more detailed guide will be made in the future.
 
 ## Todo/Known Issues
 
-- Possible issue with "Prevent overwriting previously made VDMs" setting
-- Add setting for demo location (such as "\demos")
+Currently accepting feature requests and bug reports.
 
 ## License
 
