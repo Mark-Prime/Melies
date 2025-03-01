@@ -711,3 +711,36 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
 
     Value::from(resp)
 }
+
+pub(crate) fn cleanup_renamed_events(demo_map: Value, events: Vec<Value>) -> Value {
+    let mut demos = vec![];
+    let mut current_demo = vec![];
+    let mut current_demo_name = String::new();
+
+    for mut event in events.clone() {
+        let demo_name = format!("{}", event["demo_name"].as_str().unwrap());
+
+        if !demo_map[&demo_name].is_null() {
+            event["demo_name"] = demo_map[&demo_name].clone();
+            event["event"] = json!(event["event"].as_str().unwrap().replace(&demo_name, demo_map[&demo_name].as_str().unwrap()));
+        }
+
+        event["isKillstreak"] = json!(!event["value"]["Killstreak"].is_null());
+
+        if demo_name != current_demo_name {
+            if current_demo.len() > 0 {
+                demos.push(current_demo);
+            }
+            current_demo = vec![];
+            current_demo_name = demo_name;
+        }
+
+        current_demo.push(event.clone());
+    }
+
+    if current_demo.len() > 0 {
+        demos.push(current_demo);
+    }
+
+    json!(demos)
+}

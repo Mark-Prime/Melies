@@ -19,11 +19,15 @@
   import { faCheck, faXmark } from "@fortawesome/free-solid-svg-icons";
   import Input from "$lib/components/Input.svelte";
   import Select from "$lib/components/Select.svelte";
+  import { VirtualList } from 'svelte-virtuallists';
+
+  const dispatch = createEventDispatcher();
 
   let settings = {};
 
   let enabled = $state(false);
   let renameModalEnabled = $state(false);
+  let renameStatus = $state("");
   let resp = $state({ loaded: false });
   let mapList = $state([]);
   let anySelected = $state(false);
@@ -36,6 +40,8 @@
   let mapFilter = $state("");
   let vdmFilter = $state(null);
 
+  let filters = $derived({ map: mapFilter, search: searchFilter, vdm: vdmFilter });
+  let filtered = $derived(resp.demos.filter(filter));
 
   async function loadDemos() {
     settings = await invoke("load_settings");
@@ -125,7 +131,8 @@
     return false;
   }
 
-  function toggleSelected(demo) {
+  function toggleSelected(e, demo) {
+    e.preventDefault();
     demo.selected = !demo.selected;
 
     refreshList();
@@ -229,8 +236,24 @@
     
       await invoke("rename_file", vdmPayload);
     }
+  }
 
-    renameModalEnabled = false;
+  async function postRename(demos) {
+    renameStatus = "Validating changes in _events.txt and vdms...";
+
+    let demoMap = {};
+
+    for (let demo of demos) {
+      let demoName = demo.name.replace(".dem", "").substring(1);
+      demoMap[demoName] = replaceInputName(demo);
+    }
+
+    let payload = { demoMap }
+
+    console.log(payload);
+
+    await invoke("cleanup_rename", payload);
+    dispatch("reload");
   }
 
   function renameDemos() {
@@ -246,17 +269,20 @@
 
     for (let demo of demos) {
       promises.push(renameFile(demo));
-    } 
+    }
 
-    Promise.all(promises).then(() => {
+    renameStatus = "Renaming files...";
+
+    Promise.all(promises).then(async () => {
+      if (settings.demo_manager.auto_update) {
+        await postRename(demos);
+      }
       loadDemos();
+
+      renameModalEnabled = false;
+      renameStatus = "";
     });
   }
-  run(() => {
-    let filters = { map: mapFilter, search: searchFilter, vdm: vdmFilter };
-
-    refreshList();
-  });
 </script>
 
 <button class="btn btn--sec" onclick={toggle}>
@@ -265,257 +291,263 @@
 </button>
 
 <Modal color="sec" {toggle} {enabled} large tall on:open={loadDemos}>
-  <h1>Demo Manager</h1>
-  {#if resp.loaded}
-    <div class="filters">
-      <Input title="Search" color="sec" bind:value={searchFilter} />
-      <Select title="Map" color="sec" bind:value={mapFilter}>
-        <option value=""></option>
-        {#each mapList as map}
-          <option value={map}>{map}</option>
-        {/each}
-      </Select>
-      <Select title="VDM Status" color="sec" bind:value={vdmFilter}>
-        <option value={null}></option>
-        <option value={true}>Has VDM</option>
-        <option value={false}>Doesn't have VDM</option>
-      </Select>
-    </div>
-    <div>
-      <button onclick={selectAll}> Select All </button>
-      <button disabled={!anySelected} onclick={() => selectAll(false)}>
-        Deselect All
-      </button>
-      <button disabled={!anySelected} onclick={createVdms}>
-        <Fa icon={faFileCirclePlus} color={`var(--pri)`} />
-        Create VDMs
-      </button>
-      <button disabled={!anySelected} onclick={deleteVdms}>
-        <Fa icon={faFileCircleMinus} color={`var(--pri)`} />
-        Delete VDMs
-      </button>
-      <button disabled={!anySelected} onclick={deleteDemos}>
-        <Fa icon={faTrash} color={`var(--pri)`} />
-        Delete Demos
-      </button>
-      <button
-        disabled={!anySelected}
-        onclick={() => (openRenameModal())}
-      >
-        <Fa icon={faPen} color={`var(--pri)`} />
-        Mass Rename
-      </button>
-    </div>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Player Nickname</th>
-          <th>Length</th>
-          <th>Server</th>
-          <th>Map</th>
-          <th>Created Date</th>
-          <th
-            class="tooltip tooltip--left"
-            data-tooltip={`Does the demo have a vdm?`}
-            style="--kills: 0;"
+  <div class="demo-manager">
+    <h1>Demo Manager</h1>
+    {#if resp.loaded}
+        <div class="filters">
+          <Input title="Search" color="sec" bind:value={searchFilter} />
+          <Select title="Map" color="sec" bind:value={mapFilter}>
+            <option value=""></option>
+            {#each mapList as map}
+              <option value={map}>{map}</option>
+            {/each}
+          </Select>
+          <Select title="VDM Status" color="sec" bind:value={vdmFilter}>
+            <option value={null}></option>
+            <option value={true}>Has VDM</option>
+            <option value={false}>Doesn't have VDM</option>
+          </Select>
+        </div>
+        <div>
+          <button onclick={selectAll}> Select All </button>
+          <button disabled={!anySelected} onclick={() => selectAll(false)}>
+            Deselect All
+          </button>
+          <button disabled={!anySelected} onclick={createVdms}>
+            <Fa icon={faFileCirclePlus} color={`var(--pri)`} />
+            Create VDMs
+          </button>
+          <button disabled={!anySelected} onclick={deleteVdms}>
+            <Fa icon={faFileCircleMinus} color={`var(--pri)`} />
+            Delete VDMs
+          </button>
+          <button disabled={!anySelected} onclick={deleteDemos}>
+            <Fa icon={faTrash} color={`var(--pri)`} />
+            Delete Demos
+          </button>
+          <button
+            disabled={!anySelected}
+            onclick={() => (openRenameModal())}
           >
-            VDM
-          </th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {#each resp.demos.filter(filter) as demo}
-          <tr class={"table_row " + (demo.hasVdm && "demo--hasvdm") + (demo.selected ? " demo--selected" : "")}>
-            <td id={demo.name}>
-              {demo.name}
-            </td>
-            <td>{demo.header.nick}</td>
-            <td
-              class="tooltip"
-              data-tooltip={`${demo.header.ticks} ticks`}
-              style="--kills: 0;"
-            >
-              {tickToTime(demo.header.ticks)}
-            </td>
-            <td>{demo.header.server}</td>
-            <td>{demo.header.map}</td>
-            <td>
-              {dayjs
-                .unix(demo.metadata.created.secs_since_epoch)
-                .format("MMM DD, YYYY")}
-            </td>
-            <td class="table__has-vdm">
-              {#if demo.hasVdm}
-                <span
+            <Fa icon={faPen} color={`var(--pri)`} />
+            Mass Rename
+          </button>
+        </div>
+        <VirtualList items={filtered} isTable={true}>
+          {#snippet header()}
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Player Nickname</th>
+                <th>Length</th>
+                <th>Server</th>
+                <th>Map</th>
+                <th>Created Date</th>
+                <th
                   class="tooltip tooltip--left"
-                  data-tooltip={`This demo has a VDM.`}
+                  data-tooltip={`Does the demo have a vdm?`}
                   style="--kills: 0;"
                 >
-                  <Fa icon={faCheck} color={`var(--sec)`} />
-                </span>
-              {:else}
-                <span
-                  class="tooltip tooltip--left"
-                  data-tooltip={`This demo does not have a VDM.`}
-                  style="--kills: 0;"
-                >
-                  <Fa icon={faXmark} color={`var(--tert)`} />
-                </span>
-              {/if}
-            </td>
-            <td>
-              <a
-                name="#{demo.name}-select"
-                class="icon checkbox tooltip tooltip--left"
-                data-tooltip={`Select demo.`}
-                onclick={() => toggleSelected(demo)}
-                onkeydown={() => toggleSelected(demo)}
-                tabindex="-1"
-                role="button"
-                href="/"
-              >
-                {#if demo.selected}
-                  <Fa icon={faSquareCheck} color={`var(--pri)`} />
-                {:else}
-                  <Fa
-                    icon={faSquare}
-                    color={demo.hasVdm ? `var(--sec)` : `var(--tert)`}
-                  />
-                {/if}
-              </a>
-              <a
-                name="#{demo.name}-rename"
-                class="icon checkbox tooltip tooltip--left"
-                data-tooltip={`Rename demo.`}
-                onclick={() => openRenameModal(demo)}
-                onkeydown={() => openRenameModal(demo)}
-                tabindex="-1"
-                role="button"
-                href="/"
-              >
-                <Fa
-                  icon={faPen}
-                  color={demo.hasVdm ? `var(--sec)` : `var(--tert)`}
-                />
-              </a>
-              {#if demo.hasVdm}
-                <a
-                  name="#{demo.name}-delete_vdm"
-                  class="icon checkbox tooltip tooltip--left"
-                  data-tooltip={`Delete VDM.`}
-                  onclick={async () => await delete_vdm(demo.name)}
-                  onkeydown={async () => await delete_vdm(demo.name)}
-                  tabindex="-1"
-                  role="button"
-                  href="/"
-                >
-                  <Fa icon={faFileCircleMinus} color={`var(--err)`} />
-                </a>
-              {:else}
-                <a
-                  name="#{demo.name}-create_vdm"
-                  class="icon checkbox tooltip tooltip--left"
-                  data-tooltip={`Create blank VDM.`}
-                  onclick={async () => await create_vdm(demo.name)}
-                  onkeydown={async () => await create_vdm(demo.name)}
-                  tabindex="-1"
-                  role="button"
-                  href="/"
-                >
-                  <Fa icon={faFileCirclePlus} color="var(--pri)" />
-                </a>
-              {/if}
-              <a
-                name="#{demo.name}-delete"
-                class="icon checkbox tooltip tooltip--left"
-                data-tooltip={`Delete this demo.`}
+                  VDM
+                </th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+          {/snippet}
+          {#snippet vl_slot({ item, index })}
+            <tr class={"table_row " + (item.hasVdm && "demo--hasvdm") + (item.selected ? " demo--selected" : "")}>
+              <td id={item.name}>
+                {item.name}
+              </td>
+              <td>{item.header.nick}</td>
+              <td
+                class="tooltip"
+                data-tooltip={`${item.header.ticks} ticks`}
                 style="--kills: 0;"
-                onclick={async () => await delete_demo(demo.name, demo.hasVdm)}
-                onkeydown={async () =>
-                  await delete_demo(demo.name, demo.hasVdm)}
-                tabindex="-1"
-                role="button"
-                href="/"
               >
-                <Fa icon={faTrash} color={`var(--err)`} />
-              </a>
-            </td>
-          </tr>
-        {/each}
-      </tbody>
-    </table>
-    <Modal
-      color="tert"
-      toggle={() => (renameModalEnabled = !renameModalEnabled)}
-      enabled={renameModalEnabled}
-    >
-      <h4>{renameDemo ? `Rename ${renameDemo.name}` : `Mass Rename Demos`}</h4>
-      <Input
-        title="Rename Demo"
-        type="text"
+                {tickToTime(item.header.ticks)}
+              </td>
+              <td>{item.header.server}</td>
+              <td>{item.header.map}</td>
+              <td>
+                {dayjs
+                  .unix(item.metadata.created.secs_since_epoch)
+                  .format("MMM DD, YYYY")}
+              </td>
+              <td class="table__has-vdm">
+                {#if item.hasVdm}
+                  <span
+                    class="tooltip tooltip--left"
+                    data-tooltip={`This demo has a VDM.`}
+                    style="--kills: 0;"
+                  >
+                    <Fa icon={faCheck} color={`var(--sec)`} />
+                  </span>
+                {:else}
+                  <span
+                    class="tooltip tooltip--left"
+                    data-tooltip={`This demo does not have a VDM.`}
+                    style="--kills: 0;"
+                  >
+                    <Fa icon={faXmark} color={`var(--tert)`} />
+                  </span>
+                {/if}
+              </td>
+              <td style="width: fit-content;">
+                <a
+                  name="#{item.name}-select"
+                  class="icon checkbox tooltip tooltip--left"
+                  data-tooltip={`Select demo.`}
+                  onclick={(e) => toggleSelected(e, demo)}
+                  onkeydown={(e) => toggleSelected(e, demo)}
+                  tabindex="-1"
+                  role="button"
+                  href="/"
+                >
+                  {#if item.selected}
+                    <Fa icon={faSquareCheck} color={`var(--pri)`} />
+                  {:else}
+                    <Fa
+                      icon={faSquare}
+                      color={item.hasVdm ? `var(--sec)` : `var(--tert)`}
+                    />
+                  {/if}
+                </a>
+                <a
+                  name="#{item.name}-rename"
+                  class="icon checkbox tooltip tooltip--left"
+                  data-tooltip={`Rename demo.`}
+                  onclick={() => openRenameModal(demo)}
+                  onkeydown={() => openRenameModal(demo)}
+                  tabindex="-1"
+                  role="button"
+                  href="/"
+                >
+                  <Fa
+                    icon={faPen}
+                    color={item.hasVdm ? `var(--sec)` : `var(--tert)`}
+                  />
+                </a>
+                {#if item.hasVdm}
+                  <a
+                    name="#{item.name}-delete_vdm"
+                    class="icon checkbox tooltip tooltip--left"
+                    data-tooltip={`Delete VDM.`}
+                    onclick={async () => await delete_vdm(item.name)}
+                    onkeydown={async () => await delete_vdm(item.name)}
+                    tabindex="-1"
+                    role="button"
+                    href="/"
+                  >
+                    <Fa icon={faFileCircleMinus} color={`var(--err)`} />
+                  </a>
+                {:else}
+                  <a
+                    name="#{item.name}-create_vdm"
+                    class="icon checkbox tooltip tooltip--left"
+                    data-tooltip={`Create blank VDM.`}
+                    onclick={async () => await create_vdm(item.name)}
+                    onkeydown={async () => await create_vdm(item.name)}
+                    tabindex="-1"
+                    role="button"
+                    href="/"
+                  >
+                    <Fa icon={faFileCirclePlus} color="var(--pri)" />
+                  </a>
+                {/if}
+                <a
+                  name="#{item.name}-delete"
+                  class="icon checkbox tooltip tooltip--left"
+                  data-tooltip={`Delete this demo.`}
+                  style="--kills: 0;"
+                  onclick={async () => await delete_demo(item.name, item.hasVdm)}
+                  onkeydown={async () =>
+                    await delete_demo(item.name, item.hasVdm)}
+                  tabindex="-1"
+                  role="button"
+                  href="/"
+                >
+                  <Fa icon={faTrash} color={`var(--err)`} />
+                </a>
+              </td>
+            </tr>
+          {/snippet}
+        </VirtualList>
+      <Modal
         color="tert"
-        bind:value={renameNameInput}
-      />
-      <p>
-        Metadata elements:
-        <span
-          class="tooltip"
-          data-tooltip={`The player's nickname\nExample: ${renameDemo?.header?.nick || "JoseGonzales2007"}`}
-          style="--kills: 1;"
-        >
-          {`{nickname}`},
-        </span>
-        <span
-          class="tooltip"
-          data-tooltip={`The number of ticks in the demo\nExample: ${renameDemo?.header?.ticks || 12345}`}
-          style="--kills: 1;"
-        >
-          {`{ticks}`},
-        </span>
-        <span
-          class="tooltip"
-          data-tooltip={`The server the demo was played on\nExample: ${renameDemo?.header?.server || "skial.harvest.247"}`}
-          style="--kills: 1;"
-        >
-          {`{server}`},
-        </span>
-        <span
-          class="tooltip"
-          data-tooltip={`The map the demo was played on\nExample: ${renameDemo?.header?.map || "koth_harvest_final"}`}
-          style="--kills: 1;"
-        >
-          {`{map}`},
-        </span>
-        <span
-          class="tooltip"
-          data-tooltip={`The date the demo was created\nExample: ${dayjs.unix(renameDemo?.metadata?.created?.secs_since_epoch).format("YYYY-MM-DD") || "2022-01-01"}`}
-          style="--kills: 1;"
-        >
-          {`{date}`},
-        </span>
-        <span
-          class="tooltip"
-          data-tooltip={`The time the demo was created\nExample: ${dayjs.unix(renameDemo?.metadata?.created?.secs_since_epoch).format("HH-mm-ss") || "03-10-35"}`}
-          style="--kills: 1;"
-        >
-          {`{time}`}
-        </span>
-      </p>
-      <div class="buttons">
-        <button
-          class="cancel-btn"
-          onclick={() => (renameModalEnabled = !renameModalEnabled)}
-        >
-          Cancel
-        </button>
-        <button onclick={renameDemos} disabled={!renameNameInput}>
-          {renameDemo ? `Rename` : `Mass Rename`}
-        </button>
-      </div>
-    </Modal>
-  {/if}
+        toggle={() => (renameModalEnabled = !renameModalEnabled)}
+        enabled={renameModalEnabled}
+      >
+        {#if renameStatus}
+          <h4>{renameStatus}</h4>
+        {:else}
+          <h4>{renameDemo ? `Rename ${renameDemo.name}` : `Mass Rename Demos`}</h4>
+          <Input
+            title="Rename Demo"
+            type="text"
+            color="tert"
+            bind:value={renameNameInput}
+          />
+          <p>
+            Metadata elements:
+            <span
+              class="tooltip"
+              data-tooltip={`The player's nickname\nExample: ${renameDemo?.header?.nick || "JoseGonzales2007"}`}
+              style="--kills: 1;"
+            >
+              {`{nickname}`},
+            </span>
+            <span
+              class="tooltip"
+              data-tooltip={`The number of ticks in the demo\nExample: ${renameDemo?.header?.ticks || 12345}`}
+              style="--kills: 1;"
+            >
+              {`{ticks}`},
+            </span>
+            <span
+              class="tooltip"
+              data-tooltip={`The server the demo was played on\nExample: ${renameDemo?.header?.server || "skial.harvest.247"}`}
+              style="--kills: 1;"
+            >
+              {`{server}`},
+            </span>
+            <span
+              class="tooltip"
+              data-tooltip={`The map the demo was played on\nExample: ${renameDemo?.header?.map || "koth_harvest_final"}`}
+              style="--kills: 1;"
+            >
+              {`{map}`},
+            </span>
+            <span
+              class="tooltip"
+              data-tooltip={`The date the demo was created\nExample: ${dayjs.unix(renameDemo?.metadata?.created?.secs_since_epoch).format("YYYY-MM-DD") || "2022-01-01"}`}
+              style="--kills: 1;"
+            >
+              {`{date}`},
+            </span>
+            <span
+              class="tooltip"
+              data-tooltip={`The time the demo was created\nExample: ${dayjs.unix(renameDemo?.metadata?.created?.secs_since_epoch).format("HH-mm-ss") || "03-10-35"}`}
+              style="--kills: 1;"
+            >
+              {`{time}`}
+            </span>
+          </p>
+          <div class="buttons">
+            <button
+              class="cancel-btn"
+              onclick={() => (renameModalEnabled = !renameModalEnabled)}
+            >
+              Cancel
+            </button>
+            <button onclick={renameDemos} disabled={!renameNameInput}>
+              {renameDemo ? `Rename` : `Mass Rename`}
+            </button>
+          </div>
+        {/if}
+      </Modal>
+    {/if}
+  </div>
 </Modal>
 
 <style lang="scss">
@@ -528,6 +560,12 @@
     & > * {
       width: 100%;
     }
+  }
+
+  .demo-manager {
+    display: flex;
+    flex-direction: column;
+    max-height: min(calc(100vh - 10rem), 900px);
   }
 
   .filters {
@@ -555,12 +593,6 @@
   .btn {
     display: flex;
     gap: 0.5rem;
-  }
-
-  table {
-    border-collapse: separate;
-    border-spacing: 0 2px;
-    width: 100%;
   }
 
   th {

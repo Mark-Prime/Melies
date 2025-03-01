@@ -123,7 +123,8 @@ pub(crate) fn default_settings() -> Value {
       },
       "demo_manager": {
         "default_name": "{date}_{time}_{map}_{ticks}",
-        "confirm_delete": true
+        "confirm_delete": true,
+        "auto_update": true
       },
       "hlae": {
         "sparklyfx_path": "",

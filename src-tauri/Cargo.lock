@@ -4990,9 +4990,9 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 
 [[package]]
 name = "vdm"
-version = "1.0.8"
+version = "1.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "597c7c0be957a74e6513972c36937c4637e32d6239983721101e0cc64b51dfa3"
+checksum = "f41f1fa1d9fd565976d5cdf7c8fbd974509d230b329b683e87d1f11b7d71de47"
 dependencies = [
  "regex",
 ]

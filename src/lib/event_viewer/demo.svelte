@@ -72,14 +72,10 @@
   function organizeEvents() {
     let events = [];
 
-    $inspect(demo);
-
     for (let index = 0; index < demo.length; index++) {
       const element = demo[index];
 
       let event = new Event(element, false);
-
-      console.log(event);
 
       if (event.isKillstreak) {
         events.push(event);
@@ -119,8 +115,6 @@
 
       events.push(event);
     }
-
-    console.log(events)
 
     return events;
   }

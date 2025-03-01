@@ -23,6 +23,7 @@
     "dayjs": "^1.11.13",
     "mathjs": "^11.10.0",
     "svelte-fa": "^4.0.2",
+    "svelte-virtuallists": "^1.4.1",
     "tauri-plugin-store-api": "github:tauri-apps/tauri-plugin-store"
   },
   "devDependencies": {

@@ -24,13 +24,11 @@
     videos = await invoke("load_files", { folder });
     index = 0;
     doRerender++;
-    $inspect(videos);
   }
 
   async function loadSettings() {
     settings = await invoke("load_settings");
     folder = settings.output.folder
-    $inspect(settings)
   }
 
   async function open_file(path) {

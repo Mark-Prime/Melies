@@ -774,3 +774,28 @@ input:checked + .slider--tert:before {
   background: var(--tert-con);
   border-radius: 0 8px 8px 0;
 }
+
+.vtlist-inner {
+  border-collapse: separate;
+  border-spacing: 0 2px;
+  width: 100%;
+}
+
+/* width */
+.vtlist::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+/* Track */
+.vtlist::-webkit-scrollbar-track {
+  background: var(--sec);
+  border-radius: 0 8px 8px 0;
+  overflow: hidden;
+}
+
+/* Handle */
+.vtlist::-webkit-scrollbar-thumb {
+  background: var(--sec-con);
+  border-radius: 0 8px 8px 0;
+}

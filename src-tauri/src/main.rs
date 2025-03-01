@@ -19,7 +19,7 @@ use vdm::VDM;
 use trash;
 
 use crate::clip::Clip;
-use crate::demos::{load_demo, scan_demo, scan_for_demos, scan_for_vdms, validate_demos_folder};
+use crate::demos::*;
 use crate::event::Event;
 use crate::event::EventStyle::{Bookmark, Killstreak};
 use crate::logstf::parse;
@@ -1327,6 +1327,23 @@ fn rename_file(old_path: &str, new_path: &str) {
     fs::rename(path, sanitized_path).unwrap();
 }
 
+#[command]
+fn cleanup_rename(demo_map: Value) {
+    let events_obj = load_events();
+
+    let events = match events_obj["events"].as_array() {
+        Some(val) => val.to_owned(),
+        None => {
+            return;
+        }
+    };
+
+    save_events(cleanup_renamed_events(demo_map.clone(), events));
+    let settings = load_settings();
+
+    cleanup_renamed_vdms(demo_map, scan_for_vdms(load_settings()), settings["tf_folder"].as_str().unwrap());
+}
+
 fn sanitize_name(path: &Path) -> PathBuf {
     let mut result = path.to_owned();
 
@@ -1457,6 +1474,7 @@ fn main() {
             load_theme,
             open_themes_folder,
             rename_file,
+            cleanup_rename,
             is_steam_running,
             launch_tf2,
             batch_record,

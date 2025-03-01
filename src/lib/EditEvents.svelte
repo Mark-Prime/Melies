@@ -22,6 +22,8 @@
       demo.sort((a, b) => a.tick - b.tick);
     }
 
+    console.log({ newEvents: demos });
+
     await invoke("save_events", { newEvents: demos });
     dispatch("reload");
     toggle();

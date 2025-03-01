@@ -211,6 +211,12 @@ on all players in POV demos."
       bind:value={settings.confirm_delete}
       tooltip="Gives a confirmation prompt before deleting demos."
     />
+    <Switch
+      title="Automatically rename events and vdm commands"
+      bind:value={settings.auto_update}
+      tooltip="When a demo is renamed, automatically update the
+events and vdm commands that reference the demo."
+    />
   </div>
 
   {#if automationSettings.enabled}
