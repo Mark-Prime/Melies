@@ -6,7 +6,7 @@
   import Fa from "svelte-fa";
   import Input from "./components/Input.svelte";
   import VideoPlayer from "./components/VideoPlayer.svelte";
-  import { filter } from "mathjs";
+  import { filter, to } from "mathjs";
 
   let settings = {};
   let videos = $state([]);
@@ -15,14 +15,26 @@
   let index = $state(0);
   let folder = $state("");
 
+  let defaultVideo = $state("video");
+
   const dispatch = createEventDispatcher();
 
   const forceUpdate = async (_) => {};
 	let doRerender = $state(0);
 
+  function setDefaultVideo() {
+    if (videos[index].layers[defaultVideo]) {
+      return;
+    }
+
+    let keys = Object.keys(videos[index].layers);
+    defaultVideo = keys[0];
+  }
+
   async function load_files() {
     videos = await invoke("load_files", { folder });
     index = 0;
+    setDefaultVideo();
     doRerender++;
   }
 
@@ -53,6 +65,12 @@
   onMount(() => {
     loadSettings();
   })
+
+  function playVideo(layerName) {
+    defaultVideo = layerName;
+    console.log(defaultVideo, layerName);
+    doRerender++;
+  }
 
   async function save_files(video) {
     saved.push(video.path)
@@ -116,17 +134,19 @@
         Open
       </button>
     </div>
-    {#await forceUpdate(doRerender) then _}
+    {#key doRerender}
       {#if videos.length > 0}
         <h3>{videos[index]?.name}</h3>
         <div class="video-player">
-          <VideoPlayer video={videos[index]?.layers?.video} />
+          <VideoPlayer video={videos[index]?.layers[defaultVideo]} />
           <div class="side-buttons">
             <div class="layers">
               Open Layer
-              <button onclick={() => open_file(videos[index].layers.video)} class="btn">Video</button>
-              {#each Object.keys(videos[index]?.layers).filter((layer) => layer !== "video") as layer}
-                <button onclick={() => open_file(videos[index].layers[layer])} class="btn btn--sec">{layer}</button>
+              <button onclick={() => open_file(videos[index].layers[defaultVideo])} class="btn">{defaultVideo[0].toUpperCase() + defaultVideo.slice(1).toLowerCase()}</button>
+              {#each Object.keys(videos[index]?.layers).filter((layer) => layer != defaultVideo) as layer}
+                <button onclick={() => playVideo(layer)} class="btn btn--sec">
+                  {layer.split(" ").map((word) => word[0].toUpperCase() + word.slice(1).toLowerCase()).join(" ")}
+                </button>
               {/each} 
 
               <div class="buttons">
@@ -145,7 +165,7 @@
           </div>
         </div>
       {/if}
-    {/await}
+    {/key}
   </div>
 
   {#snippet footer()}

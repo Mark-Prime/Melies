@@ -46,6 +46,8 @@
   async function loadDemos() {
     settings = await invoke("load_settings");
 
+    console.log(settings)
+
     renameDefault = settings.demo_manager?.default_name || "{date}_{time}_{map}_{ticks}";
 
     try {
@@ -277,6 +279,7 @@
       if (settings.demo_manager.auto_update) {
         await postRename(demos);
       }
+
       loadDemos();
 
       renameModalEnabled = false;
@@ -398,8 +401,8 @@
                   name="#{item.name}-select"
                   class="icon checkbox tooltip tooltip--left"
                   data-tooltip={`Select demo.`}
-                  onclick={(e) => toggleSelected(e, demo)}
-                  onkeydown={(e) => toggleSelected(e, demo)}
+                  onclick={(e) => toggleSelected(e, item)}
+                  onkeydown={(e) => toggleSelected(e, item)}
                   tabindex="-1"
                   role="button"
                   href="/"
@@ -417,8 +420,8 @@
                   name="#{item.name}-rename"
                   class="icon checkbox tooltip tooltip--left"
                   data-tooltip={`Rename demo.`}
-                  onclick={() => openRenameModal(demo)}
-                  onkeydown={() => openRenameModal(demo)}
+                  onclick={() => openRenameModal(item)}
+                  onkeydown={() => openRenameModal(item)}
                   tabindex="-1"
                   role="button"
                   href="/"

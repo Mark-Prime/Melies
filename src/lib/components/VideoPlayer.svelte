@@ -11,6 +11,7 @@
   })
 
 </script>
+
 {#if video}
   <video controls bind:this={videoElement} class="video">
     <track kind="captions" />

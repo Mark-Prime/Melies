@@ -213,7 +213,7 @@ on all players in POV demos."
     />
     <Switch
       title="Automatically rename events and vdm commands"
-      bind:value={settings.auto_update}
+      bind:value={demoManagerSettings.auto_update}
       tooltip="When a demo is renamed, automatically update the
 events and vdm commands that reference the demo."
     />
