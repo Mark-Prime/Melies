@@ -222,10 +222,14 @@ pub(crate) fn batch_record(demo_name: &str, settings: &Value, install: &str) -> 
 
     delete_folder(&last_modified, 0);
 
-    last_modified = last_modified_folder(output_folder).unwrap().path();
-    clip_name = format!("{}", last_modified.file_name().unwrap().to_str().unwrap());
-    println!("New clip name: {}", clip_name);
-    demo_name = get_demo_name(&last_modified);
+    let last_folder = last_modified_folder(output_folder);
+
+    if last_folder.is_some() {
+      last_modified = last_folder.unwrap().path();
+      clip_name = format!("{}", last_modified.file_name().unwrap().to_str().unwrap());
+      println!("New clip name: {}", clip_name);
+      demo_name = get_demo_name(&last_modified);
+    }
   }
 
   let vdm_path = format!("{}\\{}.vdm", tf_folder, demo_name);
