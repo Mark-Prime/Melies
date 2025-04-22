@@ -317,7 +317,7 @@
                 rel="noopener noreferrer"
               >
                 {getPlayerName(killstreak.steamid)}
-              </a>got a {killstreak.streak}ks at {killstreak.time * 66}
+              </a> got a {killstreak.streak}ks at {killstreak.time * 66}
             </p>
             <div class="add_event">
               <ToggleSelected value={killstreak.selected} on:click={toggleSelected(killstreak)} />
@@ -350,10 +350,12 @@
                     rel="noopener noreferrer"
                   >
                     {getPlayerName(event.killer)}
-                  </a>{#if event.isDrop}
+                  </a>
+                  {#if event.isDrop}
                     <strong>dropped </strong>{:else}
                     killed
-                  {/if}<a
+                  {/if}
+                  <a
                     href={`https://logs.tf/profile/${
                       getPlayerStats(event.steamid)?.steamid64
                     }`}
@@ -365,7 +367,8 @@
                     rel="noopener noreferrer"
                   >
                     {getPlayerName(event.steamid)}
-                  </a>at {event.time * 66}
+                  </a>
+                  at {event.time * 66}
                 </p>
                 <div class="add_event">
                   <ToggleSelected value={event.selected} on:click={toggleSelected(event)} />
@@ -398,7 +401,8 @@
                     rel="noopener noreferrer"
                   >
                     {resp["names"][event.steamid]}
-                  </a>used Übercharge ({event.medigun}) at {event.time * 66}
+                  </a>
+                  used Übercharge ({event.medigun}) at {event.time * 66}
                 </p>
                 <div class="add_event">
                   <ToggleSelected value={event.selected} on:click={toggleSelected(event)} />
@@ -471,6 +475,7 @@
       padding: 0;
       margin: 0;
       white-space: nowrap;
+      text-align: left;
     }
   }
 
