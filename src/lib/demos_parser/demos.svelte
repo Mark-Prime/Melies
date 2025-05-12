@@ -316,7 +316,7 @@
     parsedDemo = parsedDemo;
   }
 
-  function toggleKillsSelected(kills) {
+  function toggleKillsSelected(kills, victimPov = false) {
     let newKills = [ ...kills ];
     let selected = false;
 
@@ -328,6 +328,7 @@
     }
 
     for (let kill of newKills) {
+      kill.victimPov = victimPov;
       kill.selected = selected;
     }
 
@@ -403,7 +404,7 @@
               events.push({
                 time: kill.tick + 20,
                 label: `k-${kill.killer_class}_v-${kill.victim_class}`,
-                steamid64: parsedDemo.data.users[i].steamId64,
+                steamid64: parsedDemo.data.users[kill.victimPov ? kill.victim : i].steamId64,
                 bookmark: true,
               });
             }

@@ -235,6 +235,8 @@ fn start_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
             if let Some(skip_to_tick) = clip.start_tick.checked_sub(66) {
                 skip_props.skip_to_tick = Some(skip_to_tick);
             }
+            
+            skip_props.name = format!("Skip to first clip");
         }
     }
 
@@ -252,6 +254,7 @@ fn add_clip_to_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
     if clip.start_tick > last_tick + 300 {
         let skip_props = vdm.create_action(ActionType::SkipAhead).props_mut();
 
+        skip_props.name = format!("Skip {} ticks", clip.start_tick - last_tick);
         skip_props.start_tick = Some(last_tick + 66);
         skip_props.skip_to_tick = Some(clip.start_tick - 66);
     }

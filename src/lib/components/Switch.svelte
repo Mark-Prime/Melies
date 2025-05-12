@@ -24,6 +24,7 @@
       <span class={`slider round slider--${color}`}></span>
     </label>
     <div
+      class="text"
       class:tooltip
       data-tooltip={tooltip?.trim() || ""}
       style={tooltip
@@ -38,5 +39,9 @@
 <style>
   .disabled {
     opacity: 0.5;
+  }
+
+  .text {
+    text-align: left;
   }
 </style>

@@ -260,7 +260,7 @@
   <Fa icon={faFlag} color={`var(--sec)`} />
   Load from Logs.tf
 </button>
-<Modal color="sec" {toggle} {enabled}>
+<Modal color="sec" {toggle} {enabled} min_width="700px">
   {#if resp.loading}
     <h1>Logs.tf Parser</h1>
     <div class="loading">

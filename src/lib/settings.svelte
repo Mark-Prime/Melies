@@ -1,5 +1,5 @@
 <script>
-  import { run } from 'svelte/legacy';
+  import { run } from "svelte/legacy";
 
   // @ts-ignore
   import { invoke } from "@tauri-apps/api/core";
@@ -24,8 +24,8 @@
   let enabled = $state(false);
 
   let toggle = () => {
-    enabled = !enabled
-  
+    enabled = !enabled;
+
     if (enabled) {
       loadSettings();
     }
@@ -56,24 +56,23 @@
   }
 
   function addInstall() {
-    settings.alt_installs = [...settings.alt_installs, {
-      name: "",
-      tf_folder: "",
-    }]
+    settings.alt_installs = [
+      ...settings.alt_installs,
+      {
+        name: "",
+        tf_folder: "",
+      },
+    ];
   }
 
   function removeInstall(install) {
     settings.alt_installs.splice(install, 1);
 
-    settings.alt_installs = settings.alt_installs
+    settings.alt_installs = settings.alt_installs;
   }
 </script>
 
-<button class="btn btn--sec" onclick={toggle}>
-  <Fa icon={faGear} color={`var(--sec)`} />
-</button>
-<Modal color="sec" {toggle} {enabled}>
-  <h1>Settings</h1>
+{#snippet general()}
   <div class="setting">
     <div class="settings__input-group settings__span">
       <Input
@@ -82,29 +81,33 @@
         tooltip="The full filepath to your \tf folder within the Team Fortress 2 game files."
       />
     </div>
-    {#each settings.alt_installs || [] as install, index}
-      <div class="settings__input-group settings__span install-group">
-        <Input
-          title="Install Name"
-          bind:value={install.name}
-          tooltip="The full filepath to your \tf folder within the Team Fortress 2 game files."
-        />
-      <Input
-          title="Custom \tf Folder Path"
-          bind:value={install.tf_folder}
-          tooltip="The full filepath to your \tf folder within the Team Fortress 2 game files."
-        />
-        <button class="cancel-btn" onclick={() => removeInstall(index)}>
-          <Fa icon={faMinus} color={`var(--pri)`} />
-        </button>
-      </div>
-    {/each}
+    <div class="settings__input-group settings__span">
+      {#each settings.alt_installs || [] as install, index}
+        <div class="settings__input-group settings__span install-group">
+          <Input
+            title={index === 0 ? "Nickname" : ""}
+            bind:value={install.name}
+            tooltip="The full filepath to your \tf folder within the Team Fortress 2 game files."
+          />
+          <Input
+            title={index === 0 ? "Custom \\tf Folder Path" : ""}
+            bind:value={install.tf_folder}
+            tooltip="The full filepath to your \tf folder within the Team Fortress 2 game files."
+          />
+          <button class="cancel-btn" onclick={() => removeInstall(index)}>
+            <Fa icon={faMinus} color={`var(--pri)`} />
+          </button>
+        </div>
+      {/each}
+    </div>
     <div class="btn-container">
       <button class="btn-custom-install" onclick={addInstall}>
         <Fa icon={faPlus} color={`var(--pri)`} />
         Add Custom Install
       </button>
-      <a href="https://www.youtube.com/watch?v=lH4scK3uB_s" target="_blank">What's this?</a>
+      <a href="https://www.youtube.com/watch?v=lH4scK3uB_s" target="_blank">
+        What's this?
+      </a>
     </div>
     <div class="settings__input-group settings__span">
       <Input
@@ -152,7 +155,47 @@ on all players in POV demos."
     />
   </div>
 
-  <h1>Demo Manager</h1>
+  <br />
+  {#if automationSettings.enabled}
+    <h2>Automation</h2>
+    <div class="setting">
+      <Switch
+        title="Airshots"
+        bind:value={automationSettings.airshots}
+        tooltip="Bookmark anytime a player hits an airshot."
+      />
+      <Switch
+        title="Med Picks"
+        bind:value={automationSettings.med_picks}
+        tooltip="Bookmark anytime a player kills a Medic."
+      />
+      <Switch
+        title="Killstreaks"
+        bind:value={automationSettings.killstreaks}
+        tooltip="Bookmark anytime a player gets a killstreak."
+      />
+      <Switch
+        title="Record Entire Life"
+        bind:value={automationSettings.whole_life}
+        tooltip="Record the entire life. Will use standard bookmarks if disabled."
+      />
+    </div>
+
+    <h4>Classes</h4>
+
+    <div class="setting">
+      {#each Object.keys(automationSettings.classes) as class_name}
+        <Switch
+          title="Record {class_name[0].toUpperCase() + class_name.slice(1)}"
+          bind:value={automationSettings.classes[class_name]}
+          tooltip="Record clips of {class_name}."
+        />
+      {/each}
+    </div>
+  {/if}
+{/snippet}
+
+{#snippet demoManager()}
   <div class="setting">
     <div class="settings__input-group settings__span">
       <Input
@@ -218,50 +261,9 @@ on all players in POV demos."
 events and vdm commands that reference the demo."
     />
   </div>
+{/snippet}
 
-  {#if automationSettings.enabled}
-    <Collapse defaultOpen={true} title="Automation Tools">
-      <div class="bordered bordered--pri ">
-        <div class="setting">
-          <Switch
-            title="Airshots"
-            bind:value={automationSettings.airshots}
-            tooltip="Bookmark anytime a player hits an airshot."
-          />
-          <Switch
-            title="Med Picks"
-            bind:value={automationSettings.med_picks}
-            tooltip="Bookmark anytime a player kills a Medic."
-          />
-          <Switch
-            title="Killstreaks"
-            bind:value={automationSettings.killstreaks}
-            tooltip="Bookmark anytime a player gets a killstreak."
-          />
-          <Switch
-            title="Record Entire Life"
-            bind:value={automationSettings.whole_life}
-            tooltip="Record the entire life. Will use standard bookmarks if disabled."
-          />
-        </div>
-
-        <h4>Classes</h4>
-
-        <div class="setting">
-          {#each Object.keys(automationSettings.classes) as class_name}
-            <Switch
-              title="Record {class_name[0].toUpperCase() + class_name.slice(1)}"
-              bind:value={automationSettings.classes[class_name]}
-              tooltip="Record clips of {class_name}."
-            />
-          {/each}
-        </div>
-      </div>
-    </Collapse>
-  {/if}
-
-  <h2>Output</h2>
-
+{#snippet output()}
   <div class="setting">
     <div class="settings__input-group settings__span">
       <Input
@@ -306,7 +308,9 @@ events and vdm commands that reference the demo."
       title="Framerate"
       bind:value={outputSettings.framerate}
       color="sec"
-      display={!["sparklyfx", "svr", "svr.mov", "svr.mp4", "lawena"].includes(outputSettings.method)}
+      display={!["sparklyfx", "svr", "svr.mov", "svr.mp4", "lawena"].includes(
+        outputSettings.method
+      )}
     />
     {#if ["sparklyfx", "svr", "svr.mov", "svr.mp4", "lawena"].includes(outputSettings.method)}
       <div></div>
@@ -344,9 +348,9 @@ events and vdm commands that reference the demo."
       color="sec"
     />
   </div>
+{/snippet}
 
-  <h2>Recording</h2>
-
+{#snippet recording()}
   <div class="setting">
     <Input
       title="Commands"
@@ -474,57 +478,88 @@ Useful in STVs when the player could be dead."
       color="tert"
     /> -->
   </div>
+{/snippet}
 
+{#snippet hlae()}
   {#if !["svr", "svr.mov", "svr.mp4"].includes(outputSettings.method)}
-    <h2>
-      {#if outputSettings.method === "sparklyfx"}
-        HLAE
-      {:else}
-        TF2
-      {/if}
-    </h2>
-
     <div class="setting">
       {#if outputSettings.method === "sparklyfx"}
         <Input
           title="HLAE .exe Path"
           bind:value={hlaeSettings.hlae_path}
-          color="pri"
+          color="sec"
         />
         <Input
           title="SparklyFX .dll Path"
           bind:value={hlaeSettings.sparklyfx_path}
-          color="pri"
+          color="sec"
         />
       {/if}
       <div class="settings__input-group settings__span">
         <Input
           title="TF2 Launch Options"
           bind:value={hlaeSettings.launch_options}
-          color="pri"
+          color="sec"
         />
       </div>
       <Switch
         title="64Bit"
         bind:value={hlaeSettings.use_64bit}
         tooltip="Launches with 64Bit TF2."
-        color="pri"
+        color="sec"
       />
       <Switch
         title="Automatically playdemo"
         bind:value={hlaeSettings.playdemo}
         tooltip="Plays first demo on list as soon as it launches."
-        color="pri"
+        color="sec"
       />
     </div>
+  
+  {:else}
+    <h1>SVR must be launched through the SVR client</h1>
   {/if}
+{/snippet}
 
-  <Addons bind:addons={addons} />
+{#snippet addonsTab()}
+  <Addons bind:addons />
+{/snippet}
 
+{#snippet theme()}
   <Theme />
-
+{/snippet}
+<button class="btn btn--sec" onclick={toggle}>
+  <Fa icon={faGear} color={`var(--sec)`} />
+</button>
+<Modal
+  color="sec"
+  width="700px"
+  {toggle}
+  {enabled}
+  tabHeaders={[
+    "General",
+    "Output",
+    "Recording",
+    "Demo Manager",
+    {
+      title: outputSettings.method === "sparklyfx" ? "HLAE" : "TF2",
+      enabled: !["svr", "svr.mov", "svr.mp4"].includes(outputSettings.method),
+    },
+    "Addons",
+    "Theme",
+  ]}
+  tabs={[
+    general,
+    output,
+    recording,
+    demoManager,
+    hlae,
+    addonsTab,
+    theme,
+  ]}
+>
   {#snippet footer()}
-    <div class="buttons" >
+    <div class="buttons">
       <button onclick={toggle} class="cancel-btn">Cancel</button>
       <button onclick={saveSettings} class="Save"> Save </button>
     </div>
@@ -537,14 +572,6 @@ Useful in STVs when the player could be dead."
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
     padding-top: 1rem;
-  }
-
-  .bordered {
-    padding: 1rem;
-
-    & > .setting {
-      margin-bottom: 0;
-    }
   }
 
   .btn {
@@ -561,7 +588,7 @@ Useful in STVs when the player could be dead."
       height: 100%;
       width: fit-content;
 
-      gap: .5rem;
+      gap: 0.5rem;
 
       display: flex;
       align-items: center;
@@ -571,20 +598,19 @@ Useful in STVs when the player could be dead."
     &-container {
       width: fit-content;
 
-      gap: .5rem;
+      gap: 0.5rem;
 
       display: flex;
       align-items: center;
       justify-content: center;
-
     }
   }
 
   .install-group {
     display: grid;
-    grid-template-columns: .5fr 1fr max-content;
+    grid-template-columns: 0.5fr 1fr max-content;
     gap: 1rem;
-    
+
     align-items: end;
   }
 </style>

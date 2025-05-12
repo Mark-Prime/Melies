@@ -89,7 +89,7 @@
   Edit Events
 </button>
 
-<Modal color="pri" {toggle} {enabled} on:open={loadEvents}>
+<Modal color="pri" {toggle} {enabled} on:open={loadEvents} min_width="600px">
   {#each demos as demo, demoIndex}
     {#each demo as event, i (`${demoIndex}__${i}`)}
       <DemoEdit {demoIndex} {i} {demo} {demos} {event} {refresh} />

@@ -31,12 +31,10 @@
   async function loadVdm(name) {
     vdmName = name;
     vdm = await invoke("load_vdm", { name });
-    $inspect(vdm);
   }
 
   async function saveVdm(name) {
     resp = await invoke("save_vdm", { name, vdm });
-    $inspect(resp);
     toggle();
   }
 
@@ -163,6 +161,7 @@
       overflow-y: auto;
 
       padding-right: 0.25rem;
+      padding-bottom: 0.25rem;
 
       /* width */
       &::-webkit-scrollbar {

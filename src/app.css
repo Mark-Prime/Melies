@@ -736,8 +736,8 @@ input:checked + .slider--tert:before {
 }
 
 .autocomplete--tert .autocomplete-list-item.selected {
-  background-color: var(--tert-con-text) !important;
-  color: var(--bg) !important;
+  background-color: var(--tert-con) !important;
+  color: var(--tert-con-text) !important;
 }
 
 .autocomplete--tert .autocomplete-list-item.confirmed {

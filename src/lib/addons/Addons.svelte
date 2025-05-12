@@ -13,25 +13,23 @@
 </script>
 
 <div class="addons">
-  <Collapse defaultOpen={false} title="Addons">
-    {#if Object.keys(addons).length === 0}
-      <div class="setting">
-        <div class="settings__span">No Addons installed</div>
-      </div>
-    {/if}
-
-    {#each keys as addon, i}
-      <Addon bind:addon={keys[i]} bind:addons={addons} />
-    {/each}
-    <div>
-      <button onclick={() => window.open("https://github.com/Mark-Prime/awesome-Melies-addons")}>
-        Get Addons
-      </button>
-      <button onclick={() => invoke("open_addons_folder")}>
-        Open Addons Folder
-      </button>
+  {#if Object.keys(addons).length === 0}
+    <div class="setting">
+      <div class="settings__span">No Addons installed</div>
     </div>
-  </Collapse>
+  {/if}
+
+  {#each keys as addon, i}
+    <Addon bind:addon={keys[i]} bind:addons={addons} />
+  {/each}
+  <div>
+    <button onclick={() => window.open("https://github.com/Mark-Prime/awesome-Melies-addons")}>
+      Get Addons
+    </button>
+    <button onclick={() => invoke("open_addons_folder")}>
+      Open Addons Folder
+    </button>
+  </div>
 </div>
 
 <style lang="scss">

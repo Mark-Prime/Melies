@@ -32,7 +32,7 @@
   <Fa icon={faFloppyDisk} color={`var(--sec)`} />
   Load Backup
 </button>
-<Modal color="sec" {toggle} {enabled} on:open={loadBackups}>
+<Modal color="sec" {toggle} {enabled} on:open={loadBackups} min_width="600px">
   {#if resp.length > 0}
     <h1>Backups</h1>
     <h4 class="centered">

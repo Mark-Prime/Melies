@@ -77,7 +77,8 @@
           </span>
         </div>
 
-        <Toggle value={kill.selected} on:click={() => toggleKillsSelected([kill])} tooltip="As Bookmark" tooltipDirection="left"/>
+        <Toggle value={kill.selected && !kill.victimPov} on:click={() => toggleKillsSelected([kill])} tooltip="As Bookmark" tooltipDirection="left"/>
+        <Toggle value={kill.selected && kill.victimPov} on:click={() => toggleKillsSelected([kill], true)} tooltip="Victim POV As Bookmark" tooltipDirection="left"/>
       </div>
     {/each}
   </div>
