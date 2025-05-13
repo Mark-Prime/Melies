@@ -197,9 +197,10 @@ pub fn build_new_install(folder_name: &str, settings: &Value) -> Value {
   let parent_folder = PathBuf::from(tf_folder).parent().unwrap().to_path_buf();
 
   let new_tf_folder = format!("{}\\{}\\tf", parent_folder.to_str().unwrap(), new_folder_name);
+  let new_custom_folder = format!("{}\\custom", new_tf_folder);
 
-  if !Path::new(&new_tf_folder).exists() {
-    std::fs::create_dir_all(&new_tf_folder).unwrap();
+  if !Path::new(&new_custom_folder).exists() {
+    std::fs::create_dir_all(&new_custom_folder).unwrap();
   }
 
   let tf_scripts = &format!("{}\\scripts", tf_folder);
