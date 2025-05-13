@@ -1321,6 +1321,21 @@ fn open_themes_folder() {
 }
 
 #[command]
+fn open_install_folder(install: &str) {
+    let settings = load_settings();
+    let tf_folder = settings["tf_folder"].as_str().unwrap();
+    let tf_parent = PathBuf::from(tf_folder).parent().unwrap().to_path_buf();
+
+    let relative_path = install.replace(&format!("{}\\", tf_parent.to_str().unwrap()), "");
+
+    let install_folder = format!("{}\\{}", tf_parent.to_str().unwrap(), relative_path);
+
+    fs::create_dir_all(&install_folder).unwrap();
+
+    Command::new("explorer").arg(install_folder).spawn().unwrap();
+}
+
+#[command]
 fn rename_file(old_path: &str, new_path: &str) {
     let path = Path::new(old_path);
     let new_path = Path::new(new_path);
@@ -1475,12 +1490,13 @@ fn main() {
             load_backups,
             reload_backup,
             parse_demo,
-            open_addons_folder,
             delete_demo,
             delete_vdm,
             create_vdm,
             load_theme,
             open_themes_folder,
+            open_addons_folder,
+            open_install_folder,
             rename_file,
             cleanup_rename,
             is_steam_running,
