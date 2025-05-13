@@ -221,7 +221,6 @@
     color="tert"
     {toggle}
     {enabled}
-    width="800px"
     tabHeaders={settings.alt_installs.length && isSteamRunning && !isRunning
       ? ["Default", ...settings.alt_installs.map((install) => install.name)]
       : null}

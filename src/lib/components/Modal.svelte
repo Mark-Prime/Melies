@@ -70,13 +70,14 @@
         class:modal__card--wide={wide}
         style={`--color: var(--${color});
           --color-con: var(--${color}-con);
+          ${tabs && `width: 75vw`};
           ${min_width && `min-width: ${min_width}`};
           ${min_height && `min-height: ${min_height}`};
           ${max_width && `max-width: ${max_width}`};
           ${max_height && `max-height: ${max_height}`};
           ${width && `width: ${width}`};
           ${height && `height: ${height}`};
-          ${tabs && `min-height: calc(${tabHeaders.length * 40}px + 1.5rem)`};`
+          ${tabs && `min-height: calc(${tabHeaders.length * 36}px + 1.5rem)`};`
         }
       >
         {#if header}
@@ -162,6 +163,9 @@
       border-right: 0;
       border-radius: 8px 0 0 8px;
       transition: all 0.2s;
+      padding-right: 0.25rem;
+
+      font-size: x-small;
 
       &--active {
         padding-right: 2rem;
@@ -192,6 +196,10 @@
       z-index: 1000;
       overflow-y: auto;
       overflow-x: hidden;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
 
       &--large {
         max-width: min(calc(100vw - 2rem), 1680px);

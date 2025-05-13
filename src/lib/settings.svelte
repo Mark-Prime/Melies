@@ -567,7 +567,7 @@ Useful in STVs when the player could be dead."
 </button>
 <Modal
   color="sec"
-  width="700px"
+  height="100vw"
   {toggle}
   {enabled}
   tabHeaders={[
