@@ -132,7 +132,7 @@
 
     &__footer {
       position: sticky;
-      bottom: 0;
+      bottom: -2px;
       padding: 1rem;
       padding-top: 1px;
       background-color: var(--bg);

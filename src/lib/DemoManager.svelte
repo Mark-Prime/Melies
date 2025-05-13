@@ -293,7 +293,7 @@
   Demo Manager
 </button>
 
-<Modal color="sec" {toggle} {enabled} large tall on:open={loadDemos}>
+<Modal color="sec" {toggle} {enabled} large tall on:open={loadDemos} width="100vw">
   <div class="demo-manager">
     <h1>Demo Manager</h1>
     {#if resp.loaded}
@@ -336,7 +336,7 @@
             Mass Rename
           </button>
         </div>
-        <VirtualList items={filtered} isTable={true}>
+        <VirtualList items={filtered} isTable={true} class="demo-table">
           {#snippet header()}
             <thead>
               <tr>
@@ -347,7 +347,7 @@
                 <th>Map</th>
                 <th>Created Date</th>
                 <th
-                  class="tooltip tooltip--left"
+                  class="tooltip tooltip--left tooltip__lower"
                   data-tooltip={`Does the demo have a vdm?`}
                   style="--kills: 0;"
                 >
@@ -378,100 +378,104 @@
                   .format("MMM DD, YYYY")}
               </td>
               <td class="table__has-vdm">
-                {#if item.hasVdm}
-                  <span
-                    class="tooltip tooltip--left"
-                    data-tooltip={`This demo has a VDM.`}
-                    style="--kills: 0;"
-                  >
-                    <Fa icon={faCheck} color={`var(--sec)`} />
-                  </span>
-                {:else}
-                  <span
-                    class="tooltip tooltip--left"
-                    data-tooltip={`This demo does not have a VDM.`}
-                    style="--kills: 0;"
-                  >
-                    <Fa icon={faXmark} color={`var(--tert)`} />
-                  </span>
-                {/if}
-              </td>
-              <td style="width: fit-content;">
-                <a
-                  name="#{item.name}-select"
-                  class="icon checkbox tooltip tooltip--left"
-                  data-tooltip={`Select demo.`}
-                  onclick={(e) => toggleSelected(e, item)}
-                  onkeydown={(e) => toggleSelected(e, item)}
-                  tabindex="-1"
-                  role="button"
-                  href="/"
-                >
-                  {#if item.selected}
-                    <Fa icon={faSquareCheck} color={`var(--pri)`} />
+                <div style="max-width: 35px;">
+                  {#if item.hasVdm}
+                    <span
+                      class="tooltip tooltip--left"
+                      data-tooltip={`This demo has a VDM.`}
+                      style="--kills: 0;"
+                    >
+                      <Fa icon={faCheck} color={`var(--sec)`} />
+                    </span>
                   {:else}
+                    <span
+                      class="tooltip tooltip--left"
+                      data-tooltip={`This demo does not have a VDM.`}
+                      style="--kills: 0;"
+                    >
+                      <Fa icon={faXmark} color={`var(--tert)`} />
+                    </span>
+                  {/if}
+                </div>
+              </td>
+              <td>
+                <div style="max-width: 100px;">
+                  <a
+                    name="#{item.name}-select"
+                    class="icon checkbox tooltip tooltip--left"
+                    data-tooltip={`Select demo.`}
+                    onclick={(e) => toggleSelected(e, item)}
+                    onkeydown={(e) => toggleSelected(e, item)}
+                    tabindex="-1"
+                    role="button"
+                    href="/"
+                  >
+                    {#if item.selected}
+                      <Fa icon={faSquareCheck} color={`var(--pri)`} />
+                    {:else}
+                      <Fa
+                        icon={faSquare}
+                        color={item.hasVdm ? `var(--sec)` : `var(--tert)`}
+                      />
+                    {/if}
+                  </a>
+                  <a
+                    name="#{item.name}-rename"
+                    class="icon checkbox tooltip tooltip--left"
+                    data-tooltip={`Rename demo.`}
+                    onclick={() => openRenameModal(item)}
+                    onkeydown={() => openRenameModal(item)}
+                    tabindex="-1"
+                    role="button"
+                    href="/"
+                  >
                     <Fa
-                      icon={faSquare}
+                      icon={faPen}
                       color={item.hasVdm ? `var(--sec)` : `var(--tert)`}
                     />
+                  </a>
+                  {#if item.hasVdm}
+                    <a
+                      name="#{item.name}-delete_vdm"
+                      class="icon checkbox tooltip tooltip--left"
+                      data-tooltip={`Delete VDM.`}
+                      onclick={async () => await delete_vdm(item.name)}
+                      onkeydown={async () => await delete_vdm(item.name)}
+                      tabindex="-1"
+                      role="button"
+                      href="/"
+                    >
+                      <Fa icon={faFileCircleMinus} color={`var(--err)`} />
+                    </a>
+                  {:else}
+                    <a
+                      name="#{item.name}-create_vdm"
+                      class="icon checkbox tooltip tooltip--left"
+                      data-tooltip={`Create blank VDM.`}
+                      onclick={async () => await create_vdm(item.name)}
+                      onkeydown={async () => await create_vdm(item.name)}
+                      tabindex="-1"
+                      role="button"
+                      href="/"
+                    >
+                      <Fa icon={faFileCirclePlus} color="var(--pri)" />
+                    </a>
                   {/if}
-                </a>
-                <a
-                  name="#{item.name}-rename"
-                  class="icon checkbox tooltip tooltip--left"
-                  data-tooltip={`Rename demo.`}
-                  onclick={() => openRenameModal(item)}
-                  onkeydown={() => openRenameModal(item)}
-                  tabindex="-1"
-                  role="button"
-                  href="/"
-                >
-                  <Fa
-                    icon={faPen}
-                    color={item.hasVdm ? `var(--sec)` : `var(--tert)`}
-                  />
-                </a>
-                {#if item.hasVdm}
                   <a
-                    name="#{item.name}-delete_vdm"
+                    name="#{item.name}-delete"
                     class="icon checkbox tooltip tooltip--left"
-                    data-tooltip={`Delete VDM.`}
-                    onclick={async () => await delete_vdm(item.name)}
-                    onkeydown={async () => await delete_vdm(item.name)}
+                    data-tooltip={`Delete this demo.`}
+                    style="--kills: 0;"
+                    onclick={async () => await delete_demo(item.name, item.hasVdm)}
+                    onkeydown={async () =>
+                      await delete_demo(item.name, item.hasVdm)}
                     tabindex="-1"
                     role="button"
                     href="/"
                   >
-                    <Fa icon={faFileCircleMinus} color={`var(--err)`} />
+                    <Fa icon={faTrash} color={`var(--err)`} />
                   </a>
-                {:else}
-                  <a
-                    name="#{item.name}-create_vdm"
-                    class="icon checkbox tooltip tooltip--left"
-                    data-tooltip={`Create blank VDM.`}
-                    onclick={async () => await create_vdm(item.name)}
-                    onkeydown={async () => await create_vdm(item.name)}
-                    tabindex="-1"
-                    role="button"
-                    href="/"
-                  >
-                    <Fa icon={faFileCirclePlus} color="var(--pri)" />
-                  </a>
-                {/if}
-                <a
-                  name="#{item.name}-delete"
-                  class="icon checkbox tooltip tooltip--left"
-                  data-tooltip={`Delete this demo.`}
-                  style="--kills: 0;"
-                  onclick={async () => await delete_demo(item.name, item.hasVdm)}
-                  onkeydown={async () =>
-                    await delete_demo(item.name, item.hasVdm)}
-                  tabindex="-1"
-                  role="button"
-                  href="/"
-                >
-                  <Fa icon={faTrash} color={`var(--err)`} />
-                </a>
+                </div>
               </td>
             </tr>
           {/snippet}
@@ -668,10 +672,18 @@
         padding-left: 0.5rem;
       }
 
+      &:nth-of-type(7) {
+        width: 35px;
+        max-width: 35px;
+      }
+
       &:last-of-type {
         border-right-width: 1px;
         border-radius: 0 5px 5px 0;
         padding-right: 0.5rem;
+        max-width: 75px;
+
+        text-align: right;
       }
     }
   }
