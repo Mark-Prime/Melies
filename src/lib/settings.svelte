@@ -4,7 +4,12 @@
   // @ts-ignore
   import { invoke } from "@tauri-apps/api/core";
   import Modal from "$lib/components/Modal.svelte";
-  import { faGear, faPlus, faMinus } from "@fortawesome/free-solid-svg-icons";
+  import {
+    faGear,
+    faPlus,
+    faMinus,
+    faFolderOpen,
+  } from "@fortawesome/free-solid-svg-icons";
   import Fa from "svelte-fa";
   import { createEventDispatcher } from "svelte";
   import Input from "$lib/components/Input.svelte";
@@ -13,6 +18,7 @@
   import Collapse from "$lib/components/Collapse.svelte";
   import Addons from "$lib/addons/Addons.svelte";
   import Theme from "$lib/Theme.svelte";
+  import { inv } from "mathjs";
   const dispatch = createEventDispatcher();
   let settings = $state({});
   let outputSettings = $state({});
@@ -62,12 +68,13 @@
       folderName: newFolderName,
     });
 
-    settings.alt_installs = [
-      ...settings.alt_installs,
-      res,
-    ];
+    settings.alt_installs = [...settings.alt_installs, res];
 
     addingCustomInstall = false;
+
+    invoke("open_install_folder", {
+      install: res.tf_folder,
+    });
   }
 
   function addInstall() {
@@ -89,12 +96,21 @@
 
 {#snippet general()}
   <div class="setting">
-    <div class="settings__input-group settings__span">
+    <div class="settings__input-group settings__span tf-folder">
       <Input
         title="\tf Folder"
         bind:value={settings.tf_folder}
         tooltip="The full filepath to your \tf folder within the Team Fortress 2 game files."
       />
+      <button
+        class="btn--sec"
+        onclick={() =>
+          invoke("open_install_folder", {
+            install: settings.tf_folder,
+          })}
+      >
+        <Fa icon={faFolderOpen} color={`var(--sec)`} />
+      </button>
     </div>
     <div class="settings__input-group settings__span">
       {#each settings.alt_installs || [] as install, index}
@@ -109,23 +125,26 @@
             bind:value={install.tf_folder}
             tooltip="The full filepath to your \tf folder within the Team Fortress 2 game files."
           />
+          <button
+            class="btn--sec"
+            onclick={() =>
+              invoke("open_install_folder", {
+                install: install.tf_folder,
+              })}
+          >
+            <Fa icon={faFolderOpen} color={`var(--sec)`} />
+          </button>
           <button class="cancel-btn" onclick={() => removeInstall(index)}>
-            <Fa icon={faMinus} color={`var(--red)`} />
+            <Fa icon={faMinus} color={`var(--err-con-text)`} />
           </button>
         </div>
       {/each}
     </div>
     {#if addingCustomInstall}
       <div class="settings__input-group settings__span new-install">
-        <Input
-          title="New Folder Name"
-          bind:value={newFolderName}
-          color="pri"
-        />
-        <button onclick={buildInstall}>
-          Build Install
-        </button>
-        <button class="cancel-btn" onclick={addingCustomInstall = false}>
+        <Input title="New Folder Name" bind:value={newFolderName} color="pri" />
+        <button onclick={buildInstall}> Build Install </button>
+        <button class="cancel-btn" onclick={(addingCustomInstall = false)}>
           Cancel
         </button>
       </div>
@@ -135,7 +154,11 @@
         <Fa icon={faPlus} color={`var(--pri)`} />
         Existing Custom Install
       </button>
-      <button class="btn-custom-install btn--sec" onclick={addingCustomInstall = true} disabled={addingCustomInstall}>
+      <button
+        class="btn-custom-install btn--sec"
+        onclick={(addingCustomInstall = true)}
+        disabled={addingCustomInstall}
+      >
         <Fa icon={faPlus} color={`var(--sec)`} />
         New Custom Install
       </button>
@@ -549,7 +572,6 @@ Useful in STVs when the player could be dead."
         color="sec"
       />
     </div>
-  
   {:else}
     <h1>SVR must be launched through the SVR client</h1>
   {/if}
@@ -582,15 +604,7 @@ Useful in STVs when the player could be dead."
     "Addons",
     "Theme",
   ]}
-  tabs={[
-    general,
-    output,
-    recording,
-    demoManager,
-    hlae,
-    addonsTab,
-    theme,
-  ]}
+  tabs={[general, output, recording, demoManager, hlae, addonsTab, theme]}
 >
   {#snippet footer()}
     <div class="buttons">
@@ -642,17 +656,25 @@ Useful in STVs when the player could be dead."
 
   .install-group {
     display: grid;
-    grid-template-columns: 0.5fr 1fr max-content;
+    grid-template-columns: 0.5fr 1fr max-content max-content;
+    gap: 0.5rem;
+    margin-bottom: 3px;
+
+    align-items: end;
+  }
+
+  .new-install {
+    display: grid;
+    grid-template-columns: 1fr max-content max-content;
     gap: 1rem;
 
     align-items: end;
   }
 
-.new-install{ 
-  display: grid;
-  grid-template-columns: 1fr max-content max-content;
-  gap: 1rem;
-
-  align-items: end;
-}
+  .tf-folder {
+    display: grid;
+    grid-template-columns: 1fr max-content;
+    gap: 0.5rem;
+    align-items: end;
+  }
 </style>
