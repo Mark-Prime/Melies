@@ -32,13 +32,14 @@
   const tabClicked = (i) => dispatch("tabClicked", i);
 
   run(() => {
+    activeTab = 0;
+
     if (enabled) {
       dispatch("open");
+      return;
     }
 
-    if (!enabled) {
-      dispatch("close");
-    }
+    dispatch("close");
   });
 </script>
 

@@ -269,6 +269,7 @@
               <div>
                 <Input
                   title="SparklyFX .dll Path"
+                  tooltip="The .dll will be automatically adjusted for 64 vs 32Bit."
                   bind:value={hlaeSettings.sparklyfx_path}
                   color="tert"
                 />
