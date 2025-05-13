@@ -1,7 +1,7 @@
 <script>
   import EventViewer from "$lib/event_viewer/EventViewer.svelte";
   import Hero from "$lib/home/hero.svelte";
-  import Backups from "$lib/backups.svelte";
+  import Backups from "$lib/Backups.svelte";
   import Logstf from "$lib/LogsTf.svelte";
   import Demos from "$lib/demos_parser/demos.svelte";
   import { invoke } from "@tauri-apps/api/core";
