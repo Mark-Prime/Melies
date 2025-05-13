@@ -1,4 +1,5 @@
-use std::{path::{Path, PathBuf}, process::Command, thread};
+use std::{fs::{self, OpenOptions}, io::Write, path::{Path, PathBuf}, process::Command, thread};
+use fs_extra::{copy_items, dir};
 use serde_json::{json, Value};
 
 fn get_tf2_path(settings: &Value) -> PathBuf {
@@ -188,6 +189,48 @@ fn get_demo_name(path: &PathBuf) -> String {
     };
 
     return caps["name"].to_string();
+}
+
+pub fn build_new_install(folder_name: &str, settings: &Value) -> Value {
+  let new_folder_name = folder_name.to_lowercase().replace(" ", "_");
+  let tf_folder = settings["tf_folder"].as_str().unwrap();
+  let parent_folder = PathBuf::from(tf_folder).parent().unwrap().to_path_buf();
+
+  let new_tf_folder = format!("{}\\{}\\tf", parent_folder.to_str().unwrap(), new_folder_name);
+
+  if !Path::new(&new_tf_folder).exists() {
+    std::fs::create_dir_all(&new_tf_folder).unwrap();
+  }
+
+  let tf_scripts = &format!("{}\\scripts", tf_folder);
+  let tf_cfg = &format!("{}\\cfg", tf_folder);
+  let tf_gameinfo = &format!("{}\\gameinfo.txt", tf_folder);
+
+  let mut options = dir::CopyOptions::new();
+
+  options.overwrite = true;
+
+  let mut from_paths = Vec::new();
+
+  from_paths.push(tf_scripts.as_str());
+  from_paths.push(tf_cfg.as_str());
+  from_paths.push(tf_gameinfo.as_str());
+
+  copy_items(&from_paths, &Path::new(&new_tf_folder), &options).unwrap();
+
+  let new_gameinfo = &format!("{}\\gameinfo.txt", new_tf_folder);
+
+  let contents = fs::read_to_string(new_gameinfo).unwrap();
+
+  let new = contents.replace("game+mod+custom_mod\ttf/custom/*","game+mod+custom_mod\t|gameinfo_path|custom/*").replace("game+game_write\t\ttf","game+game_write\t\t|gameinfo_path|\n\t\t\tgame\t\t\ttf");
+
+  let mut file = OpenOptions::new().write(true).truncate(true).open(new_gameinfo).unwrap();
+  file.write(new.as_bytes()).unwrap();
+
+  return json!({ 
+    "name": folder_name,
+    "tf_folder": format!("{}\\tf", new_folder_name)
+  });
 }
 
 fn delete_folder(path: &PathBuf, try_count: i32) {

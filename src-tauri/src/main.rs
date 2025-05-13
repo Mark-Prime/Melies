@@ -1451,6 +1451,11 @@ fn delete_file(path: &str) {
     trash::delete(path).unwrap();
 }
 
+#[tauri::command]
+fn build_install(folder_name: &str) -> Value {
+    tf2::build_new_install(folder_name, &load_settings())
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -1483,7 +1488,8 @@ fn main() {
             batch_record,
             load_files,
             open_file,
-            delete_file
+            delete_file,
+            build_install
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

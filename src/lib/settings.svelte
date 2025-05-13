@@ -22,6 +22,8 @@
   let hlaeSettings = $state({});
   let addons = $state({});
   let enabled = $state(false);
+  let addingCustomInstall = $state(false);
+  let newFolderName = $state("");
 
   let toggle = () => {
     enabled = !enabled;
@@ -53,6 +55,19 @@
     console.log(answer);
 
     toggle();
+  }
+
+  async function buildInstall() {
+    let res = await invoke("build_install", {
+      folderName: newFolderName,
+    });
+
+    settings.alt_installs = [
+      ...settings.alt_installs,
+      res,
+    ];
+
+    addingCustomInstall = false;
   }
 
   function addInstall() {
@@ -95,15 +110,34 @@
             tooltip="The full filepath to your \tf folder within the Team Fortress 2 game files."
           />
           <button class="cancel-btn" onclick={() => removeInstall(index)}>
-            <Fa icon={faMinus} color={`var(--pri)`} />
+            <Fa icon={faMinus} color={`var(--red)`} />
           </button>
         </div>
       {/each}
     </div>
-    <div class="btn-container">
+    {#if addingCustomInstall}
+      <div class="settings__input-group settings__span new-install">
+        <Input
+          title="New Folder Name"
+          bind:value={newFolderName}
+          color="pri"
+        />
+        <button onclick={buildInstall}>
+          Build Install
+        </button>
+        <button class="cancel-btn" onclick={addingCustomInstall = false}>
+          Cancel
+        </button>
+      </div>
+    {/if}
+    <div class="btn-container settings__span">
       <button class="btn-custom-install" onclick={addInstall}>
         <Fa icon={faPlus} color={`var(--pri)`} />
-        Add Custom Install
+        Existing Custom Install
+      </button>
+      <button class="btn-custom-install btn--sec" onclick={addingCustomInstall = true} disabled={addingCustomInstall}>
+        <Fa icon={faPlus} color={`var(--sec)`} />
+        New Custom Install
       </button>
       <a href="https://www.youtube.com/watch?v=lH4scK3uB_s" target="_blank">
         What's this?
@@ -613,4 +647,12 @@ Useful in STVs when the player could be dead."
 
     align-items: end;
   }
+
+.new-install{ 
+  display: grid;
+  grid-template-columns: 1fr max-content max-content;
+  gap: 1rem;
+
+  align-items: end;
+}
 </style>
