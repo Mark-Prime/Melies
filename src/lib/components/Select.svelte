@@ -9,7 +9,8 @@
     color = "pri",
     display = true,
     tooltip = "",
-    children
+    children,
+    style
   } = $props();
 
   const dispatch = createEventDispatcher();
@@ -18,7 +19,7 @@
 </script>
 
 {#if display}
-  <div>
+  <div style={style}>
     <label
       for={key}
       class:tooltip

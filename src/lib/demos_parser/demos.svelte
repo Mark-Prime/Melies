@@ -1,5 +1,5 @@
 <script>
-  import { run } from 'svelte/legacy';
+  import { run } from "svelte/legacy";
 
   import { invoke } from "@tauri-apps/api/core";
   import {
@@ -24,19 +24,26 @@
   const dispatch = createEventDispatcher();
 
   let index = $state(0),
-    total = $state(0);
+    total = $state(0),
+    search = $state(""),
+    playerClasses = $state({}),
+    selectedPlayer = $state(""),
+    playerList = $state({});
 
   import Life from "./demo_life.svelte";
   import KillstreakPointer from "./demo_ks_pointer.svelte";
   import AllKillstreaksPointer from "./demo_all_ks_pointer.svelte";
   import KillPointerList from "./demo_med_picks.svelte";
   import AllKillPointers from "./demo_all_med_picks.svelte";
+  import Input from "$lib/components/Input.svelte";
+  import { filter } from "mathjs";
+  import Select from "$lib/components/Select.svelte";
 
   let isDragging = $state(false);
   let enabled = $state(false);
   let toggle = () => {
-    enabled = !enabled
-  
+    enabled = !enabled;
+
     loadDemos();
     loadSettings();
   };
@@ -53,14 +60,14 @@
       case "tauri://drag-drop":
         isDragging = false;
 
-        $inspect(settings);
-        
+        console.log($state.snapshot(settings));
+
         for (let file of e.payload.paths) {
           if (file.endsWith(".dem")) {
             selected.push(file.replace(settings.tf_folder, ""));
           }
         }
-        
+
         if (currentDemo === "") {
           total = selected.length;
           nextDemo();
@@ -69,7 +76,7 @@
       default:
         break;
     }
-  })
+  });
 
   let resp = $state({ loaded: false, loading: false });
   let parsedDemo = $state({ loaded: false, loading: false });
@@ -93,8 +100,8 @@
   let filterAirshots = (k) => isAirshot(parsedDemo, k, settings);
 
   function filterLife(player, valKey) {
-    let lives = parsedDemo.data.player_lives[player]
-    let validLives = [ ...lives ].filter((life) => life[valKey].length > 0);
+    let lives = parsedDemo.data.player_lives[player];
+    let validLives = [...lives].filter((life) => life[valKey].length > 0);
 
     for (let playerLife of validLives) {
       let validKills = [];
@@ -108,7 +115,9 @@
       playerLife[valKey] = validKills;
     }
 
-    return [ ...validLives ].filter((playerLife) => playerLife[valKey].length > 0);
+    return [...validLives].filter(
+      (playerLife) => playerLife[valKey].length > 0
+    );
   }
 
   async function loadEvents() {
@@ -124,10 +133,7 @@
             event.isKillstreak = true;
           }
 
-          if (
-            i === 0 ||
-            eventList.events[i - 1].demo_name != event.demo_name
-          ) {
+          if (i === 0 || eventList.events[i - 1].demo_name != event.demo_name) {
             demos.push([event]);
             return;
           }
@@ -237,6 +243,9 @@
     selected = [];
     currentDemo = "";
     parsedDemo = { loaded: false, loading: false };
+    selectedPlayer = '';
+    playerList = [];
+    playerClasses = {};
 
     for (let demo of resp.demos) {
       demo.selected = false;
@@ -317,7 +326,7 @@
   }
 
   function toggleKillsSelected(kills, victimPov = false) {
-    let newKills = [ ...kills ];
+    let newKills = [...kills];
     let selected = false;
 
     for (let kill of newKills) {
@@ -345,13 +354,15 @@
     }
 
     if (isKillstreak) {
-      let kills = parsedDemo.data.player_lives[demo.owner_id][demo.life_index].kills;
+      let kills =
+        parsedDemo.data.player_lives[demo.owner_id][demo.life_index].kills;
       for (let killIndex of demo.kills) {
         let kill = kills[killIndex];
         kill.selected = demo.selected_as_bookmark;
       }
 
-      parsedDemo.data.player_lives[demo.owner_id][demo.life_index].kills = kills;
+      parsedDemo.data.player_lives[demo.owner_id][demo.life_index].kills =
+        kills;
     }
 
     resp = resp;
@@ -404,7 +415,9 @@
               events.push({
                 time: kill.tick + 20,
                 label: `k-${kill.killer_class}_v-${kill.victim_class}`,
-                steamid64: parsedDemo.data.users[kill.victimPov ? kill.victim : i].steamId64,
+                steamid64:
+                  parsedDemo.data.users[kill.victimPov ? kill.victim : i]
+                    .steamId64,
                 bookmark: true,
               });
             }
@@ -490,6 +503,41 @@
       parsedDemo = { loaded: false, loading: true };
       currentDemo = selected.shift();
       parsedDemo = await invoke("parse_demo", { path: currentDemo });
+      selectedPlayer = '';
+      playerList = [];
+      playerClasses = {};
+
+      for (let playerId in parsedDemo.data.users) {
+        let player = parsedDemo.data.users[playerId];
+
+        if (Object.keys(player.classes).length !== 0) {
+          if (!playerList[player.name]) {
+            playerList[player.name] = Object.keys(player.classes).map(
+              (classNum) => {
+                if (classConverter(classNum) !== "0") {
+                  return classConverter(classNum);
+                }
+              }
+            );
+          } else {
+            for (let playerClass of Object.keys(player.classes)) {
+              let converted = classConverter(playerClass);
+
+              if (!playerList[player.name]?.includes(classConverter(playerClass)) && converted !== "0") {
+                playerList[player.name].push(classConverter(playerClass));
+              }
+            }
+          }
+        }
+
+        for (let playerClass of Object.keys(player.classes)) {
+          playerClasses[classConverter(playerClass)] = true;
+        }
+      }
+
+      delete playerClasses[0];
+
+      console.log($state.snapshot(playerList));
 
       if (currentDemo[0] !== "\\") {
         currentDemo = "\\" + currentDemo.split("\\").pop();
@@ -499,13 +547,13 @@
       labelRounds();
       isPovDemo = isDemoPov();
 
-      console.log(settings);
+      $state.snapshot(settings);
 
       // Sort the team order by class
       bluTeam.sort(sortByClass);
       redTeam.sort(sortByClass);
 
-      console.log(parsedDemo);
+      console.log($state.snapshot(parsedDemo));
     } else {
       closeModal();
     }
@@ -599,6 +647,25 @@
       return false;
     }
 
+    let classFilter = false
+
+    for (let playerClass of Object.keys(parsedDemo.data.users[player].classes)) {
+      if (playerClasses[classConverter(playerClass)]) {
+        classFilter = true;
+        break;
+      }
+    }
+
+    if (!classFilter) {
+      return false;
+    }
+
+    if (selectedPlayer) {
+      if (selectedPlayer !== parsedDemo.data.users[player].name) {
+        return false;
+      }
+    }
+
     if (displayLives) {
       return true;
     }
@@ -618,7 +685,7 @@
     return false;
   }
 
-  function recordEntireDemo(userId) {
+  function recordEntireDemo(userId, includePauses = true) {
     let events = [
       {
         time: settings.recording.start_delay,
@@ -636,6 +703,23 @@
         steamid64: parsedDemo.data?.users[userId].steamId64,
       },
     ];
+
+    if (!includePauses) {
+      for (let pause of parsedDemo.data.pauses) {
+        events.push({
+          time: pause.from,
+          label: parsedDemo.data?.users[userId].steamId64,
+          steamid64: parsedDemo.data?.users[userId].steamId64,
+        });
+        events.push({
+          time: pause.to,
+          label: parsedDemo.data?.users[userId].steamId64,
+          steamid64: parsedDemo.data?.users[userId].steamId64,
+          kills: 0,
+          start: true,
+        });
+      }
+    }
 
     let demo_name = currentDemo.replace(".dem", "").substring(1);
 
@@ -1210,6 +1294,9 @@
     displayPlayers = displayPlayers;
     resp = resp;
     parsedDemo = parsedDemo;
+    selectedPlayer = selectedPlayer;
+    playerList = playerList;
+    playerClasses = playerClasses;
   }
 
   function on_key_down(event) {
@@ -1257,6 +1344,8 @@
   {enabled}
   grow
   wide={resp.loaded && currentDemo !== ""}
+  width={currentDemo === "" ? "830px" : "100vw"}
+  height={!resp.loaded || !resp.loading ? "fit-content" : "100vh"}
 >
   {#if isDragging}
     <div class="dropzone">
@@ -1265,10 +1354,11 @@
   {:else if resp.loaded}
     {#if currentDemo === ""}
       <h1>Demos</h1>
-      <table>
+      <Input color="tert" bind:value={search} title="Search" />
+      <table style="margin-top: 1rem;">
         <thead>
           <tr>
-            <th> Name </th>
+            <th>Name</th>
             <th>Length</th>
             <th>Map</th>
             <th
@@ -1282,7 +1372,11 @@
           </tr>
         </thead>
         <tbody>
-          {#each resp.demos as demo, i}
+          {#each resp.demos.filter((demo) => demo.name
+                .toLowerCase()
+                .includes(search.toLowerCase()) || demo.header.map
+                .toLowerCase()
+                .includes(search.toLowerCase())) as demo, i}
             <tr
               class={"table_row " +
                 (demo.hasVdm && "demo--hasvdm") +
@@ -1319,7 +1413,10 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                 {/if}
               </td>
               <td class="add_demo">
-                <Toggle value={demo.selected} on:click={() => toggleSelected(demo, null, i)} />
+                <Toggle
+                  value={demo.selected}
+                  on:click={() => toggleSelected(demo, null, i)}
+                />
               </td>
             </tr>
           {/each}
@@ -1372,6 +1469,35 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
             </button>
           </div>
         {/if}
+        <div class="class-filters">
+          <Select title="Player" color="tert" bind:value={selectedPlayer} style="width: fit-content;">
+            <option value=""></option>
+            {#each Object.keys(playerList).sort() as player}
+              <option value={player}>
+                {player}
+                ({playerList[player].join(", ")})
+              </option>
+            {/each}
+          </Select>
+          {#each ["scout", "soldier", "pyro", "demoman", "heavy", "engineer", "medic", "sniper", "spy"] as playerClass}
+            {#if playerClasses[playerClass] !== undefined}
+              <button
+                class:btn--tert={!playerClasses[playerClass]}
+                onclick={() =>
+                  (playerClasses[playerClass] = !playerClasses[playerClass])}
+                class="tooltip"
+                data-tooltip={playerClasses[playerClass]
+                  ? "Hide " + playerClass.charAt(0).toUpperCase() + playerClass.slice(1)
+                  : "Show " + playerClass.charAt(0).toUpperCase() + playerClass.slice(1)}
+                style="--kills: 0;"
+              >
+                <div class:btn--deselected={!playerClasses[playerClass]}>
+                  <ClassLogo player_class={playerClass} />
+                </div>
+              </button>
+            {/if}
+          {/each}
+        </div>
         <div class="teams">
           {#each ["blue", "red"] as team}
             <div class="team">
@@ -1437,12 +1563,22 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                         {/if}
                       {/if}
                     {/each}
-                    <button
-                      class="full_demo"
-                      onclick={() => recordEntireDemo(player)}
-                    >
-                      Record entire demo
-                    </button>
+                    <div class="full_demo__container">
+                      <button
+                        class="full_demo"
+                        onclick={() => recordEntireDemo(player)}
+                      >
+                        Record entire demo
+                      </button>
+                      {#if parsedDemo.data.pauses.length > 0}
+                        <button
+                          class="full_demo"
+                          onclick={() => recordEntireDemo(player, false)}
+                        >
+                          Record without Pauses
+                        </button>
+                      {/if}
+                    </div>
 
                     <KillPointerList
                       label="Med Picks"
@@ -1466,10 +1602,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                       {tickToTime}
                       {toggleKillsSelected}
                       {toggleSelected}
-                      lives={() => filterLife(
-                        player,
-                        "airshots"
-                      )}
+                      lives={() => filterLife(player, "airshots")}
                     />
                     {#if parsedDemo.data.player_lives[player].filter((life) => life.killstreak_pointers.length > 0).length > 0}
                       <h4 class="centered">Killstreaks</h4>
@@ -1544,7 +1677,10 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
           {#if displayChat}
             <div class="chat">
               {#each parsedDemo.data.chat as chat}
-                <Toggle value={chat.selected} on:click={() => toggleSelected(chat)} />
+                <Toggle
+                  value={chat.selected}
+                  on:click={() => toggleSelected(chat)}
+                />
                 <div class="chat__tick">
                   {chat.tick}
                 </div>
@@ -1593,7 +1729,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
   {/if}
 
   {#snippet footer()}
-    <div class="buttons" >
+    <div class="buttons">
       {#if resp.loaded && !isDragging}
         {#if currentDemo === ""}
           <button class="cancel-btn" onclick={closeModal}>Cancel</button>
@@ -1613,6 +1749,47 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
 </Modal>
 
 <style lang="scss">
+  button.tooltip:hover::before {
+    font-size: 14px;
+    padding: 6px 10px;
+  }
+
+  .btn--deselected {
+    opacity: 0.5;
+  }
+
+  .class-filters {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+
+    align-items: end;
+    margin: 1rem 0;
+    gap: 0.5rem;
+
+    & > button {
+      padding: 7px 7.5px 4px 7.5px;
+    }
+  }
+
+  .full_demo__container {
+    display: flex;
+    flex-direction: row;
+
+    & > button:first-of-type {
+      border-radius: 5px 0 0 5px;
+    }
+
+    & > button:last-of-type {
+      border-radius: 0 5px 5px 0;
+    }
+
+    & > button:only-child {
+      border-radius: 5px;
+    }
+  }
+
   .dropzone {
     display: flex;
     align-items: center;
