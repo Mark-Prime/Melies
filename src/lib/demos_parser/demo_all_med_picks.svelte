@@ -2,13 +2,13 @@
   import ClassLogo from "$lib/components/ClassLogo.svelte";
   import Toggle from "$lib/components/ToggleSelected.svelte";
   import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+  import { classConverter } from "$lib/composables/classConverter";
 
-  /** @type {{label: any, kills: any, toggleSelected: any, classConverter: any, parsedDemo: any, tickToTime: any, toggleKillsSelected: any}} */
+  /** @type {{label: any, kills: any, toggleSelected: any, parsedDemo: any, tickToTime: any, toggleKillsSelected: any}} */
   let {
     label,
     kills,
     toggleSelected,
-    classConverter,
     parsedDemo,
     tickToTime,
     toggleKillsSelected

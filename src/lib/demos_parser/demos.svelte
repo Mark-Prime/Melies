@@ -11,6 +11,7 @@
   import { createEventDispatcher } from "svelte";
   import dayjs from "dayjs";
 
+  import { classConverter, classNumConverter } from "$lib/composables/classConverter";
   import tickToTime from "$lib/composables/tickToTime.js";
   import isAirshot from "$lib/composables/isAirshot.js";
   import Modal from "$lib/components/Modal.svelte";
@@ -35,6 +36,7 @@
   import AllKillstreaksPointer from "./demo_all_ks_pointer.svelte";
   import KillPointerList from "./demo_med_picks.svelte";
   import AllKillPointers from "./demo_all_med_picks.svelte";
+  import Hotkeys from "../components/Hotkeys.svelte";
   import Input from "$lib/components/Input.svelte";
   import { filter } from "mathjs";
   import Select from "$lib/components/Select.svelte";
@@ -86,7 +88,7 @@
   let displayLives = $state(false);
   let displayAssists = $state(false);
   let displayPlayers = $state(false);
-  let isShiftDown = false;
+  let keyStates = $state({});
   let isPovDemo = $state(false);
   let displayChat = $state(false);
   let povId = 0;
@@ -279,7 +281,7 @@
     demo.selected = !demo.selected;
 
     if (i !== null) {
-      if (isShiftDown) {
+      if (keyStates["Shift"]) {
         for (let index in resp.demos) {
           if (
             index > Math.min(i, lastSelected) &&
@@ -1147,80 +1149,6 @@
     return redTeam;
   }
 
-  function getKillstreaks() {
-    if (!isPovDemo) {
-      return parsedDemo.data.killstreak_pointers;
-    }
-
-    return [];
-  }
-
-  function classConverter(playerClass) {
-    switch (playerClass) {
-      case "1":
-        return "scout";
-      case "3":
-        return "soldier";
-      case "7":
-        return "pyro";
-      case "4":
-        return "demoman";
-      case "6":
-        return "heavy";
-      case "9":
-        return "engineer";
-      case "5":
-        return "medic";
-      case "2":
-        return "sniper";
-      case "8":
-        return "spy";
-      default:
-        return playerClass;
-    }
-  }
-
-  function classNumConverter(playerClass) {
-    switch (playerClass) {
-      case "1":
-        return 1;
-      case "3":
-        return 2;
-      case "7":
-        return 3;
-      case "4":
-        return 4;
-      case "6":
-        return 5;
-      case "9":
-        return 6;
-      case "5":
-        return 7;
-      case "2":
-        return 8;
-      case "8":
-        return 9;
-      default:
-        return playerClass;
-    }
-  }
-
-  function getLifeFromKillstreak(ks) {
-    for (let life of parsedDemo.data.player_lives[ks.kills[0].killer]) {
-      if (life.killstreak_pointers.length === 0) {
-        continue;
-      }
-
-      for (let killstreak of life.killstreak_pointers) {
-        if (
-          JSON.stringify(killstreak.kills[0]) === JSON.stringify(ks.kills[0])
-        ) {
-          return life;
-        }
-      }
-    }
-  }
-
   function toggleClass(player, playerClass) {
     let class_mapping = [
       "scout",
@@ -1299,28 +1227,6 @@
     playerClasses = playerClasses;
   }
 
-  function on_key_down(event) {
-    if (event.repeat) return;
-
-    switch (event.key) {
-      case "Shift":
-        isShiftDown = true;
-
-        event.preventDefault();
-        break;
-    }
-  }
-
-  function on_key_up(event) {
-    switch (event.key) {
-      case "Shift":
-        isShiftDown = false;
-
-        event.preventDefault();
-        break;
-    }
-  }
-
   function allKillsSelected(life) {
     for (let kill of life.kills) {
       if (!kill.selected) {
@@ -1332,7 +1238,7 @@
   }
 </script>
 
-<svelte:window onkeydown={on_key_down} onkeyup={on_key_up} />
+<Hotkeys bind:keyStates={keyStates} />
 
 <button class="btn btn--tert" onclick={toggle}>
   <Fa icon={faWandMagicSparkles} color={`var(--tert)`} />
@@ -1553,7 +1459,6 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                           <Life
                             {life}
                             steamid64={parsedDemo.data.users[player].steamId64}
-                            {classConverter}
                             {toggleSelected}
                             {parsedDemo}
                             {tickToTime}
@@ -1584,7 +1489,6 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                       label="Med Picks"
                       valKey="med_picks"
                       steamid64={parsedDemo.data.users[player].steamId64}
-                      {classConverter}
                       {parsedDemo}
                       {tickToTime}
                       {toggleSelected}
@@ -1597,7 +1501,6 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                       label="Air Shots"
                       valKey="airshots"
                       steamid64={parsedDemo.data.users[player].steamId64}
-                      {classConverter}
                       {parsedDemo}
                       {tickToTime}
                       {toggleKillsSelected}
@@ -1610,7 +1513,6 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                         {#each life.killstreak_pointers as ksPointer}
                           <KillstreakPointer
                             steamid64={parsedDemo.data.users[player].steamId64}
-                            {classConverter}
                             {toggleSelected}
                             {parsedDemo}
                             {tickToTime}
@@ -1631,7 +1533,6 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
           <div class="kill_pointers">
             <AllKillPointers
               label="Med Picks"
-              {classConverter}
               {parsedDemo}
               {tickToTime}
               {toggleKillsSelected}
@@ -1642,14 +1543,12 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
               killstreaks={parsedDemo.data.killstreak_pointers}
               {parsedDemo}
               {limitStringLength}
-              {classConverter}
               {toggleBookmarkSelected}
               {tickToTime}
               {toggleSelected}
             />
             <AllKillPointers
               label="Air Shots"
-              {classConverter}
               {parsedDemo}
               {tickToTime}
               {toggleKillsSelected}
