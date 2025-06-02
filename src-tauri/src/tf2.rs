@@ -14,7 +14,7 @@ fn get_tf2_path(settings: &Value) -> PathBuf {
   return tf2_path;
 }
 
-fn build_launch_options(settings: &Value, demo_name: &str, install: &str, tab: &str) -> String {
+fn build_launch_options(settings: &Value, demo_name: &str, install: &str, tab: &str, first_run: bool) -> String {
   let mut launch_options = settings["hlae"]["launch_options"].to_string();
   let tab = tab.parse::<i64>().unwrap();
 
@@ -63,13 +63,27 @@ fn build_launch_options(settings: &Value, demo_name: &str, install: &str, tab: &
     launch_options = format!("{} -force32bit", launch_options);
   }
 
+  if settings["hlae"]["novid"] == true {
+    launch_options = format!("{} -novid", launch_options);
+  }
+
+  if settings["hlae"]["borderless"] == true {
+    launch_options = format!("{} -windowed -noborder", launch_options);
+  }
+
+  if first_run == true {
+    launch_options = format!("{} dx_level {}", launch_options, settings["hlae"]["dxlevel"]);
+  }
+
+  launch_options = format!("{} -w {} -h {}", launch_options, settings["hlae"]["width"], settings["hlae"]["height"]);
+
   return launch_options;
 }
 
-pub(crate) fn run_tf2(demo_name: &str, settings: &Value, install: &str, tab: &str) {
+pub(crate) fn run_tf2(demo_name: &str, settings: &Value, install: &str, tab: &str, first_run: bool) {
   println!("Running TF2");
 
-  let launch_options = build_launch_options(settings, demo_name, install, tab);
+  let launch_options = build_launch_options(settings, demo_name, install, tab, first_run);
 
   println!("Launch options: {}", launch_options);
 
@@ -262,10 +276,10 @@ fn delete_folder(path: &PathBuf, try_count: i32) {
   }
 }
 
-pub(crate) fn batch_record(demo_name: &str, settings: &Value, install: &str, tab: &str) -> Value {
+pub(crate) fn batch_record(demo_name: &str, settings: &Value, install: &str, tab: &str, first_run: bool) -> Value {
   use vdm::VDM;
 
-  run_tf2(demo_name, settings, install, tab);
+  run_tf2(demo_name, settings, install, tab, first_run);
 
   let output_folder = settings["output"]["folder"].as_str().unwrap();
   let tf_folder = settings["tf_folder"].as_str().unwrap();

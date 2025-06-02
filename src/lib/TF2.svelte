@@ -74,7 +74,7 @@
 
     hlaeSettings = defaultHlaeSettings;
 
-    settings.alt_installs[tabIndex - 1] = {...newSettings, ...settings.alt_installs[tabIndex - 1]};
+    settings.alt_installs[tabIndex - 1] = { ...settings.alt_installs[tabIndex - 1], ...newSettings };
   }
 
   async function launchOnce() {
@@ -103,13 +103,17 @@
     await invoke("save_settings", {
       newSettings: JSON.stringify(settings),
     });
+    let firstRun = true;
 
     while (true) {
       let resp = await invoke("batch_record", {
         demoName: startingDemo,
         install: install,
-        tab: String(tabIndex)
+        tab: String(tabIndex),
+        firstRun
       });
+
+      firstRun = false;
 
       if (resp === null || resp.complete) {
         break;
@@ -137,7 +141,15 @@
     }
   });
 
-  function tabClicked(e) {
+  async function tabClicked(e) {
+    if (tabIndex) {
+      updateAltInstallSettings();
+
+      await invoke("save_settings", {
+        newSettings: JSON.stringify(settings),
+      });
+    }
+
     tabIndex = e.detail;
 
     install = [{ tf_folder: settings.tf_folder }, ...settings.alt_installs][
@@ -159,43 +171,37 @@
   }
 </script>
 
-{#snippet defaultInstall()}
-  <div class="setting">
-    <div class="settings__input-group settings__span">
-      <Input
-        title="TF2 Launch Options"
-        bind:value={hlaeSettings.launch_options}
-        color="pri"
-      />
-    </div>
-    <Switch
-      title="64Bit"
-      bind:value={hlaeSettings.use_64bit}
-      tooltip="Launches with 64Bit TF2."
-      color="pri"
-    />
-    <Switch
-      title="Automatically playdemo"
-      bind:value={hlaeSettings.playdemo}
-      tooltip="Plays first demo on list as soon as it launches."
-      color="pri"
-    />
-    {#if outputSettings.method === "sparklyfx" && !hlaeSettings.use_64bit}
-      <div class="settings__span no_margin">
-        HLAE will be automatically injected into TF2.
-      </div>
-    {/if}
-  </div>
-{/snippet}
-
 {#snippet altInstall(customInstall)}
   <div class="setting">
-    <div class="settings__input-group settings__span">
+    <div class="launch_options settings__span">
       <Input
         title="TF2 Launch Options"
         bind:value={hlaeSettings.launch_options}
         color={["pri", "sec", "tert"][tabIndex % 3]}
       />
+      <Select
+        title="DXLevel"
+        color={["pri", "sec", "tert"][tabIndex % 3]}
+        bind:value={hlaeSettings.dxlevel}
+      >
+        <option value={80}>80</option>
+        <option value={90}>90</option>
+        <option value={95}>95</option>
+        <option value={100}>100 (Recommended)</option>
+      </Select>
+      <Input
+        title="Width"
+        tooltip={`Tf2 window width.`}
+        bind:value={hlaeSettings.width}
+        color={["pri", "sec", "tert"][tabIndex % 3]}
+      />
+      <Input
+        title="Height"
+        tooltip={`Tf2 window height.`}
+        bind:value={hlaeSettings.height}
+        color={["pri", "sec", "tert"][tabIndex % 3]}
+      />
+      <a href="https://docs.comfig.app/9.9.3/customization/launch_options">Learn More about Launch Options and DXLevel</a>
     </div>
     <Switch
       title="64Bit"
@@ -207,6 +213,18 @@
       title="Automatically playdemo"
       bind:value={hlaeSettings.playdemo}
       tooltip="Plays first demo on list as soon as it launches."
+      color={["pri", "sec", "tert"][tabIndex % 3]}
+    />
+    <Switch
+      title="Skip Intro Video"
+      bind:value={hlaeSettings.novid}
+      tooltip="Uses -novid launch option."
+      color={["pri", "sec", "tert"][tabIndex % 3]}
+    />
+    <Switch
+      title="Borderless Window"
+      bind:value={hlaeSettings.borderless}
+      tooltip="Uses -windowed and -noborder launch options."
       color={["pri", "sec", "tert"][tabIndex % 3]}
     />
     {#if outputSettings.method === "sparklyfx" && !hlaeSettings.use_64bit}
@@ -231,7 +249,7 @@
       ? ["Default", ...settings.alt_installs.map((install) => install.name)]
       : null}
     tabs={settings.alt_installs.length && isSteamRunning && !isRunning
-      ? [defaultInstall, ...settings.alt_installs.map(() => altInstall)]
+      ? [altInstall, ...settings.alt_installs.map(() => altInstall)]
       : null}
     on:tabClicked={tabClicked}
   >
@@ -369,5 +387,16 @@
 
   .setting__nomargin {
     margin: 0;
+  }
+
+  .launch_options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    align-items: center;
+    gap: 0.5rem;
+
+    & a {
+      grid-column: 1 / span 2;
+    }
   }
 </style>

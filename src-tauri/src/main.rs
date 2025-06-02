@@ -1410,12 +1410,12 @@ fn is_steam_running() -> bool {
 
 #[command]
 fn launch_tf2(demo_name: &str, install: &str, tab: &str) {
-    tf2::run_tf2(demo_name, &load_settings(), install, tab);
+    tf2::run_tf2(demo_name, &load_settings(), install, tab, true);
 }
 
 #[command]
-fn batch_record(demo_name: &str, install: &str, tab: &str) -> Value {
-    tf2::batch_record(demo_name, &load_settings(), install, tab)
+fn batch_record(demo_name: &str, install: &str, tab: &str, first_run: bool) -> Value {
+    tf2::batch_record(demo_name, &load_settings(), install, tab, first_run)
 }
 
 #[tauri::command]
