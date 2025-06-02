@@ -143,6 +143,14 @@ fn write_cfg(settings: &Value) -> Result<(), String> {
     let mut installs: Vec<String> = vec!["tf".to_string()];
 
     for install in settings["alt_installs"].as_array().unwrap() {
+        if let None = install["name"].as_str() {
+            continue;
+        }
+
+        if let None = install["tf_folder"].as_str() {
+            continue;
+        }
+
         let mut install_folder = install["tf_folder"].as_str().unwrap().replace(base_folder_str, "");
 
         if install_folder.starts_with("\\") {
@@ -155,8 +163,13 @@ fn write_cfg(settings: &Value) -> Result<(), String> {
     for install in installs {
         let install_folder_str = format!("{}\\{}", base_folder_str, install);
 
-        if !Path::new(&format!("{}\\cfg", install_folder_str)).exists() {
-            std::fs::create_dir_all(format!("{}\\cfg", install_folder_str)).unwrap();
+        let cfg_path = format!("{}\\cfg", install_folder_str);
+
+        if !Path::new(&cfg_path).exists() {
+            match std::fs::create_dir_all(Path::new(&cfg_path)) {
+                Ok(_) => {}
+                Err(why) => return Err(format!("Couldn't create cfg folder: {}", why)),
+            }
         }
     
         let mut file = match File::create(format!("{}\\cfg\\melies.cfg", install_folder_str)) {
@@ -1140,6 +1153,8 @@ fn reload_backup(file_name: Value) -> Result<Value, String> {
         }
     }
 
+    println!("Reloading backup: {}", file_path);
+
     if backup_file.exists() {
         let copy = fs::copy(file_path, dir);
 
@@ -1394,13 +1409,13 @@ fn is_steam_running() -> bool {
 }
 
 #[command]
-fn launch_tf2(demo_name: &str, install: &str) {
-    tf2::run_tf2(demo_name, &load_settings(), install);
+fn launch_tf2(demo_name: &str, install: &str, tab: &str) {
+    tf2::run_tf2(demo_name, &load_settings(), install, tab);
 }
 
 #[command]
-fn batch_record(demo_name: &str, install: &str) -> Value {
-    tf2::batch_record(demo_name, &load_settings(), install)
+fn batch_record(demo_name: &str, install: &str, tab: &str) -> Value {
+    tf2::batch_record(demo_name, &load_settings(), install, tab)
 }
 
 #[tauri::command]

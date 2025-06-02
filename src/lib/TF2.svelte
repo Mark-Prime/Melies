@@ -50,6 +50,11 @@
 
   async function checkSteam() {
     isSteamRunning = await invoke("is_steam_running");
+
+    while (!isSteamRunning) {
+      isSteamRunning = await invoke("is_steam_running");
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
   }
 
   function updateAltInstallSettings() {
@@ -69,7 +74,7 @@
 
     hlaeSettings = defaultHlaeSettings;
 
-    settings.alt_installs[tabIndex] = {...newSettings, ...settings.alt_installs[tabIndex]};
+    settings.alt_installs[tabIndex - 1] = {...newSettings, ...settings.alt_installs[tabIndex - 1]};
   }
 
   async function launchOnce() {
@@ -83,7 +88,7 @@
       newSettings: JSON.stringify(settings),
     });
 
-    await invoke("launch_tf2", { demoName: startingDemo, install: install });
+    await invoke("launch_tf2", { demoName: startingDemo, install: install, tab: String(tabIndex) });
 
     isRunning = false;
   }
@@ -103,6 +108,7 @@
       let resp = await invoke("batch_record", {
         demoName: startingDemo,
         install: install,
+        tab: String(tabIndex)
       });
 
       if (resp === null || resp.complete) {

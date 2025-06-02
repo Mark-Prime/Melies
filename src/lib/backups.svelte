@@ -22,6 +22,7 @@
   }
 
   async function reloadBackup(backup) {
+    console.log('TEST', backup)
     await invoke("reload_backup", { fileName: backup.file_name });
     dispatch("reload");
     toggle();

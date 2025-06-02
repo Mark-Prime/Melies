@@ -14,9 +14,23 @@ fn get_tf2_path(settings: &Value) -> PathBuf {
   return tf2_path;
 }
 
-fn build_launch_options(settings: &Value, demo_name: &str, install: &str) -> String {
-  let mut launch_options = settings["hlae"]["launch_options"]
-    .to_string()
+fn build_launch_options(settings: &Value, demo_name: &str, install: &str, tab: &str) -> String {
+  let mut launch_options = settings["hlae"]["launch_options"].to_string();
+  let tab = tab.parse::<i64>().unwrap();
+
+  if tab > 0 {
+    let alt_launch_options = &settings["alt_installs"][(tab - 1) as usize]["launch_options"].as_str();
+
+    match alt_launch_options {
+      Some(options) => {
+        let json_options = json!(options);
+        launch_options = json_options.to_string();
+      }
+      None => {}
+    }
+  }
+
+  let mut launch_options = launch_options
     .replace("\"", "")
     .replace("-game tf", "");
 
@@ -52,10 +66,10 @@ fn build_launch_options(settings: &Value, demo_name: &str, install: &str) -> Str
   return launch_options;
 }
 
-pub(crate) fn run_tf2(demo_name: &str, settings: &Value, install: &str) {
+pub(crate) fn run_tf2(demo_name: &str, settings: &Value, install: &str, tab: &str) {
   println!("Running TF2");
 
-  let launch_options = build_launch_options(settings, demo_name, install);
+  let launch_options = build_launch_options(settings, demo_name, install, tab);
 
   println!("Launch options: {}", launch_options);
 
@@ -248,10 +262,10 @@ fn delete_folder(path: &PathBuf, try_count: i32) {
   }
 }
 
-pub(crate) fn batch_record(demo_name: &str, settings: &Value, install: &str) -> Value {
+pub(crate) fn batch_record(demo_name: &str, settings: &Value, install: &str, tab: &str) -> Value {
   use vdm::VDM;
 
-  run_tf2(demo_name, settings, install);
+  run_tf2(demo_name, settings, install, tab);
 
   let output_folder = settings["output"]["folder"].as_str().unwrap();
   let tf_folder = settings["tf_folder"].as_str().unwrap();

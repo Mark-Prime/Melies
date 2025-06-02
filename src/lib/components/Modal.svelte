@@ -50,7 +50,7 @@
       {#if tabHeaders}
         <div class="modal__tabs">
           {#each tabHeaders as tab, i}
-            {#if typeof tab === "string" || tab.enabled}
+            {#if typeof tab === "string" || tab?.enabled}
               <button
                 class={`modal__tab btn--${['pri', 'sec', 'tert'][i % 3]}`}
                 class:modal__tab--active={tab === tabHeaders[activeTab]}
