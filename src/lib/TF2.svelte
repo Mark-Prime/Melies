@@ -88,7 +88,11 @@
       newSettings: JSON.stringify(settings),
     });
 
-    await invoke("launch_tf2", { demoName: startingDemo, install: install, tab: String(tabIndex) });
+    let res = await invoke("launch_tf2", { demoName: startingDemo, install: install, tab: String(tabIndex) });
+
+    if (res.status === "error") {
+      alert(res.message);
+    }
 
     isRunning = false;
   }

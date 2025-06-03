@@ -59,28 +59,31 @@ fn build_launch_options(settings: &Value, demo_name: &str, install: &str, tab: &
     launch_options = format!("{} -game tf", launch_options);
   }
 
-  if settings["hlae"]["use_64bit"] != true {
+  if settings["hlae"]["use_64bit"] != true && !launch_options.contains("-force32bit") {
     launch_options = format!("{} -force32bit", launch_options);
   }
 
-  if settings["hlae"]["novid"] == true {
+  if settings["hlae"]["novid"] == true && !launch_options.contains("-novid") {
     launch_options = format!("{} -novid", launch_options);
   }
 
   if settings["hlae"]["borderless"] == true {
+    launch_options = launch_options.replace("-fullscreen", "");
     launch_options = format!("{} -windowed -noborder", launch_options);
   }
 
   if first_run == true {
-    launch_options = format!("{} dx_level {}", launch_options, settings["hlae"]["dxlevel"]);
+    launch_options = format!("{} -dxlevel {}", launch_options, settings["hlae"]["dxlevel"]);
   }
 
   launch_options = format!("{} -w {} -h {}", launch_options, settings["hlae"]["width"], settings["hlae"]["height"]);
 
+  launch_options = launch_options.replace("  ", " ");
+
   return launch_options;
 }
 
-pub(crate) fn run_tf2(demo_name: &str, settings: &Value, install: &str, tab: &str, first_run: bool) {
+pub(crate) fn run_tf2(demo_name: &str, settings: &Value, install: &str, tab: &str, first_run: bool) -> Value {
   println!("Running TF2");
 
   let launch_options = build_launch_options(settings, demo_name, install, tab, first_run);
@@ -116,29 +119,64 @@ pub(crate) fn run_tf2(demo_name: &str, settings: &Value, install: &str, tab: &st
         args.push(&hlae_dll);
       }
 
-      Command::new(hlae)
+      let hlae_cmd = Command::new(hlae)
         .args(args)
-        .spawn()
-        .expect("failed to execute process");
+        .spawn();
+
+      match hlae_cmd {
+        Ok(mut hlae) => {
+          hlae.wait().unwrap();
+        }
+        Err(e) => {
+          println!("error: {}", e);
+          return json!({
+            "status": "error",
+            "message": format!("Failed to run HLAE: {}", e)
+          });
+        }
+      }
     }
     "svr" => {
-      return;
+      return json!({
+            "status": "error",
+            "message": format!("Can not run SVR")
+          });
     }
     "svr.mov" => {
-      return;
+      return json!({
+            "status": "error",
+            "message": format!("Can not run SVR")
+          });
     }
     "svr.mp4" => {
-      return;
+      return json!({
+            "status": "error",
+            "message": format!("Can not run SVR")
+          });
     }
     _ => {
-      Command::new(tf2_path)
+      let cmd_res = Command::new(tf2_path)
         .args(launch_options.as_str().split(" ").collect::<Vec<_>>())
-        .spawn()
-        .expect("failed to execute process");
+        .spawn();
+
+      match cmd_res {
+        Ok(mut cmd) => {
+          cmd.wait().unwrap();
+        }
+        Err(e) => {
+          println!("error: {}", e);
+          return json!({
+            "status": "error",
+            "message": format!("Failed to run TF2: {}", e)
+          });
+        }
+      }
     }
   }
 
   wait_for_tf2(settings);
+
+  return json!({"status": "success"});
 }
 
 fn wait_for_tf2(settings: &Value) -> bool {
@@ -279,7 +317,11 @@ fn delete_folder(path: &PathBuf, try_count: i32) {
 pub(crate) fn batch_record(demo_name: &str, settings: &Value, install: &str, tab: &str, first_run: bool) -> Value {
   use vdm::VDM;
 
-  run_tf2(demo_name, settings, install, tab, first_run);
+  let tfs_res = run_tf2(demo_name, settings, install, tab, first_run);
+
+  if tfs_res["status"].as_str().unwrap() == "error" {
+    return tfs_res;
+  }
 
   let output_folder = settings["output"]["folder"].as_str().unwrap();
   let tf_folder = settings["tf_folder"].as_str().unwrap();
