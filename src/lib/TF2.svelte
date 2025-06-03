@@ -90,7 +90,7 @@
 
     let res = await invoke("launch_tf2", { demoName: startingDemo, install: install, tab: String(tabIndex) });
 
-    if (res.status === "error") {
+    if (res?.status && res?.status === "error") {
       alert(res.message);
     }
 

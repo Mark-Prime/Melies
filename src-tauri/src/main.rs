@@ -1409,8 +1409,8 @@ fn is_steam_running() -> bool {
 }
 
 #[command]
-fn launch_tf2(demo_name: &str, install: &str, tab: &str) {
-    tf2::run_tf2(demo_name, &load_settings(), install, tab, true);
+fn launch_tf2(demo_name: &str, install: &str, tab: &str) -> Value {
+    tf2::run_tf2(demo_name, &load_settings(), install, tab, true)
 }
 
 #[command]
