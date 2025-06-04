@@ -9,7 +9,8 @@
     color = "pri",
     display = true,
     tooltip = "",
-    disabled = false
+    disabled = false,
+    left = false
   } = $props();
 
   const dispatch = createEventDispatcher();
@@ -26,6 +27,7 @@
     <div
       class="text"
       class:tooltip
+      class:tooltip--left={left}
       data-tooltip={tooltip?.trim() || ""}
       style={tooltip
         ? `--kills: ${tooltip.split(/\r\n|\r|\n/).length - 1};`

@@ -256,6 +256,7 @@
       ? [altInstall, ...settings.alt_installs.map(() => altInstall)]
       : null}
     on:tabClicked={tabClicked}
+    min_width="600px"
   >
     {#snippet header()}
       {#if isSteamRunning}
@@ -310,12 +311,35 @@
     {#if isSteamRunning}
       {#if !isRunning}
         <div class="setting">
-          <div class="settings__input-group settings__span">
+          <div class="launch_options settings__span">
             <Input
               title="TF2 Launch Options"
               bind:value={hlaeSettings.launch_options}
               color="tert"
             />
+            <Select
+              title="DXLevel"
+              color="tert"
+              bind:value={hlaeSettings.dxlevel}
+            >
+              <option value={80}>80</option>
+              <option value={90}>90</option>
+              <option value={95}>95</option>
+              <option value={100}>100 (Recommended)</option>
+            </Select>
+            <Input
+              title="Width"
+              tooltip={`Tf2 window width.`}
+              bind:value={hlaeSettings.width}
+              color="tert"
+            />
+            <Input
+              title="Height"
+              tooltip={`Tf2 window height.`}
+              bind:value={hlaeSettings.height}
+              color="tert"
+            />
+            <a href="https://docs.comfig.app/9.9.3/customization/launch_options">Learn More about Launch Options and DXLevel</a>
           </div>
           <Switch
             title="64Bit"
@@ -328,6 +352,20 @@
             bind:value={hlaeSettings.playdemo}
             tooltip="Plays first demo on list as soon as it launches."
             color="tert"
+            left={true}
+          />
+          <Switch
+            title="Skip Intro Video"
+            bind:value={hlaeSettings.novid}
+            tooltip="Uses -novid launch option."
+            color="tert"
+          />
+          <Switch
+            title="Borderless Window"
+            bind:value={hlaeSettings.borderless}
+            tooltip="Uses -windowed and -noborder launch options."
+            color="tert"
+            left={true}
           />
           {#if outputSettings.method === "sparklyfx" && !hlaeSettings.use_64bit}
             <div class="settings__span no_margin">
