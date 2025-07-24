@@ -16,6 +16,30 @@ If you are familiar with Ryukbot or Ryukbot v2, a large amount of the program wi
 
 A more detailed guide will be made in the future.
 
+## Building
+
+```sh
+git clone https://github.com/Mark-Prime/Melies
+cd Melies
+git submodule update --init --recursive
+```
+
+### `pnpm` or corepack users
+
+```sh
+pnpm install --frozen-lockfile
+pnpm run tauri build
+```
+
+### `npm` users
+
+```sh
+npm install
+npm run tauri build
+```
+
+for a dev build with hot reloads, use `tauri dev` instead of `tauri build`.
+
 ## Todo/Known Issues
 
 Currently accepting feature requests and bug reports.
