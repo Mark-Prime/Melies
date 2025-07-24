@@ -4,7 +4,7 @@ A Rust built, GUI focused, remake or Ryukbot v2.
 
 ## Goals
 
-*Ryukbot v2* was designed to make recording Team Fortress 2 footage as automated as possible while still allowing some freedom in how that automation worked, however, it's entirely command line interface made it confusing or even hard to use for some people. *Méliès* looks to change that by creating a faster and easier to understand system. With [Rust](https://www.rust-lang.org/) and [Tauri](https://tauri.app/) doing all of the heavy lifting, we won't need to rely on pythons relatively slow speeds to process everything. The GUI built with [Svelte-Kit](https://kit.svelte.dev/) also has the goal of making the program as easy to understand and customizable as possible, allowing users to see and edit their settings without needing a text editor to edit a JSON file.
+_Ryukbot v2_ was designed to make recording Team Fortress 2 footage as automated as possible while still allowing some freedom in how that automation worked, however, it's entirely command line interface made it confusing or even hard to use for some people. _Méliès_ looks to change that by creating a faster and easier to understand system. With [Rust](https://www.rust-lang.org/) and [Tauri](https://tauri.app/) doing all of the heavy lifting, we won't need to rely on pythons relatively slow speeds to process everything. The GUI built with [Svelte-Kit](https://kit.svelte.dev/) also has the goal of making the program as easy to understand and customizable as possible, allowing users to see and edit their settings without needing a text editor to edit a JSON file.
 
 ### A Trip to the Moon
 

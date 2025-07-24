@@ -33,8 +33,8 @@ fn compile_addon_settings(v: &Value, depth: usize) -> String {
                         continue;
                     }
 
-                    extend!(cfg, "\r\n{}\t", tab_depth);
-                    extend!(cfg, "\\\\ {}\r\n", ki.as_str());
+                    extend!(cfg, "\n{}\t", tab_depth);
+                    extend!(cfg, "\\\\ {}\n", ki.as_str());
                     extend!(
                         cfg,
                         "{}",
@@ -45,7 +45,7 @@ fn compile_addon_settings(v: &Value, depth: usize) -> String {
                     if vi["value"] == true {
                         extend!(
                             cfg,
-                            "{};\r\n",
+                            "{};\n",
                             tab_depth.clone() + vi["command"].as_str().unwrap()
                         );
                     }
@@ -53,7 +53,7 @@ fn compile_addon_settings(v: &Value, depth: usize) -> String {
                 "bool" => {
                     extend!(
                         cfg,
-                        "{};\r\n",
+                        "{};\n",
                         format!(
                             "{}{} {}",
                             tab_depth.clone(),
@@ -69,7 +69,7 @@ fn compile_addon_settings(v: &Value, depth: usize) -> String {
 
                     extend!(
                         cfg,
-                        "{};\r\n",
+                        "{};\n",
                         format!(
                             "{}{} {}",
                             tab_depth.clone(),
@@ -115,9 +115,9 @@ pub fn compile_addons(settings: &Value) -> String {
             continue;
         }
 
-        extend!(cfg, "\r\necho \"Running {} addon\";\r\n", k);
+        extend!(cfg, "\necho \"Running {} addon\";\n", k);
 
-        extend!(cfg, "{}\r\n", addon_text);
+        extend!(cfg, "{}\n", addon_text);
     }
 
     return cfg;

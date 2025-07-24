@@ -722,7 +722,10 @@ pub(crate) fn cleanup_renamed_events(demo_map: Value, events: Vec<Value>) -> Val
 
         if !demo_map[&demo_name].is_null() {
             event["demo_name"] = demo_map[&demo_name].clone();
-            event["event"] = json!(event["event"].as_str().unwrap().replace(&demo_name, demo_map[&demo_name].as_str().unwrap()));
+            event["event"] = json!(event["event"]
+                .as_str()
+                .unwrap()
+                .replace(&demo_name, demo_map[&demo_name].as_str().unwrap()));
         }
 
         event["isKillstreak"] = json!(!event["value"]["Killstreak"].is_null());
