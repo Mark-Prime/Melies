@@ -35,6 +35,7 @@ mod macros;
 mod settings;
 mod vdms;
 mod tf2;
+mod weapons;
 
 fn setting_as_bin(setting: &Value) -> i64 {
     if !setting.is_boolean() {
@@ -1486,6 +1487,11 @@ fn build_install(folder_name: &str) -> Value {
     tf2::build_new_install(folder_name, &load_settings())
 }
 
+#[tauri::command]
+fn get_weapons() -> Value {
+    weapons::get_weapons_as_json()
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -1520,7 +1526,8 @@ fn main() {
             load_files,
             open_file,
             delete_file,
-            build_install
+            build_install,
+            get_weapons
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

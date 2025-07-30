@@ -3,6 +3,8 @@
   import Toggle from "$lib/components/ToggleSelected.svelte";
   import { writeText } from '@tauri-apps/plugin-clipboard-manager';
   import { classConverter } from "$lib/composables/classConverter";
+  import { invoke } from "@tauri-apps/api/core";
+  import { onMount } from "svelte";
 
   /** @type {{life: any, steamid64: any, toggleSelected: any, parsedDemo: any, tickToTime: any, toggleKillsSelected: any, allKillsSelected: any}} */
   let {
@@ -14,6 +16,14 @@
     toggleKillsSelected,
     allKillsSelected
   } = $props();
+
+  let weapons = $state({});
+
+  onMount(async () => {
+    weapons = await invoke("get_weapons");
+
+    console.log(weapons);
+  })
 </script>
 
 <div class={"demo demo__life " + (life.selected && "demo--selected")}>
@@ -54,7 +64,7 @@
             <ClassLogo player_class={classConverter(kill.victim_class)} />
             {parsedDemo.data.users[kill.victim].name}
           </a>
-          with {kill.weapon}
+          with {weapons[kill.weapon]?.name || kill.weapon}
           {#if kill.crit_type}
             <span
               class={["", "killstreak", "killstreak--large"][kill.crit_type]}
