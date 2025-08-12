@@ -10,6 +10,7 @@ use sanitize_filename::sanitize;
 use serde_json::{self, json, Value};
 use std::env::{current_dir, home_dir};
 use std::ffi::OsStr;
+use std::fmt::Write as FmtWrite;
 use std::fs::{DirEntry, File};
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -74,65 +75,65 @@ fn setting_as_bool(setting: &Value) -> bool {
 fn write_cfg(settings: &Value) -> Result<(), String> {
     let mut cfg = String::new();
 
-    extend!(
-        cfg,
+    let _ = write!(
+        &mut cfg,
         "echo \"Execing Melies Config\";\ncl_drawhud {};\n",
         setting_as_bin(&settings["output"]["hud"])
     );
-    extend!(cfg, "sv_cheats {};\n", "1");
-    extend!(
-        cfg,
+    let _ = write!(&mut cfg, "sv_cheats {};\n", "1");
+    let _ = write!(
+        &mut cfg,
         "voice_enable {};\n",
         setting_as_bin(&settings["output"]["voice_chat"])
     );
-    extend!(
-        cfg,
+    let _ = write!(
+        &mut cfg,
         "hud_saytext_time {};\n",
         setting_as_bin(&settings["output"]["text_chat"]) * 12
     );
-    extend!(
-        cfg,
+    let _ = write!(
+        &mut cfg,
         "crosshair {};\n",
         setting_as_bin(&settings["output"]["crosshair"])
     );
-    extend!(
-        cfg,
+    let _ = write!(
+        &mut cfg,
         "r_drawviewmodel {};\n",
         setting_as_bin(&settings["output"]["viewmodel"])
     );
-    extend!(
-        cfg,
+    let _ = write!(
+        &mut cfg,
         "tf_use_min_viewmodels {};\n",
         setting_as_bin(&settings["output"]["minmode"])
     );
-    extend!(
-        cfg,
+    let _ = write!(
+        &mut cfg,
         "viewmodel_fov_demo {};\n",
         setting_as_bin(&settings["recording"]["viewmodel_fov"])
     );
-    extend!(
-        cfg,
+    let _ = write!(
+        &mut cfg,
         "fov_desired {};\n",
         setting_as_bin(&settings["recording"]["fov"])
     );
 
     if setting_as_bin(&settings["recording"]["third_person"]) == 1 {
-        extend!(cfg, "thirdperson{};\n", "");
+        let _ = write!(&mut cfg, "thirdperson{};\n", "");
     } else {
-        extend!(cfg, "firstperson{};\n", "");
+        let _ = write!(&mut cfg, "firstperson{};\n", "");
     }
 
     if let Some(commands) = settings["recording"]["commands"].as_str() {
-        extend!(cfg, "{}\n", commands);
+        let _ = write!(&mut cfg, "{}\n", commands);
     }
 
-    extend!(
-        cfg,
+    let _ = write!(
+        &mut cfg,
         "{};\n",
         "alias \"snd_fix\" \"snd_restart; snd_soundmixer Default_mix;\""
     );
 
-    extend!(cfg, "{}", compile_addons(settings));
+    let _ = write!(&mut cfg, "{}", compile_addons(settings));
 
     let tf_folder = match settings["tf_folder"].as_str() {
         Some(folder) => folder,
@@ -427,78 +428,69 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
     }
 }
 
-fn check_dir(files: Result<fs::ReadDir, std::io::Error>) -> Result<String, String> {
-    let entries;
-
-    match files {
-        Ok(ent) => {
-            entries = ent;
-        }
-        Err(_) => {
+fn check_dir(files: Result<fs::ReadDir, std::io::Error>) -> Result<PathBuf, String> {
+    let entries = match files {
+        Ok(ent) => ent,
+        Err(err) => {
             return Err(
-                "Could not find the _events.txt or KillStreaks.txt files.\nPlease check your settings to ensure the 'tf' folder is correctly linked.\nIf you do not have either file, please make one in the 'tf' or 'tf/demos' folder.".to_string()
+                format!("Could not find the _events.txt or KillStreaks.txt files.\nPlease check your settings to ensure the 'tf' folder is correctly linked.\nIf you do not have either file, please make one in the 'tf' or 'tf/demos' folder.\n{err}")
             );
         }
-    }
+    };
 
     for entry in entries {
-        let dir: DirEntry;
-
-        match entry {
-            Ok(directory) => {
-                dir = directory;
-            }
+        let dir = match entry {
+            Ok(v) => v,
             Err(err) => {
                 return Err(err.to_string());
             }
+        };
+
+        let dir_path = dir.path();
+
+        if dir_path
+            .file_name()
+            .is_some_and(|name| name == "_events.txt")
+        {
+            return Ok(dir_path);
         }
 
-        let dir_str = dir.path().to_string_lossy().to_string();
-
-        if dir_str.ends_with("\\_events.txt") {
-            return Ok(dir_str);
-        }
-
-        if dir_str.ends_with("\\KillStreaks.txt") {
-            return Ok(dir_str);
+        if dir_path
+            .file_name()
+            .is_some_and(|name| name == "KillStreaks.txt")
+        {
+            return Ok(dir_path);
         }
     }
 
     Err(format!("File Not Found"))
 }
 
-fn find_dir(settings: &Value) -> Result<String, String> {
+fn find_dir(settings: &Value) -> Result<PathBuf, String> {
     let tf_folder = settings["tf_folder"].as_str();
 
     let files = match tf_folder {
-        Some(tf_folder) => fs::read_dir(format!("{}\\demos", tf_folder)),
+        Some(tf_folder) => fs::read_dir(Path::new(tf_folder).join("demos")),
         None => Err(std::io::Error::new(
             std::io::ErrorKind::InvalidInput,
             "tf_folder not set",
         )),
     };
 
-    match check_dir(files) {
-        Ok(res) => {
-            return Ok(res);
-        }
-        Err(_) => {}
+    if let Ok(res) = check_dir(files) {
+        return Ok(res);
     }
 
-    let tf_folder = settings["tf_folder"].as_str();
     let files = match tf_folder {
-        Some(tf_folder) => fs::read_dir(format!("{}", tf_folder)),
+        Some(tf_folder) => fs::read_dir(tf_folder),
         None => Err(std::io::Error::new(
             std::io::ErrorKind::InvalidInput,
             "tf_folder not set",
         )),
     };
 
-    match check_dir(files) {
-        Ok(res) => {
-            return Ok(res);
-        }
-        Err(_) => {}
+    if let Ok(res) = check_dir(files) {
+        return Ok(res);
     }
 
     match settings["tf_folder"].as_str() {
@@ -546,9 +538,14 @@ fn ryukbot() -> Value {
     let event_len = events.count();
 
     if event_len == 0 {
+        let err = format!(
+            "_events.txt or KillStreaks.txt was found but had no valid events. Please add events before running again.\n\nFile Location: {}",
+            dir.display()
+        );
+
         return json!({
             "code": 410,
-            "err_text": format!("_events.txt or KillStreaks.txt was found but had no valid events. Please add events before running again.\n\nFile Location: {}", dir)
+            "err_text": err,
         });
     }
 
@@ -770,7 +767,7 @@ fn save_events(new_events: Value) -> Value {
     let mut new_events_text = String::new();
 
     for demo in new_events.as_array().unwrap() {
-        extend!(new_events_text, "{}\n", ">");
+        let _ = write!(&mut new_events_text, "{}\n", ">");
 
         for event in demo.as_array().unwrap() {
             let re = Regex::new("\\[(.*)\\] (.*) \\(\"(.*)\" at (\\d*)\\)").unwrap();
@@ -790,14 +787,14 @@ fn save_events(new_events: Value) -> Value {
 
             if event["demo_name"].as_str().unwrap() != original_event.demo_name {
                 let built_event = build_event_from_json(event);
-                extend!(new_events_text, "{}\n", built_event.event);
+                let _ = write!(&mut new_events_text, "{}\n", built_event.event);
                 events.push(built_event);
                 continue;
             }
 
             if event["tick"].as_i64().unwrap() != original_event.tick {
                 let built_event = build_event_from_json(event);
-                extend!(new_events_text, "{}\n", built_event.event);
+                let _ = write!(&mut new_events_text, "{}\n", built_event.event);
                 events.push(built_event);
                 continue;
             }
@@ -806,14 +803,14 @@ fn save_events(new_events: Value) -> Value {
                 Bookmark(bm) => {
                     if event["isKillstreak"].as_bool().unwrap() {
                         let built_event = build_event_from_json(event);
-                        extend!(new_events_text, "{}\n", built_event.event);
+                        let _ = write!(&mut new_events_text, "{}\n", built_event.event);
                         events.push(built_event);
                         continue;
                     }
 
                     if bm.to_owned() != event["value"]["Bookmark"].as_str().unwrap() {
                         let built_event = build_event_from_json(event);
-                        extend!(new_events_text, "{}\n", built_event.event);
+                        let _ = write!(&mut new_events_text, "{}\n", built_event.event);
                         events.push(built_event);
                         continue;
                     }
@@ -821,21 +818,21 @@ fn save_events(new_events: Value) -> Value {
                 Killstreak(ks) => {
                     if !event["isKillstreak"].as_bool().unwrap() {
                         let built_event = build_event_from_json(event);
-                        extend!(new_events_text, "{}\n", built_event.event);
+                        let _ = write!(&mut new_events_text, "{}\n", built_event.event);
                         events.push(built_event);
                         continue;
                     }
 
                     if ks.to_owned() != event["value"]["Killstreak"].as_i64().unwrap() {
                         let built_event = build_event_from_json(event);
-                        extend!(new_events_text, "{}\n", built_event.event);
+                        let _ = write!(&mut new_events_text, "{}\n", built_event.event);
                         events.push(built_event);
                         continue;
                     }
                 }
             }
 
-            extend!(new_events_text, "{}\n", original_event.event);
+            let _ = write!(&mut new_events_text, "{}\n", original_event.event);
             events.push(original_event);
         }
     }
@@ -1397,7 +1394,7 @@ fn load_files(folder: &str) -> Value {
     json!(videos)
 }
 
-fn impl_open_file(path: impl AsRef<OsStr>) {
+pub fn impl_open_file(path: impl AsRef<OsStr>) {
     opener::open(path).unwrap();
 }
 
@@ -1466,7 +1463,7 @@ fn main() {
         .expect("error while running tauri application");
 }
 
-static CONF_DIR: LazyLock<PathBuf> = LazyLock::new(|| {
+pub static CONF_DIR: LazyLock<PathBuf> = LazyLock::new(|| {
     if cfg!(windows) {
         // Microsoft doesn't know what a standard is
         home_dir().map(|d| d.join("Documents").join("Melies"))

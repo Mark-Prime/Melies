@@ -1,16 +1,13 @@
-use std::{env, fs, process::Command};
+use std::fmt::Write;
+use std::fs;
 
-use crate::{macros::*, setting_as_bin};
+use crate::{impl_open_file, setting_as_bin, CONF_DIR};
 use serde_json::Value;
 
-fn compile_addon_settings(v: &Value, depth: usize) -> String {
-    let mut cfg = "".to_string();
-
+fn compile_addon_settings(v: &Value, depth: usize, buf: &mut String) {
     let v_map = match v.as_object() {
         Some(v_map) => v_map,
-        None => {
-            return cfg;
-        }
+        None => return,
     };
 
     let tab_depth = "\t".repeat(depth);
@@ -27,39 +24,31 @@ fn compile_addon_settings(v: &Value, depth: usize) -> String {
         match &vi["type"] {
             Value::String(vi_type) => match vi_type.as_str() {
                 "group" => {
-                    let addon_text = compile_addon_settings(&vi["settings"], depth + 1);
+                    let mut addon_text = String::new();
+                    compile_addon_settings(&vi["settings"], depth + 1, &mut addon_text);
 
                     if addon_text.is_empty() {
                         continue;
                     }
 
-                    extend!(cfg, "\n{}\t", tab_depth);
-                    extend!(cfg, "\\\\ {}\n", ki.as_str());
-                    extend!(
-                        cfg,
-                        "{}",
-                        compile_addon_settings(&vi["settings"], depth + 1)
+                    write!(buf, "\n{}\t", tab_depth);
+                    write!(buf, "\\\\ {}\n", ki.as_str());
+                    buf.push_str(&addon_text);
+                }
+                "toggle" if vi["value"] == true => {
+                    write!(
+                        buf,
+                        "{};\n",
+                        tab_depth.clone() + vi["command"].as_str().unwrap()
                     );
                 }
-                "toggle" => {
-                    if vi["value"] == true {
-                        extend!(
-                            cfg,
-                            "{};\n",
-                            tab_depth.clone() + vi["command"].as_str().unwrap()
-                        );
-                    }
-                }
                 "bool" => {
-                    extend!(
-                        cfg,
-                        "{};\n",
-                        format!(
-                            "{}{} {}",
-                            tab_depth.clone(),
-                            vi["command"].as_str().unwrap(),
-                            setting_as_bin(&vi["value"])
-                        )
+                    write!(
+                        buf,
+                        "{}{} {};\n",
+                        tab_depth.clone(),
+                        vi["command"].as_str().unwrap(),
+                        setting_as_bin(&vi["value"])
                     );
                 }
                 "string" | "int" => {
@@ -67,15 +56,12 @@ fn compile_addon_settings(v: &Value, depth: usize) -> String {
                         continue;
                     }
 
-                    extend!(
-                        cfg,
-                        "{};\n",
-                        format!(
-                            "{}{} {}",
-                            tab_depth.clone(),
-                            vi["command"].as_str().unwrap(),
-                            vi["value"]
-                        )
+                    write!(
+                        buf,
+                        "{}{} {};\n",
+                        tab_depth.clone(),
+                        vi["command"].as_str().unwrap(),
+                        vi["value"]
                     );
                 }
                 _ => {
@@ -87,14 +73,12 @@ fn compile_addon_settings(v: &Value, depth: usize) -> String {
             }
         }
     }
-
-    return cfg;
 }
 
 pub fn compile_addons(settings: &Value) -> String {
     let addons = settings["addons"].as_object();
 
-    let mut cfg = "".to_string();
+    let mut cfg = String::new();
 
     if addons.is_none() {
         return cfg;
@@ -109,41 +93,24 @@ pub fn compile_addons(settings: &Value) -> String {
     vec.sort_by(|a, b| (a.1["type"] == "group").cmp(&(b.1["type"] == "group")));
 
     for (k, v) in addons {
-        let addon_text = compile_addon_settings(v, 0);
+        let mut addon_text = String::new();
+        compile_addon_settings(v, 0, &mut addon_text);
 
         if addon_text.is_empty() {
             continue;
         }
 
-        extend!(cfg, "\necho \"Running {} addon\";\n", k);
-
-        extend!(cfg, "{}\n", addon_text);
+        write!(&mut cfg, "\necho \"Running {} addon\";\n", k);
+        write!(&mut cfg, "{}\n", addon_text);
     }
 
     return cfg;
 }
 
 pub fn open_addons_folder() {
-    let user_profile = env::var("USERPROFILE");
-
-    let addons_path = match user_profile {
-        Ok(profile) => {
-            format!("{}\\Documents\\Melies\\addons", profile)
-        }
-        Err(_) => {
-            format!(
-                "{}\\addons",
-                std::env::current_exe()
-                    .unwrap()
-                    .parent()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-            )
-        }
-    };
+    let addons_path = CONF_DIR.join("addons");
 
     fs::create_dir_all(&addons_path).unwrap();
 
-    Command::new("explorer").arg(addons_path).spawn().unwrap();
+    impl_open_file(addons_path);
 }
