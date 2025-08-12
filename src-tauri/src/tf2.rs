@@ -53,10 +53,8 @@ fn build_launch_options(
     }
 
     if demo_name != "" && settings["hlae"]["playdemo"] == true {
-        let mut trimmed_name = demo_name.to_string().replace(".dem", "");
-
-        println!("Playing demo: {}", trimmed_name);
-        launch_options = format!("{} +playdemo {}", launch_options, trimmed_name);
+        println!("Playing demo: {demo_name}");
+        launch_options = format!("{} +playdemo {}", launch_options, demo_name);
     }
 
     if install != settings["tf_folder"].as_str().unwrap() {
