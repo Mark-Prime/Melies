@@ -98,9 +98,9 @@
   <div class="setting">
     <div class="settings__input-group settings__span tf-folder">
       <Input
-        title="\tf Folder"
+        title="'tf' Folder"
         bind:value={settings.tf_folder}
-        tooltip="The full filepath to your \tf folder within the Team Fortress 2 game files."
+        tooltip="The full filepath to your 'tf' folder within the Team Fortress 2 game files."
       />
       <button
         class="btn--sec"
@@ -118,12 +118,12 @@
           <Input
             title={index === 0 ? "Nickname" : ""}
             bind:value={install.name}
-            tooltip="The full filepath to your \tf folder within the Team Fortress 2 game files."
+            tooltip="The full filepath to your 'tf' folder within the Team Fortress 2 game files."
           />
           <Input
-            title={index === 0 ? "Custom \\tf Folder Path" : ""}
+            title={index === 0 ? "Custom 'tf' Folder Path" : ""}
             bind:value={install.tf_folder}
-            tooltip="The full filepath to your \tf folder within the Team Fortress 2 game files."
+            tooltip="The full filepath to your 'tf' folder within the Team Fortress 2 game files."
           />
           <button
             class="btn--sec"

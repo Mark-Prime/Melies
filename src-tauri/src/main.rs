@@ -8,15 +8,17 @@ use chrono::prelude::*;
 use regex::Regex;
 use sanitize_filename::sanitize;
 use serde_json::{self, json, Value};
+use std::env::{current_dir, home_dir};
+use std::ffi::OsStr;
+use std::fmt::Write as FmtWrite;
 use std::fs::{DirEntry, File};
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::sync::LazyLock;
 use std::{env, fs};
 use tauri::command;
 use vdm::action::ActionType;
 use vdm::VDM;
-use trash;
 
 use crate::clip::Clip;
 use crate::demos::*;
@@ -33,8 +35,8 @@ mod event;
 mod logstf;
 mod macros;
 mod settings;
-mod vdms;
 mod tf2;
+mod vdms;
 mod weapons;
 
 fn setting_as_bin(setting: &Value) -> i64 {
@@ -73,65 +75,65 @@ fn setting_as_bool(setting: &Value) -> bool {
 fn write_cfg(settings: &Value) -> Result<(), String> {
     let mut cfg = String::new();
 
-    extend!(
-        cfg,
-        "echo \"Execing Melies Config\";\r\ncl_drawhud {};\r\n",
+    let _ = write!(
+        &mut cfg,
+        "echo \"Execing Melies Config\";\ncl_drawhud {};\n",
         setting_as_bin(&settings["output"]["hud"])
     );
-    extend!(cfg, "sv_cheats {};\r\n", "1");
-    extend!(
-        cfg,
-        "voice_enable {};\r\n",
+    let _ = write!(&mut cfg, "sv_cheats {};\n", "1");
+    let _ = write!(
+        &mut cfg,
+        "voice_enable {};\n",
         setting_as_bin(&settings["output"]["voice_chat"])
     );
-    extend!(
-        cfg,
-        "hud_saytext_time {};\r\n",
+    let _ = write!(
+        &mut cfg,
+        "hud_saytext_time {};\n",
         setting_as_bin(&settings["output"]["text_chat"]) * 12
     );
-    extend!(
-        cfg,
-        "crosshair {};\r\n",
+    let _ = write!(
+        &mut cfg,
+        "crosshair {};\n",
         setting_as_bin(&settings["output"]["crosshair"])
     );
-    extend!(
-        cfg,
-        "r_drawviewmodel {};\r\n",
+    let _ = write!(
+        &mut cfg,
+        "r_drawviewmodel {};\n",
         setting_as_bin(&settings["output"]["viewmodel"])
     );
-    extend!(
-        cfg,
-        "tf_use_min_viewmodels {};\r\n",
+    let _ = write!(
+        &mut cfg,
+        "tf_use_min_viewmodels {};\n",
         setting_as_bin(&settings["output"]["minmode"])
     );
-    extend!(
-        cfg,
-        "viewmodel_fov_demo {};\r\n",
+    let _ = write!(
+        &mut cfg,
+        "viewmodel_fov_demo {};\n",
         setting_as_bin(&settings["recording"]["viewmodel_fov"])
     );
-    extend!(
-        cfg,
-        "fov_desired {};\r\n",
+    let _ = write!(
+        &mut cfg,
+        "fov_desired {};\n",
         setting_as_bin(&settings["recording"]["fov"])
     );
 
     if setting_as_bin(&settings["recording"]["third_person"]) == 1 {
-        extend!(cfg, "thirdperson{};\r\n", "");
+        let _ = write!(&mut cfg, "thirdperson{};\n", "");
     } else {
-        extend!(cfg, "firstperson{};\r\n", "");
+        let _ = write!(&mut cfg, "firstperson{};\n", "");
     }
 
     if let Some(commands) = settings["recording"]["commands"].as_str() {
-        extend!(cfg, "{}\r\n", commands);
+        let _ = write!(&mut cfg, "{}\n", commands);
     }
 
-    extend!(
-        cfg,
-        "{};\r\n",
+    let _ = write!(
+        &mut cfg,
+        "{};\n",
         "alias \"snd_fix\" \"snd_restart; snd_soundmixer Default_mix;\""
     );
 
-    extend!(cfg, "{}", compile_addons(settings));
+    let _ = write!(&mut cfg, "{}", compile_addons(settings));
 
     let tf_folder = match settings["tf_folder"].as_str() {
         Some(folder) => folder,
@@ -139,9 +141,8 @@ fn write_cfg(settings: &Value) -> Result<(), String> {
     };
 
     let base_folder = Path::new(tf_folder).parent().unwrap();
-    let base_folder_str = base_folder.to_str().unwrap();
 
-    let mut installs: Vec<String> = vec!["tf".to_string()];
+    let mut installs = vec![PathBuf::from("tf")];
 
     for install in settings["alt_installs"].as_array().unwrap() {
         if let None = install["name"].as_str() {
@@ -152,19 +153,17 @@ fn write_cfg(settings: &Value) -> Result<(), String> {
             continue;
         }
 
-        let mut install_folder = install["tf_folder"].as_str().unwrap().replace(base_folder_str, "");
+        let install_folder = Path::new(install["tf_folder"].as_str().unwrap())
+            .strip_prefix(base_folder)
+            .unwrap();
 
-        if install_folder.starts_with("\\") {
-            install_folder.remove(0);
-        }
-
-        installs.push(install_folder);
+        installs.push(install_folder.to_owned());
     }
 
     for install in installs {
-        let install_folder_str = format!("{}\\{}", base_folder_str, install);
+        let install_folder = base_folder.join(install);
 
-        let cfg_path = format!("{}\\cfg", install_folder_str);
+        let cfg_path = install_folder.join("cfg");
 
         if !Path::new(&cfg_path).exists() {
             match std::fs::create_dir_all(Path::new(&cfg_path)) {
@@ -172,12 +171,12 @@ fn write_cfg(settings: &Value) -> Result<(), String> {
                 Err(why) => return Err(format!("Couldn't create cfg folder: {}", why)),
             }
         }
-    
-        let mut file = match File::create(format!("{}\\cfg\\melies.cfg", install_folder_str)) {
+
+        let mut file = match File::create(cfg_path.join("melies.cfg")) {
             Ok(file) => file,
             Err(why) => return Err(format!("Couldn't create melies.cfg: {}", why)),
         };
-    
+
         match file.write_all(cfg.as_bytes()) {
             Ok(_) => {}
             Err(why) => return Err(format!("Couldn't write melies.cfg: {}", why)),
@@ -249,7 +248,7 @@ fn start_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
             if let Some(skip_to_tick) = clip.start_tick.checked_sub(66) {
                 skip_props.skip_to_tick = Some(skip_to_tick);
             }
-            
+
             skip_props.name = format!("Skip to first clip");
         }
     }
@@ -366,7 +365,8 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
             "sparklyfx" => {
                 if settings["output"]["folder"].as_str().unwrap().len() > 0 {
                     commands = format!(
-                        "sf_recorder_start {}\\{}",
+                        "sf_recorder_start {}\\{}", // no need to change this as tf2 normalizes
+                        // paths internally
                         settings["output"]["folder"].as_str().unwrap(),
                         clip_name
                     );
@@ -428,84 +428,75 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
     }
 }
 
-fn check_dir(files: Result<fs::ReadDir, std::io::Error>) -> Result<String, String> {
-    let entries;
-
-    match files {
-        Ok(ent) => {
-            entries = ent;
-        }
-        Err(_) => {
+fn check_dir(files: Result<fs::ReadDir, std::io::Error>) -> Result<PathBuf, String> {
+    let entries = match files {
+        Ok(ent) => ent,
+        Err(err) => {
             return Err(
-                "Could not find the _events.txt or KillStreaks.txt files.\r\nPlease check your settings to ensure the tf folder is correctly linked.\r\nIf you do not have either file, please make one in the \\tf or \\tf\\demos folder.".to_string()
+                format!("Could not find the _events.txt or KillStreaks.txt files.\nPlease check your settings to ensure the 'tf' folder is correctly linked.\nIf you do not have either file, please make one in the 'tf' or 'tf/demos' folder.\n{err}")
             );
         }
-    }
+    };
 
     for entry in entries {
-        let dir: DirEntry;
-
-        match entry {
-            Ok(directory) => {
-                dir = directory;
-            }
+        let dir = match entry {
+            Ok(v) => v,
             Err(err) => {
                 return Err(err.to_string());
             }
+        };
+
+        let dir_path = dir.path();
+
+        if dir_path
+            .file_name()
+            .is_some_and(|name| name == "_events.txt")
+        {
+            return Ok(dir_path);
         }
 
-        let dir_str = dir.path().to_string_lossy().to_string();
-
-        if dir_str.ends_with("\\_events.txt") {
-            return Ok(dir_str);
-        }
-
-        if dir_str.ends_with("\\KillStreaks.txt") {
-            return Ok(dir_str);
+        if dir_path
+            .file_name()
+            .is_some_and(|name| name == "KillStreaks.txt")
+        {
+            return Ok(dir_path);
         }
     }
 
     Err(format!("File Not Found"))
 }
 
-fn find_dir(settings: &Value) -> Result<String, String> {
+fn find_dir(settings: &Value) -> Result<PathBuf, String> {
     let tf_folder = settings["tf_folder"].as_str();
 
     let files = match tf_folder {
-        Some(tf_folder) => fs::read_dir(format!("{}\\demos", tf_folder)),
+        Some(tf_folder) => fs::read_dir(Path::new(tf_folder).join("demos")),
         None => Err(std::io::Error::new(
             std::io::ErrorKind::InvalidInput,
             "tf_folder not set",
         )),
     };
 
-    match check_dir(files) {
-        Ok(res) => {
-            return Ok(res);
-        }
-        Err(_) => {}
+    if let Ok(res) = check_dir(files) {
+        return Ok(res);
     }
 
-    let tf_folder = settings["tf_folder"].as_str();
     let files = match tf_folder {
-        Some(tf_folder) => fs::read_dir(format!("{}", tf_folder)),
+        Some(tf_folder) => fs::read_dir(tf_folder),
         None => Err(std::io::Error::new(
             std::io::ErrorKind::InvalidInput,
             "tf_folder not set",
         )),
     };
 
-    match check_dir(files) {
-        Ok(res) => {
-            return Ok(res);
-        }
-        Err(_) => {}
+    if let Ok(res) = check_dir(files) {
+        return Ok(res);
     }
 
     match settings["tf_folder"].as_str() {
         Some(tf_folder) =>
             Err(
-                format!("Could not find the _events.txt or KillStreaks.txt files.\r\nPlease check your settings to ensure the tf folder is correctly linked.\r\nIf you do not have either file, please make one in the \\tf or \\tf\\demos folder. \r\n\r\ntf_folder setting: ({})", tf_folder)
+                format!("Could not find the _events.txt or KillStreaks.txt files.\nPlease check your settings to ensure the tf folder is correctly linked.\nIf you do not have either file, please make one in the 'tf' or 'tf/demos' folder. \n\ntf_folder setting: ({})", tf_folder)
             ),
         None => Err("tf_folder setting not set".to_string()),
     }
@@ -535,7 +526,7 @@ fn ryukbot() -> Value {
         Err(_) => {
             return json!({
                 "code": 404,
-                "err_text": "Failed to read _events.txt or KillStreaks.txt\r\nPlease check your settings to ensure the tf folder is correctly linked.".to_string()
+                "err_text": "Failed to read _events.txt or KillStreaks.txt\nPlease check your settings to ensure the tf folder is correctly linked.".to_string()
             });
         }
     };
@@ -547,9 +538,14 @@ fn ryukbot() -> Value {
     let event_len = events.count();
 
     if event_len == 0 {
+        let err = format!(
+            "_events.txt or KillStreaks.txt was found but had no valid events. Please add events before running again.\n\nFile Location: {}",
+            dir.display()
+        );
+
         return json!({
             "code": 410,
-            "err_text": format!("_events.txt or KillStreaks.txt was found but had no valid events. Please add events before running again.\r\n\r\nFile Location: {}", dir)
+            "err_text": err,
         });
     }
 
@@ -771,7 +767,7 @@ fn save_events(new_events: Value) -> Value {
     let mut new_events_text = String::new();
 
     for demo in new_events.as_array().unwrap() {
-        extend!(new_events_text, "{}\r\n", ">");
+        let _ = write!(&mut new_events_text, "{}\n", ">");
 
         for event in demo.as_array().unwrap() {
             let re = Regex::new("\\[(.*)\\] (.*) \\(\"(.*)\" at (\\d*)\\)").unwrap();
@@ -791,14 +787,14 @@ fn save_events(new_events: Value) -> Value {
 
             if event["demo_name"].as_str().unwrap() != original_event.demo_name {
                 let built_event = build_event_from_json(event);
-                extend!(new_events_text, "{}\r\n", built_event.event);
+                let _ = write!(&mut new_events_text, "{}\n", built_event.event);
                 events.push(built_event);
                 continue;
             }
 
             if event["tick"].as_i64().unwrap() != original_event.tick {
                 let built_event = build_event_from_json(event);
-                extend!(new_events_text, "{}\r\n", built_event.event);
+                let _ = write!(&mut new_events_text, "{}\n", built_event.event);
                 events.push(built_event);
                 continue;
             }
@@ -807,14 +803,14 @@ fn save_events(new_events: Value) -> Value {
                 Bookmark(bm) => {
                     if event["isKillstreak"].as_bool().unwrap() {
                         let built_event = build_event_from_json(event);
-                        extend!(new_events_text, "{}\r\n", built_event.event);
+                        let _ = write!(&mut new_events_text, "{}\n", built_event.event);
                         events.push(built_event);
                         continue;
                     }
 
                     if bm.to_owned() != event["value"]["Bookmark"].as_str().unwrap() {
                         let built_event = build_event_from_json(event);
-                        extend!(new_events_text, "{}\r\n", built_event.event);
+                        let _ = write!(&mut new_events_text, "{}\n", built_event.event);
                         events.push(built_event);
                         continue;
                     }
@@ -822,21 +818,21 @@ fn save_events(new_events: Value) -> Value {
                 Killstreak(ks) => {
                     if !event["isKillstreak"].as_bool().unwrap() {
                         let built_event = build_event_from_json(event);
-                        extend!(new_events_text, "{}\r\n", built_event.event);
+                        let _ = write!(&mut new_events_text, "{}\n", built_event.event);
                         events.push(built_event);
                         continue;
                     }
 
                     if ks.to_owned() != event["value"]["Killstreak"].as_i64().unwrap() {
                         let built_event = build_event_from_json(event);
-                        extend!(new_events_text, "{}\r\n", built_event.event);
+                        let _ = write!(&mut new_events_text, "{}\n", built_event.event);
                         events.push(built_event);
                         continue;
                     }
                 }
             }
 
-            extend!(new_events_text, "{}\r\n", original_event.event);
+            let _ = write!(&mut new_events_text, "{}\n", original_event.event);
             events.push(original_event);
         }
     }
@@ -972,26 +968,9 @@ fn save_backup(settings: &Value) -> Value {
         .to_string()
         .replace("\"", "");
 
-    let user_profile = env::var("USERPROFILE");
+    let output_folder = &*BACKUPS_DIR;
 
-    let output_folder = match user_profile {
-        Ok(profile) => {
-            format!("{}\\Documents\\Melies\\backups", profile)
-        }
-        Err(_) => {
-            format!(
-                "{}\\backups",
-                std::env::current_exe()
-                    .unwrap()
-                    .parent()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-            )
-        }
-    };
-
-    let output_path = format!("{}\\{}.txt", output_folder, date);
+    let output_path = output_folder.join(date);
 
     fs::create_dir_all(output_folder).unwrap();
 
@@ -1008,6 +987,9 @@ fn parse_log(url: Value) -> Value {
     parse(url)
 }
 
+const FIX_TF_FOLDER: &str =
+    "Can't find 'tf' folder. Please fix the \"'tf' Folder\" setting in settings.";
+
 #[command]
 fn load_vdms() -> Result<Value, String> {
     let settings = load_settings();
@@ -1015,9 +997,7 @@ fn load_vdms() -> Result<Value, String> {
         return Ok(scan_for_vdms(settings));
     }
 
-    Err(String::from(
-        "Can't find \\tf folder. Please fix the \"\\tf Folder\" setting in settings.",
-    ))
+    Err(String::from(FIX_TF_FOLDER))
 }
 
 #[command]
@@ -1027,32 +1007,11 @@ fn load_demos() -> Result<Value, String> {
         return Ok(scan_for_demos(settings));
     }
 
-    Err(String::from(
-        "Can't find \\tf folder. Please fix the \"\\tf Folder\" setting in settings.",
-    ))
+    Err(String::from(FIX_TF_FOLDER))
 }
 
 pub(crate) fn validate_backups_folder() -> bool {
-    let user_profile = env::var("USERPROFILE");
-
-    let backups_folder = match user_profile {
-        Ok(profile) => {
-            format!("{}\\Documents\\Melies\\backups", profile)
-        }
-        Err(_) => {
-            format!(
-                "{}\\backups",
-                std::env::current_exe()
-                    .unwrap()
-                    .parent()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-            )
-        }
-    };
-
-    match fs::read_dir(backups_folder) {
+    match fs::read_dir(&*BACKUPS_DIR) {
         Ok(_) => {
             return true;
         }
@@ -1065,26 +1024,7 @@ pub(crate) fn validate_backups_folder() -> bool {
 pub(crate) fn scan_for_backups() -> Value {
     let mut events: Vec<Value> = vec![];
 
-    let user_profile = env::var("USERPROFILE");
-
-    let backups_folder = match user_profile {
-        Ok(profile) => {
-            format!("{}\\Documents\\Melies\\backups", profile)
-        }
-        Err(_) => {
-            format!(
-                "{}\\backups",
-                std::env::current_exe()
-                    .unwrap()
-                    .parent()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-            )
-        }
-    };
-
-    for entry in fs::read_dir(backups_folder).unwrap() {
+    for entry in fs::read_dir(&*BACKUPS_DIR).unwrap() {
         let entry = entry.unwrap();
         let path = entry.path();
 
@@ -1119,26 +1059,7 @@ fn load_backups() -> Result<Value, String> {
 
 #[command]
 fn reload_backup(file_name: Value) -> Result<Value, String> {
-    let user_profile = env::var("USERPROFILE");
-
-    let backups_folder = match user_profile {
-        Ok(profile) => {
-            format!("{}\\Documents\\Melies\\backups", profile)
-        }
-        Err(_) => {
-            format!(
-                "{}\\backups",
-                std::env::current_exe()
-                    .unwrap()
-                    .parent()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-            )
-        }
-    };
-
-    let file_path = format!("{}\\{}", backups_folder, file_name.as_str().unwrap());
+    let file_path = BACKUPS_DIR.join(file_name.as_str().unwrap());
     let backup_file = Path::new(&file_path);
 
     let settings = load_settings();
@@ -1154,7 +1075,7 @@ fn reload_backup(file_name: Value) -> Result<Value, String> {
         }
     }
 
-    println!("Reloading backup: {}", file_path);
+    println!("Reloading backup: {}", file_path.display());
 
     if backup_file.exists() {
         let copy = fs::copy(file_path, dir);
@@ -1170,7 +1091,7 @@ fn reload_backup(file_name: Value) -> Result<Value, String> {
 }
 
 #[command]
-fn parse_demo(path: String) -> Value {
+fn parse_demo(path: &str) -> Value {
     scan_demo(load_settings(), path)
 }
 
@@ -1277,26 +1198,9 @@ fn create_vdm(file_name: Value) {
 
 #[command]
 fn load_theme() -> Value {
-    let user_profile = env::var("USERPROFILE");
+    let settings_path = CONF_DIR.join("theme.json");
 
-    let settings_path = match user_profile {
-        Ok(profile) => {
-            format!("{}\\Documents\\Melies\\theme.json", profile)
-        }
-        Err(_) => {
-            format!(
-                "{}\\theme.json",
-                std::env::current_exe()
-                    .unwrap()
-                    .parent()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-            )
-        }
-    };
-
-    if Path::new(&settings_path).exists() {
+    if settings_path.exists() {
         let file = fs::read_to_string(settings_path).unwrap();
         let mut theme: Value = serde_json::from_str(&file).unwrap();
 
@@ -1312,43 +1216,16 @@ fn load_theme() -> Value {
 
 #[command]
 fn open_themes_folder() {
-    let user_profile = env::var("USERPROFILE");
+    fs::create_dir_all(&*CONF_DIR).unwrap();
 
-    let addons_path = match user_profile {
-        Ok(profile) => {
-            format!("{}\\Documents\\Melies", profile)
-        }
-        Err(_) => {
-            format!(
-                "{}",
-                std::env::current_exe()
-                    .unwrap()
-                    .parent()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-            )
-        }
-    };
-
-    fs::create_dir_all(&addons_path).unwrap();
-
-    Command::new("explorer").arg(addons_path).spawn().unwrap();
+    impl_open_file(&*CONF_DIR);
 }
 
 #[command]
 fn open_install_folder(install: &str) {
-    let settings = load_settings();
-    let tf_folder = settings["tf_folder"].as_str().unwrap();
-    let tf_parent = PathBuf::from(tf_folder).parent().unwrap().to_path_buf();
+    fs::create_dir_all(install).unwrap();
 
-    let relative_path = install.replace(&format!("{}\\", tf_parent.to_str().unwrap()), "");
-
-    let install_folder = format!("{}\\{}", tf_parent.to_str().unwrap(), relative_path);
-
-    fs::create_dir_all(&install_folder).unwrap();
-
-    Command::new("explorer").arg(install_folder).spawn().unwrap();
+    impl_open_file(install);
 }
 
 #[command]
@@ -1375,7 +1252,11 @@ fn cleanup_rename(demo_map: Value) {
     save_events(cleanup_renamed_events(demo_map.clone(), events));
     let settings = load_settings();
 
-    cleanup_renamed_vdms(demo_map, scan_for_vdms(load_settings()), settings["tf_folder"].as_str().unwrap());
+    cleanup_renamed_vdms(
+        demo_map,
+        scan_for_vdms(load_settings()),
+        settings["tf_folder"].as_str().unwrap(),
+    );
 }
 
 fn sanitize_name(path: &Path) -> PathBuf {
@@ -1436,11 +1317,11 @@ fn load_files(folder: &str) -> Value {
             continue;
         }
 
-        let has_layers = std::fs::read_dir(path.to_str().unwrap().to_string() + "\\take0000");
+        let has_layers = std::fs::read_dir(path.join("take0000"));
 
         let layers = match has_layers {
             Ok(layers) => layers,
-            Err(_) => continue
+            Err(_) => continue,
         };
 
         let mut video_layers = json!({});
@@ -1457,7 +1338,10 @@ fn load_files(folder: &str) -> Value {
                 continue;
             }
 
-            video_layers[file_name.replace(".mp4", "").replace(".avi", "").replace(".mkv", "")] = json!(path.to_str().unwrap().to_string());
+            video_layers[file_name
+                .replace(".mp4", "")
+                .replace(".avi", "")
+                .replace(".mkv", "")] = json!(path.to_str().unwrap().to_string());
         }
 
         let video: Value = json!({
@@ -1472,14 +1356,22 @@ fn load_files(folder: &str) -> Value {
     json!(videos)
 }
 
+pub fn impl_open_file(path: impl AsRef<OsStr>) {
+    opener::open(path).unwrap();
+}
+
+fn impl_delete_file(path: impl AsRef<Path>) {
+    trash::delete(path).unwrap();
+}
+
 #[tauri::command]
 fn open_file(path: &str) {
-    opener::open(path).unwrap();
+    impl_open_file(path)
 }
 
 #[tauri::command]
 fn delete_file(path: &str) {
-    trash::delete(path).unwrap();
+    impl_delete_file(path)
 }
 
 #[tauri::command]
@@ -1532,3 +1424,19 @@ fn main() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
+pub static CONF_DIR: LazyLock<PathBuf> = LazyLock::new(|| {
+    if cfg!(windows) {
+        // Microsoft doesn't know what a standard is
+        home_dir().map(|d| d.join("Documents").join("Melies"))
+    } else {
+        // MacOS, Linux, *BSD, etc.
+        std::env::var_os("XDG_CONFIG_HOME")
+            .map(PathBuf::from)
+            .map(|d| d.join("Melies"))
+            .or_else(|| home_dir().map(|d| d.join(".config").join("Melies")))
+    }
+    .unwrap_or_else(|| current_dir().unwrap())
+});
+
+static BACKUPS_DIR: LazyLock<PathBuf> = LazyLock::new(|| CONF_DIR.join("backups"));

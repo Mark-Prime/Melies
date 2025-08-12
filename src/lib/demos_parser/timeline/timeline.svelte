@@ -5,7 +5,7 @@
   // @ts-nocheck
   import { useMousePosition } from "@svelteuidev/composables";
   import Slider2 from "./timeline_slider.svelte";
-  import ClassLogo from "$lib/components/classlogo.svelte";
+  import ClassLogo from "$lib/components/ClassLogo.svelte";
   import { onMount } from "svelte";
   import { median } from "mathjs";
 
@@ -333,7 +333,7 @@
                       life.kills.length
                         ? `Player${life.kills.length > 1 ? "s" : ""} Killed: `
                         : `No Kills`
-                    }\n\r${life.kills
+                    }\n${life.kills
                       .map((kill) => {
                         let crit_types = ["", " Mini-Crit", " CRITICAL HIT!"];
                         return `${
@@ -342,7 +342,7 @@
                           crit_types[kill.crit_type]
                         }`;
                       })
-                      .join(", \n\r")}`}
+                      .join(", \n")}`}
                     style={`
                       --kills: ${life.kills.length + 1};
                       --pos: ${(leftPos + startTick - life.start) / scale}px;
@@ -388,7 +388,7 @@
                       `}
                       data-tooltip={`Start: ${calcTick(
                         life.start
-                      )}\r\nTimecode: ${tickToTime(calcTick(life.start))}`}
+                      )}\nTimecode: ${tickToTime(calcTick(life.start))}`}
                       style={`
                           --position: -1px;
                           --kills: 1;
@@ -412,7 +412,7 @@
                       `}
                       data-tooltip={`End: ${calcTick(
                         life.end
-                      )}\r\nTimecode: ${tickToTime(calcTick(life.end))}`}
+                      )}\nTimecode: ${tickToTime(calcTick(life.end))}`}
                       style={`
                         --position: ${calcTimelineMarker(
                           life.end,
@@ -441,9 +441,9 @@
                         `}
                         data-tooltip={`Killed: ${
                           parsedDemo.data?.users[kill.victim].name
-                        }\r\nTick: ${calcTick(
+                        }\nTick: ${calcTick(
                           kill.tick
-                        )}\r\nTimecode: ${tickToTime(calcTick(kill.tick))}`}
+                        )}\nTimecode: ${tickToTime(calcTick(kill.tick))}`}
                         style={`
                             --position: ${calcTimelineMarker(
                               kill.tick,
@@ -480,7 +480,7 @@
                           }
                           ${x > divWidth * 0.7 && "timeline__ks--left"}
                       `}
-                      data-tooltip={`${`Players Killed in Killstreak: `}\n\r${getKills(
+                      data-tooltip={`${`Players Killed in Killstreak: `}\n${getKills(
                         ksPointer,
                         index
                       )
@@ -492,7 +492,7 @@
                             crit_types[kill.crit_type]
                           }`;
                         })
-                        .join(", \n\r")}`}
+                        .join(", \n")}`}
                       style={`
                         --position: ${Math.max(
                           calcTimelineMarker(

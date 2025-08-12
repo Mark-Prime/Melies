@@ -1,4 +1,3 @@
-use reqwest;
 use serde_json::{self, json, Value};
 use steamid_ng::SteamID;
 

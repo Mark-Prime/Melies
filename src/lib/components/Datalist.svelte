@@ -25,7 +25,7 @@
       class:tooltip
       data-tooltip={tooltip.trim()}
       style={tooltip
-        ? `--kills: ${tooltip.split(/\r\n|\r|\n/).length - 1};`
+        ? `--kills: ${tooltip.split(/\n||\n/).length - 1};`
         : ""}
     >
       {title}

@@ -1,10 +1,14 @@
 use serde::Serialize;
 use serde_json::{json, Map, Value};
 use std::{
-    env,
+    borrow::Cow,
+    env::home_dir,
     fs::{self, File},
-    path::Path,
+    path::{Path, PathBuf},
+    sync::LazyLock,
 };
+
+use crate::CONF_DIR;
 
 #[derive(Debug, Serialize)]
 pub enum RecordToggle {
@@ -21,35 +25,17 @@ pub enum RecordToggle {
 }
 
 pub(crate) fn build_settings() -> Value {
-    let user_profile = env::var("USERPROFILE");
+    let settings_path = CONF_DIR.join("settings.json");
 
-    let binding = match user_profile {
-        Ok(profile) => {
-            format!("{}\\Documents\\Melies\\settings.json", profile)
-        }
-        Err(_) => {
-            format!(
-                "{}\\settings.json",
-                std::env::current_exe()
-                    .unwrap()
-                    .parent()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-            )
-        }
-    };
-
-    let settings_path = Path::new(&binding);
-    let settings_prefix = settings_path.parent().unwrap();
+    let settings_prefix = &**CONF_DIR;
     std::fs::create_dir_all(settings_prefix).unwrap();
 
-    File::create(settings_path).unwrap();
+    File::create(&settings_path).unwrap();
 
     let mut settings = default_settings();
 
     fs::write(
-        settings_path,
+        &settings_path,
         serde_json::to_string_pretty(&settings.to_string()).unwrap(),
     )
     .unwrap();
@@ -61,7 +47,7 @@ pub(crate) fn build_settings() -> Value {
 
 pub(crate) fn default_settings() -> Value {
     let defaults = json!({
-      "tf_folder": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Team Fortress 2\\tf",
+      "tf_folder": &**DEFAULT_TF_FOLDER,
       "alt_installs": [],
       "clear_events": true,
       "save_backups": true,
@@ -171,26 +157,9 @@ pub(crate) fn default_settings() -> Value {
 }
 
 pub(crate) fn load_settings() -> Value {
-    let user_profile = env::var("USERPROFILE");
+    let settings_path = CONF_DIR.join("settings.json");
 
-    let settings_path = match user_profile {
-        Ok(profile) => {
-            format!("{}\\Documents\\Melies\\settings.json", profile)
-        }
-        Err(_) => {
-            format!(
-                "{}\\settings.json",
-                std::env::current_exe()
-                    .unwrap()
-                    .parent()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-            )
-        }
-    };
-
-    if Path::new(&settings_path).exists() {
+    if settings_path.exists() {
         let file = fs::read_to_string(settings_path).unwrap();
         let settings: Value = serde_json::from_str(&file).unwrap();
 
@@ -214,26 +183,9 @@ pub(crate) fn load_settings() -> Value {
 pub(crate) fn save_settings(new_settings: String) -> Value {
     let settings: Value = serde_json::from_str(&new_settings).unwrap();
 
-    let user_profile = env::var("USERPROFILE");
+    let settings_path = CONF_DIR.join("settings.json");
 
-    let settings_path = match user_profile {
-        Ok(profile) => {
-            format!("{}\\Documents\\Melies\\settings.json", profile)
-        }
-        Err(_) => {
-            format!(
-                "{}\\settings.json",
-                std::env::current_exe()
-                    .unwrap()
-                    .parent()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-            )
-        }
-    };
-
-    if Path::new(&settings_path).exists() {
+    if settings_path.exists() {
         let mut defaults = default_settings();
 
         save_addons(&settings["addons"]);
@@ -253,24 +205,7 @@ pub(crate) fn save_settings(new_settings: String) -> Value {
 }
 
 pub(crate) fn load_addons() -> Value {
-    let user_profile = env::var("USERPROFILE");
-
-    let addons_path = match user_profile {
-        Ok(profile) => {
-            format!("{}\\Documents\\Melies\\addons", profile)
-        }
-        Err(_) => {
-            format!(
-                "{}\\addons",
-                std::env::current_exe()
-                    .unwrap()
-                    .parent()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-            )
-        }
-    };
+    let addons_path = CONF_DIR.join("addons");
 
     fs::create_dir_all(&addons_path).unwrap();
 
@@ -306,26 +241,10 @@ pub(crate) fn load_addons() -> Value {
 fn save_addons(addons: &Value) {
     let map: &Map<String, Value> = addons.as_object().unwrap();
 
-    for (k, v) in map {
-        let user_profile = env::var("USERPROFILE");
+    let addons_dir = CONF_DIR.join("addons");
 
-        let addon_path = match user_profile {
-            Ok(profile) => {
-                format!("{}\\Documents\\Melies\\addons\\{}.json", profile, k)
-            }
-            Err(_) => {
-                format!(
-                    "{}\\addons\\{}.json",
-                    std::env::current_exe()
-                        .unwrap()
-                        .parent()
-                        .unwrap()
-                        .to_str()
-                        .unwrap(),
-                    k
-                )
-            }
-        };
+    for (k, v) in map {
+        let addon_path = addons_dir.join(format!("{k}.json"));
 
         fs::write(addon_path, serde_json::to_string_pretty(v).unwrap()).unwrap();
     }
@@ -340,5 +259,43 @@ fn merge(a: &mut Value, b: Value) {
             }
         }
         (a, b) => *a = b,
+    }
+}
+
+//
+static DEFAULT_TF_FOLDER: LazyLock<Cow<'static, Path>> = LazyLock::new(find_tf_folder);
+
+fn find_tf_folder() -> Cow<'static, Path> {
+    if cfg!(windows) {
+        Path::new("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Team Fortress 2\\tf").into()
+    } else if cfg!(target_os = "macos") {
+        home_dir()
+            .unwrap()
+            .join("Library/Application Support/Steam/steamapps/common/Team Fortress 2/tf")
+            .into()
+    } else {
+        let steam_path = [
+            home_dir().map(|d| d.join(".var/app/com.valvesoftware.Steam/.steam/steam")),
+            home_dir().map(|d| d.join(".var/app/com.valvesoftware.SteamBeta/.steam/steam")),
+            std::env::var_os("XDG_DATA_DIR")
+                .map(PathBuf::from)
+                .map(|d| d.join("Steam"))
+                .or_else(|| home_dir().map(|d| d.join(".local/share/Steam"))),
+        ]
+        .into_iter()
+        .filter_map(|maybe_path| match maybe_path.as_ref() {
+            Some(path) if path.exists() => maybe_path,
+            _ => None,
+        })
+        .next()
+        .unwrap_or_else(|| {
+            home_dir()
+                .unwrap()
+                .join(".var/app/com.valvesoftware.Steam/.steam/steam")
+        });
+
+        steam_path
+            .join("steamapps/common/Team Fortress 2/tf")
+            .into()
     }
 }

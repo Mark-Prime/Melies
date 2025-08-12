@@ -1,7 +1,10 @@
 use std::path::Path;
 
-use serde_json::{ json, Value };
-use vdm::{ action::{ Action, ActionType }, VDM };
+use serde_json::{json, Value};
+use vdm::{
+    action::{Action, ActionType},
+    VDM,
+};
 
 pub(crate) fn json_to_vdm(json: Value) -> VDM {
     let mut vdm = VDM::new();
@@ -225,41 +228,34 @@ pub(crate) fn vdm_to_json(vdm: VDM) -> Value {
     for action in vdm.actions {
         match action {
             Action::SkipAhead(props) => {
-                actions.push(
-                    json!({
+                actions.push(json!({
                     "factory": "SkipAhead",
                     "name": props.name,
                     "start_tick": props.start_tick,
                     "start_time": props.start_time,
                     "skip_to_tick": props.skip_to_tick,
                     "skip_to_time": props.skip_to_time
-                })
-                );
+                }));
             }
             Action::StopPlayback(props) => {
-                actions.push(
-                    json!({
+                actions.push(json!({
                     "factory": "StopPlayback",
                     "name": props.name,
                     "start_tick": props.start_tick,
                     "start_time": props.start_time,
-                })
-                );
+                }));
             }
             Action::PlayCommands(props) => {
-                actions.push(
-                    json!({
+                actions.push(json!({
                     "factory": "PlayCommands",
                     "name": props.name,
                     "start_tick": props.start_tick,
                     "start_time": props.start_time,
                     "commands": props.commands
-                })
-                );
+                }));
             }
             Action::ScreenFadeStart(props) => {
-                actions.push(
-                    json!({
+                actions.push(json!({
                     "factory": "ScreenFadeStart",
                     "name": props.name,
                     "start_tick": props.start_tick,
@@ -272,12 +268,10 @@ pub(crate) fn vdm_to_json(vdm: VDM) -> Value {
                     "stay_out_enabled": props.stay_out_enabled,
                     "purge_enabled": props.purge_enabled,
                     "rgba1": props.rgba1,
-                })
-                );
+                }));
             }
             Action::TextMessageStart(props) => {
-                actions.push(
-                    json!({
+                actions.push(json!({
                     "factory": "TextMessageStart",
                     "name": props.name,
                     "start_tick": props.start_tick,
@@ -296,34 +290,28 @@ pub(crate) fn vdm_to_json(vdm: VDM) -> Value {
                     "xy": props.xy,
                     "rgba1": props.rgba1,
                     "rgba2": props.rgba2,
-                })
-                );
+                }));
             }
             Action::PlayCDTrackStart(props) => {
-                actions.push(
-                    json!({
+                actions.push(json!({
                     "factory": "PlayCDTrackStart",
                     "name": props.name,
                     "start_tick": props.start_tick,
                     "start_time": props.start_time,
                     "track": props.track,
-                })
-                );
+                }));
             }
             Action::PlaySoundStart(props) => {
-                actions.push(
-                    json!({
+                actions.push(json!({
                     "factory": "PlaySoundStart",
                     "name": props.name,
                     "start_tick": props.start_tick,
                     "start_time": props.start_time,
                     "sound": props.sound,
-                })
-                );
+                }));
             }
             Action::Pause(props) => {
-                actions.push(
-                    json!({
+                actions.push(json!({
                     "factory": "Pause",
                     "name": props.name,
                     "start_tick": props.start_tick,
@@ -331,12 +319,10 @@ pub(crate) fn vdm_to_json(vdm: VDM) -> Value {
                     "stop_tick": props.stop_tick,
                     "stop_time": props.stop_time,
                     "duration": props.duration
-                })
-                );
+                }));
             }
             Action::ChangePlaybackRate(props) => {
-                actions.push(
-                    json!({
+                actions.push(json!({
                     "factory": "ChangePlaybackRate",
                     "name": props.name,
                     "start_tick": props.start_tick,
@@ -344,12 +330,10 @@ pub(crate) fn vdm_to_json(vdm: VDM) -> Value {
                     "stop_tick": props.stop_tick,
                     "stop_time": props.stop_time,
                     "playback_rate": props.playback_rate
-                })
-                );
+                }));
             }
             Action::ZoomFov(props) => {
-                actions.push(
-                    json!({
+                actions.push(json!({
                     "factory": "ZoomFov",
                     "name": props.name,
                     "start_tick": props.start_tick,
@@ -360,8 +344,7 @@ pub(crate) fn vdm_to_json(vdm: VDM) -> Value {
                     "fov_fade_out": props.fade_out,
                     "fov_fade_in": props.fade_in,
                     "fov_hold": props.hold_time,
-                })
-                );
+                }));
             }
         }
     }

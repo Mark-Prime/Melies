@@ -160,27 +160,18 @@ pub(crate) fn validate_demos_folder(settings: &Value) -> bool {
 pub(crate) fn scan_for_demos(settings: Value) -> Value {
     let mut demos: Vec<Value> = vec![];
 
-    if !Path::new(settings["tf_folder"].as_str().unwrap()).exists() {
+    let tf_folder = Path::new(settings["tf_folder"].as_str().unwrap());
+
+    if !tf_folder.exists() {
         return Value::from({});
     }
 
-    demos.extend(scan_folder_for_filetype(
-        &settings,
-        settings["tf_folder"].as_str().unwrap(),
-        ".dem",
-    ));
+    demos.extend(scan_folder_for_filetype(tf_folder, tf_folder, "dem"));
 
-    if Path::new(&format!(
-        "{}\\demos",
-        settings["tf_folder"].as_str().unwrap()
-    ))
-    .exists()
-    {
-        demos.extend(scan_folder_for_filetype(
-            &settings,
-            &format!("{}\\demos", settings["tf_folder"].as_str().unwrap()),
-            ".dem",
-        ));
+    let demos_folder = tf_folder.join("demos");
+
+    if demos_folder.exists() {
+        demos.extend(scan_folder_for_filetype(tf_folder, &demos_folder, "dem"));
     }
 
     let mut resp = Value::from({});
@@ -191,38 +182,35 @@ pub(crate) fn scan_for_demos(settings: Value) -> Value {
     return resp;
 }
 
-pub(crate) fn load_demo(settings: &Value, demo_name: &String) -> Value {
-    let tf_folder = settings["tf_folder"].as_str().unwrap();
+pub(crate) fn load_demo(settings: &Value, demo_name: &str) -> Value {
+    let tf_folder = Path::new(settings["tf_folder"].as_str().unwrap());
 
-    let path_str = format!("{}\\{}.dem", tf_folder, demo_name);
+    let mut path = tf_folder.join(demo_name);
+    // https://github.com/rust-lang/rust/issues/127292
+    path.as_mut_os_string().push(".dem");
 
-    let path = Path::new(&path_str);
+    let mut demos_path = tf_folder.join("demos").join(demo_name);
+    demos_path.as_mut_os_string().push(".dem");
 
-    let demos_path_str = format!("{}\\demos\\{}.dem", tf_folder, demo_name);
-
-    let demos_path = Path::new(&demos_path_str);
-
-    let demo_path;
-
-    if path.exists() {
-        demo_path = path;
+    let demo_path = if path.exists() {
+        path
     } else if demos_path.exists() {
-        demo_path = demos_path;
+        demos_path
     } else {
-        println!("{} does not exist", path_str);
-        println!("{} does not exist", demos_path_str);
+        println!("{} does not exist", path.display());
+        println!("{} does not exist", demos_path.display());
         return Value::from({
             json!({
                 "loaded": false,
                 "error": "Demo does not exist"
             })
         });
-    }
+    };
 
     let vdm_path = demo_path.with_extension("vdm");
 
     let mut file = Value::from({});
-    let metadata = fs::metadata(demo_path).unwrap();
+    let metadata = fs::metadata(&demo_path).unwrap();
     file["name"] = Value::from(demo_name.to_owned());
     file["metadata"] = json!({
         "modified": metadata.modified().unwrap(),
@@ -231,7 +219,7 @@ pub(crate) fn load_demo(settings: &Value, demo_name: &String) -> Value {
 
     file["hasVdm"] = serde_json::Value::Bool(vdm_path.exists());
 
-    let mut demo_file = File::open(demo_path).unwrap();
+    let mut demo_file = File::open(&demo_path).unwrap();
     let mut file_buf = [0u8; 1072];
     demo_file.read_exact(&mut file_buf).unwrap();
 
@@ -277,57 +265,68 @@ fn get_demo_header(demo: Demo) -> Result<Value, std::io::Error> {
     }
 }
 
-fn scan_folder_for_filetype(settings: &Value, path: &str, file_type: &str) -> Vec<Value> {
+fn scan_folder_for_filetype(
+    root: impl AsRef<Path>,
+    path: impl AsRef<Path>,
+    file_type: &str,
+) -> Vec<Value> {
     let mut files: Vec<Value> = vec![];
 
     let paths = fs::read_dir(path).unwrap();
 
-    for path in paths {
-        if path.as_ref().is_err() {
+    for entry in paths {
+        let Ok(entry) = entry else {
+            continue;
+        };
+
+        let path = entry.path();
+
+        if !path.extension().is_some_and(|ext| ext == file_type) {
             continue;
         }
 
-        let file_name = path.as_ref().unwrap().path().display().to_string();
+        let parsed_file_name = path
+            .strip_prefix(&root)
+            .expect("`path` to be a child of `root`")
+            .to_str()
+            .map(ToOwned::to_owned)
+            .unwrap();
 
-        if file_name.ends_with(file_type) {
-            let parsed_file_name = file_name.replace(settings["tf_folder"].as_str().unwrap(), "");
+        let mut file = Value::from({});
+        let metadata = fs::metadata(&path).unwrap();
+        file["name"] = Value::from(parsed_file_name);
+        file["metadata"] = json!({
+            "modified": metadata.modified().unwrap(),
+            "created": metadata.created().unwrap(),
+        });
 
-            let mut file = Value::from({});
-            let metadata = fs::metadata(path.as_ref().unwrap().path()).unwrap();
-            file["name"] = Value::from(parsed_file_name);
-            file["metadata"] = json!({
-                "modified": metadata.modified().unwrap(),
-                "created": metadata.created().unwrap(),
-            });
+        if file_type == "dem" {
+            let mut vdm_path = path.clone();
+            vdm_path.as_mut_os_string().push(".vdm");
 
-            if file_type == ".dem" {
-                let mut vdm_path = path.as_ref().unwrap().path();
-                let demo_path = path.as_ref().unwrap().path();
-                let mut demo_file = File::open(path.unwrap().path()).unwrap();
-                let mut file_buf = [0u8; 1072];
-                demo_file.read_exact(&mut file_buf).unwrap();
+            let demo_path = &*path;
+            let mut demo_file = File::open(demo_path).unwrap();
+            let mut file_buf = [0u8; 1072];
+            demo_file.read_exact(&mut file_buf).unwrap();
 
-                let demo = Demo::new(&file_buf);
+            let demo = Demo::new(&file_buf);
 
-                vdm_path.set_extension("vdm");
+            file["hasVdm"] = serde_json::Value::Bool(vdm_path.exists());
 
-                file["hasVdm"] = serde_json::Value::Bool(vdm_path.exists());
+            match get_demo_header(demo) {
+                Ok(val) => {
+                    file["header"] = val;
+                }
+                Err(err) => {
+                    println!("Corrupt demo: {}", demo_path.display());
+                    println!("{}", err);
 
-                match get_demo_header(demo) {
-                    Ok(val) => {
-                        file["header"] = val;
-                    }
-                    Err(err) => {
-                        println!("Corrupt demo: {}", demo_path.display());
-                        println!("{}", err);
-
-                        continue;
-                    }
+                    continue;
                 }
             }
-
-            files.push(file);
         }
+
+        files.push(file);
     }
 
     files.sort_by(|a, b| compare(a["name"].as_str().unwrap(), b["name"].as_str().unwrap()));
@@ -338,27 +337,18 @@ fn scan_folder_for_filetype(settings: &Value, path: &str, file_type: &str) -> Ve
 pub(crate) fn scan_for_vdms(settings: Value) -> Value {
     let mut vdms: Vec<Value> = vec![];
 
-    if !Path::new(settings["tf_folder"].as_str().unwrap()).exists() {
+    let tf_folder = Path::new(settings["tf_folder"].as_str().unwrap());
+
+    if !tf_folder.exists() {
         return Value::from({});
     }
 
-    vdms.extend(scan_folder_for_filetype(
-        &settings,
-        settings["tf_folder"].as_str().unwrap(),
-        ".vdm",
-    ));
+    vdms.extend(scan_folder_for_filetype(tf_folder, tf_folder, "vdm"));
 
-    if Path::new(&format!(
-        "{}\\demos",
-        settings["tf_folder"].as_str().unwrap()
-    ))
-    .exists()
-    {
-        vdms.extend(scan_folder_for_filetype(
-            &settings,
-            &format!("{}\\demos", settings["tf_folder"].as_str().unwrap()),
-            ".vdm",
-        ));
+    let demos_folder = tf_folder.join("demos");
+
+    if demos_folder.exists() {
+        vdms.extend(scan_folder_for_filetype(tf_folder, demos_folder, "vdm"));
     }
 
     let mut resp = Value::from({});
@@ -395,14 +385,12 @@ fn get_player_class(
     Class::Other
 }
 
-pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
-    let mut file_path = path.clone();
+pub(crate) fn scan_demo(settings: Value, path: &str) -> Value {
+    let tf_folder = Path::new(settings["tf_folder"].as_str().unwrap());
 
-    if path.starts_with("\\") {
-        file_path = format!("{}{}", settings["tf_folder"].as_str().unwrap(), path);
-    }
+    let file_path = tf_folder.join(path);
 
-    println!("{}", file_path);
+    println!("{}", file_path.display());
 
     let file = fs::read(file_path).unwrap();
 
@@ -722,7 +710,10 @@ pub(crate) fn cleanup_renamed_events(demo_map: Value, events: Vec<Value>) -> Val
 
         if !demo_map[&demo_name].is_null() {
             event["demo_name"] = demo_map[&demo_name].clone();
-            event["event"] = json!(event["event"].as_str().unwrap().replace(&demo_name, demo_map[&demo_name].as_str().unwrap()));
+            event["event"] = json!(event["event"]
+                .as_str()
+                .unwrap()
+                .replace(&demo_name, demo_map[&demo_name].as_str().unwrap()));
         }
 
         event["isKillstreak"] = json!(!event["value"]["Killstreak"].is_null());
