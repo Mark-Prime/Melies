@@ -18,7 +18,7 @@ serde_json = "1.0"
 chrono = "0.4.24"
 regex = "1"
 serde = { version = "1.0", features = ["derive"] }
-vdm = "1.0.9"
+vdm = "1.1.1"
 reqwest = { version = "0.11", features = ["blocking", "json"] }
 steamid-ng = "1.0.0"
 sysinfo = "0.32.1"

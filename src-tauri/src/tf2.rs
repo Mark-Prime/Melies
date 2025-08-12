@@ -244,7 +244,7 @@ fn wait_for_tf2(settings: &Value) -> bool {
     true
 }
 
-fn last_modified_folder(videos_folder: &str) -> Option<std::fs::DirEntry> {
+fn last_modified_folder(videos_folder: impl AsRef<Path>) -> Option<std::fs::DirEntry> {
     std::fs::read_dir(videos_folder)
         .expect("Couldn't access local directory")
         .flatten()
@@ -252,16 +252,16 @@ fn last_modified_folder(videos_folder: &str) -> Option<std::fs::DirEntry> {
         .max_by_key(|x| x.metadata().unwrap().modified().unwrap())
 }
 
-fn has_audio(path: &PathBuf) -> bool {
-    let take_path = format!("{}/take0000", path.to_str().unwrap());
+fn has_audio(path: impl AsRef<Path>) -> bool {
+    let take_path = path.as_ref().join("take0000");
 
-    if !std::fs::metadata(take_path.clone()).is_ok() {
+    if !std::fs::metadata(&take_path).is_ok() {
         return false;
     }
 
-    for entry in std::fs::read_dir(take_path).unwrap() {
+    for entry in std::fs::read_dir(&take_path).unwrap() {
         let entry = entry.unwrap();
-        if entry.path().extension().unwrap() == "wav" {
+        if entry.path().extension().is_some_and(|ext| ext == "wav") {
             return true;
         }
     }
@@ -369,10 +369,10 @@ pub(crate) fn batch_record(
         return tfs_res;
     }
 
-    let output_folder = settings["output"]["folder"].as_str().unwrap();
-    let tf_folder = settings["tf_folder"].as_str().unwrap();
+    let output_folder = Path::new(settings["output"]["folder"].as_str().unwrap());
+    let tf_folder = Path::new(settings["tf_folder"].as_str().unwrap());
 
-    let mut last_modified = last_modified_folder(output_folder).unwrap().path();
+    let mut last_modified = last_modified_folder(&output_folder).unwrap().path();
 
     let mut clip_name = format!("{}", last_modified.file_name().unwrap().to_str().unwrap());
     let mut demo_name = get_demo_name(&last_modified);
@@ -382,7 +382,7 @@ pub(crate) fn batch_record(
 
         delete_folder(&last_modified, 0);
 
-        let last_folder = last_modified_folder(output_folder);
+        let last_folder = last_modified_folder(&output_folder);
 
         if last_folder.is_some() {
             last_modified = last_folder.unwrap().path();
@@ -392,7 +392,8 @@ pub(crate) fn batch_record(
         }
     }
 
-    let vdm_path = format!("{}\\{}.vdm", tf_folder, demo_name);
+    let mut vdm_path = tf_folder.join(&demo_name);
+    vdm_path.as_mut_os_string().push(".dem");
 
     let mut vdm = VDM::open(&vdm_path).unwrap();
 

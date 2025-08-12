@@ -1120,7 +1120,7 @@ fn reload_backup(file_name: Value) -> Result<Value, String> {
 }
 
 #[command]
-fn parse_demo(path: String) -> Value {
+fn parse_demo(path: &str) -> Value {
     scan_demo(load_settings(), path)
 }
 

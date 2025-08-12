@@ -182,38 +182,35 @@ pub(crate) fn scan_for_demos(settings: Value) -> Value {
     return resp;
 }
 
-pub(crate) fn load_demo(settings: &Value, demo_name: &String) -> Value {
-    let tf_folder = settings["tf_folder"].as_str().unwrap();
+pub(crate) fn load_demo(settings: &Value, demo_name: &str) -> Value {
+    let tf_folder = Path::new(settings["tf_folder"].as_str().unwrap());
 
-    let path_str = format!("{}\\{}.dem", tf_folder, demo_name);
+    let mut path = tf_folder.join(demo_name);
+    // https://github.com/rust-lang/rust/issues/127292
+    path.as_mut_os_string().push(".dem");
 
-    let path = Path::new(&path_str);
+    let mut demos_path = tf_folder.join("demos").join(demo_name);
+    demos_path.as_mut_os_string().push(".dem");
 
-    let demos_path_str = format!("{}\\demos\\{}.dem", tf_folder, demo_name);
-
-    let demos_path = Path::new(&demos_path_str);
-
-    let demo_path;
-
-    if path.exists() {
-        demo_path = path;
+    let demo_path = if path.exists() {
+        path
     } else if demos_path.exists() {
-        demo_path = demos_path;
+        demos_path
     } else {
-        println!("{} does not exist", path_str);
-        println!("{} does not exist", demos_path_str);
+        println!("{} does not exist", path.display());
+        println!("{} does not exist", demos_path.display());
         return Value::from({
             json!({
                 "loaded": false,
                 "error": "Demo does not exist"
             })
         });
-    }
+    };
 
     let vdm_path = demo_path.with_extension("vdm");
 
     let mut file = Value::from({});
-    let metadata = fs::metadata(demo_path).unwrap();
+    let metadata = fs::metadata(&demo_path).unwrap();
     file["name"] = Value::from(demo_name.to_owned());
     file["metadata"] = json!({
         "modified": metadata.modified().unwrap(),
@@ -222,7 +219,7 @@ pub(crate) fn load_demo(settings: &Value, demo_name: &String) -> Value {
 
     file["hasVdm"] = serde_json::Value::Bool(vdm_path.exists());
 
-    let mut demo_file = File::open(demo_path).unwrap();
+    let mut demo_file = File::open(&demo_path).unwrap();
     let mut file_buf = [0u8; 1072];
     demo_file.read_exact(&mut file_buf).unwrap();
 
@@ -305,14 +302,14 @@ fn scan_folder_for_filetype(
 
         if file_type == "dem" {
             let mut vdm_path = path.clone();
+            vdm_path.as_mut_os_string().push(".vdm");
+
             let demo_path = &*path;
             let mut demo_file = File::open(demo_path).unwrap();
             let mut file_buf = [0u8; 1072];
             demo_file.read_exact(&mut file_buf).unwrap();
 
             let demo = Demo::new(&file_buf);
-
-            vdm_path.set_extension("vdm");
 
             file["hasVdm"] = serde_json::Value::Bool(vdm_path.exists());
 
@@ -388,14 +385,12 @@ fn get_player_class(
     Class::Other
 }
 
-pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
-    let mut file_path = path.clone();
+pub(crate) fn scan_demo(settings: Value, path: &str) -> Value {
+    let tf_folder = Path::new(settings["tf_folder"].as_str().unwrap());
 
-    if path.starts_with("\\") {
-        file_path = format!("{}{}", settings["tf_folder"].as_str().unwrap(), path);
-    }
+    let file_path = tf_folder.join(path);
 
-    println!("{}", file_path);
+    println!("{}", file_path.display());
 
     let file = fs::read(file_path).unwrap();
 
