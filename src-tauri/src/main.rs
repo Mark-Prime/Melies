@@ -968,12 +968,7 @@ fn save_backup(settings: &Value) -> Value {
         .to_string()
         .replace("\"", "");
 
-    let user_profile = env::var("USERPROFILE");
-
-    let output_folder = match user_profile {
-        Ok(profile) => BACKUPS_DIR.join(profile),
-        Err(_) => BACKUPS_DIR.to_owned(),
-    };
+    let output_folder = &*BACKUPS_DIR;
 
     let output_path = output_folder.join(date);
 
@@ -1016,14 +1011,7 @@ fn load_demos() -> Result<Value, String> {
 }
 
 pub(crate) fn validate_backups_folder() -> bool {
-    let user_profile = env::var("USERPROFILE");
-
-    let backups_folder = match user_profile {
-        Ok(profile) => BACKUPS_DIR.join(profile),
-        Err(_) => BACKUPS_DIR.to_owned(),
-    };
-
-    match fs::read_dir(backups_folder) {
+    match fs::read_dir(&*BACKUPS_DIR) {
         Ok(_) => {
             return true;
         }
@@ -1036,14 +1024,7 @@ pub(crate) fn validate_backups_folder() -> bool {
 pub(crate) fn scan_for_backups() -> Value {
     let mut events: Vec<Value> = vec![];
 
-    let user_profile = env::var("USERPROFILE");
-
-    let backups_folder = match user_profile {
-        Ok(profile) => BACKUPS_DIR.join(profile),
-        Err(_) => BACKUPS_DIR.to_owned(),
-    };
-
-    for entry in fs::read_dir(backups_folder).unwrap() {
+    for entry in fs::read_dir(&*BACKUPS_DIR).unwrap() {
         let entry = entry.unwrap();
         let path = entry.path();
 
@@ -1078,14 +1059,7 @@ fn load_backups() -> Result<Value, String> {
 
 #[command]
 fn reload_backup(file_name: Value) -> Result<Value, String> {
-    let user_profile = env::var("USERPROFILE");
-
-    let backups_folder = match user_profile {
-        Ok(profile) => BACKUPS_DIR.join(profile),
-        Err(_) => BACKUPS_DIR.to_owned(),
-    };
-
-    let file_path = backups_folder.join(file_name.as_str().unwrap());
+    let file_path = BACKUPS_DIR.join(file_name.as_str().unwrap());
     let backup_file = Path::new(&file_path);
 
     let settings = load_settings();
@@ -1224,14 +1198,9 @@ fn create_vdm(file_name: Value) {
 
 #[command]
 fn load_theme() -> Value {
-    let user_profile = env::var("USERPROFILE");
+    let settings_path = CONF_DIR.join("theme.json");
 
-    let settings_path = match user_profile {
-        Ok(profile) => CONF_DIR.join(profile).join("theme.json"),
-        Err(_) => CONF_DIR.join("theme.json"),
-    };
-
-    if Path::new(&settings_path).exists() {
+    if settings_path.exists() {
         let file = fs::read_to_string(settings_path).unwrap();
         let mut theme: Value = serde_json::from_str(&file).unwrap();
 
@@ -1247,16 +1216,9 @@ fn load_theme() -> Value {
 
 #[command]
 fn open_themes_folder() {
-    let user_profile = env::var("USERPROFILE");
+    fs::create_dir_all(&*CONF_DIR).unwrap();
 
-    let addons_path = match user_profile {
-        Ok(profile) => &*CONF_DIR.join(profile),
-        Err(_) => &*CONF_DIR,
-    };
-
-    fs::create_dir_all(&addons_path).unwrap();
-
-    impl_open_file(&addons_path);
+    impl_open_file(&*CONF_DIR);
 }
 
 #[command]

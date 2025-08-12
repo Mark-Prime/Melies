@@ -31,19 +31,19 @@ fn compile_addon_settings(v: &Value, depth: usize, buf: &mut String) {
                         continue;
                     }
 
-                    write!(buf, "\n{}\t", tab_depth);
-                    write!(buf, "\\\\ {}\n", ki.as_str());
+                    let _ = write!(buf, "\n{}\t", tab_depth);
+                    let _ = write!(buf, "\\\\ {}\n", ki.as_str());
                     buf.push_str(&addon_text);
                 }
                 "toggle" if vi["value"] == true => {
-                    write!(
+                    let _ = write!(
                         buf,
                         "{};\n",
                         tab_depth.clone() + vi["command"].as_str().unwrap()
                     );
                 }
                 "bool" => {
-                    write!(
+                    let _ = write!(
                         buf,
                         "{}{} {};\n",
                         tab_depth.clone(),
@@ -56,7 +56,7 @@ fn compile_addon_settings(v: &Value, depth: usize, buf: &mut String) {
                         continue;
                     }
 
-                    write!(
+                    let _ = write!(
                         buf,
                         "{}{} {};\n",
                         tab_depth.clone(),
@@ -100,8 +100,8 @@ pub fn compile_addons(settings: &Value) -> String {
             continue;
         }
 
-        write!(&mut cfg, "\necho \"Running {} addon\";\n", k);
-        write!(&mut cfg, "{}\n", addon_text);
+        let _ = write!(&mut cfg, "\necho \"Running {} addon\";\n", k);
+        let _ = write!(&mut cfg, "{}\n", addon_text);
     }
 
     return cfg;
