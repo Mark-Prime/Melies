@@ -36,6 +36,7 @@ mod macros;
 mod settings;
 mod tf2;
 mod vdms;
+mod weapons;
 
 fn setting_as_bin(setting: &Value) -> i64 {
     if !setting.is_boolean() {
@@ -364,7 +365,7 @@ fn record_clip(vdm: &mut VDM, clip: &Clip, settings: &Value) {
                 if settings["output"]["folder"].as_str().unwrap().len() > 0 {
                     commands = format!(
                         "sf_recorder_start {}\\{}", // no need to change this as tf2 normalizes
-                                                    // paths internally
+                        // paths internally
                         settings["output"]["folder"].as_str().unwrap(),
                         clip_name
                     );
@@ -1419,6 +1420,11 @@ fn build_install(folder_name: &str) -> Value {
     tf2::build_new_install(folder_name, &load_settings())
 }
 
+#[tauri::command]
+fn get_weapons() -> Value {
+    weapons::get_weapons_as_json()
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -1453,7 +1459,8 @@ fn main() {
             load_files,
             open_file,
             delete_file,
-            build_install
+            build_install,
+            get_weapons
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

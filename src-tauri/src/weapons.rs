@@ -4,7 +4,8 @@ use serde_json::{json, Value};
 #[derive(Debug, Serialize)]
 pub enum WeaponType {
     Melee,
-    Ranged,
+    Hitscan,
+    Projectile,
     Misc
 }
 
@@ -22,45 +23,113 @@ pub fn get_weapons_as_json() -> Value {
     "arrow": "Arrow",
     "arrow_fire": "Flaming Arrow",
     "balloffire": "Dragon's Fury Fireball",
-    "ball_ornament": "Wrap Assassin Ball",
+    "ball": "Ball",
+    "detonator": "Detonator",
+    "guillotine": "Flying Guillotine",
     "energy_ball": "Short Circuit Orb",
-    "flare": "Flare",
-    "flare_detonator": "Detonator Flare",
+    "energy_ring": "Righteous Bison",
+    "flare": "Flare Gun",
     "grapplinghook": "Grappling Hook",
-    "healing_bolt": "Crusader's Crossbow Bolt",
+    "crusaders_crossbow": "Crusader's Crossbow",
     "huntsman_flyingburn": "Flaming Arrow",
+    "loose_cannon_impact": "Loose Cannon Impact",
+    "loose_cannon_explosion": "Loose Cannon",
     "mechanicalarmorb": "Short Circuit Orb",
     "pipe": "Grenade",
     "pipe_remote": "Stickybomb",
+    "tf_projectile_pipe_remote": "Stickybomb",
     "promode": "Grenade",
     "rocket": "Rocket",
+    "quake_rl": "Original",
+    "tf_projectile_rocket": "Rocket",
     "sentryrocket": "Sentry Rocket",
-    "sticky": "Stickybomb"
+    "iron_bomber": "Iron Bomber",
   });
 
   for (weapon, name) in proj.as_object().unwrap() {
-    weapons[format!("tf_projectile_{}", weapon)] = json!(
+    weapons[weapon] = json!(
       Weapon {
-        name: name.to_string(),
-        weapon_type: WeaponType::Ranged,
+        name: format!("the {}", name.as_str().unwrap()),
+        weapon_type: WeaponType::Projectile,
         can_airshot: true
       }
     );
 
     weapons[format!("deflect_{}", weapon)] = json!(
       Weapon {
-        name: format!("Reflected {}", name.to_string()),
-        weapon_type: WeaponType::Ranged,
+        name: format!("a Reflected {}", name.as_str().unwrap()),
+        weapon_type: WeaponType::Projectile,
         can_airshot: true
       }
     );
   }
 
   let melee = json!({
-    "tf_weapon_bat": "Bat",
-    "tf_weapon_bat_wood": "The Sandman",
-    "tf_weapon_bat_fish": "The Holy Mackerel",
+    "bat": "Bat",
+    "holymackerel": "Holy Mackerel",
+    "wrap_assassin": "Wrap Assassin",
+    "bonesaw": "Bonesaw",
+    "fryingpan": "Frying Pan",
+    "fists": "Fists",
+    "nonnonviolent_protest": "Conscientious Objector",
+    "claidheamohmor": "Claidheamh Mòr",
+    "warfan": "Fan O'War",
+    "prinny_machete": "Prinny Machete",
+    "sandman": "Sandman",
+    "candy_cane": "Candy Cane",
+    "boston_basher": "Boston Basher",
+    "skullbat": "Bat Outta Hell",
+    "atomizer": "Atomizer",
+    "lava_bat": "Sun-on-a-Stick",
+    "pep_brawlerblaster": "Baby Face Blaster",
+    "pep_pistol": "Pretty Boys Pocket Pistol",
+    "disciplinary_action": "Disciplinary Action",
   });
+
+  for (weapon, name) in melee.as_object().unwrap() {
+    weapons[weapon] = json!(
+      Weapon {
+        name: format!("the {}", name.as_str().unwrap()),
+        weapon_type: WeaponType::Melee,
+        can_airshot: false
+      }
+    );
+  }
+
+  let hitscan = json!({
+    "scattergun": "Scattergun",
+    "pistol_scout": "Pistol",
+    "soda_popper": "Soda Popper",
+    "the_winger": "Winger",
+    "back_scatter": "Back Scatter",
+    "force_a_nature": "Force-A-Nature",
+    "shortstop": "Shortstop",
+    "tomislav": "Tomislav",
+  });
+
+  for (weapon, name) in hitscan.as_object().unwrap() {
+    weapons[weapon] = json!(
+      Weapon {
+        name: format!("the {}", name.as_str().unwrap()),
+        weapon_type: WeaponType::Hitscan,
+        can_airshot: false
+      }
+    );
+  }
+
+  let misc = json!({
+    "world": "World"
+  });
+
+  for (weapon, name) in misc.as_object().unwrap() {
+    weapons[weapon] = json!(
+      Weapon {
+        name: format!("the {}", name.as_str().unwrap()),
+        weapon_type: WeaponType::Misc,
+        can_airshot: false
+      }
+    );
+  }
 
   weapons
 }
