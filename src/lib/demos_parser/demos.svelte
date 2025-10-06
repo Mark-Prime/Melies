@@ -1225,6 +1225,8 @@
     selectedPlayer = selectedPlayer;
     playerList = playerList;
     playerClasses = playerClasses;
+
+    console.log(parsedDemo)
   }
 
   function allKillsSelected(life) {

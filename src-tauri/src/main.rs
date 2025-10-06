@@ -36,6 +36,7 @@ mod settings;
 mod vdms;
 mod tf2;
 mod weapons;
+mod batch_automation;
 
 fn setting_as_bin(setting: &Value) -> i64 {
     if !setting.is_boolean() {
@@ -1415,8 +1416,13 @@ fn launch_tf2(demo_name: &str, install: &str, tab: &str) -> Value {
 }
 
 #[command]
-fn batch_record(demo_name: &str, install: &str, tab: &str, first_run: bool) -> Value {
-    tf2::batch_record(demo_name, &load_settings(), install, tab, first_run)
+fn get_next_demo() -> Value {
+    tf2::get_next_demo(&load_settings())
+}
+
+#[command]
+fn is_tf2_running() -> Value {
+    serde_json::Value::Bool(tf2::is_tf2_running())
 }
 
 #[tauri::command]
@@ -1492,6 +1498,16 @@ fn get_weapons() -> Value {
     weapons::get_weapons_as_json()
 }
 
+#[tauri::command]
+fn before_batch() -> Value {
+    batch_automation::before_batch(&load_settings())
+}
+
+#[tauri::command]
+fn after_batch() -> Value {
+    batch_automation::after_batch(&load_settings())
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -1522,7 +1538,10 @@ fn main() {
             cleanup_rename,
             is_steam_running,
             launch_tf2,
-            batch_record,
+            get_next_demo,
+            is_tf2_running,
+            before_batch,
+            after_batch,
             load_files,
             open_file,
             delete_file,

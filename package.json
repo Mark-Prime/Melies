@@ -18,7 +18,7 @@
     "@svelteuidev/composables": "^0.14.0",
     "@tauri-apps/api": "^2.0.0",
     "@tauri-apps/plugin-clipboard-manager": "^2.2.0",
-    "@tauri-apps/plugin-dialog": "^2.0.0",
+    "@tauri-apps/plugin-dialog": "^2.4.0",
     "@tauri-apps/plugin-shell": "^2.0.0",
     "dayjs": "^1.11.13",
     "mathjs": "^11.10.0",

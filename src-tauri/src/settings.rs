@@ -136,7 +136,26 @@ pub(crate) fn default_settings() -> Value {
         "use_64bit": true,
         "playdemo": true,
         "novid": true,
-        "borderless": true
+        "borderless": true,
+        "before_batch": "nothing",
+        "before_batch_path": "",
+        "after_batch": "nothing",
+        "after_batch_path": ""
+      },
+      "features": {
+        "basic": {
+            "editEvents": true,
+            "backups": true,
+            "scanDemos": true,
+        },
+        "advanced": {
+            "vdmeditor": true,
+            "demoManager": true,
+            "sortFootage": true,
+        },
+        "deprecated": {
+            "logstf": false
+        }
       },
       "advanced": {
         "airshots": {

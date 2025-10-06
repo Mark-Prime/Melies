@@ -256,11 +256,11 @@
   }
 </script>
 
-<button class="btn btn--sec" onclick={toggle}>
-  <Fa icon={faFlag} color={`var(--sec)`} />
+<button class="btn btn--pri" onclick={toggle}>
+  <Fa icon={faFlag} color={`var(--pri)`} />
   Load from Logs.tf
 </button>
-<Modal color="sec" {toggle} {enabled} min_width="700px">
+<Modal color="pri" {toggle} {enabled} min_width="700px">
   {#if resp.loading}
     <h1>Logs.tf Parser</h1>
     <div class="loading">
@@ -421,7 +421,7 @@
       <input
         bind:value={url}
         id="tf_folder"
-        class="input-group__input input--sec"
+        class="input-group__input input--pri"
       />
     </div>
     <div class="buttons">
@@ -452,7 +452,7 @@
   .section_header {
     margin-top: 2.5rem;
     margin-bottom: 0;
-    color: var(--sec-con-text);
+    color: var(--pri-con-text);
   }
 
   .event {
@@ -460,15 +460,15 @@
     padding: 0.3rem 0.5rem;
     margin: 2px 0;
     font-family: "Source Code Pro", monospace;
-    color: var(--sec-con-text);
-    border: 1px solid var(--sec-con);
+    color: var(--pri-con-text);
+    border: 1px solid var(--pri-con);
     border-radius: 5px;
 
     display: grid;
     grid-template-columns: 1fr 1fr;
 
     &--selected {
-      border: 1px solid var(--sec);
+      border: 1px solid var(--pri);
     }
 
     & > p {
@@ -488,7 +488,7 @@
 
   .round {
     margin: 0;
-    color: var(--sec);
+    color: var(--pri);
   }
 
   .drop {
@@ -527,7 +527,7 @@
     &:hover,
     &:active,
     &:focus {
-      color: var(--sec);
+      color: var(--pri);
 
       &::before {
         display: block;

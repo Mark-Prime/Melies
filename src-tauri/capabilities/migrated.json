@@ -12,6 +12,8 @@
     "dialog:allow-confirm",
     "dialog:default",
     "shell:default",
-    "clipboard-manager:allow-write-text"
+    "clipboard-manager:allow-write-text",
+    "dialog:default",
+    "dialog:default"
   ]
 }

@@ -17,12 +17,14 @@
 
   let resp = $state({ vdms: 0, clips: 0, events: 0, code: 0 });
   let theme = $state({ has_theme: false });
+  let settings = $state({});
   let reload = $state(false);
-  let forceReload = (full) => {
+  let forceReload = async (full) => {
     reload = !reload;
     if (full) {
       resp = { vdms: 0, clips: 0, events: 0, code: 0 };
     }
+    settings = await invoke("load_settings");
   };
 
   async function runMelies() {
@@ -32,7 +34,12 @@
 
   onMount(async () => {
     theme = await invoke("load_theme");
+    settings = await invoke("load_settings");
   })
+
+  function hasAnyEnabled(setting) {
+    return setting && Object.keys(setting).map((feature) => setting[feature]).includes(true)
+  }
 </script>
 
 <link
@@ -83,14 +90,36 @@
       </div>
       <div class="homepage__right">
         <div class="homepage__tools">
-          <EditEvents on:reload={() => forceReload(true)} />
-          <Demos on:reload={() => forceReload(true)} />
-          <Logstf on:reload={() => forceReload(true)} />
-          <Backups on:reload={() => forceReload(true)} />
-          <br />Advanced Tools
-          <VdmEditor on:reload={() => forceReload(true)} />
-          <DemoManager on:reload={() => forceReload(true)} />
-          <SortFootage on:reload={() => forceReload(true)} />
+          {#if settings?.features?.basic?.editEvents}
+            <EditEvents on:reload={() => forceReload(true)} />
+          {/if}
+          {#if settings?.features?.basic?.backups}
+            <Backups on:reload={() => forceReload(true)} />
+          {/if}
+          {#if settings?.features?.basic?.scanDemos}
+            <Demos on:reload={() => forceReload(true)} />
+          {/if}
+
+          {#if hasAnyEnabled(settings?.features?.advanced)}
+            <br /> Advanced Tools
+          {/if}
+          
+          {#if settings?.features?.advanced?.vdmeditor}
+            <VdmEditor on:reload={() => forceReload(true)} />
+          {/if}
+          {#if settings?.features?.advanced?.demoManager}
+            <DemoManager on:reload={() => forceReload(true)} />
+          {/if}
+          {#if settings?.features?.advanced?.sortFootage}
+            <SortFootage on:reload={() => forceReload(true)} />
+          {/if}
+            
+          {#if hasAnyEnabled(settings?.features?.deprecated)}
+            <br /> Deprecated Tools
+          {/if}
+          {#if settings?.features?.deprecated?.logstf}
+            <Logstf on:reload={() => forceReload(true)} />
+          {/if}
         </div>
 
         <div class="homepage__bottom">

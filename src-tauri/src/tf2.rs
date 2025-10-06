@@ -174,47 +174,23 @@ pub(crate) fn run_tf2(demo_name: &str, settings: &Value, install: &str, tab: &st
     }
   }
 
-  wait_for_tf2(settings);
-
   return json!({"status": "success"});
 }
 
-fn wait_for_tf2(settings: &Value) -> bool {
-  use sysinfo::System;
-  use std::{thread, time};
+/// Checks if TF2 is running.
+///
+/// Returns `true` if TF2 is running, `false` otherwise.
+pub fn is_tf2_running() -> bool {
+  let system = sysinfo::System::new_all();
 
-  loop {
-    let wait_time = time::Duration::from_secs(1);
-
-    thread::sleep(wait_time);
-
-    let s = System::new_all();
-
-    let mut process_found = false;
-
-    for _process in s.processes_by_name("tf_win64".as_ref()) {
-      process_found = true;
-      break;
-    }
-
-    if settings["hlae"]["use_64bit"] == true {
-      for _process in s.processes_by_name("tf_win64".as_ref()) {
-        process_found = true;
-        break;
-      }
-    } else {
-      for _process in s.processes_by_name("tf".as_ref()) {
-        process_found = true;
-        break;
-      }
-    }
-
-    if !process_found {
-      break;
-    }
-  }
-
-  true
+  system
+    .processes_by_name("tf_win64".as_ref())
+    .next()
+    .is_some()
+    || system
+      .processes_by_name("tf".as_ref())
+      .next()
+      .is_some()
 }
 
 fn last_modified_folder(videos_folder: &str) -> Option<std::fs::DirEntry> {
@@ -314,14 +290,8 @@ fn delete_folder(path: &PathBuf, try_count: i32) {
   }
 }
 
-pub(crate) fn batch_record(demo_name: &str, settings: &Value, install: &str, tab: &str, first_run: bool) -> Value {
+pub(crate) fn get_next_demo(settings: &Value) -> Value {
   use vdm::VDM;
-
-  let tfs_res = run_tf2(demo_name, settings, install, tab, first_run);
-
-  if tfs_res["status"].as_str().unwrap() == "error" {
-    return tfs_res;
-  }
 
   let output_folder = settings["output"]["folder"].as_str().unwrap();
   let tf_folder = settings["tf_folder"].as_str().unwrap();
@@ -348,7 +318,18 @@ pub(crate) fn batch_record(demo_name: &str, settings: &Value, install: &str, tab
 
   let vdm_path = format!("{}\\{}.vdm", tf_folder, demo_name);
 
-  let mut vdm = VDM::open(&vdm_path).unwrap();
+  let vdm_result = VDM::open(&vdm_path);
+
+  let mut vdm = match vdm_result {
+    Ok(vdm) => vdm,
+    Err(e) => {
+      println!("Failed to open vdm: {}", e);
+      return json!({
+        "complete": false,
+        "next_demo": demo_name
+      })
+    }
+  };
 
   let actions = &vdm.actions;
 

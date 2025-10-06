@@ -21,8 +21,6 @@
 
   onMount(async () => {
     weapons = await invoke("get_weapons");
-
-    console.log(weapons);
   })
 </script>
 

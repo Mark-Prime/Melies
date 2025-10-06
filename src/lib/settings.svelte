@@ -25,6 +25,7 @@
   let recordingSettings = $state({});
   let automationSettings = $state({});
   let demoManagerSettings = $state({});
+  let featureSettings = $state({});
   let hlaeSettings = $state({});
   let addons = $state({});
   let enabled = $state(false);
@@ -49,6 +50,7 @@
     recordingSettings = settings.recording;
     automationSettings = settings.automation;
     demoManagerSettings = settings.demo_manager;
+    featureSettings = settings.features;
     hlaeSettings = settings.hlae;
     addons = settings.addons;
     $state.snapshot(settings);
@@ -101,6 +103,8 @@
         title="\tf Folder"
         bind:value={settings.tf_folder}
         tooltip="The full filepath to your \tf folder within the Team Fortress 2 game files."
+        filepath={true}
+        directory={true}
       />
       <button
         class="btn--sec"
@@ -118,12 +122,14 @@
           <Input
             title={index === 0 ? "Nickname" : ""}
             bind:value={install.name}
-            tooltip="The full filepath to your \tf folder within the Team Fortress 2 game files."
+            tooltip="What you want to call this custom install."
           />
           <Input
             title={index === 0 ? "Custom \\tf Folder Path" : ""}
             bind:value={install.tf_folder}
             tooltip="The full filepath to your \tf folder within the Team Fortress 2 game files."
+            filepath={true}
+            directory={true}
           />
           <button
             class="btn--sec"
@@ -165,15 +171,6 @@
       <a href="https://www.youtube.com/watch?v=lH4scK3uB_s" target="_blank">
         What's this?
       </a>
-    </div>
-    <div class="settings__input-group settings__span">
-      <Input
-        title="Output Folder"
-        bind:value={outputSettings.folder}
-        tooltip="The full filepath to the folder you want to output to.
-If left blank, the output folder will default to your sparklyfx settings."
-        display={outputSettings.method === "sparklyfx"}
-      />
     </div>
     <Switch
       title="Prevent overwriting previously made VDMs"
@@ -322,6 +319,18 @@ events and vdm commands that reference the demo."
 
 {#snippet output()}
   <div class="setting">
+    <div class="settings__input-group settings__span">
+      <Input
+        title="Output Folder"
+        bind:value={outputSettings.folder}
+        tooltip="The full filepath to the folder you want to output to.
+If left blank, the output folder will default to your sparklyfx settings."
+        display={outputSettings.method === "sparklyfx"}
+        filepath={true}
+        directory={true}
+        color="sec"
+      />
+    </div>
     <div class="settings__input-group settings__span">
       <Input
         title="Clip name format"
@@ -545,11 +554,15 @@ Useful in STVs when the player could be dead."
           title="HLAE .exe Path"
           bind:value={hlaeSettings.hlae_path}
           color="sec"
+          filepath={true}
+          filetype=".exe"
         />
         <Input
           title="SparklyFX .dll Path"
           bind:value={hlaeSettings.sparklyfx_path}
           color="sec"
+          filepath={true}
+          filetype=".dll"
         />
       {/if}
       <div class="settings__input-group settings__span">
@@ -559,7 +572,7 @@ Useful in STVs when the player could be dead."
           color="sec"
         />
       </div>
-      <Switch
+      <!-- <Switch
         title="64Bit"
         bind:value={hlaeSettings.use_64bit}
         tooltip="Launches with 64Bit TF2."
@@ -569,6 +582,51 @@ Useful in STVs when the player could be dead."
         title="Automatically playdemo"
         bind:value={hlaeSettings.playdemo}
         tooltip="Plays first demo on list as soon as it launches."
+        color="sec"
+      /> -->
+      <Select
+        title="Before Batch Recording"
+        bind:value={hlaeSettings.before_batch}
+        tooltip={`What do to when before starting batch recording.`}
+        color="sec"
+        disabled
+      >
+        <option value="nothing">Nothing</option>
+        <option value="open">Open Output Folder</option>
+        <option value="run">Run Program</option>
+      </Select>
+      <Select
+        title="After Batch Recording"
+        bind:value={hlaeSettings.after_batch}
+        tooltip={`What do to when batch recording is complete.`}
+        color="sec"
+        disabled
+      >
+        <option value="nothing">Nothing</option>
+        <option value="open">Open Output Folder</option>
+        <option value="shutdown">Shutdown PC</option>
+        <option value="run">Run Program</option>
+      </Select>
+      
+      <Input
+        title="Program to Run BEFORE Batch Recording"
+        bind:value={hlaeSettings.before_batch_path}
+        disabled={hlaeSettings.before_batch !== "run"}
+        tooltip={hlaeSettings.before_batch !== "run" ? "Before Batch Recording must be set to 'Run Program'." : ""}
+        color="sec"
+      />
+      
+      <Input
+        title="Program to Run AFTER Batch Recording"
+        bind:value={hlaeSettings.after_batch_path}
+        disabled={hlaeSettings.after_batch !== "run"}
+        tooltip={hlaeSettings.after_batch !== "run" ? "After Batch Recording must be set to 'Run Program'." : ""}
+        color="sec"
+      />
+      <Switch
+        title="Skip Intro Video"
+        bind:value={hlaeSettings.novid}
+        tooltip="Uses -novid launch option."
         color="sec"
       />
     </div>
@@ -583,6 +641,54 @@ Useful in STVs when the player could be dead."
 
 {#snippet theme()}
   <Theme />
+{/snippet}
+
+{#snippet features()}
+  <div class="setting">
+    <Switch
+      title="Edit Events"
+      bind:value={featureSettings.basic.editEvents}
+      color="sec"
+    />
+    <Switch
+      title="Load Backup"
+      bind:value={featureSettings.basic.backups}
+      color="sec"
+    />
+    <Switch
+      title="Scan Demos"
+      bind:value={featureSettings.basic.scanDemos}
+      color="sec"
+    />
+  </div>
+  <h3>Advanced Features</h3>
+  <div class="setting">
+    <Switch
+      title="VDM Editor"
+      bind:value={featureSettings.advanced.vdmeditor}
+      color="sec"
+    />
+    <Switch
+      title="Demo Manager"
+      bind:value={featureSettings.advanced.demoManager}
+      color="sec"
+    />
+    <Switch
+      title="Sort Footage"
+      bind:value={featureSettings.advanced.sortFootage}
+      color="sec"
+    />
+  </div>
+  <h3>Deprecated Features</h3>
+  <p>Note: These features are no longer supported or updated.</p>
+  <div class="setting">
+    <Switch
+      title="Load from Logs.tf"
+      bind:value={featureSettings.deprecated.logstf}
+      tooltip="Deprecated due to being less accurate and less applicable compared to scanning demos."
+      color="sec"
+    />
+  </div>
 {/snippet}
 <button class="btn btn--sec" onclick={toggle}>
   <Fa icon={faGear} color={`var(--sec)`} />
@@ -603,8 +709,9 @@ Useful in STVs when the player could be dead."
     },
     "Addons",
     "Theme",
+    "Features"
   ]}
-  tabs={[general, output, recording, demoManager, hlae, addonsTab, theme]}
+  tabs={[general, output, recording, demoManager, hlae, addonsTab, theme, features]}
 >
   {#snippet footer()}
     <div class="buttons">
