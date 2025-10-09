@@ -317,7 +317,7 @@
                 bind:value={hlaeSettings.sparklyfx_path}
                 color="tert"
                 filepath={true}
-                filetype=".exe"
+                filetype=".dll"
               />
               <Select
                 title="Before Batch Recording"
