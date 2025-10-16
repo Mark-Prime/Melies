@@ -1548,6 +1548,11 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                           />
                         {/if}
                         {getPlayerName(parsedDemo.data.users[player])}
+                        {#if getPlayerName(parsedDemo.data.users[player]) !== parsedDemo.data.users[player].name}
+                          <span class="player__name">
+                            (aka {parsedDemo.data.users[player].name})
+                          </span>
+                        {/if}
                       </a>
                       {#each getClasses(player) as playerClass}
                         <ClassLogo
@@ -2028,6 +2033,13 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
       height: 1.5rem;
 
       border-radius: 25%;
+    }
+
+    &__name {
+      color: var(--bg-text);;
+      font-weight: bold;
+      font-size: 0.8rem;
+      padding: 0;
     }
 
     &::before {
