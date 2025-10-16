@@ -11,7 +11,10 @@
   import { createEventDispatcher } from "svelte";
   import dayjs from "dayjs";
 
-  import { classConverter, classNumConverter } from "$lib/composables/classConverter";
+  import {
+    classConverter,
+    classNumConverter,
+  } from "$lib/composables/classConverter";
   import tickToTime from "$lib/composables/tickToTime.js";
   import isAirshot from "$lib/composables/isAirshot.js";
   import Modal from "$lib/components/Modal.svelte";
@@ -29,7 +32,8 @@
     search = $state(""),
     playerClasses = $state({}),
     selectedPlayer = $state(""),
-    playerList = $state({});
+    playerList = $state({}),
+    playerNames = $state({});
 
   import Life from "./demo_life.svelte";
   import KillstreakPointer from "./demo_ks_pointer.svelte";
@@ -80,6 +84,29 @@
     }
   });
 
+  async function loadPlayerNames() {
+    if (!featureSettings.demo_scanner?.rgl) {
+      return;
+    }
+
+    let steamIds = [];
+
+    for (let playerIndex of Object.keys(parsedDemo.data.users)) {
+      let player = parsedDemo.data.users[playerIndex];
+
+      if (player.steamId64 == "0") {
+        continue;
+      }
+
+      steamIds.push(player.steamId64);
+    }
+
+    console.log(steamIds);
+
+    playerNames = await invoke("get_rgl_users", { steamIds: steamIds });
+    console.log(playerNames);
+  }
+
   let resp = $state({ loaded: false, loading: false });
   let parsedDemo = $state({ loaded: false, loading: false });
   let selected = [];
@@ -97,9 +124,54 @@
   let currentDemo = $state("");
 
   let settings = $state({});
-  let recordingSettings = {};
+  let recordingSettings = $state({});
+  let featureSettings = $state({});
 
   let filterAirshots = (k) => isAirshot(parsedDemo, k, settings);
+
+  function getPlayerName(player) {
+    if (!player) {
+      return;
+    }
+
+    if (playerNames[player?.steamId64]) {
+      return playerNames[player.steamId64].name;
+    }
+
+    return player.name;
+  }
+
+  function getPlayerHref(player) {
+    if (!player) {
+      return;
+    }
+
+    if (playerNames[player.steamId64]) {
+      return `https://rgl.gg/Public/PlayerProfile?p=${player.steamId64}`;
+    }
+
+    if (featureSettings.demo_scanner?.logstf) {
+      return `https://logs.tf/profile/${player.steamId64}`;
+    }
+
+    return `http://steamcommunity.com/profiles/${player.steamId64}`;
+  }
+
+  function getPlayerHrefTooltip(player) {
+    if (!player) {
+      return;
+    }
+
+    if (playerNames[player?.steamId64]) {
+      return `Open RGL profile`;
+    }
+
+    if (featureSettings.demo_scanner?.logstf) {
+      return `Open logs.tf profile`;
+    }
+
+    return `Open Steam profile`;
+  }
 
   function filterLife(player, valKey) {
     let lives = parsedDemo.data.player_lives[player];
@@ -159,6 +231,7 @@
 
     let settings = await invoke("load_settings");
     let recordingSettings = settings.recording;
+    let featureSettings = settings.features;
 
     let specMode = recordingSettings["third_person"] ? "spec_third" : "spec";
 
@@ -231,6 +304,9 @@
   async function loadSettings() {
     settings = await invoke("load_settings");
     recordingSettings = settings.recording;
+    featureSettings = settings.features;
+
+    console.log("settings", settings);
   }
 
   async function loadDemos() {
@@ -245,7 +321,7 @@
     selected = [];
     currentDemo = "";
     parsedDemo = { loaded: false, loading: false };
-    selectedPlayer = '';
+    selectedPlayer = "";
     playerList = [];
     playerClasses = {};
 
@@ -505,7 +581,7 @@
       parsedDemo = { loaded: false, loading: true };
       currentDemo = selected.shift();
       parsedDemo = await invoke("parse_demo", { path: currentDemo });
-      selectedPlayer = '';
+      selectedPlayer = "";
       playerList = [];
       playerClasses = {};
 
@@ -525,7 +601,12 @@
             for (let playerClass of Object.keys(player.classes)) {
               let converted = classConverter(playerClass);
 
-              if (!playerList[player.name]?.includes(classConverter(playerClass)) && converted !== "0") {
+              if (
+                !playerList[player.name]?.includes(
+                  classConverter(playerClass)
+                ) &&
+                converted !== "0"
+              ) {
                 playerList[player.name].push(classConverter(playerClass));
               }
             }
@@ -556,6 +637,7 @@
       redTeam.sort(sortByClass);
 
       console.log($state.snapshot(parsedDemo));
+      loadPlayerNames();
     } else {
       closeModal();
     }
@@ -649,9 +731,11 @@
       return false;
     }
 
-    let classFilter = false
+    let classFilter = false;
 
-    for (let playerClass of Object.keys(parsedDemo.data.users[player].classes)) {
+    for (let playerClass of Object.keys(
+      parsedDemo.data.users[player].classes
+    )) {
       if (playerClasses[classConverter(playerClass)]) {
         classFilter = true;
         break;
@@ -1226,7 +1310,7 @@
     playerList = playerList;
     playerClasses = playerClasses;
 
-    console.log(parsedDemo)
+    console.log(parsedDemo);
   }
 
   function allKillsSelected(life) {
@@ -1240,7 +1324,7 @@
   }
 </script>
 
-<Hotkeys bind:keyStates={keyStates} />
+<Hotkeys bind:keyStates />
 
 <button class="btn btn--tert" onclick={toggle}>
   <Fa icon={faWandMagicSparkles} color={`var(--tert)`} />
@@ -1371,14 +1455,19 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
         </div>
         {#if settings.automation.enabled}
           <div class="buttons">
-            <button class="btn" onclick={recordAll}> Record All Lives </button>
+            <button class="btn" onclick={recordAll}>Record All Lives</button>
             <button class="btn" onclick={recordAllHighlights}>
               Record All Highlights
             </button>
           </div>
         {/if}
         <div class="class-filters">
-          <Select title="Player" color="tert" bind:value={selectedPlayer} style="width: fit-content;">
+          <Select
+            title="Player"
+            color="tert"
+            bind:value={selectedPlayer}
+            style="width: fit-content;"
+          >
             <option value=""></option>
             {#each Object.keys(playerList).sort() as player}
               <option value={player}>
@@ -1395,8 +1484,12 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                   (playerClasses[playerClass] = !playerClasses[playerClass])}
                 class="tooltip"
                 data-tooltip={playerClasses[playerClass]
-                  ? "Hide " + playerClass.charAt(0).toUpperCase() + playerClass.slice(1)
-                  : "Show " + playerClass.charAt(0).toUpperCase() + playerClass.slice(1)}
+                  ? "Hide " +
+                    playerClass.charAt(0).toUpperCase() +
+                    playerClass.slice(1)
+                  : "Show " +
+                    playerClass.charAt(0).toUpperCase() +
+                    playerClass.slice(1)}
                 style="--kills: 0;"
               >
                 <div class:btn--deselected={!playerClasses[playerClass]}>
@@ -1434,15 +1527,27 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                     {/if}
                     <h3 class="player__header">
                       <a
-                        href={`https://logs.tf/profile/${parsedDemo.data.users[player]["steamId64"]}`}
+                        href={getPlayerHref(parsedDemo.data.users[player])}
                         class={parsedDemo.data.users[player]["team"] +
                           " player"}
-                        data-tooltip="Open logs.tf profile"
+                        data-tooltip={getPlayerHrefTooltip(
+                          parsedDemo.data.users[player]
+                        )}
                         target="_blank"
                         rel="noopener noreferrer"
                         id={`player-${parsedDemo.data.users[player].name}`}
                       >
-                        {parsedDemo.data.users[player].name}
+                        {#if playerNames[parsedDemo.data.users[player]?.steamId64]}
+                          <img
+                            src={playerNames[
+                              parsedDemo.data.users[player]?.steamId64
+                            ].avatar}
+                            alt={playerNames[
+                              parsedDemo.data.users[player]?.steamId64
+                            ].name}
+                          />
+                        {/if}
+                        {getPlayerName(parsedDemo.data.users[player])}
                       </a>
                       {#each getClasses(player) as playerClass}
                         <ClassLogo
@@ -1455,61 +1560,67 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                     </h3>
                   </div>
                   {#if !parsedDemo.data.users[player].hide}
-                    {#each parsedDemo.data.player_lives[player] as life}
-                      {#if life.start != 0}
-                        {#if displayLives || life.kills.length > 0 || (displayAssists && life.assists.length > 0)}
-                          <Life
-                            {life}
-                            steamid64={parsedDemo.data.users[player].steamId64}
-                            {toggleSelected}
-                            {parsedDemo}
-                            {tickToTime}
-                            {toggleKillsSelected}
-                            {allKillsSelected}
-                          />
+                    {#if featureSettings.demo_scanner.breakdowns}
+                      {#each parsedDemo.data.player_lives[player] as life}
+                        {#if life.start != 0}
+                          {#if displayLives || life.kills.length > 0 || (displayAssists && life.assists.length > 0)}
+                            <Life
+                              {life}
+                              steamid64={parsedDemo.data.users[player].steamId64}
+                              {toggleSelected}
+                              {parsedDemo}
+                              {tickToTime}
+                              {toggleKillsSelected}
+                              {allKillsSelected}
+                            />
+                          {/if}
                         {/if}
-                      {/if}
-                    {/each}
-                    <div class="full_demo__container">
-                      <button
-                        class="full_demo"
-                        onclick={() => recordEntireDemo(player)}
-                      >
-                        Record entire demo
-                      </button>
-                      {#if parsedDemo.data.pauses.length > 0}
+                      {/each}
+                      <div class="full_demo__container">
                         <button
                           class="full_demo"
-                          onclick={() => recordEntireDemo(player, false)}
+                          onclick={() => recordEntireDemo(player)}
                         >
-                          Record without Pauses
+                          Record entire demo
                         </button>
-                      {/if}
-                    </div>
+                        {#if parsedDemo.data.pauses.length > 0}
+                          <button
+                            class="full_demo"
+                            onclick={() => recordEntireDemo(player, false)}
+                          >
+                            Record without Pauses
+                          </button>
+                        {/if}
+                      </div>
+                    {/if}
 
-                    <KillPointerList
-                      label="Med Picks"
-                      valKey="med_picks"
-                      steamid64={parsedDemo.data.users[player].steamId64}
-                      {parsedDemo}
-                      {tickToTime}
-                      {toggleSelected}
-                      {toggleKillsSelected}
-                      lives={parsedDemo.data.player_lives[player].filter(
-                        (life) => life.med_picks.length > 0
-                      )}
-                    />
-                    <KillPointerList
-                      label="Air Shots"
-                      valKey="airshots"
-                      steamid64={parsedDemo.data.users[player].steamId64}
-                      {parsedDemo}
-                      {tickToTime}
-                      {toggleKillsSelected}
-                      {toggleSelected}
-                      lives={() => filterLife(player, "airshots")}
-                    />
-                    {#if parsedDemo.data.player_lives[player].filter((life) => life.killstreak_pointers.length > 0).length > 0}
+                    {#if featureSettings.demo_scanner.killstreaks}
+                      <KillPointerList
+                        label="Med Picks"
+                        valKey="med_picks"
+                        steamid64={parsedDemo.data.users[player].steamId64}
+                        {parsedDemo}
+                        {tickToTime}
+                        {toggleSelected}
+                        {toggleKillsSelected}
+                        lives={parsedDemo.data.player_lives[player].filter(
+                          (life) => life.med_picks.length > 0
+                        )}
+                      />
+                    {/if}
+                      {#if featureSettings.demo_scanner.airshots}
+                      <KillPointerList
+                        label="Air Shots"
+                        valKey="airshots"
+                        steamid64={parsedDemo.data.users[player].steamId64}
+                        {parsedDemo}
+                        {tickToTime}
+                        {toggleKillsSelected}
+                        {toggleSelected}
+                        lives={() => filterLife(player, "airshots")}
+                      />
+                    {/if}
+                    {#if parsedDemo.data.player_lives[player].filter((life) => life.killstreak_pointers.length > 0).length > 0 && featureSettings.demo_scanner.killstreaks}
                       <h4 class="centered">Killstreaks</h4>
                       {#each parsedDemo.data.player_lives[player].filter((life) => life.killstreak_pointers.length > 0) as life}
                         {#each life.killstreak_pointers as ksPointer}
@@ -1533,33 +1644,39 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
         </div>
         {#if !isPovDemo}
           <div class="kill_pointers">
-            <AllKillPointers
-              label="Med Picks"
-              {parsedDemo}
-              {tickToTime}
-              {toggleKillsSelected}
-              {toggleSelected}
-              kills={parsedDemo.data.med_picks}
-            />
-            <AllKillstreaksPointer
-              killstreaks={parsedDemo.data.killstreak_pointers}
-              {parsedDemo}
-              {limitStringLength}
-              {toggleBookmarkSelected}
-              {tickToTime}
-              {toggleSelected}
-            />
-            <AllKillPointers
-              label="Air Shots"
-              {parsedDemo}
-              {tickToTime}
-              {toggleKillsSelected}
-              {toggleSelected}
-              kills={parsedDemo.data.airshots.filter((k) => filterAirshots(k))}
-            />
+            {#if featureSettings.demo_scanner.killstreaks}
+              <AllKillPointers
+                label="Med Picks"
+                {parsedDemo}
+                {tickToTime}
+                {toggleKillsSelected}
+                {toggleSelected}
+                kills={parsedDemo.data.med_picks}
+              />
+            {/if}
+            {#if featureSettings.demo_scanner.killstreaks}
+              <AllKillstreaksPointer
+                killstreaks={parsedDemo.data.killstreak_pointers}
+                {parsedDemo}
+                {limitStringLength}
+                {toggleBookmarkSelected}
+                {tickToTime}
+                {toggleSelected}
+              />
+            {/if}
+            {#if featureSettings.demo_scanner.airshots}
+              <AllKillPointers
+                label="Air Shots"
+                {parsedDemo}
+                {tickToTime}
+                {toggleKillsSelected}
+                {toggleSelected}
+                kills={parsedDemo.data.airshots.filter((k) => filterAirshots(k))}
+              />
+            {/if}
           </div>
         {/if}
-        {#if parsedDemo.data.chat.length > 0}
+        {#if parsedDemo.data.chat.length > 0 && featureSettings.demo_scanner.chat}
           <div class="section-title-toggle chat__title">
             {#if displayChat}
               <button
@@ -1600,15 +1717,17 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
             </div>
           {/if}
         {/if}
-        <Timeline
-          {parsedDemo}
-          {tickToTime}
-          {displayPlayer}
-          {toggleSelected}
-          {displayLives}
-          {displayAssists}
-          {getTeam}
-        />
+        {#if featureSettings.demo_scanner.timeline}
+          <Timeline
+            {parsedDemo}
+            {tickToTime}
+            {displayPlayer}
+            {toggleSelected}
+            {displayLives}
+            {displayAssists}
+            {getTeam}
+          />
+        {/if}
       {:else}
         <div class="loading">
           <div class="loadingio-spinner-dual-ball-gstkvx2ybq5">
@@ -1900,6 +2019,16 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
 
   .player {
     position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    & img {
+      width: 1.5rem;
+      height: 1.5rem;
+
+      border-radius: 25%;
+    }
 
     &::before {
       content: attr(data-tooltip);

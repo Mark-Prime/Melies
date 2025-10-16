@@ -153,6 +153,16 @@ pub(crate) fn default_settings() -> Value {
             "demoManager": true,
             "sortFootage": true,
         },
+        "demo_scanner": {
+            "logstf": false,
+            "rgl": false,
+            "med_picks": true,
+            "airshots": true,
+            "killstreaks": true,
+            "breakdowns": true,
+            "chat": true,
+            "timeline": true
+        },
         "deprecated": {
             "logstf": false
         }

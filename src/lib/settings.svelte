@@ -679,6 +679,50 @@ Useful in STVs when the player could be dead."
       color="sec"
     />
   </div>
+  <h3>Demo Scanner</h3>
+  <div class="setting">
+    <Switch
+      title="Display Med Picks"
+      bind:value={featureSettings.demo_scanner.med_picks}
+      color="sec"
+    />
+    <Switch
+      title="Display Player breakdowns"
+      bind:value={featureSettings.demo_scanner.breakdowns}
+      color="sec"
+    />
+    <Switch
+      title="Display Killstreaks"
+      bind:value={featureSettings.demo_scanner.killstreaks}
+      color="sec"
+    />
+    <Switch
+      title="Display Chat"
+      bind:value={featureSettings.demo_scanner.chat}
+      color="sec"
+    />
+    <Switch
+      title="Display Air Shots"
+      bind:value={featureSettings.demo_scanner.airshots}
+      color="sec"
+    />
+    <Switch
+      title="Display Timeline View"
+      bind:value={featureSettings.demo_scanner.timeline}
+      color="sec"
+    />
+    <Switch
+      title="Load RGL.gg player information"
+      tooltip="Replaces player name with RGL.gg profile name if available."
+      bind:value={featureSettings.demo_scanner.rgl}
+      color="sec"
+    />
+    <Switch
+      title="Link to Logs.tf profiles"
+      bind:value={featureSettings.demo_scanner.logstf}
+      color="sec"
+    />
+  </div>
   <h3>Deprecated Features</h3>
   <p>Note: These features are no longer supported or updated.</p>
   <div class="setting">

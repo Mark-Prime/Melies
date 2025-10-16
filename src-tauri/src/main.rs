@@ -35,6 +35,7 @@ mod macros;
 mod settings;
 mod vdms;
 mod tf2;
+mod rgl;
 mod weapons;
 mod batch_automation;
 
@@ -1508,6 +1509,12 @@ fn after_batch() -> Value {
     batch_automation::after_batch(&load_settings())
 }
 
+#[tauri::command]
+fn get_rgl_users(steam_ids: Vec<String>) -> Value {
+    rgl::get_users(steam_ids)
+}
+
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -1546,7 +1553,8 @@ fn main() {
             open_file,
             delete_file,
             build_install,
-            get_weapons
+            get_weapons,
+            get_rgl_users
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

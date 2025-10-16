@@ -313,11 +313,11 @@ impl Round {
     }
 }
 
-#[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
-pub struct World {
-    pub boundary_min: Vector,
-    pub boundary_max: Vector,
-}
+// #[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
+// pub struct World {
+//     pub boundary_min: Vector,
+//     pub boundary_max: Vector,
+// }
 
 #[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Analyser {
