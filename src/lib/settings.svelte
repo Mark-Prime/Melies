@@ -149,7 +149,7 @@
     {#if addingCustomInstall}
       <div class="settings__input-group settings__span new-install">
         <Input title="New Folder Name" bind:value={newFolderName} color="pri" />
-        <button onclick={buildInstall}> Build Install </button>
+        <button onclick={buildInstall}>Build Install</button>
         <button class="cancel-btn" onclick={(addingCustomInstall = false)}>
           Cancel
         </button>
@@ -607,20 +607,24 @@ Useful in STVs when the player could be dead."
         <option value="shutdown">Shutdown PC</option>
         <option value="run">Run Program</option>
       </Select>
-      
+
       <Input
         title="Program to Run BEFORE Batch Recording"
         bind:value={hlaeSettings.before_batch_path}
         disabled={hlaeSettings.before_batch !== "run"}
-        tooltip={hlaeSettings.before_batch !== "run" ? "Before Batch Recording must be set to 'Run Program'." : ""}
+        tooltip={hlaeSettings.before_batch !== "run"
+          ? "Before Batch Recording must be set to 'Run Program'."
+          : ""}
         color="sec"
       />
-      
+
       <Input
         title="Program to Run AFTER Batch Recording"
         bind:value={hlaeSettings.after_batch_path}
         disabled={hlaeSettings.after_batch !== "run"}
-        tooltip={hlaeSettings.after_batch !== "run" ? "After Batch Recording must be set to 'Run Program'." : ""}
+        tooltip={hlaeSettings.after_batch !== "run"
+          ? "After Batch Recording must be set to 'Run Program'."
+          : ""}
         color="sec"
       />
       <Switch
@@ -734,6 +738,49 @@ Useful in STVs when the player could be dead."
     />
   </div>
 {/snippet}
+
+{#snippet recommendations()}
+  <h3>Recommended Tools</h3>
+  <div class="cards">
+    <div class="card">
+      <h3>HLAE</h3>
+      <a
+        href="https://github.com/advancedfx/advancedfx/releases"
+        target="_blank"
+        class="btn"
+      >
+        Download
+      </a>
+    </div>
+
+    <div class="card">
+      <h3>SparklyFX</h3>
+      <a
+        href="https://github.com/cademtz/sparkly-fx/releases"
+        target="_blank"
+        class="btn"
+      >
+        Download
+      </a>
+    </div>
+
+    <div class="card">
+      <h3>
+        CastingEssentialsNext
+        <br />
+        (64-bit Only)
+      </h3>
+      <a
+        href="https://github.com/drunderscore/CastingEssentialsNext/releases"
+        target="_blank"
+        class="btn"
+      >
+        Download
+      </a>
+    </div>
+  </div>
+{/snippet}
+
 <button class="btn btn--sec" onclick={toggle}>
   <Fa icon={faGear} color={`var(--sec)`} />
 </button>
@@ -753,19 +800,57 @@ Useful in STVs when the player could be dead."
     },
     "Addons",
     "Theme",
-    "Features"
+    "Features",
+    "Recommendations",
   ]}
-  tabs={[general, output, recording, demoManager, hlae, addonsTab, theme, features]}
+  tabs={[
+    general,
+    output,
+    recording,
+    demoManager,
+    hlae,
+    addonsTab,
+    theme,
+    features,
+    recommendations,
+  ]}
 >
   {#snippet footer()}
     <div class="buttons">
       <button onclick={toggle} class="cancel-btn">Cancel</button>
-      <button onclick={saveSettings} class="Save"> Save </button>
+      <button onclick={saveSettings} class="Save">Save</button>
     </div>
   {/snippet}
 </Modal>
 
 <style lang="scss">
+  a.btn {
+    padding: .5rem 1rem;
+    height: 2rem;
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  .card {
+    background-color: var(--bg2);
+    border-radius: 0px;
+    border: 1px solid var(--tert-con);
+    padding: 1rem;
+    position: relative;
+    z-index: 1000;
+    overflow-y: hidden;
+    overflow-x: hidden;
+
+    border-radius: 8px;
+
+    display: flex;
+    flex-direction: column;
+  }
+
   .buttons {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
