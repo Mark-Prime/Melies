@@ -25,16 +25,13 @@
             event.isKillstreak = true;
           }
 
-          if (
-            i === 0 ||
-            eventList.events[i - 1].demo_name != event.demo_name
-          ) {
+          if (i === 0 || eventList.events[i - 1].demo_name != event.demo_name) {
             demos.push([event]);
             return;
           }
 
           demos[demos.length - 1].push(event);
-        }
+        },
       );
 
       demos = demos;
@@ -77,23 +74,22 @@
 
     overflow-y: auto;
 
-    
-      /* width */
-      &::-webkit-scrollbar {
-        width: 8px;
-      }
+    /* width */
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
 
-      /* Track */
-      &::-webkit-scrollbar-track {
-        background: var(--pri);
-        border-radius: 0 8px 8px 0;
-        overflow: hidden;
-      }
+    /* Track */
+    &::-webkit-scrollbar-track {
+      background: var(--pri);
+      border-radius: 0 8px 8px 0;
+      overflow: hidden;
+    }
 
-      /* Handle */
-      &::-webkit-scrollbar-thumb {
-        background: var(--pri-con);
-        border-radius: 0 8px 8px 0;
-      }
+    /* Handle */
+    &::-webkit-scrollbar-thumb {
+      background: var(--pri-con);
+      border-radius: 0 8px 8px 0;
+    }
   }
 </style>

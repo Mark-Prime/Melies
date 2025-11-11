@@ -8,7 +8,7 @@
   import { invoke } from "@tauri-apps/api/core";
   import { onMount } from "svelte";
 
-  import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+  import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 
   /** @type {{demo: any, settings: any}} */
   let { demo, settings = $bindable() } = $props();
@@ -127,7 +127,7 @@
 
   onMount(() => {
     demoEvents = organizeEvents();
-  })
+  });
 </script>
 
 <div class="demo-display">
@@ -145,43 +145,48 @@
       {#each demoEvents as event}
         <div class={`event event--${event.color}`}>
           {#if event.color === "err"}
-            <span class="tooltip" data-tooltip={event.err} style={`--kills: 0;`}>
-              <Fa icon={faCircleExclamation} color={`var(--err)`} /> {event.event}
+            <span
+              class="tooltip"
+              data-tooltip={event.err}
+              style={`--kills: 0;`}
+            >
+              <Fa icon={faCircleExclamation} color={`var(--err)`} />
+              {event.event}
             </span>
-          {:else}
-            {#if typeof event.value !== "string" || !event.value?.includes("mls_rec_demo")}
-              {event.isKillstreak ? `${event.value}ks` : `Bookmark "${event.value}"`}
-              from
-              <button
-                class="tick"
+          {:else if typeof event.value !== "string" || !event.value?.includes("mls_rec_demo")}
+            {event.isKillstreak
+              ? `${event.value}ks`
+              : `Bookmark "${event.value}"`}
+            from
+            <button
+              class="tick"
+              data-tooltip={`${tickToTime(event.start)}`}
+              style={`--kills: 0;`}
+              onclick={() => writeText(`demo_gototick ${event.start}`)}
+            >
+              <span
+                class="tooltip"
                 data-tooltip={`${tickToTime(event.start)}`}
                 style={`--kills: 0;`}
-                onclick={() => writeText(`demo_gototick ${event.start}`)}
               >
-                <span
-                  class="tooltip"
-                  data-tooltip={`${tickToTime(event.start)}`}
-                  style={`--kills: 0;`}
-                >
-                  {event.start}
-                </span>
-              </button>
-              to
-              <button
-                class="tick"
-                onclick={() => writeText(`demo_gototick ${event.end}`)}
+                {event.start}
+              </span>
+            </button>
+            to
+            <button
+              class="tick"
+              onclick={() => writeText(`demo_gototick ${event.end}`)}
+            >
+              <span
+                class="tooltip"
+                data-tooltip={`${tickToTime(event.end)}`}
+                style={`--kills: 0;`}
               >
-                <span
-                  class="tooltip"
-                  data-tooltip={`${tickToTime(event.end)}`}
-                  style={`--kills: 0;`}
-                >
-                  {event.end}
-                </span>
-              </button>
-            {:else}
-              Record Entire Demo
-            {/if}
+                {event.end}
+              </span>
+            </button>
+          {:else}
+            Record Entire Demo
           {/if}
         </div>
       {/each}

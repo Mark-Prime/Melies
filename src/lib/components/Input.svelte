@@ -1,9 +1,7 @@
 <script>
   import { createEventDispatcher } from "svelte";
-  import { open } from '@tauri-apps/plugin-dialog';
-  import {
-    faFileImport,
-  } from "@fortawesome/free-solid-svg-icons";
+  import { open } from "@tauri-apps/plugin-dialog";
+  import { faFileImport } from "@fortawesome/free-solid-svg-icons";
   import Fa from "svelte-fa";
 
   /** @type {{value: any, title?: any, key?: any, color?: string, display?: boolean, tooltip?: string, type?: string, disabled?: boolean}} */
@@ -18,7 +16,7 @@
     disabled = false,
     filepath = false,
     filetype = null,
-    directory = false
+    directory = false,
   } = $props();
 
   const dispatch = createEventDispatcher();
@@ -34,10 +32,10 @@
 
     if (filetype) {
       if (!file.endsWith(filetype)) {
-        await confirm(
-          'This must be a "' + filetype + '" file.',
-          { title: 'Tauri', kind: 'warning' }
-        );
+        await confirm('This must be a "' + filetype + '" file.', {
+          title: "Tauri",
+          kind: "warning",
+        });
         return;
       }
     }
@@ -68,7 +66,7 @@
         type="number"
         id={key}
         class={`input input--${color}`}
-        disabled={disabled}
+        {disabled}
       />
     {:else}
       <input
@@ -77,13 +75,16 @@
         oninput={change}
         id={key}
         class={`input input--${color}`}
-        disabled={disabled}
+        {disabled}
       />
     {/if}
     {#if filepath}
-      <div class="file-picker tooltip"  data-tooltip={`Select ${filetype ? filetype + " " : ""}${directory ? "Folder" : "File"}`}>
-        <button onclick={openFilePicker} >
-          <Fa icon={faFileImport} color={`var(--${color})`}/>
+      <div
+        class="file-picker tooltip"
+        data-tooltip={`Select ${filetype ? filetype + " " : ""}${directory ? "Folder" : "File"}`}
+      >
+        <button onclick={openFilePicker}>
+          <Fa icon={faFileImport} color={`var(--${color})`} />
         </button>
       </div>
     {/if}

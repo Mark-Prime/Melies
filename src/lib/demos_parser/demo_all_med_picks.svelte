@@ -1,7 +1,7 @@
 <script>
   import ClassLogo from "$lib/components/ClassLogo.svelte";
   import Toggle from "$lib/components/ToggleSelected.svelte";
-  import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+  import { writeText } from "@tauri-apps/plugin-clipboard-manager";
   import { classConverter } from "$lib/composables/classConverter";
 
   /** @type {{label: any, kills: any, toggleSelected: any, parsedDemo: any, tickToTime: any, toggleKillsSelected: any}} */
@@ -11,7 +11,7 @@
     toggleSelected,
     parsedDemo,
     tickToTime,
-    toggleKillsSelected
+    toggleKillsSelected,
   } = $props();
 
   function getKill(pointer) {
@@ -29,7 +29,9 @@
     return parsedDemo.data.player_lives[pointer.owner_id][pointer.life_index];
   }
 
-  let sortedKills = $derived([...kills].sort((a, b) => getKill(a).tick - getKill(b).tick));
+  let sortedKills = $derived(
+    [...kills].sort((a, b) => getKill(a).tick - getKill(b).tick),
+  );
 </script>
 
 {#if kills.length > 0}
@@ -85,20 +87,23 @@
               >
                 <button
                   class="tick"
-                  onclick={() => writeText(`demo_gototick ${getKill(pointer).tick}; wait 10; spec_player ${parsedDemo.data.users[getKill(pointer).killer].steamId64}`)}
+                  onclick={() =>
+                    writeText(
+                      `demo_gototick ${getKill(pointer).tick}; wait 10; spec_player ${parsedDemo.data.users[getKill(pointer).killer].steamId64}`,
+                    )}
                 >
                   {getKill(pointer).tick}
                 </button>
               </span>
             </div>
             <div class="buttons">
-              <Toggle 
+              <Toggle
                 value={getLife(pointer).selected}
                 on:click={() => toggleSelected(getLife(pointer))}
                 tooltip="Entire Life"
                 tooltipDirection="left"
               />
-              <Toggle 
+              <Toggle
                 value={getKill(pointer).selected}
                 on:click={() => toggleKillsSelected([getKill(pointer)])}
                 tooltip="As Bookmark"

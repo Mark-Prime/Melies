@@ -7,7 +7,7 @@
     demo,
     demoIndex,
     i,
-    refresh
+    refresh,
   } = $props();
 
   function deleteEvent(demoIndex, i) {
@@ -143,7 +143,9 @@
   </div>
   {#if i === demo.length - 1}
     <div class="demo demo__new-event">
-      <a onclick={() => addEvent(demoIndex)} href="/"> Add new event to demo </a>
+      <a onclick={() => addEvent(demoIndex)} href="/">
+        Add new event to demo
+      </a>
     </div>
     <div class="demo demo__bottom">
       {demo.length} event{#if demo.length > 1}s{/if}

@@ -15,14 +15,14 @@
   async function loadBackups() {
     try {
       resp = await invoke("load_backups");
-      resp = resp.sort( (a, b) => b.file_name.localeCompare(a.file_name) )
+      resp = resp.sort((a, b) => b.file_name.localeCompare(a.file_name));
     } catch (error) {
       alert(error);
     }
   }
 
   async function reloadBackup(backup) {
-    console.log('TEST', backup)
+    console.log("TEST", backup);
     await invoke("reload_backup", { fileName: backup.file_name });
     dispatch("reload");
     toggle();
@@ -42,7 +42,9 @@
     {#each resp as backup}
       <div class="demo">
         <p>{backup.file_name}</p>
-        <p>{dayjs.unix(backup.created.secs_since_epoch).format('MMM DD, YYYY')}</p>
+        <p>
+          {dayjs.unix(backup.created.secs_since_epoch).format("MMM DD, YYYY")}
+        </p>
         <div class="add_demo">
           <button onclick={() => reloadBackup(backup)}>Load</button>
         </div>

@@ -1,5 +1,4 @@
 <script>
-
   import { createEventDispatcher } from "svelte";
   /** @type {{action: any, index: any, selected: any}} */
   let { action = $bindable(), index, selected } = $props();
@@ -12,12 +11,16 @@
   }
 </script>
 
-<button class="action" class:selected={selected} onclick={() => dispatch("select")}>
+<button class="action" class:selected onclick={() => dispatch("select")}>
   <p>{index + 1}: {action.name}</p>
 
   <p class="tick">{action.start_tick || action.start_time || ""}</p>
 
-  <select value={action.factory} class="select" onchange={(e) => update(e.target.value)}>
+  <select
+    value={action.factory}
+    class="select"
+    onchange={(e) => update(e.target.value)}
+  >
     <option value="SkipAhead">SkipAhead</option>
     <option value="StopPlayback">StopPlayback</option>
     <option value="PlayCommands">PlayCommands</option>
@@ -36,7 +39,7 @@
     color: var(--pri);
     text-align: left;
     width: 100%;
-    padding: .2rem .3rem ;
+    padding: 0.2rem 0.3rem;
 
     display: grid;
     grid-template-columns: 1.5fr 1fr 1fr;

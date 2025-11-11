@@ -53,7 +53,7 @@
           }
 
           demos[demos.length - 1].push(event);
-        }
+        },
       );
 
       return demos;
@@ -122,7 +122,7 @@
 
     if (!resp["rounds"]) {
       return parseLog();
-    } 
+    }
 
     for (let [i, round] of resp["rounds"].entries()) {
       ubers.push([]);
@@ -175,7 +175,7 @@
     let classes = [];
     for (let player_class of class_stats) {
       classes.push(
-        player_class.type[0].toUpperCase() + player_class.type.slice(1)
+        player_class.type[0].toUpperCase() + player_class.type.slice(1),
       );
     }
 
@@ -228,7 +228,7 @@
 
     parseLogEvents(
       demo_name,
-      events.sort((a, b) => a.time - b.time)
+      events.sort((a, b) => a.time - b.time),
     );
 
     ubers = [];
@@ -309,18 +309,23 @@
                 href={`https://logs.tf/profile/${
                   getPlayerStats(killstreak.steamid)?.steamid64
                 }`}
-                class={getPlayerStats(killstreak.steamid)?.team.toLowerCase() + " player"}
+                class={getPlayerStats(killstreak.steamid)?.team.toLowerCase() +
+                  " player"}
                 data-tooltip={parseClasses(
-                  getPlayerStats(killstreak.steamid).class_stats
+                  getPlayerStats(killstreak.steamid).class_stats,
                 )}
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 {getPlayerName(killstreak.steamid)}
-              </a> got a {killstreak.streak}ks at {killstreak.time * 66}
+              </a>
+              got a {killstreak.streak}ks at {killstreak.time * 66}
             </p>
             <div class="add_event">
-              <ToggleSelected value={killstreak.selected} on:click={toggleSelected(killstreak)} />
+              <ToggleSelected
+                value={killstreak.selected}
+                on:click={toggleSelected(killstreak)}
+              />
             </div>
           </div>
         {/if}
@@ -344,7 +349,7 @@
                     }`}
                     class={getPlayerStats(event.killer)?.team + " player"}
                     data-tooltip={parseClasses(
-                      getPlayerStats(event.killer).class_stats
+                      getPlayerStats(event.killer).class_stats,
                     )}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -361,7 +366,7 @@
                     }`}
                     class={getPlayerStats(event.steamid)?.team + " player"}
                     data-tooltip={parseClasses(
-                      getPlayerStats(event.steamid).class_stats
+                      getPlayerStats(event.steamid).class_stats,
                     )}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -371,7 +376,10 @@
                   at {event.time * 66}
                 </p>
                 <div class="add_event">
-                  <ToggleSelected value={event.selected} on:click={toggleSelected(event)} />
+                  <ToggleSelected
+                    value={event.selected}
+                    on:click={toggleSelected(event)}
+                  />
                 </div>
               </div>
             {/if}
@@ -395,7 +403,7 @@
                     }`}
                     class={getPlayerStats(event.steamid)?.team + " player"}
                     data-tooltip={parseClasses(
-                      getPlayerStats(event.steamid).class_stats
+                      getPlayerStats(event.steamid).class_stats,
                     )}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -405,7 +413,10 @@
                   used Übercharge ({event.medigun}) at {event.time * 66}
                 </p>
                 <div class="add_event">
-                  <ToggleSelected value={event.selected} on:click={toggleSelected(event)} />
+                  <ToggleSelected
+                    value={event.selected}
+                    on:click={toggleSelected(event)}
+                  />
                 </div>
               </div>
             {/if}
@@ -430,7 +441,7 @@
     </div>
   {/if}
   {#snippet footer()}
-    <div >
+    <div>
       {#if resp.loaded}
         <h3 class="centered padding-0">Ticks may be inaccurate</h3>
         <p class="centered padding-0">(logs.tf doesn't store them well)</p>

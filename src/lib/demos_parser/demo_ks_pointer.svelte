@@ -1,7 +1,7 @@
 <script>
   import ClassLogo from "$lib/components/ClassLogo.svelte";
   import Toggle from "$lib/components/ToggleSelected.svelte";
-  import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+  import { writeText } from "@tauri-apps/plugin-clipboard-manager";
   import { classConverter } from "$lib/composables/classConverter";
 
   /** @type {{toggleSelected: any, steamid64: any, parsedDemo: any, tickToTime: any, ksPointer: any, toggleBookmarkSelected: any, isPovDemo: any}} */
@@ -12,7 +12,7 @@
     tickToTime,
     ksPointer,
     toggleBookmarkSelected,
-    isPovDemo
+    isPovDemo,
   } = $props();
 
   function getLife() {
@@ -49,7 +49,7 @@
         player_class={classConverter(playerClass)}
         tooltip={`Kills: ${
           getKills().filter(
-            (kill) => kill.killer_class === classConverter(playerClass)
+            (kill) => kill.killer_class === classConverter(playerClass),
           ).length
         }`}
       />
@@ -96,7 +96,10 @@
         >
           <button
             class="tick"
-            onclick={() => writeText(`demo_gototick ${kill.tick}; wait 10; spec_player ${steamid64}`)}
+            onclick={() =>
+              writeText(
+                `demo_gototick ${kill.tick}; wait 10; spec_player ${steamid64}`,
+              )}
           >
             {kill.tick}
           </button>
@@ -108,12 +111,15 @@
     class="tooltip"
     style={`--kills: 0;`}
     data-tooltip={`Timecode: ${Math.floor(
-      Math.round(getKills()[0].tick / 66) / 60
+      Math.round(getKills()[0].tick / 66) / 60,
     )}m ${Math.round(getKills()[0].tick / 66) % 60}s`}
   >
     <button
       class="tick"
-      onclick={() => writeText(`demo_gototick ${getKills()[0].tick}; wait 10; spec_player ${steamid64}`)}
+      onclick={() =>
+        writeText(
+          `demo_gototick ${getKills()[0].tick}; wait 10; spec_player ${steamid64}`,
+        )}
     >
       First: {getKills()[0].tick}
     </button>
@@ -122,32 +128,37 @@
     class="tooltip"
     style={`--kills: 0;`}
     data-tooltip={`Length: ${tickToTime(
-      getKills()[getKills().length - 1].tick - getKills()[0].tick
+      getKills()[getKills().length - 1].tick - getKills()[0].tick,
     )}`}
   >
     <button
       class="tick"
-      onclick={() => writeText(`demo_gototick ${getKills()[getKills().length - 1].tick}; wait 10; spec_player ${steamid64}`)}
+      onclick={() =>
+        writeText(
+          `demo_gototick ${getKills()[getKills().length - 1].tick}; wait 10; spec_player ${steamid64}`,
+        )}
     >
-    Last: {getKills()[getKills().length - 1].tick}
+      Last: {getKills()[getKills().length - 1].tick}
     </button>
   </div>
   <div class="killstreak__buttons">
-    <Toggle 
-      value={parsedDemo.data.player_lives[ksPointer.owner_id][ksPointer.life_index].selected}
+    <Toggle
+      value={parsedDemo.data.player_lives[ksPointer.owner_id][
+        ksPointer.life_index
+      ].selected}
       on:click={() => toggleSelected(getLife())}
       tooltip="Entire Life"
       tooltipDirection="left"
     />
     {#if isPovDemo}
-      <Toggle 
+      <Toggle
         value={ksPointer.selected}
         on:click={() => toggleSelected(ksPointer, false)}
         tooltip="As Killstreak"
         tooltipDirection="left"
       />
     {/if}
-    <Toggle 
+    <Toggle
       value={ksPointer.selected_as_bookmark}
       on:click={() => toggleBookmarkSelected(ksPointer, true)}
       tooltip="As Bookmarks"

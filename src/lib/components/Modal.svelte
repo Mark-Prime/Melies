@@ -1,5 +1,5 @@
 <script>
-  import { run } from 'svelte/legacy';
+  import { run } from "svelte/legacy";
 
   import { createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
@@ -24,7 +24,7 @@
     children,
     footer,
     tabHeaders,
-    tabs
+    tabs,
   } = $props();
 
   let activeTab = $state(0);
@@ -45,16 +45,25 @@
 
 {#if enabled}
   <div class="modal">
-    <a class="modal__background" onclick={() => toggle()} href="/" aria-label="Close"> </a>
+    <a
+      class="modal__background"
+      onclick={() => toggle()}
+      href="/"
+      aria-label="Close"
+    >
+    </a>
     <div class="modal__card-container">
       {#if tabHeaders}
         <div class="modal__tabs">
           {#each tabHeaders as tab, i}
             {#if typeof tab === "string" || tab?.enabled}
               <button
-                class={`modal__tab btn--${['pri', 'sec', 'tert'][i % 3]}`}
+                class={`modal__tab btn--${["pri", "sec", "tert"][i % 3]}`}
                 class:modal__tab--active={tab === tabHeaders[activeTab]}
-                onclick={() => { activeTab = i; tabClicked(i) }}
+                onclick={() => {
+                  activeTab = i;
+                  tabClicked(i);
+                }}
               >
                 {tab.title || tab}
               </button>
@@ -78,8 +87,7 @@
           ${max_height && `max-height: ${max_height}`};
           ${width && `width: ${width}`};
           ${height && `height: ${height}`};
-          ${tabs && `min-height: calc(${tabHeaders.length * 36}px + 1.5rem)`};`
-        }
+          ${tabs && `min-height: calc(${tabHeaders.length * 36}px + 1.5rem)`};`}
       >
         {#if header}
           <div class="modal__header">
@@ -87,9 +95,7 @@
           </div>
         {/if}
         {#if tabs}
-          <div
-            class="modal__content"
-          >
+          <div class="modal__content">
             <h2>{tabHeaders[activeTab].title || tabHeaders[activeTab]}</h2>
             {@render tabs[activeTab]?.()}
           </div>
@@ -206,14 +212,14 @@
         max-width: min(calc(100vw - 2rem), 1680px);
         max-height: min(calc(100vh - 2rem), 900px);
       }
-      
+
       &--grow {
         max-width: min(calc(100vw - 2rem), 1680px);
         max-height: min(calc(100vh - 2rem), 900px);
 
         width: fit-content;
       }
-      
+
       &--wide {
         max-width: min(calc(100vw - 2rem), 1680px);
         max-height: min(calc(100vh - 2rem), 900px);

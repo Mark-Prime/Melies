@@ -1,11 +1,6 @@
 <script>
   /** @type {{player_class: any, tooltip?: boolean, click?: any, args?: any}} */
-  let {
-    player_class,
-    tooltip = false,
-    click = () => {},
-    args = []
-  } = $props();
+  let { player_class, tooltip = false, click = () => {}, args = [] } = $props();
 
   function getImgUrl(player_class) {
     switch (player_class) {
@@ -35,7 +30,7 @@
 
 {#if getImgUrl(player_class)}
   <button
-    class:tooltip={tooltip}
+    class:tooltip
     data-tooltip={tooltip}
     style="--kills: 0"
     onclick={() => click(...args)}

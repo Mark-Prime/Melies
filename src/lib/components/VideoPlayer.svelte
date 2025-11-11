@@ -1,15 +1,14 @@
 <script>
   import { convertFileSrc } from "@tauri-apps/api/core";
-  import { onMount } from 'svelte';
+  import { onMount } from "svelte";
 
   /** @type {{video: any}} */
   let { video } = $props();
   let videoElement = $state();
 
   onMount(() => {
-    videoElement?.play()
-  })
-
+    videoElement?.play();
+  });
 </script>
 
 {#if video}
@@ -21,6 +20,6 @@
 
 <style>
   * {
-   width: 100%;  
+    width: 100%;
   }
 </style>

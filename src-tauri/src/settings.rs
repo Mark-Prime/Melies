@@ -1,66 +1,52 @@
 use serde::Serialize;
-use serde_json::{json, Map, Value};
-use std::{
-    env,
-    fs::{self, File},
-    path::Path,
-};
+use serde_json::{ json, Map, Value };
+use std::{ env, fs::{ self, File }, path::Path };
 
 #[derive(Debug, Serialize)]
 pub enum RecordToggle {
-    // * 0 = off, 1 = on critical hit, 2 = weapon dependant, 3 = ranged only,  4 = melee only, 5 = always
-    Never,
-    CriticalHit,
-    // MiniCriticalHit,
-    AnyCritHit,
-    // WeaponDependant,
-    // RangedOnly,
-    // MeleeOnly,
-    Always,
-    Passive,
+  // * 0 = off, 1 = on critical hit, 2 = weapon dependant, 3 = ranged only,  4 = melee only, 5 = always
+  Never,
+  CriticalHit,
+  // MiniCriticalHit,
+  AnyCritHit,
+  // WeaponDependant,
+  // RangedOnly,
+  // MeleeOnly,
+  Always,
+  Passive,
 }
 
 pub(crate) fn build_settings() -> Value {
-    let user_profile = env::var("USERPROFILE");
+  let user_profile = env::var("USERPROFILE");
 
-    let binding = match user_profile {
-        Ok(profile) => {
-            format!("{}\\Documents\\Melies\\settings.json", profile)
-        }
-        Err(_) => {
-            format!(
-                "{}\\settings.json",
-                std::env::current_exe()
-                    .unwrap()
-                    .parent()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-            )
-        }
-    };
+  let binding = match user_profile {
+    Ok(profile) => { format!("{}\\Documents\\Melies\\settings.json", profile) }
+    Err(_) => {
+      format!(
+        "{}\\settings.json",
+        std::env::current_exe().unwrap().parent().unwrap().to_str().unwrap()
+      )
+    }
+  };
 
-    let settings_path = Path::new(&binding);
-    let settings_prefix = settings_path.parent().unwrap();
-    std::fs::create_dir_all(settings_prefix).unwrap();
+  let settings_path = Path::new(&binding);
+  let settings_prefix = settings_path.parent().unwrap();
+  std::fs::create_dir_all(settings_prefix).unwrap();
 
-    File::create(settings_path).unwrap();
+  File::create(settings_path).unwrap();
 
-    let mut settings = default_settings();
+  let mut settings = default_settings();
 
-    fs::write(
-        settings_path,
-        serde_json::to_string_pretty(&settings.to_string()).unwrap(),
-    )
-    .unwrap();
+  fs::write(settings_path, serde_json::to_string_pretty(&settings.to_string()).unwrap()).unwrap();
 
-    settings["addons"] = load_addons();
+  settings["addons"] = load_addons();
 
-    settings
+  settings
 }
 
 pub(crate) fn default_settings() -> Value {
-    let defaults = json!({
+  let defaults =
+    json!({
       "tf_folder": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Team Fortress 2\\tf",
       "alt_installs": [],
       "clear_events": true,
@@ -196,178 +182,145 @@ pub(crate) fn default_settings() -> Value {
       }
     });
 
-    defaults
+  defaults
 }
 
 pub(crate) fn load_settings() -> Value {
-    let user_profile = env::var("USERPROFILE");
+  let user_profile = env::var("USERPROFILE");
 
-    let settings_path = match user_profile {
-        Ok(profile) => {
-            format!("{}\\Documents\\Melies\\settings.json", profile)
-        }
-        Err(_) => {
-            format!(
-                "{}\\settings.json",
-                std::env::current_exe()
-                    .unwrap()
-                    .parent()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-            )
-        }
-    };
+  let settings_path = match user_profile {
+    Ok(profile) => { format!("{}\\Documents\\Melies\\settings.json", profile) }
+    Err(_) => {
+      format!(
+        "{}\\settings.json",
+        std::env::current_exe().unwrap().parent().unwrap().to_str().unwrap()
+      )
+    }
+  };
 
-    if Path::new(&settings_path).exists() {
-        let file = fs::read_to_string(settings_path).unwrap();
-        let settings: Value = serde_json::from_str(&file).unwrap();
+  if Path::new(&settings_path).exists() {
+    let file = fs::read_to_string(settings_path).unwrap();
+    let settings: Value = serde_json::from_str(&file).unwrap();
 
-        let mut defaults = default_settings();
+    let mut defaults = default_settings();
 
-        merge(&mut defaults, settings);
+    merge(&mut defaults, settings);
 
-        // I have no idea why this needs to happen but it prevents a crash
-        if defaults.is_string() {
-            defaults = serde_json::from_str(&defaults.as_str().unwrap()).unwrap();
-        }
-
-        defaults["addons"] = load_addons();
-
-        return defaults;
+    // I have no idea why this needs to happen but it prevents a crash
+    if defaults.is_string() {
+      defaults = serde_json::from_str(&defaults.as_str().unwrap()).unwrap();
     }
 
-    build_settings()
+    defaults["addons"] = load_addons();
+
+    return defaults;
+  }
+
+  build_settings()
 }
 
 pub(crate) fn save_settings(new_settings: String) -> Value {
-    let settings: Value = serde_json::from_str(&new_settings).unwrap();
+  let settings: Value = serde_json::from_str(&new_settings).unwrap();
 
-    let user_profile = env::var("USERPROFILE");
+  let user_profile = env::var("USERPROFILE");
 
-    let settings_path = match user_profile {
-        Ok(profile) => {
-            format!("{}\\Documents\\Melies\\settings.json", profile)
-        }
-        Err(_) => {
-            format!(
-                "{}\\settings.json",
-                std::env::current_exe()
-                    .unwrap()
-                    .parent()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-            )
-        }
-    };
-
-    if Path::new(&settings_path).exists() {
-        let mut defaults = default_settings();
-
-        save_addons(&settings["addons"]);
-
-        merge(&mut defaults, settings);
-
-        fs::write(
-            settings_path,
-            serde_json::to_string_pretty(&defaults).unwrap(),
-        )
-        .unwrap();
-
-        return defaults;
+  let settings_path = match user_profile {
+    Ok(profile) => { format!("{}\\Documents\\Melies\\settings.json", profile) }
+    Err(_) => {
+      format!(
+        "{}\\settings.json",
+        std::env::current_exe().unwrap().parent().unwrap().to_str().unwrap()
+      )
     }
+  };
 
-    build_settings()
+  if Path::new(&settings_path).exists() {
+    let mut defaults = default_settings();
+
+    save_addons(&settings["addons"]);
+
+    merge(&mut defaults, settings);
+
+    fs::write(settings_path, serde_json::to_string_pretty(&defaults).unwrap()).unwrap();
+
+    return defaults;
+  }
+
+  build_settings()
 }
 
 pub(crate) fn load_addons() -> Value {
-    let user_profile = env::var("USERPROFILE");
+  let user_profile = env::var("USERPROFILE");
 
-    let addons_path = match user_profile {
-        Ok(profile) => {
-            format!("{}\\Documents\\Melies\\addons", profile)
-        }
-        Err(_) => {
-            format!(
-                "{}\\addons",
-                std::env::current_exe()
-                    .unwrap()
-                    .parent()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-            )
-        }
-    };
+  let addons_path = match user_profile {
+    Ok(profile) => { format!("{}\\Documents\\Melies\\addons", profile) }
+    Err(_) => {
+      format!("{}\\addons", std::env::current_exe().unwrap().parent().unwrap().to_str().unwrap())
+    }
+  };
 
-    fs::create_dir_all(&addons_path).unwrap();
+  fs::create_dir_all(&addons_path).unwrap();
 
-    let mut addons = json!({});
+  let mut addons = json!({});
 
-    let files = fs::read_dir(addons_path).unwrap();
+  let files = fs::read_dir(addons_path).unwrap();
 
-    for file in files {
-        let filename_os = file.as_ref().unwrap().file_name();
-        let filename = filename_os.to_str().unwrap().to_string();
+  for file in files {
+    let filename_os = file.as_ref().unwrap().file_name();
+    let filename = filename_os.to_str().unwrap().to_string();
 
-        if !filename.contains(".json") && !filename.contains(".JSON") {
-            continue;
-        }
-
-        let mut name = filename.replace(".json", "");
-        name = name.replace(".JSON", "");
-
-        let data = fs::read_to_string(file.unwrap().path()).expect("Unable to read file");
-        let res = match serde_json::from_str(&data) {
-            Ok(val) => val,
-            Err(_) => {
-                continue;
-            }
-        };
-
-        addons[name] = res;
+    if !filename.contains(".json") && !filename.contains(".JSON") {
+      continue;
     }
 
-    addons
+    let mut name = filename.replace(".json", "");
+    name = name.replace(".JSON", "");
+
+    let data = fs::read_to_string(file.unwrap().path()).expect("Unable to read file");
+    let res = match serde_json::from_str(&data) {
+      Ok(val) => val,
+      Err(_) => {
+        continue;
+      }
+    };
+
+    addons[name] = res;
+  }
+
+  addons
 }
 
 fn save_addons(addons: &Value) {
-    let map: &Map<String, Value> = addons.as_object().unwrap();
+  let map: &Map<String, Value> = addons.as_object().unwrap();
 
-    for (k, v) in map {
-        let user_profile = env::var("USERPROFILE");
+  for (k, v) in map {
+    let user_profile = env::var("USERPROFILE");
 
-        let addon_path = match user_profile {
-            Ok(profile) => {
-                format!("{}\\Documents\\Melies\\addons\\{}.json", profile, k)
-            }
-            Err(_) => {
-                format!(
-                    "{}\\addons\\{}.json",
-                    std::env::current_exe()
-                        .unwrap()
-                        .parent()
-                        .unwrap()
-                        .to_str()
-                        .unwrap(),
-                    k
-                )
-            }
-        };
+    let addon_path = match user_profile {
+      Ok(profile) => { format!("{}\\Documents\\Melies\\addons\\{}.json", profile, k) }
+      Err(_) => {
+        format!(
+          "{}\\addons\\{}.json",
+          std::env::current_exe().unwrap().parent().unwrap().to_str().unwrap(),
+          k
+        )
+      }
+    };
 
-        fs::write(addon_path, serde_json::to_string_pretty(v).unwrap()).unwrap();
-    }
+    fs::write(addon_path, serde_json::to_string_pretty(v).unwrap()).unwrap();
+  }
 }
 
 fn merge(a: &mut Value, b: Value) {
-    match (a, b) {
-        (a @ &mut Value::Object(_), Value::Object(b)) => {
-            let a = a.as_object_mut().unwrap();
-            for (k, v) in b {
-                merge(a.entry(k).or_insert(Value::Null), v);
-            }
-        }
-        (a, b) => *a = b,
+  match (a, b) {
+    (a @ &mut Value::Object(_), Value::Object(b)) => {
+      let a = a.as_object_mut().unwrap();
+      for (k, v) in b {
+        merge(a.entry(k).or_insert(Value::Null), v);
+      }
     }
+    (a, b) => {
+      *a = b;
+    }
+  }
 }

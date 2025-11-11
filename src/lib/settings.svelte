@@ -375,7 +375,7 @@ If left blank, the output folder will default to your sparklyfx settings."
       bind:value={outputSettings.framerate}
       color="sec"
       display={!["sparklyfx", "svr", "svr.mov", "svr.mp4", "lawena"].includes(
-        outputSettings.method
+        outputSettings.method,
       )}
     />
     {#if ["sparklyfx", "svr", "svr.mov", "svr.mp4", "lawena"].includes(outputSettings.method)}
@@ -825,7 +825,7 @@ Useful in STVs when the player could be dead."
 
 <style lang="scss">
   a.btn {
-    padding: .5rem 1rem;
+    padding: 0.5rem 1rem;
     height: 2rem;
   }
 

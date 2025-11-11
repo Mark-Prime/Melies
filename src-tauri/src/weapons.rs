@@ -3,28 +3,29 @@ use serde_json::{ json, Value };
 
 #[derive(Debug, Serialize)]
 pub enum WeaponType {
-    Projectile,
-    DeflectedProjectile,
-    Flamethrower,
-    Hitscan,
-    Building,
-    Rifle,
-    Melee,
-    Knife,
-    Misc,
-    Status,
+  Projectile,
+  DeflectedProjectile,
+  Flamethrower,
+  Hitscan,
+  Building,
+  Rifle,
+  Melee,
+  Knife,
+  Misc,
+  Status,
 }
 
 #[derive(Debug, Serialize)]
 pub struct Weapon {
-    pub name: String,
-    pub weapon_type: WeaponType,
+  pub name: String,
+  pub weapon_type: WeaponType,
 }
 
 pub fn get_weapons_as_json() -> Value {
-    let mut weapons = json!({});
+  let mut weapons = json!({});
 
-    let proj = json!({
+  let proj =
+    json!({
       "arrow": "Arrow",
       "arrow_fire": "Flaming Arrow",
       "balloffire": "Dragon's Fury Fireball",
@@ -55,13 +56,15 @@ pub fn get_weapons_as_json() -> Value {
       "battleneedle": "Blutsauger",
     });
 
-    let flamethrowers = json!({
+  let flamethrowers =
+    json!({
       "flamethrower": "Flamethrower",
       "degreaser": "Degreaser",
       "dragons_fury_bonus": "Dragon's Fury",
     });
 
-    let melee = json!({
+  let melee =
+    json!({
       "bat": "Bat",
       "holymackerel": "Holy Mackerel",
       "wrap_assassin": "Wrap Assassin",
@@ -85,7 +88,8 @@ pub fn get_weapons_as_json() -> Value {
       "scotland_shard": "Scottish Handshake",
     });
 
-    let knives = json!({
+  let knives =
+    json!({
       "spy_cicle": "Spy Cicle",
       "knife": "Knife",
       "black_rose": "Black Rose",
@@ -94,7 +98,8 @@ pub fn get_weapons_as_json() -> Value {
       "big_earner": "Big Earner",
     });
 
-    let hitscan = json!({
+  let hitscan =
+    json!({
       "scattergun": "Scattergun",
       "pistol_scout": "Pistol",
       "pistol": "Pistol",
@@ -115,92 +120,94 @@ pub fn get_weapons_as_json() -> Value {
       "frontier_kill": "Frontier Justice",
     });
 
-    let buildings = json!({
+  let buildings =
+    json!({
       "obj_minisentry": "Minisentry",
       "obj_sentrygun": "Sentrygun",
     });
 
-    let rifles = json!({
+  let rifles =
+    json!({
       "sniperrifle": "Sniper Rifle",
       "ambassador": "Ambassador",
       "huntsman": "Huntsman",
     });
 
-    let misc = json!({
+  let misc = json!({
       "world": "World",
     });
 
-    let status = json!({
+  let status = json!({
       "bleed_kill": "Bleed",
     });
 
-    for (weapon, name) in proj.as_object().unwrap() {
-        weapons[weapon] = json!(Weapon {
-            name: format!("the {}", name.as_str().unwrap()),
-            weapon_type: WeaponType::Projectile,
-        });
+  for (weapon, name) in proj.as_object().unwrap() {
+    weapons[weapon] = json!(Weapon {
+      name: format!("the {}", name.as_str().unwrap()),
+      weapon_type: WeaponType::Projectile,
+    });
 
-        weapons[format!("deflect_{}", weapon)] = json!(Weapon {
-            name: format!("a reflected {}", name.as_str().unwrap()),
-            weapon_type: WeaponType::DeflectedProjectile,
-        });
-    }
+    weapons[format!("deflect_{}", weapon)] = json!(Weapon {
+      name: format!("a reflected {}", name.as_str().unwrap()),
+      weapon_type: WeaponType::DeflectedProjectile,
+    });
+  }
 
-    for (weapon, name) in flamethrowers.as_object().unwrap() {
-        weapons[weapon] = json!(Weapon {
-            name: format!("the {}", name.as_str().unwrap()),
-            weapon_type: WeaponType::Flamethrower,
-        });
-    }
+  for (weapon, name) in flamethrowers.as_object().unwrap() {
+    weapons[weapon] = json!(Weapon {
+      name: format!("the {}", name.as_str().unwrap()),
+      weapon_type: WeaponType::Flamethrower,
+    });
+  }
 
-    for (weapon, name) in melee.as_object().unwrap() {
-        weapons[weapon] = json!(Weapon {
-            name: format!("the {}", name.as_str().unwrap()),
-            weapon_type: WeaponType::Melee,
-        });
-    }
+  for (weapon, name) in melee.as_object().unwrap() {
+    weapons[weapon] = json!(Weapon {
+      name: format!("the {}", name.as_str().unwrap()),
+      weapon_type: WeaponType::Melee,
+    });
+  }
 
-    for (weapon, name) in knives.as_object().unwrap() {
-        weapons[weapon] = json!(Weapon {
-            name: format!("the {}", name.as_str().unwrap()),
-            weapon_type: WeaponType::Knife,
-        });
-    }
+  for (weapon, name) in knives.as_object().unwrap() {
+    weapons[weapon] = json!(Weapon {
+      name: format!("the {}", name.as_str().unwrap()),
+      weapon_type: WeaponType::Knife,
+    });
+  }
 
-    for (weapon, name) in hitscan.as_object().unwrap() {
-        weapons[weapon] = json!(Weapon {
-            name: format!("the {}", name.as_str().unwrap()),
-            weapon_type: WeaponType::Hitscan,
-        });
-    }
+  for (weapon, name) in hitscan.as_object().unwrap() {
+    weapons[weapon] = json!(Weapon {
+      name: format!("the {}", name.as_str().unwrap()),
+      weapon_type: WeaponType::Hitscan,
+    });
+  }
 
-    for (weapon, name) in buildings.as_object().unwrap() {
-        weapons[weapon] = json!(Weapon {
-            name: format!("a {}", name.as_str().unwrap()),
-            weapon_type: WeaponType::Building,
-        });
-    }
+  for (weapon, name) in buildings.as_object().unwrap() {
+    weapons[weapon] = json!(Weapon {
+      name: format!("a {}", name.as_str().unwrap()),
+      weapon_type: WeaponType::Building,
+    });
+  }
 
-    for (weapon, name) in rifles.as_object().unwrap() {
-        weapons[weapon] = json!(Weapon {
-            name: format!("the {}", name.as_str().unwrap()),
-            weapon_type: WeaponType::Rifle,
-        });
-    }
+  for (weapon, name) in rifles.as_object().unwrap() {
+    weapons[weapon] = json!(Weapon {
+      name: format!("the {}", name.as_str().unwrap()),
+      weapon_type: WeaponType::Rifle,
+    });
+  }
 
-    for (weapon, name) in misc.as_object().unwrap() {
-        weapons[weapon] = json!(Weapon {
-            name: format!("the {}", name.as_str().unwrap()),
-            weapon_type: WeaponType::Misc,
-        });
-    }
+  for (weapon, name) in misc.as_object().unwrap() {
+    weapons[weapon] = json!(Weapon {
+      name: format!("the {}", name.as_str().unwrap()),
+      weapon_type: WeaponType::Misc,
+    });
+  }
 
-    for (weapon, name) in status.as_object().unwrap() {
-        weapons[weapon] = json!(Weapon {
-            name: name.to_string(),
-            weapon_type: WeaponType::Status,
-        });
-    }
+  for (weapon, name) in status.as_object().unwrap() {
+    weapons[weapon] = json!(Weapon {
+      name: name.to_string(),
+      weapon_type: WeaponType::Status,
+    });
+  }
 
-    weapons
+  weapons
 }

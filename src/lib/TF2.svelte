@@ -31,17 +31,17 @@
 
   let toggle = () => {
     enabled = !enabled;
-  }
+  };
 
   let stopRecording = () => {
-    isRunning = false; 
+    isRunning = false;
     batchRecording = false;
-  }
+  };
 
   let cancel = () => {
     enabled = !enabled;
     stopRecording();
-  }
+  };
 
   async function loadSettings() {
     settings = await invoke("load_settings");
@@ -72,22 +72,25 @@
 
   function updateAltInstallSettings() {
     let newSettings = {};
-    
+
     if (hlaeSettings.launch_options !== defaultHlaeSettings.launch_options) {
       newSettings.launch_options = hlaeSettings.launch_options;
     }
-    
+
     if (hlaeSettings.use_64bit !== defaultHlaeSettings.use_64bit) {
       newSettings.use_64bit = hlaeSettings.use_64bit;
     }
-    
+
     // if (hlaeSettings.playdemo !== defaultHlaeSettings.playdemo) {
     //   newSettings.playdemo = hlaeSettings.playdemo;
     // }
 
     hlaeSettings = defaultHlaeSettings;
 
-    settings.alt_installs[tabIndex - 1] = { ...settings.alt_installs[tabIndex - 1], ...newSettings };
+    settings.alt_installs[tabIndex - 1] = {
+      ...settings.alt_installs[tabIndex - 1],
+      ...newSettings,
+    };
   }
 
   async function launchOnce() {
@@ -101,7 +104,11 @@
       newSettings: JSON.stringify(settings),
     });
 
-    let res = await invoke("launch_tf2", { demoName: startingDemo, install: install, tab: String(tabIndex) });
+    let res = await invoke("launch_tf2", {
+      demoName: startingDemo,
+      install: install,
+      tab: String(tabIndex),
+    });
 
     if (res?.status && res?.status === "error") {
       alert(res.message);
@@ -124,7 +131,11 @@
 
     await invoke("before_batch");
 
-    await invoke("launch_tf2", { demoName: startingDemo, install: install, tab: String(tabIndex) });
+    await invoke("launch_tf2", {
+      demoName: startingDemo,
+      install: install,
+      tab: String(tabIndex),
+    });
 
     while (isRunning) {
       let isTf2Running = await invoke("is_tf2_running");
@@ -134,7 +145,9 @@
         continue;
       }
 
-      let resp = await invoke("get_next_demo")
+      let resp = await invoke("get_next_demo");
+
+      console.log(resp);
 
       if (resp === null || resp.complete) {
         break;
@@ -142,12 +155,16 @@
 
       startingDemo = resp.next_demo;
 
-      await invoke("launch_tf2", { demoName: startingDemo, install: install, tab: String(tabIndex) });
+      await invoke("launch_tf2", {
+        demoName: startingDemo,
+        install: install,
+        tab: String(tabIndex),
+      });
     }
 
     isRunning = false;
     batchRecording = false;
-    
+
     await invoke("after_batch");
   }
 
@@ -227,7 +244,9 @@
         bind:value={hlaeSettings.height}
         color={["pri", "sec", "tert"][tabIndex % 3]}
       />
-      <a href="https://docs.comfig.app/9.9.3/customization/launch_options">Learn More about Launch Options and DXLevel</a>
+      <a href="https://docs.comfig.app/9.9.3/customization/launch_options"
+        >Learn More about Launch Options and DXLevel</a
+      >
     </div>
     <Switch
       title="64Bit"
@@ -342,7 +361,7 @@
                 <option value="shutdown">Shutdown PC</option>
                 <option value="run">Run Program</option>
               </Select>
-              
+
               {#if hlaeSettings.before_batch === "run"}
                 <Input
                   title="Program to run before batch recording"
@@ -351,7 +370,7 @@
                   filepath={true}
                 />
               {/if}
-              
+
               {#if hlaeSettings.after_batch === "run"}
                 <Input
                   title="Program to run after batch recording"
@@ -408,7 +427,9 @@
               bind:value={hlaeSettings.height}
               color="tert"
             />
-            <a href="https://docs.comfig.app/9.9.3/customization/launch_options">Learn More about Launch Options and DXLevel</a>
+            <a href="https://docs.comfig.app/9.9.3/customization/launch_options"
+              >Learn More about Launch Options and DXLevel</a
+            >
           </div>
           <Switch
             title="64Bit"
@@ -457,7 +478,11 @@
       <div class="buttons">
         {#if isSteamRunning}
           <button onclick={cancel} class="cancel-btn">Cancel</button>
-          <button onclick={launchOnce} class="btn btn--sec" disabled={isRunning}>
+          <button
+            onclick={launchOnce}
+            class="btn btn--sec"
+            disabled={isRunning}
+          >
             Launch Once
           </button>
           {#if batchRecording}
@@ -483,7 +508,7 @@
   </Modal>
 
   {#if batchRecording}
-    <button class="footer-notice" onclick={enabled = true}>
+    <button class="footer-notice" onclick={() => (enabled = true)}>
       <div class="lds-hourglass"></div>
       BATCH RECORDING IS IN PROGRESS
     </button>
@@ -498,7 +523,7 @@
     left: 50%;
     transform: translateX(-50%);
     width: fit-content;
-    padding: .5rem 1rem;
+    padding: 0.5rem 1rem;
     background-color: var(--bg);
     color: var(--tert-con-text);
     text-align: center;

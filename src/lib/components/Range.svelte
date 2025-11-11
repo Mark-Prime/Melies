@@ -3,8 +3,6 @@
 
   const dispatch = createEventDispatcher();
 
-
-
   /** @type {{value: any, title?: any, key?: any, min?: number, max?: number, color?: string}} */
   let {
     value = $bindable(),
@@ -12,7 +10,7 @@
     key = title.toLowerCase().replace(/ /g, "_") || "range",
     min = 0,
     max = 255,
-    color = "pri"
+    color = "pri",
   } = $props();
 
   const change = () => dispatch("change", value);
