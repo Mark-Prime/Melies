@@ -8,7 +8,12 @@
 </script>
 
 <div>
-  <input type="color" id="color" onchange={e => dispatch("change", e.target.value)} bind:value={value}/>
+  <input
+    type="color"
+    id="color"
+    onchange={(e) => dispatch("change", e.target.value)}
+    bind:value
+  />
   <label for="color">{title}</label>
 </div>
 

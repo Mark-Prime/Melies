@@ -1,5 +1,5 @@
 <script>
-  import Group from './Group.svelte';
+  import Group from "./Group.svelte";
   // @ts-nocheck
   import Setting from "./Setting.svelte";
   import addonTypeSort from "$lib/composables/addonTypeSort";
@@ -13,8 +13,10 @@
 </script>
 
 {#if Object.keys(group.settings).length > 0}
-  <div class={`bordered group bordered--${['pri', 'sec', 'tert'][depth % 3]}`} >
-    <button onclick={() => open = !open} class:open ><h4>{open ? '-' : '+'} {title}</h4></button>
+  <div class={`bordered group bordered--${["pri", "sec", "tert"][depth % 3]}`}>
+    <button onclick={() => (open = !open)} class:open
+      ><h4>{open ? "-" : "+"} {title}</h4></button
+    >
     {#if group.description}
       <p>{group.description}</p>
     {/if}
@@ -22,9 +24,17 @@
       <div class="setting">
         {#each addonTypeSorted as setting, i}
           {#if group.settings[setting].type === "group"}
-            <Group group={group.settings[setting]} defaultTitle={setting} depth={depth + 1}/>
+            <Group
+              group={group.settings[setting]}
+              defaultTitle={setting}
+              depth={depth + 1}
+            />
           {:else}
-            <Setting bind:setting={group.settings[setting]} bind:defaultTitle={addonTypeSorted[i]} depth={depth}/>
+            <Setting
+              bind:setting={group.settings[setting]}
+              bind:defaultTitle={addonTypeSorted[i]}
+              {depth}
+            />
           {/if}
         {/each}
       </div>

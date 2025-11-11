@@ -1,7 +1,7 @@
 <script>
   import ClassLogo from "$lib/components/ClassLogo.svelte";
   import Toggle from "$lib/components/ToggleSelected.svelte";
-  import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+  import { writeText } from "@tauri-apps/plugin-clipboard-manager";
   import { classConverter } from "$lib/composables/classConverter";
 
   /** @type {{killstreaks: any, parsedDemo: any, limitStringLength: any, toggleBookmarkSelected: any, tickToTime: any, toggleSelected: any}} */
@@ -11,7 +11,7 @@
     limitStringLength,
     toggleBookmarkSelected,
     tickToTime,
-    toggleSelected
+    toggleSelected,
   } = $props();
 
   function getLife(index) {
@@ -71,7 +71,7 @@
                   tooltip={`Kills: ${
                     getKills(index).filter(
                       (kill) =>
-                        kill.killer_class === classConverter(player_class)
+                        kill.killer_class === classConverter(player_class),
                     ).length
                   }`}
                 />
@@ -87,9 +87,8 @@
                 " tooltip"}
             >
               {limitStringLength(
-                parsedDemo.data.users[ksPointer.owner_id]?.name ||
-                  "Name Error",
-                16
+                parsedDemo.data.users[ksPointer.owner_id]?.name || "Name Error",
+                16,
               )}
             </a>
             <button
@@ -140,7 +139,10 @@
                   >
                     <button
                       class="tick"
-                      onclick={() => writeText(`demo_gototick ${kill.tick}; wait 10; spec_player ${parsedDemo.data.users[ksPointer.owner_id].steamId64}`)}
+                      onclick={() =>
+                        writeText(
+                          `demo_gototick ${kill.tick}; wait 10; spec_player ${parsedDemo.data.users[ksPointer.owner_id].steamId64}`,
+                        )}
                     >
                       {kill.tick}
                     </button>
@@ -152,12 +154,15 @@
               class="tooltip"
               style={`--kills: 0;`}
               data-tooltip={`Timecode: ${Math.floor(
-                Math.round(getKills(index)[0].tick / 66) / 60
+                Math.round(getKills(index)[0].tick / 66) / 60,
               )}m ${Math.round(getKills(index)[0].tick / 66) % 60}s`}
             >
               <button
                 class="tick"
-                onclick={() => writeText(`demo_gototick ${getKills(index)[0].tick}; wait 10; spec_player ${parsedDemo.data.users[getKills(index)[0].killer].steamId64}`)}
+                onclick={() =>
+                  writeText(
+                    `demo_gototick ${getKills(index)[0].tick}; wait 10; spec_player ${parsedDemo.data.users[getKills(index)[0].killer].steamId64}`,
+                  )}
               >
                 First: {getKills(index)[0].tick}
               </button>
@@ -167,26 +172,33 @@
               style={`--kills: 0;`}
               data-tooltip={`Length: ${tickToTime(
                 getKills(index)[getKills(index).length - 1].tick -
-                  getKills(index)[0].tick
+                  getKills(index)[0].tick,
               )}`}
             >
               <button
                 class="tick"
-                onclick={() => writeText(`demo_gototick ${getKills(index)[getKills(index).length - 1].tick}; wait 10; spec_player ${parsedDemo.data.users[getKills(index)[getKills(index).length - 1].killer].steamId64}`)}
+                onclick={() =>
+                  writeText(
+                    `demo_gototick ${getKills(index)[getKills(index).length - 1].tick}; wait 10; spec_player ${parsedDemo.data.users[getKills(index)[getKills(index).length - 1].killer].steamId64}`,
+                  )}
               >
                 Last: {getKills(index)[getKills(index).length - 1].tick}
               </button>
             </div>
             <div class="killstreak__buttons">
-              <Toggle 
-                value={parsedDemo.data.player_lives[ksPointer.owner_id][ksPointer.life_index].selected} 
-                on:click={() => toggleSelected(getLife(index))} 
-                tooltip="Entire Life" 
+              <Toggle
+                value={parsedDemo.data.player_lives[ksPointer.owner_id][
+                  ksPointer.life_index
+                ].selected}
+                on:click={() => toggleSelected(getLife(index))}
+                tooltip="Entire Life"
                 tooltipDirection="left"
               />
-              <Toggle 
-                value={parsedDemo.data.player_lives[ksPointer.owner_id][ksPointer.life_index].killstreak_pointers[ksPointer.index].selected_as_bookmark} 
-                on:click={() => toggleBookmarkSelected(getKs(index), true)} 
+              <Toggle
+                value={parsedDemo.data.player_lives[ksPointer.owner_id][
+                  ksPointer.life_index
+                ].killstreak_pointers[ksPointer.index].selected_as_bookmark}
+                on:click={() => toggleBookmarkSelected(getKs(index), true)}
                 tooltip="As Bookmarks"
                 tooltipDirection="left"
               />

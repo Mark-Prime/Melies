@@ -1,5 +1,5 @@
 <script>
-  import { run } from 'svelte/legacy';
+  import { run } from "svelte/legacy";
 
   import { createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
@@ -22,16 +22,11 @@
 
 <div class="toggle">
   {#if enabled}
-    <button
-      onclick={() => (enabled = false)}
-      class="cancel-btn hide-toggle"
-    >
+    <button onclick={() => (enabled = false)} class="cancel-btn hide-toggle">
       -
     </button>
   {:else}
-    <button onclick={() => (enabled = true)} class="hide-toggle">
-      +
-    </button>
+    <button onclick={() => (enabled = true)} class="hide-toggle"> + </button>
   {/if}
   <h2 class="centered">{title}</h2>
 </div>
@@ -40,18 +35,18 @@
 {/if}
 
 <style>
-.toggle {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-}
+  .toggle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+  }
 
-button {
-  width: 2.5rem;
-}
+  button {
+    width: 2.5rem;
+  }
 
-h2 {
-  white-space: nowrap;
-}
+  h2 {
+    white-space: nowrap;
+  }
 </style>

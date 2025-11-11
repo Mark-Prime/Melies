@@ -1,6 +1,6 @@
 # Méliès
 
-A Rust built, GUI focused, remake or Ryukbot v2.
+A Rust built, GUI focused, remake of Ryukbot v2.
 
 ## Goals
 
@@ -8,7 +8,7 @@ A Rust built, GUI focused, remake or Ryukbot v2.
 
 ### A Trip to the Moon
 
-[Georges Méliès](https://en.wikipedia.org/wiki/Georges_M%C3%A9li%C3%A8s) was a French illusionist and film that took audiences from the Earth to the Moon back in 1902. I'm hoping this little program helps people unleash their own imaginations, just like Georges Méliès did all those years ago.
+[Georges Méliès](https://en.wikipedia.org/wiki/Georges_M%C3%A9li%C3%A8s) was a French illusionist and film director that took audiences from the Earth to the Moon back in 1902. I'm hoping this little program helps people unleash their own imaginations, just like Georges Méliès did all those years ago.
 
 ## Getting Started
 

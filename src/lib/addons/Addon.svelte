@@ -14,9 +14,15 @@
   <div class="setting">
     {#each addonTypeSort(addons[addon]) as addonSetting}
       {#if addons[addon][addonSetting].type === "group"}
-        <Group bind:group={addons[addon][addonSetting]} defaultTitle={addonSetting} />
+        <Group
+          bind:group={addons[addon][addonSetting]}
+          defaultTitle={addonSetting}
+        />
       {:else}
-        <Setting bind:setting={addons[addon][addonSetting]} defaultTitle={addonSetting} />
+        <Setting
+          bind:setting={addons[addon][addonSetting]}
+          defaultTitle={addonSetting}
+        />
       {/if}
     {/each}
   </div>

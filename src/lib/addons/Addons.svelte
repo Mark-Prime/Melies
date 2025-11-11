@@ -9,7 +9,6 @@
   let { addons = $bindable() } = $props();
 
   let keys = $derived(Object.keys(addons));
-
 </script>
 
 <div class="addons">
@@ -20,10 +19,13 @@
   {/if}
 
   {#each keys as addon, i}
-    <Addon bind:addon={keys[i]} bind:addons={addons} />
+    <Addon bind:addon={keys[i]} bind:addons />
   {/each}
   <div>
-    <button onclick={() => window.open("https://github.com/Mark-Prime/awesome-Melies-addons")}>
+    <button
+      onclick={() =>
+        window.open("https://github.com/Mark-Prime/awesome-Melies-addons")}
+    >
       Get Addons
     </button>
     <button onclick={() => invoke("open_addons_folder")}>

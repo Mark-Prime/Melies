@@ -45,16 +45,13 @@
             event.isKillstreak = true;
           }
 
-          if (
-            i === 0 ||
-            eventList.events[i - 1].demo_name != event.demo_name
-          ) {
+          if (i === 0 || eventList.events[i - 1].demo_name != event.demo_name) {
             demos.push([event]);
             return;
           }
 
           demos[demos.length - 1].push(event);
-        }
+        },
       );
 
       demos = demos;
@@ -96,9 +93,11 @@
     {/each}
   {/each}
   {#snippet footer()}
-    <div >
+    <div>
       <div class="new-demo">
-        <a href="/" class="new-demo__1" onclick={addDemo}> Add Event Manually </a>
+        <a href="/" class="new-demo__1" onclick={addDemo}>
+          Add Event Manually
+        </a>
       </div>
       <div class="new-demo">
         <a href="/" class="new-demo__2" onclick={cancel}> Cancel </a>

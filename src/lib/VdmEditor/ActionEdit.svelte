@@ -1,12 +1,11 @@
 <script>
-  import { run } from 'svelte/legacy';
+  import { run } from "svelte/legacy";
 
   import ColorSelect from "$lib/components/ColorSelect.svelte";
   import Input from "$lib/components/Input.svelte";
   import Range from "$lib/components/Range.svelte";
   import Select from "$lib/components/Select.svelte";
   import Switch from "$lib/components/Switch.svelte";
-
 
   let startTimeType = $state("tick");
   let skipToTimeType = $state("tick");
@@ -40,8 +39,6 @@
   let color1 = $state("#ffffff");
   let color2 = $state("#ffffff");
 
-
-
   function calcTickTypes() {
     if (action?.start_tick !== null) {
       startTimeType = "tick";
@@ -73,7 +70,6 @@
     action.rgba2 = [rgb2.r, rgb2.g, rgb2.b, action.rgba2[3]];
     dispatch("change", action);
   }
-
 
   function onStartTimeChange() {
     switch (startTimeType) {

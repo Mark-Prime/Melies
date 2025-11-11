@@ -4,9 +4,7 @@ export default function isAirshot(parsedDemo, k, settings) {
   }
 
   let kill =
-    parsedDemo.data.player_lives[k.owner_id][k.life_index].kills[
-      k.kill_index
-    ];
+    parsedDemo.data.player_lives[k.owner_id][k.life_index].kills[k.kill_index];
 
   if (["pumpkin", "explosion", "golden_frying_pan"].includes(kill.weapon)) {
     return true;

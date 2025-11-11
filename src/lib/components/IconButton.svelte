@@ -4,9 +4,9 @@
   let { icon, label, color } = $props();
 </script>
 
-<button class="card" style="{`--color: var(${color}-con);`}">
-    <span><Fa {icon} size="4x" color={`var(${color})`} /></span>
-    <div class="label" style="{`--color: var(${color});`}">{label}</div>
+<button class="card" style={`--color: var(${color}-con);`}>
+  <span><Fa {icon} size="4x" color={`var(${color})`} /></span>
+  <div class="label" style={`--color: var(${color});`}>{label}</div>
 </button>
 
 <style lang="scss">
@@ -29,6 +29,6 @@
   }
 
   .label {
-      color: var(--color);
+    color: var(--color);
   }
 </style>

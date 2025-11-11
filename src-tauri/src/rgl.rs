@@ -1,9 +1,10 @@
-use serde_json::{json, Value};
+use serde_json::{ json, Value };
 use reqwest;
 
 pub fn get_users(steam_ids: Vec<String>) -> Value {
   let mut users: Value = json!({});
-  let resp = reqwest::blocking::Client::new()
+  let resp = reqwest::blocking::Client
+    ::new()
     .post("https://api.rgl.gg/v0/profile/getmany")
     .header("Content-Type", "application/json")
     .body(serde_json::to_string(&steam_ids).unwrap())

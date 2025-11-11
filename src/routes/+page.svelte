@@ -35,10 +35,15 @@
   onMount(async () => {
     theme = await invoke("load_theme");
     settings = await invoke("load_settings");
-  })
+  });
 
   function hasAnyEnabled(setting) {
-    return setting && Object.keys(setting).map((feature) => setting[feature]).includes(true)
+    return (
+      setting &&
+      Object.keys(setting)
+        .map((feature) => setting[feature])
+        .includes(true)
+    );
   }
 </script>
 
@@ -46,34 +51,38 @@
   href="https://fonts.googleapis.com/css2?family=Briem+Hand:wght@100..900&display=swap"
   rel="stylesheet"
 />
-<div class="homepage" style="{theme.has_theme ? 
-` --red: ${theme.red || '#f35355'};
-  --blu: ${theme.blu || '#65b1e2'};
+<div
+  class="homepage"
+  style={theme.has_theme
+    ? ` --red: ${theme.red || "#f35355"};
+  --blu: ${theme.blu || "#65b1e2"};
 
-  --bg: ${theme.bg || '#1a1c1e'};
-  --bg2: ${theme.bg2 || '#131516'};
-  --bg-text: ${theme.bg_text || '#e3e2e6'};
+  --bg: ${theme.bg || "#1a1c1e"};
+  --bg2: ${theme.bg2 || "#131516"};
+  --bg-text: ${theme.bg_text || "#e3e2e6"};
 
-  --pri: ${theme.pri || '#a7c8ff'};
-  --pri-text: ${theme.pri_text || '#003061'};
-  --pri-con: ${theme.pri_con || '#004689'};
-  --pri-con-text: ${theme.pri_con_text || '#d5e3ff'};
+  --pri: ${theme.pri || "#a7c8ff"};
+  --pri-text: ${theme.pri_text || "#003061"};
+  --pri-con: ${theme.pri_con || "#004689"};
+  --pri-con-text: ${theme.pri_con_text || "#d5e3ff"};
 
-  --sec: ${theme.sec || '#d3bbff'};
-  --sec-text: ${theme.sec_text || '#3c1d70'};
-  --sec-con: ${theme.sec_con || '#533688'};
-  --sec-con-text: ${theme.sec_con_text || '#ebddff'};
+  --sec: ${theme.sec || "#d3bbff"};
+  --sec-text: ${theme.sec_text || "#3c1d70"};
+  --sec-con: ${theme.sec_con || "#533688"};
+  --sec-con-text: ${theme.sec_con_text || "#ebddff"};
 
-  --tert: ${theme.tert || '#ffb0cd'};
-  --tert-text: ${theme.tert_text || '#5d1137'};
-  --tert-con: ${theme.tert_con || '#7a294e'};
-  --tert-con-text: ${theme.tert_con_text || '#ffd9e4'};
+  --tert: ${theme.tert || "#ffb0cd"};
+  --tert-text: ${theme.tert_text || "#5d1137"};
+  --tert-con: ${theme.tert_con || "#7a294e"};
+  --tert-con-text: ${theme.tert_con_text || "#ffd9e4"};
 
-  --err: ${theme.err || '#ffb4ab'};
-  --err-text: ${theme.err_text || '#690005'};
-  --err-con: ${theme.err_con || '#93000a'};
-  --err-con-text: ${theme.err_con_text || '#ffdad6'};
-` : ''}">
+  --err: ${theme.err || "#ffb4ab"};
+  --err-text: ${theme.err_text || "#690005"};
+  --err-con: ${theme.err_con || "#93000a"};
+  --err-con-text: ${theme.err_con_text || "#ffdad6"};
+`
+    : ""}
+>
   <div class="homepage__main">
     <Hero />
     <div class="homepage__container">
@@ -103,7 +112,7 @@
           {#if hasAnyEnabled(settings?.features?.advanced)}
             <br /> Advanced Tools
           {/if}
-          
+
           {#if settings?.features?.advanced?.vdmeditor}
             <VdmEditor on:reload={() => forceReload(true)} />
           {/if}
@@ -113,7 +122,7 @@
           {#if settings?.features?.advanced?.sortFootage}
             <SortFootage on:reload={() => forceReload(true)} />
           {/if}
-            
+
           {#if hasAnyEnabled(settings?.features?.deprecated)}
             <br /> Deprecated Tools
           {/if}

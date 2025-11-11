@@ -1,5 +1,5 @@
 <script>
-  import AutoComplete from "simple-svelte-autocomplete"
+  import AutoComplete from "simple-svelte-autocomplete";
   import { createEventDispatcher } from "svelte";
   /** @type {{value: any, title?: any, key?: any, color?: string, display?: boolean, tooltip?: string, children?: import('svelte').Snippet}} */
   let {
@@ -10,7 +10,7 @@
     display = true,
     tooltip = "",
     children,
-    items = []
+    items = [],
   } = $props();
 
   const dispatch = createEventDispatcher();
@@ -31,11 +31,7 @@
       {title}
     </label>
     <div class={`autocomplete--${color}`}>
-      <AutoComplete 
-        {items} 
-        bind:selectedItem={value} 
-        onChange={change}
-      />
+      <AutoComplete {items} bind:selectedItem={value} onChange={change} />
     </div>
   </div>
 {/if}

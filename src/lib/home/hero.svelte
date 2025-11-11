@@ -6,7 +6,12 @@
   <img src="/MeliesColor.svg" alt="Melies Logo" />
   <div>
     <h1>Méliès</h1>
-    <h2>TF2 Recording in the <a href="https://en.wikipedia.org/wiki/A_Trip_to_the_Moon" target="_blank"><span>Space Age</span></a></h2>
+    <h2>
+      TF2 Recording in the <a
+        href="https://en.wikipedia.org/wiki/A_Trip_to_the_Moon"
+        target="_blank"><span>Space Age</span></a
+      >
+    </h2>
   </div>
 </div>
 

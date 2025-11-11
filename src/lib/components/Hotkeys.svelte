@@ -1,8 +1,5 @@
 <script>
-
-  let {
-    keyStates = $bindable({})
-  } = $props();
+  let { keyStates = $bindable({}) } = $props();
 
   function on_key_event(event) {
     if (event.repeat) return;

@@ -1,7 +1,7 @@
 <script>
   import ClassLogo from "$lib/components/ClassLogo.svelte";
   import Toggle from "$lib/components/ToggleSelected.svelte";
-  import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+  import { writeText } from "@tauri-apps/plugin-clipboard-manager";
   import { classConverter } from "$lib/composables/classConverter";
   import { invoke } from "@tauri-apps/api/core";
   import { onMount } from "svelte";
@@ -14,14 +14,14 @@
     parsedDemo,
     tickToTime,
     toggleKillsSelected,
-    allKillsSelected
+    allKillsSelected,
   } = $props();
 
   let weapons = $state({});
 
   onMount(async () => {
     weapons = await invoke("get_weapons");
-  })
+  });
 </script>
 
 <div class={"demo demo__life " + (life.selected && "demo--selected")}>
@@ -31,7 +31,7 @@
         player_class={classConverter(playerClass)}
         tooltip={`Kills: ${
           life.kills.filter(
-            (kill) => kill.killer_class === classConverter(playerClass)
+            (kill) => kill.killer_class === classConverter(playerClass),
           ).length
         }`}
       />
@@ -78,15 +78,28 @@
           >
             <button
               class="tick"
-              onclick={() => writeText(`demo_gototick ${kill.tick}; wait 10; spec_player ${steamid64}`)}
+              onclick={() =>
+                writeText(
+                  `demo_gototick ${kill.tick}; wait 10; spec_player ${steamid64}`,
+                )}
             >
               {kill.tick}
             </button>
           </span>
         </div>
 
-        <Toggle value={kill.selected && !kill.victimPov} on:click={() => toggleKillsSelected([kill])} tooltip="As Bookmark" tooltipDirection="left"/>
-        <Toggle value={kill.selected && kill.victimPov} on:click={() => toggleKillsSelected([kill], true)} tooltip="Victim POV As Bookmark" tooltipDirection="left"/>
+        <Toggle
+          value={kill.selected && !kill.victimPov}
+          on:click={() => toggleKillsSelected([kill])}
+          tooltip="As Bookmark"
+          tooltipDirection="left"
+        />
+        <Toggle
+          value={kill.selected && kill.victimPov}
+          on:click={() => toggleKillsSelected([kill], true)}
+          tooltip="Victim POV As Bookmark"
+          tooltipDirection="left"
+        />
       </div>
     {/each}
   </div>
@@ -104,7 +117,10 @@
   >
     <button
       class="tick"
-      onclick={() => writeText(`demo_gototick ${life.start}; wait 10; spec_player ${steamid64}`)}
+      onclick={() =>
+        writeText(
+          `demo_gototick ${life.start}; wait 10; spec_player ${steamid64}`,
+        )}
     >
       Start: {life.start}
     </button>
@@ -116,13 +132,21 @@
   >
     <button
       class="tick"
-      onclick={() => writeText(`demo_gototick ${life.end}; wait 10; spec_player ${steamid64}`)}
+      onclick={() =>
+        writeText(
+          `demo_gototick ${life.end}; wait 10; spec_player ${steamid64}`,
+        )}
     >
       End: {life.end}
     </button>
   </div>
   <div class="killstreak__buttons">
-    <Toggle value={life.selected} on:click={() => toggleSelected(life)} tooltip="Entire Life" tooltipDirection="left"/>
+    <Toggle
+      value={life.selected}
+      on:click={() => toggleSelected(life)}
+      tooltip="Entire Life"
+      tooltipDirection="left"
+    />
     <div class="add_demo">
       {#if life.kills.length == 0}
         <div
@@ -170,7 +194,7 @@
     justify-content: end;
     grid-column: 6;
   }
-  
+
   .tick {
     all: unset;
     position: relative;

@@ -1,7 +1,7 @@
 <script>
-  import { faCopy } from '@fortawesome/free-solid-svg-icons';
+  import { faCopy } from "@fortawesome/free-solid-svg-icons";
   import Fa from "svelte-fa";
-  import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+  import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 
   /** @type {{resp: any}} */
   let { resp } = $props();
@@ -9,7 +9,7 @@
   let copyText = $state("");
 
   function copy() {
-    writeText(`playdemo ${resp.first_demo};`)
+    writeText(`playdemo ${resp.first_demo};`);
     copyText = "Copied to clipboard";
     setTimeout(() => {
       copyText = "";
@@ -28,12 +28,10 @@
   {/if}
   {#if resp.first_demo}
     <p>
-      To start the automation, load the first demo by opening tf2 and using the command:
+      To start the automation, load the first demo by opening tf2 and using the
+      command:
       <br />
-      <button
-        class="tick"
-        onclick={() => copy()}
-      >
+      <button class="tick" onclick={() => copy()}>
         {#if copyText}
           <code>Copied to clipboard</code>
         {:else}

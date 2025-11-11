@@ -10,7 +10,7 @@
     display = true,
     tooltip = "",
     disabled = false,
-    left = false
+    left = false,
   } = $props();
 
   const dispatch = createEventDispatcher();
@@ -19,9 +19,14 @@
 </script>
 
 {#if display}
-  <div class={`input__switch ${disabled ? "disabled" : ""}`} id="{key}">
+  <div class={`input__switch ${disabled ? "disabled" : ""}`} id={key}>
     <label class="switch">
-      <input type="checkbox" bind:checked={value} onchange={change} disabled={disabled}/>
+      <input
+        type="checkbox"
+        bind:checked={value}
+        onchange={change}
+        {disabled}
+      />
       <span class={`slider round slider--${color}`}></span>
     </label>
     <div

@@ -190,7 +190,7 @@
     }
 
     return [...validLives].filter(
-      (playerLife) => playerLife[valKey].length > 0
+      (playerLife) => playerLife[valKey].length > 0,
     );
   }
 
@@ -213,7 +213,7 @@
           }
 
           demos[demos.length - 1].push(event);
-        }
+        },
       );
 
       return demos;
@@ -572,7 +572,7 @@
       if (events.length !== 0) {
         parseDemoEvents(
           demo_name,
-          events.sort((a, b) => a.time - b.time)
+          events.sort((a, b) => a.time - b.time),
         );
       }
     }
@@ -595,7 +595,7 @@
                 if (classConverter(classNum) !== "0") {
                   return classConverter(classNum);
                 }
-              }
+              },
             );
           } else {
             for (let playerClass of Object.keys(player.classes)) {
@@ -603,7 +603,7 @@
 
               if (
                 !playerList[player.name]?.includes(
-                  classConverter(playerClass)
+                  classConverter(playerClass),
                 ) &&
                 converted !== "0"
               ) {
@@ -734,7 +734,7 @@
     let classFilter = false;
 
     for (let playerClass of Object.keys(
-      parsedDemo.data.users[player].classes
+      parsedDemo.data.users[player].classes,
     )) {
       if (playerClasses[classConverter(playerClass)]) {
         classFilter = true;
@@ -783,7 +783,7 @@
       {
         time: Math.max(
           parsedDemo.header?.ticks - 99,
-          settings.recording.start_delay + 66
+          settings.recording.start_delay + 66,
         ),
         label: parsedDemo.data?.users[userId].steamId64,
         steamid64: parsedDemo.data?.users[userId].steamId64,
@@ -825,7 +825,7 @@
     label,
     tick,
     demo_count,
-    isPovDemo
+    isPovDemo,
   ) {
     let name = demo_name;
 
@@ -850,7 +850,7 @@
     userId,
     life,
     demo_count,
-    isPovDemo
+    isPovDemo,
   ) {
     let newDemo = [];
 
@@ -962,7 +962,7 @@
                   userId,
                   life,
                   demo_count,
-                  isPovDemo
+                  isPovDemo,
                 ),
               ];
 
@@ -994,8 +994,8 @@
                   label,
                   kill.tick,
                   demo_count,
-                  isPovDemo
-                )
+                  isPovDemo,
+                ),
               );
 
               kill.selected = true;
@@ -1022,7 +1022,7 @@
                   userId,
                   life,
                   demo_count,
-                  isPovDemo
+                  isPovDemo,
                 ),
               ];
 
@@ -1055,8 +1055,8 @@
                 "MP",
                 kill.tick,
                 demo_count,
-                isPovDemo
-              )
+                isPovDemo,
+              ),
             );
           }
         }
@@ -1080,7 +1080,7 @@
                   userId,
                   life,
                   demo_count,
-                  isPovDemo
+                  isPovDemo,
                 ),
               ];
 
@@ -1111,8 +1111,8 @@
                 "AS",
                 kill.tick,
                 demo_count,
-                isPovDemo
-              )
+                isPovDemo,
+              ),
             );
           }
         }
@@ -1178,12 +1178,12 @@
         },
         tick: Math.max(
           parsedDemo.header?.ticks - 99,
-          settings.recording.start_delay + 66
+          settings.recording.start_delay + 66,
         ),
         demo_name: demo_name + "_" + userId,
         event: `[demo_${parsedDemo.data?.users[userId].steamId64}] clip_end (\"${demo_name}\" at ${Math.max(
           parsedDemo.header?.ticks - 99,
-          settings.recording.start_delay + 66
+          settings.recording.start_delay + 66,
         )})`,
         isKillstreak: false,
       });
@@ -1531,7 +1531,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                         class={parsedDemo.data.users[player]["team"] +
                           " player"}
                         data-tooltip={getPlayerHrefTooltip(
-                          parsedDemo.data.users[player]
+                          parsedDemo.data.users[player],
                         )}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -1571,7 +1571,8 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                           {#if displayLives || life.kills.length > 0 || (displayAssists && life.assists.length > 0)}
                             <Life
                               {life}
-                              steamid64={parsedDemo.data.users[player].steamId64}
+                              steamid64={parsedDemo.data.users[player]
+                                .steamId64}
                               {toggleSelected}
                               {parsedDemo}
                               {tickToTime}
@@ -1609,11 +1610,11 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                         {toggleSelected}
                         {toggleKillsSelected}
                         lives={parsedDemo.data.player_lives[player].filter(
-                          (life) => life.med_picks.length > 0
+                          (life) => life.med_picks.length > 0,
                         )}
                       />
                     {/if}
-                      {#if featureSettings.demo_scanner.airshots}
+                    {#if featureSettings.demo_scanner.airshots}
                       <KillPointerList
                         label="Air Shots"
                         valKey="airshots"
@@ -1676,7 +1677,9 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                 {tickToTime}
                 {toggleKillsSelected}
                 {toggleSelected}
-                kills={parsedDemo.data.airshots.filter((k) => filterAirshots(k))}
+                kills={parsedDemo.data.airshots.filter((k) =>
+                  filterAirshots(k),
+                )}
               />
             {/if}
           </div>
@@ -2036,7 +2039,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
     }
 
     &__name {
-      color: var(--bg-text);;
+      color: var(--bg-text);
       font-weight: bold;
       font-size: 0.8rem;
       padding: 0;

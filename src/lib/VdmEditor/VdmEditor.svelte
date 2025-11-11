@@ -70,7 +70,7 @@
 
 <Modal color="pri" {toggle} {enabled} tall grow on:open={loadVdms}>
   {#snippet footer()}
-    <div >
+    <div>
       {#if resp.loaded && resp.vdms && !vdmName}
         <div class="buttons">
           <button class="btn btn--cancel" onclick={toggle}>Cancel</button>
@@ -89,7 +89,11 @@
     {#each resp.vdms as vdm}
       <div class={"demo"}>
         <p>{vdm.name}</p>
-        <p>{dayjs.unix(vdm.metadata.created.secs_since_epoch).format('MMM DD, YYYY')}</p>
+        <p>
+          {dayjs
+            .unix(vdm.metadata.created.secs_since_epoch)
+            .format("MMM DD, YYYY")}
+        </p>
         <div class="add_demo">
           <button class="btn" onclick={() => loadVdm(vdm.name)}> Edit </button>
         </div>

@@ -7,11 +7,11 @@ function typeValue(val) {
     default:
       return 2;
   }
-} 
+}
 
 export default function addonTypeSort(addons) {
   let addonKeys = Object.keys(addons);
-  
+
   return addonKeys.sort((a, b) => {
     return typeValue(addons[a].type) - typeValue(addons[b].type);
   });

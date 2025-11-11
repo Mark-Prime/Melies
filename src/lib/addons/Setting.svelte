@@ -10,24 +10,24 @@
 
 {#if setting.type === "string"}
   <Input
-    title={title}
+    {title}
     bind:value={setting.value}
     tooltip={setting.tooltip}
-    color={['pri', 'sec', 'tert'][depth % 3]}
+    color={["pri", "sec", "tert"][depth % 3]}
   />
 {:else if setting.type === "int"}
   <Input
-    title={title}
+    {title}
     bind:value={setting.value}
     tooltip={setting.tooltip}
     type="number"
-    color={['pri', 'sec', 'tert'][depth % 3]}
+    color={["pri", "sec", "tert"][depth % 3]}
   />
 {:else if setting.type === "bool" || setting.type === "toggle"}
   <Switch
-    title={title}
+    {title}
     bind:value={setting.value}
     tooltip={setting.tooltip}
-    color={['pri', 'sec', 'tert'][depth % 3]}
+    color={["pri", "sec", "tert"][depth % 3]}
   />
 {/if}

@@ -1,6 +1,6 @@
 <script>
-  import { run } from 'svelte/legacy';
-  import { untrack } from 'svelte'
+  import { run } from "svelte/legacy";
+  import { untrack } from "svelte";
 
   // @ts-nocheck
   import { useMousePosition } from "@svelteuidev/composables";
@@ -17,7 +17,7 @@
     toggleSelected,
     displayLives,
     displayAssists,
-    getTeam
+    getTeam,
   } = $props();
 
   let maxScale = $state(1.0);
@@ -89,30 +89,42 @@
         case "range":
           let difference = right - left;
 
-          untrack(() => left = median(
-            0,
-            startingLeft + distancePerc * 100 - paddingPerc * 100,
-            100 - difference
-          ));
-          untrack(() => right = median(
-            difference,
-            startingRight + distancePerc * 100 - paddingPerc * 100,
-            100
-          ));
+          untrack(
+            () =>
+              (left = median(
+                0,
+                startingLeft + distancePerc * 100 - paddingPerc * 100,
+                100 - difference,
+              )),
+          );
+          untrack(
+            () =>
+              (right = median(
+                difference,
+                startingRight + distancePerc * 100 - paddingPerc * 100,
+                100,
+              )),
+          );
           break;
         case "left":
-          untrack(() => left = median(
-            0,
-            startingLeft + distancePerc * 100 - paddingPerc * 100,
-            right - minimum
-          ));
+          untrack(
+            () =>
+              (left = median(
+                0,
+                startingLeft + distancePerc * 100 - paddingPerc * 100,
+                right - minimum,
+              )),
+          );
           break;
         case "right":
-          untrack(() => right = median(
-            left + minimum,
-            startingRight + distancePerc * 100 - paddingPerc * 100,
-            100
-          ));
+          untrack(
+            () =>
+              (right = median(
+                left + minimum,
+                startingRight + distancePerc * 100 - paddingPerc * 100,
+                100,
+              )),
+          );
           break;
       }
     }
@@ -308,7 +320,7 @@
                       --length: ${calcTimelineLength(
                         life,
                         leftPos,
-                        rightPos
+                        rightPos,
                       )}px;
                       --start: ${calcTimelineStart(life)}px
                   `}
@@ -328,7 +340,7 @@
                         ${calcTick(life.start) < leftPos && "tooltip--custom"}
                     `}
                     data-tooltip={`Length: ${tickToTime(
-                      life.end - life.start
+                      life.end - life.start,
                     )}\n${
                       life.kills.length
                         ? `Player${life.kills.length > 1 ? "s" : ""} Killed: `
@@ -387,7 +399,7 @@
                           ${x > divWidth * 0.7 && "timeline__marker--left"}
                       `}
                       data-tooltip={`Start: ${calcTick(
-                        life.start
+                        life.start,
                       )}\r\nTimecode: ${tickToTime(calcTick(life.start))}`}
                       style={`
                           --position: -1px;
@@ -411,14 +423,14 @@
                         ${x > divWidth * 0.7 && "timeline__marker--left"}
                       `}
                       data-tooltip={`End: ${calcTick(
-                        life.end
+                        life.end,
                       )}\r\nTimecode: ${tickToTime(calcTick(life.end))}`}
                       style={`
                         --position: ${calcTimelineMarker(
                           life.end,
                           life,
                           leftPos,
-                          rightPos
+                          rightPos,
                         )}px;
                     `}
                     >
@@ -442,14 +454,14 @@
                         data-tooltip={`Killed: ${
                           parsedDemo.data?.users[kill.victim].name
                         }\r\nTick: ${calcTick(
-                          kill.tick
+                          kill.tick,
                         )}\r\nTimecode: ${tickToTime(calcTick(kill.tick))}`}
                         style={`
                             --position: ${calcTimelineMarker(
                               kill.tick,
                               life,
                               leftPos,
-                              rightPos
+                              rightPos,
                             )}px;
                         `}
                       >
@@ -482,7 +494,7 @@
                       `}
                       data-tooltip={`${`Players Killed in Killstreak: `}\n\r${getKills(
                         ksPointer,
-                        index
+                        index,
                       )
                         .map((kill) => {
                           let crit_types = ["", " Mini-Crit", " CRITICAL HIT!"];
@@ -499,9 +511,9 @@
                             getKills(ksPointer, index)[0].tick,
                             life,
                             leftPos,
-                            rightPos
+                            rightPos,
                           ),
-                          0
+                          0,
                         )}px;
                         --kills: ${getKills(ksPointer, index).length};
                         --length: ${
@@ -516,13 +528,13 @@
                             getKills(ksPointer, index)[0].tick,
                             life,
                             leftPos,
-                            rightPos
+                            rightPos,
                           ) < 0
                             ? calcTimelineMarker(
                                 getKills(ksPointer, index)[0].tick,
                                 life,
                                 leftPos,
-                                rightPos
+                                rightPos,
                               )
                             : 0)
                         }px;
@@ -550,7 +562,7 @@
         `}
         >
           <p class="timeline__round--text">
-            { round.label }
+            {round.label}
           </p>
         </div>
       {/each}
@@ -567,7 +579,11 @@
       Range: {Math.round(leftPos)} - {Math.round(rightPos)}
     </div>
     <div>
-      Mouse Pos: {median(0, Math.round(leftPos + (x / divWidth) * width), totalTicks)}
+      Mouse Pos: {median(
+        0,
+        Math.round(leftPos + (x / divWidth) * width),
+        totalTicks,
+      )}
     </div>
   </div>
 </div>

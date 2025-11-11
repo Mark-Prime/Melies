@@ -1,7 +1,7 @@
 <script>
   import ClassLogo from "$lib/components/ClassLogo.svelte";
   import Toggle from "$lib/components/ToggleSelected.svelte";
-  import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+  import { writeText } from "@tauri-apps/plugin-clipboard-manager";
   import { classConverter } from "$lib/composables/classConverter";
 
   /** @type {{lives: any, steamid64: any, label: any, valKey: any, parsedDemo: any, tickToTime: any, toggleKillsSelected: any, toggleSelected: any}} */
@@ -13,7 +13,7 @@
     parsedDemo,
     tickToTime,
     toggleKillsSelected,
-    toggleSelected
+    toggleSelected,
   } = $props();
 
   function getKill(pointer) {
@@ -68,7 +68,10 @@
             >
               <button
                 class="tick"
-                onclick={() => writeText(`demo_gototick ${getKill(pointer).tick}; wait 10; spec_player ${steamid64}`)}
+                onclick={() =>
+                  writeText(
+                    `demo_gototick ${getKill(pointer).tick}; wait 10; spec_player ${steamid64}`,
+                  )}
               >
                 {getKill(pointer).tick}
               </button>
@@ -81,7 +84,10 @@
               data-tooltip="Entire Life"
               style={`--kills: 0;`}
             >
-              <Toggle value={getLife(pointer).selected} on:click={() => toggleSelected(getLife(pointer))} />
+              <Toggle
+                value={getLife(pointer).selected}
+                on:click={() => toggleSelected(getLife(pointer))}
+              />
             </div>
 
             <div
@@ -89,7 +95,10 @@
               data-tooltip="As Bookmark"
               style={`--kills: 0;`}
             >
-              <Toggle value={getKill(pointer).selected} on:click={() => toggleKillsSelected([getKill(pointer)])} />
+              <Toggle
+                value={getKill(pointer).selected}
+                on:click={() => toggleKillsSelected([getKill(pointer)])}
+              />
             </div>
           </div>
         </div>
@@ -103,7 +112,7 @@
     margin-top: 0.7rem;
     margin-bottom: 0.5rem;
   }
-  
+
   .tick {
     all: unset;
     position: relative;

@@ -1,5 +1,4 @@
 <script>
-
   import { createEventDispatcher } from "svelte";
   /** @type {{value: any, title?: any, key?: any, color?: string, display?: boolean, tooltip?: string, children?: import('svelte').Snippet}} */
   let {
@@ -10,7 +9,7 @@
     display = true,
     tooltip = "",
     children,
-    style
+    style,
   } = $props();
 
   const dispatch = createEventDispatcher();
@@ -19,7 +18,7 @@
 </script>
 
 {#if display}
-  <div style={style}>
+  <div {style}>
     <label
       for={key}
       class:tooltip
@@ -45,7 +44,7 @@
 <style lang="scss">
   select {
     width: 100%;
-    padding-top: calc(.5rem - 2px);
+    padding-top: calc(0.5rem - 2px);
   }
 
   label {
