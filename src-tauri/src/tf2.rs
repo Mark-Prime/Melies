@@ -26,9 +26,7 @@ fn get_tf2_path(settings: &Value) -> PathBuf {
 fn build_launch_options(
   settings: &Value,
   demo_name: &str,
-  install: &str,
-  tab: &str,
-  first_run: bool
+  tab: &str
 ) -> String {
   let mut launch_options = settings["hlae"]["launch_options"].to_string();
   let tab = tab.parse::<i64>().unwrap();
@@ -63,6 +61,8 @@ fn build_launch_options(
     launch_options = format!("{} +playdemo {}", launch_options, trimmed_name);
   }
 
+  let install = get_install(settings, tab);
+
   if install != settings["tf_folder"].as_str().unwrap() {
     let tf2_path = PathBuf::from(settings["tf_folder"].as_str().unwrap())
       .parent()
@@ -89,9 +89,7 @@ fn build_launch_options(
     launch_options = format!("{} -windowed -noborder", launch_options);
   }
 
-  if first_run == true {
-    launch_options = format!("{} -dxlevel {}", launch_options, settings["hlae"]["dxlevel"]);
-  }
+  launch_options = format!("{} -dxlevel {}", launch_options, settings["hlae"]["dxlevel"]);
 
   launch_options = format!(
     "{} -w {} -h {}",
@@ -108,13 +106,11 @@ fn build_launch_options(
 pub(crate) fn run_tf2(
   demo_name: &str,
   settings: &Value,
-  install: &str,
-  tab: &str,
-  first_run: bool
+  tab: &str
 ) -> Value {
   println!("Running TF2");
 
-  let launch_options = build_launch_options(settings, demo_name, install, tab, first_run);
+  let launch_options = build_launch_options(settings, demo_name, tab);
 
   println!("Launch options: {}", launch_options);
 
@@ -221,7 +217,7 @@ pub fn is_tf2_running() -> bool {
 
   let new_bits = system.processes_by_name("tf_win64.exe".as_ref()).next().is_some();
 
-  println!("32bit: {}, 64bit: {}", old_bits, new_bits);
+  // println!("32bit: {}, 64bit: {}", old_bits, new_bits);
 
   old_bits || new_bits
 }
@@ -435,4 +431,14 @@ pub(crate) fn get_next_demo(settings: &Value) -> Value {
     "complete": false,
     "next_demo": demo_name
   });
+}
+
+pub fn get_install(settings: &Value, tab: i64) -> String {
+  if tab == 0 {
+    return settings["tf_folder"].as_str().unwrap().to_string();
+  }
+  
+  let alt_installs = settings["alt_installs"].as_array().unwrap();
+  
+  return alt_installs[(tab - 1) as usize]["tf_folder"].as_str().unwrap().to_string();
 }

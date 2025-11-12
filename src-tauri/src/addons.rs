@@ -1,6 +1,6 @@
 use std::{ env, fs, process::Command };
 
-use crate::{ macros::*, setting_as_bin };
+use crate::{ macros::*, settings::setting_as_bin };
 use serde_json::Value;
 
 fn compile_addon_settings(v: &Value, depth: usize) -> String {

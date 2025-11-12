@@ -389,7 +389,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
     file_path = format!("{}{}", settings["tf_folder"].as_str().unwrap(), path);
   }
 
-  println!("{}", file_path);
+  println!("Demo Path: {}", file_path);
 
   let file = fs::read(file_path).unwrap();
 
@@ -402,9 +402,9 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
     Err(err) => {
       println!("{}", err);
       return json!({
-                "code": 400,
-                "err_text": format!("{}", err)
-            });
+        "code": 400,
+        "err_text": format!("{}", err)
+      });
     }
   };
 
@@ -654,37 +654,37 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
 
   let resp =
     json!({
-        "header": {
-            "demo_type": header.demo_type,
-            "version": header.version,
-            "protocol": header.protocol,
-            "server": header.server,
-            "nick": header.nick,
-            "map": header.map,
-            "game": header.game,
-            "duration": header.duration,
-            "ticks": ticks,
-            "frames": header.frames,
-            "signon": header.signon,
-        },
-        "data": {
-            "deaths": state.deaths,
-            "spawns": state.spawns,
-            "rounds": state.rounds,
-            "users": state.users,
-            "chat": state.chat,
-            "start_tick": start_tick,
-            "end_tick": state.end_tick,
-            "user_events": sorted_events,
-            "player_lives": player_lives,
-            "med_picks": med_picks,
-            "airshots": airshots,
-            "killstreak_pointers": killstreak_pointers,
-            "pauses": state.pauses,
-            "ubers": state.ubers
-        },
-        "loaded": true,
-        "loading": false
+      "header": {
+        "demo_type": header.demo_type,
+        "version": header.version,
+        "protocol": header.protocol,
+        "server": header.server,
+        "nick": header.nick,
+        "map": header.map,
+        "game": header.game,
+        "duration": header.duration,
+        "ticks": ticks,
+        "frames": header.frames,
+        "signon": header.signon,
+      },
+      "data": {
+        "deaths": state.deaths,
+        "spawns": state.spawns,
+        "rounds": state.rounds,
+        "users": state.users,
+        "chat": state.chat,
+        "start_tick": start_tick,
+        "end_tick": state.end_tick,
+        "user_events": sorted_events,
+        "player_lives": player_lives,
+        "med_picks": med_picks,
+        "airshots": airshots,
+        "killstreak_pointers": killstreak_pointers,
+        "pauses": state.pauses,
+        "ubers": state.ubers
+      },
+      "loaded": true,
+      "loading": false
     });
 
   Value::from(resp)

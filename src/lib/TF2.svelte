@@ -106,7 +106,6 @@
 
     let res = await invoke("launch_tf2", {
       demoName: startingDemo,
-      install: install,
       tab: String(tabIndex),
     });
 
@@ -133,7 +132,6 @@
 
     await invoke("launch_tf2", {
       demoName: startingDemo,
-      install: install,
       tab: String(tabIndex),
     });
 
@@ -157,7 +155,6 @@
 
       await invoke("launch_tf2", {
         demoName: startingDemo,
-        install: install,
         tab: String(tabIndex),
       });
     }
