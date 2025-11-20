@@ -9,6 +9,9 @@ use std::fs;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
+use std::sync::Arc;
+use std::sync::Mutex;
+use std::thread;
 use std::vec;
 use tf_demo_parser::demo::header::Header;
 use tf_demo_parser::{ Demo, DemoParser };
@@ -20,6 +23,7 @@ use self::new_analyser::Spawn;
 use tf_demo_parser::demo::data::DemoTick;
 
 mod new_analyser;
+mod organizer;
 
 #[derive(Debug, Serialize, Clone)]
 enum Event {
@@ -208,9 +212,9 @@ pub(crate) fn load_demo(settings: &Value, demo_name: &String) -> Value {
     println!("{} does not exist", demos_path_str);
     return Value::from({
       json!({
-                "loaded": false,
-                "error": "Demo does not exist"
-            })
+        "loaded": false,
+        "error": "Demo does not exist"
+      })
     });
   }
 
@@ -221,8 +225,8 @@ pub(crate) fn load_demo(settings: &Value, demo_name: &String) -> Value {
   file["name"] = Value::from(demo_name.to_owned());
   file["metadata"] =
     json!({
-        "modified": metadata.modified().unwrap(),
-        "created": metadata.created().unwrap(),
+      "modified": metadata.modified().unwrap(),
+      "created": metadata.created().unwrap(),
     });
 
   file["hasVdm"] = serde_json::Value::Bool(vdm_path.exists());
@@ -243,9 +247,9 @@ pub(crate) fn load_demo(settings: &Value, demo_name: &String) -> Value {
 
       return Value::from({
         json!({
-                    "loaded": false,
-                    "error": "Corrupt demo"
-                })
+          "loaded": false,
+          "error": "Corrupt demo"
+        })
       });
     }
   }
@@ -290,9 +294,9 @@ fn scan_folder_for_filetype(settings: &Value, path: &str, file_type: &str) -> Ve
       file["name"] = Value::from(parsed_file_name);
       file["metadata"] =
         json!({
-                "modified": metadata.modified().unwrap(),
-                "created": metadata.created().unwrap(),
-            });
+          "modified": metadata.modified().unwrap(),
+          "created": metadata.created().unwrap(),
+        });
 
       if file_type == ".dem" {
         let mut vdm_path = path.as_ref().unwrap().path();
@@ -411,240 +415,215 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
   let mut user_events: HashMap<u16, Vec<Event>> = HashMap::new();
   let mut user_classes: HashMap<u16, Vec<ClassSpawn>> = HashMap::new();
 
-  for spawn in &state.spawns {
-    let user_id: u16 = spawn.user.into();
-    let user = user_events.entry(user_id).or_insert(vec![]);
-    let user_class = user_classes.entry(user_id).or_insert(vec![]);
+  organizer::get_classes(&state, &mut user_events, &mut user_classes);
 
-    user_class.push(ClassSpawn {
-      class: spawn.class.clone(),
-      tick: spawn.tick,
-    });
+  organizer::get_kills_assists(&mut state, &mut user_events, &user_classes);
 
-    user.push(Event::Spawn(spawn.clone()));
-  }
+  organizer::get_rounds(&mut state, &mut user_events, &header);
 
-  for death in &mut state.deaths {
-    let killer = user_events.entry(death.killer.into()).or_insert(vec![]);
+  let sorted_events: Arc<Mutex<HashMap<u16, Vec<Event>>>> = Arc::new(Mutex::new(HashMap::new()));
+  let player_lives: Arc<Mutex<HashMap<u16, Vec<Life>>>> = Arc::new(Mutex::new(HashMap::new()));
+  let killstreak_pointers: Arc<Mutex<Vec<KillstreakPointer>>> = Arc::new(Mutex::new(vec![]));
+  let med_picks: Arc<Mutex<Vec<KillPointer>>> = Arc::new(Mutex::new(vec![]));
+  let airshots: Arc<Mutex<Vec<KillPointer>>> = Arc::new(Mutex::new(vec![]));
 
-    {
-      let user_classes_clone = user_classes.clone();
-      death.killer_class = get_player_class(user_classes_clone, death.killer.into(), death.tick);
-    }
+  let mut handles = vec![];
 
-    {
-      let user_classes_clone = user_classes.clone();
-      death.victim_class = get_player_class(user_classes_clone, death.victim.into(), death.tick);
-    }
+  // let sorted_events_buffer = Arc::clone(&sorted_events);
+  let user_events_buffer = user_events;
 
-    killer.push(Event::Kill(death.clone()));
+  for (key, events) in user_events_buffer {
 
-    let assist_id = death.assister;
+    let sorted_events = Arc::clone(&sorted_events);
+    let player_lives = Arc::clone(&player_lives);
+    let killstreak_pointers = Arc::clone(&killstreak_pointers);
+    let med_picks = Arc::clone(&med_picks);
+    let airshots = Arc::clone(&airshots);
 
-    if assist_id.is_some() {
-      let assister = user_events.entry(assist_id.unwrap().into()).or_insert(vec![]);
+    let settings_buffer = settings.clone();
 
-      assister.push(Event::Assist(death.clone()));
-    }
+    let settings = Arc::new(Mutex::new(settings_buffer));
 
-    let victim = user_events.entry(death.victim.into()).or_insert(vec![]);
+    let handle = thread::spawn(move || {
+      let mut current_player = vec![];
+      let mut events = events.to_owned();
 
-    victim.push(Event::Death(death.clone()));
-  }
+      events.sort_by(|a, b| a.cmp(b));
 
-  for round in &state.rounds {
-    for user in &mut user_events {
-      user.1.push(Event::RoundEnd(round.end_tick.into()));
-    }
-  }
+      let mut current_life: Life = Life::new(0, vec!["".to_string()]);
 
-  if !state.rounds.is_empty() {
-    let round = state.rounds.last_mut().unwrap();
-
-    if round.end_tick == DemoTick::from(0) {
-      round.end_tick = DemoTick::from(header.ticks);
-    }
-  }
-
-  let mut sorted_events: HashMap<u16, Vec<Event>> = HashMap::new();
-  let mut player_lives: HashMap<u16, Vec<Life>> = HashMap::new();
-  let mut killstreak_pointers: Vec<KillstreakPointer> = vec![];
-  let mut med_picks: Vec<KillPointer> = vec![];
-  let mut airshots: Vec<KillPointer> = vec![];
-
-  for (key, events) in &user_events {
-    let mut current_player = vec![];
-    let mut events = events.to_owned();
-
-    events.sort_by(|a, b| a.cmp(b));
-
-    let mut current_life: Life = Life::new(0, vec!["".to_string()]);
-
-    for event in &events {
-      match event {
-        Event::Spawn(spawn) => {
-          if current_life.start == 0 {
-            current_life = Life::new(spawn.tick.into(), vec![spawn.class.to_string()]);
-          } else if !current_life.classes.contains(&spawn.class.to_string()) {
-            current_life.classes.push(spawn.class.to_string());
+      for event in &events {
+        match event {
+          Event::Spawn(spawn) => {
+            if current_life.start == 0 {
+              current_life = Life::new(spawn.tick.into(), vec![spawn.class.to_string()]);
+            } else if !current_life.classes.contains(&spawn.class.to_string()) {
+              current_life.classes.push(spawn.class.to_string());
+            }
           }
-        }
-        Event::Kill(kill) => {
-          if kill.killer == kill.victim {
-            continue;
-          }
-
-          if current_life.start == 0 {
-            if current_player.last().is_some() {
-              let previous_life: &Life = current_player.last().unwrap();
-
-              if previous_life.finalized {
-                continue;
-              }
+          Event::Kill(kill) => {
+            if kill.killer == kill.victim {
+              continue;
             }
 
-            current_life = match current_player.pop() {
-              Some(val) => val,
-              None => {
-                continue;
+            if current_life.start == 0 {
+              if current_player.last().is_some() {
+                let previous_life: &Life = current_player.last().unwrap();
+
+                if previous_life.finalized {
+                  continue;
+                }
               }
-            };
-          }
 
-          // println!("{:?}", kill);
-          if kill.victim_class == Class::Medic {
-            let med_pick = KillPointer::new(*key, current_player.len(), current_life.kills.len());
-            current_life.med_picks.push(med_pick.clone());
-            med_picks.push(med_pick);
-          }
-
-          if kill.is_airborne {
-            let airshot = KillPointer::new(*key, current_player.len(), current_life.kills.len());
-            current_life.airshots.push(airshot.clone());
-            airshots.push(airshot);
-          }
-
-          current_life.last_kill_tick = kill.tick;
-
-          current_life.kills.push(kill.to_owned());
-        }
-        Event::Assist(assist) => {
-          if current_life.start == 0 {
-            if current_player.last().is_some() {
-              let previous_life: &Life = current_player.last().unwrap();
-
-              if previous_life.finalized {
-                continue;
-              }
+              current_life = match current_player.pop() {
+                Some(val) => val,
+                None => {
+                  continue;
+                }
+              };
             }
 
-            current_life = match current_player.pop() {
-              Some(val) => val,
-              None => {
-                continue;
+            // println!("{:?}", kill);
+            if kill.victim_class == Class::Medic {
+              let med_pick = KillPointer::new(key, current_player.len(), current_life.kills.len());
+              current_life.med_picks.push(med_pick.clone());
+              med_picks.lock().unwrap().push(med_pick);
+            }
+
+            if kill.is_airborne {
+              let airshot = KillPointer::new(key, current_player.len(), current_life.kills.len());
+              current_life.airshots.push(airshot.clone());
+              airshots.lock().unwrap().push(airshot);
+            }
+
+            current_life.last_kill_tick = kill.tick;
+
+            current_life.kills.push(kill.to_owned());
+          }
+          Event::Assist(assist) => {
+            if current_life.start == 0 {
+              if current_player.last().is_some() {
+                let previous_life: &Life = current_player.last().unwrap();
+
+                if previous_life.finalized {
+                  continue;
+                }
               }
-            };
+
+              current_life = match current_player.pop() {
+                Some(val) => val,
+                None => {
+                  continue;
+                }
+              };
+            }
+
+            current_life.assists.push(assist.to_owned());
           }
+          Event::Death(death) => {
+            if death.killer == 0 {
+              continue;
+            }
 
-          current_life.assists.push(assist.to_owned());
-        }
-        Event::Death(death) => {
-          if death.killer == 0 {
-            continue;
+            if current_life.start == 0 {
+              current_life = match current_player.pop() {
+                Some(val) => val,
+                None => {
+                  continue;
+                }
+              };
+            }
+
+            current_life.end = death.tick.into();
+
+            if !current_life.classes.contains(&"spy".to_string()) {
+              current_life.finalized = true;
+            }
+
+            current_player.push(current_life);
+
+            current_life = Life::new(0, vec!["".to_string()]);
           }
-
-          if current_life.start == 0 {
-            current_life = match current_player.pop() {
-              Some(val) => val,
-              None => {
-                continue;
-              }
-            };
-          }
-
-          current_life.end = death.tick.into();
-
-          if !current_life.classes.contains(&"spy".to_string()) {
+          Event::RoundEnd(tick) => {
+            current_life.end = tick.to_owned();
             current_life.finalized = true;
+            current_player.push(current_life);
+
+            current_life = Life::new(0, vec!["".to_string()]);
           }
-
-          current_player.push(current_life);
-
-          current_life = Life::new(0, vec!["".to_string()]);
-        }
-        Event::RoundEnd(tick) => {
-          current_life.end = tick.to_owned();
-          current_life.finalized = true;
-          current_player.push(current_life);
-
-          current_life = Life::new(0, vec!["".to_string()]);
         }
       }
-    }
 
-    for (life_index, life) in current_player.iter_mut().enumerate() {
-      if life.kills.len() < 3 {
-        continue;
-      }
+      for (life_index, life) in current_player.iter_mut().enumerate() {
+        if life.kills.len() < 3 {
+          continue;
+        }
 
-      let mut kill_count = 0;
-      let mut streak_count = 0;
-      let mut last_kill_tick: i64 = 0;
+        let mut kill_count = 0;
+        let mut streak_count = 0;
+        let mut last_kill_tick: i64 = 0;
 
-      for (kill_index, kill) in life.kills.iter().enumerate() {
-        let kill_tick: u32 = kill.tick.into();
+        for (kill_index, kill) in life.kills.iter().enumerate() {
+          let kill_tick: u32 = kill.tick.into();
 
-        if kill_count == 0 {
-          life.killstreak_pointers.push(
-            KillstreakPointer::new(
+          if kill_count == 0 {
+            life.killstreak_pointers.push(
+              KillstreakPointer::new(
+                key.to_owned(),
+                life_index,
+                kill_index,
+                life.killstreak_pointers.len()
+              )
+            );
+            last_kill_tick = kill_tick.into();
+            kill_count += 1;
+            streak_count += 1;
+          } else if
+            (kill_tick as i64) <
+            last_kill_tick + settings.lock().unwrap()["recording"]["before_killstreak_per_kill"].as_i64().unwrap()
+          {
+            life.killstreak_pointers[streak_count - 1].kills.push(kill_index);
+            kill_count += 1;
+          } else if kill_count < 3 {
+            kill_count = 1;
+            last_kill_tick = kill_tick.into();
+            life.killstreak_pointers[streak_count - 1] = KillstreakPointer::new(
               key.to_owned(),
               life_index,
               kill_index,
-              life.killstreak_pointers.len()
-            )
-          );
-          last_kill_tick = kill_tick.into();
-          kill_count += 1;
-          streak_count += 1;
-        } else if
-          (kill_tick as i64) <
-          last_kill_tick + settings["recording"]["before_killstreak_per_kill"].as_i64().unwrap()
-        {
-          life.killstreak_pointers[streak_count - 1].kills.push(kill_index);
-          kill_count += 1;
-        } else if kill_count < 3 {
-          kill_count = 1;
-          last_kill_tick = kill_tick.into();
-          life.killstreak_pointers[streak_count - 1] = KillstreakPointer::new(
-            key.to_owned(),
-            life_index,
-            kill_index,
-            life.killstreak_pointers.len() - 1
-          );
+              life.killstreak_pointers.len() - 1
+            );
+          }
+        }
+
+        life.killstreak_pointers = life.killstreak_pointers
+          .iter()
+          .map(|v| v.clone())
+          .filter(|sen| {
+            let min_kills = settings.lock().unwrap()["recording"]["minimum_kills_in_streak"].as_i64();
+
+            match min_kills {
+              Some(min_kills) => sen.kills.len() >= (min_kills as usize),
+              None => false,
+            }
+          })
+          .collect::<Vec<KillstreakPointer>>();
+
+        for ks in &life.killstreak_pointers {
+          killstreak_pointers.lock().unwrap().push(ks.clone());
         }
       }
 
-      life.killstreak_pointers = life.killstreak_pointers
-        .iter()
-        .map(|v| v.clone())
-        .filter(|sen| {
-          let min_kills = settings["recording"]["minimum_kills_in_streak"].as_i64();
+      player_lives.lock().unwrap().insert(key.to_owned(), current_player);
+      sorted_events.lock().unwrap().insert(key.to_owned(), events.to_vec());
+    });
 
-          match min_kills {
-            Some(min_kills) => sen.kills.len() >= (min_kills as usize),
-            None => false,
-          }
-        })
-        .collect::<Vec<KillstreakPointer>>();
-
-      for ks in &life.killstreak_pointers {
-        killstreak_pointers.push(ks.clone());
-      }
-    }
-
-    player_lives.insert(key.to_owned(), current_player);
-    sorted_events.insert(key.to_owned(), events.to_vec());
+    handles.push(handle);
   }
+
+  for handle in handles { handle.join().unwrap(); }
+
+  let killstreak_pointers = &mut *killstreak_pointers.lock().unwrap();
 
   killstreak_pointers.sort_by_key(|ks| ks.average);
 

@@ -13,12 +13,12 @@ edition = "2021"
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-opener = { version = "0.7.2", featuers = ["reveal"] }
+opener = { version = "0.7.2", features = ["reveal"] }
 serde_json = "1.0"
 chrono = "0.4.24"
 regex = "1"
 serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "2", features = ["protocol-asset"] }
+tauri = { version = "2", features = ["protocol-asset", "devtools"] }
 vdm = "1.0.9"
 reqwest = { version = "0.11", features = ["blocking", "json"] }
 steamid-ng = "1.0.0"
