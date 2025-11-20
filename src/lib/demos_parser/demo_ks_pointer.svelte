@@ -3,6 +3,8 @@
   import Toggle from "$lib/components/ToggleSelected.svelte";
   import { writeText } from "@tauri-apps/plugin-clipboard-manager";
   import { classConverter } from "$lib/composables/classConverter";
+  import { invoke } from "@tauri-apps/api/core";
+  import { onMount } from "svelte";
 
   /** @type {{toggleSelected: any, steamid64: any, parsedDemo: any, tickToTime: any, ksPointer: any, toggleBookmarkSelected: any, isPovDemo: any}} */
   let {
@@ -13,7 +15,14 @@
     ksPointer,
     toggleBookmarkSelected,
     isPovDemo,
+    getPlayerName
   } = $props();
+  
+  let weapons = $state({});
+
+  onMount(async () => {
+    weapons = await invoke("get_weapons");
+  });
 
   function getLife() {
     return parsedDemo.data.player_lives[ksPointer.owner_id][
@@ -80,9 +89,9 @@
           data-tooltip="Jump To Player"
         >
           <ClassLogo player_class={classConverter(kill.victim_class)} />
-          {parsedDemo.data.users[kill.victim].name}
+          {getPlayerName(parsedDemo.data.users[kill.victim])}
         </a>
-        with {kill.weapon}
+        with {weapons[kill.weapon]?.name || kill.weapon}
         {#if kill.crit_type}
           <span class={["", "killstreak", "killstreak--large"][kill.crit_type]}>
             {["", " (Mini-Crit) ", " (CRITICAL HIT!) "][kill.crit_type]}

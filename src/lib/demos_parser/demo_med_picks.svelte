@@ -3,6 +3,8 @@
   import Toggle from "$lib/components/ToggleSelected.svelte";
   import { writeText } from "@tauri-apps/plugin-clipboard-manager";
   import { classConverter } from "$lib/composables/classConverter";
+  import { invoke } from "@tauri-apps/api/core";
+  import { onMount } from "svelte";
 
   /** @type {{lives: any, steamid64: any, label: any, valKey: any, parsedDemo: any, tickToTime: any, toggleKillsSelected: any, toggleSelected: any}} */
   let {
@@ -14,7 +16,14 @@
     tickToTime,
     toggleKillsSelected,
     toggleSelected,
+    getPlayerName
   } = $props();
+  
+  let weapons = $state({});
+
+  onMount(async () => {
+    weapons = await invoke("get_weapons");
+  });
 
   function getKill(pointer) {
     return parsedDemo.data.player_lives[pointer.owner_id][pointer.life_index]
@@ -46,9 +55,9 @@
               <ClassLogo
                 player_class={classConverter(getKill(pointer).victim_class)}
               />
-              {parsedDemo.data.users[getKill(pointer).victim].name}
+              {getPlayerName(parsedDemo.data.users[getKill(pointer).victim])}
             </a>
-            with {getKill(pointer).weapon}
+            with {weapons[getKill(pointer).weapon]?.name || getKill(pointer).weapon}
             {#if getKill(pointer).crit_type}
               <span
                 class={["", "killstreak", "killstreak--large"][

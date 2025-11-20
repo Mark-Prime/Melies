@@ -101,10 +101,7 @@
       steamIds.push(player.steamId64);
     }
 
-    console.log(steamIds);
-
     playerNames = await invoke("get_rgl_users", { steamIds: steamIds });
-    console.log(playerNames);
   }
 
   let resp = $state({ loaded: false, loading: false });
@@ -1578,6 +1575,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                               {tickToTime}
                               {toggleKillsSelected}
                               {allKillsSelected}
+                              {getPlayerName}
                             />
                           {/if}
                         {/if}
@@ -1609,6 +1607,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                         {tickToTime}
                         {toggleSelected}
                         {toggleKillsSelected}
+                        {getPlayerName}
                         lives={parsedDemo.data.player_lives[player].filter(
                           (life) => life.med_picks.length > 0,
                         )}
@@ -1623,6 +1622,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                         {tickToTime}
                         {toggleKillsSelected}
                         {toggleSelected}
+                        {getPlayerName}
                         lives={() => filterLife(player, "airshots")}
                       />
                     {/if}
@@ -1638,6 +1638,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                             {ksPointer}
                             {toggleBookmarkSelected}
                             {isPovDemo}
+                            {getPlayerName}
                           />
                         {/each}
                       {/each}
@@ -1657,6 +1658,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                 {tickToTime}
                 {toggleKillsSelected}
                 {toggleSelected}
+                {getPlayerName}
                 kills={parsedDemo.data.med_picks}
               />
             {/if}
@@ -1668,6 +1670,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                 {toggleBookmarkSelected}
                 {tickToTime}
                 {toggleSelected}
+                {getPlayerName}
               />
             {/if}
             {#if featureSettings.demo_scanner.airshots}
@@ -1677,6 +1680,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                 {tickToTime}
                 {toggleKillsSelected}
                 {toggleSelected}
+                {getPlayerName}
                 kills={parsedDemo.data.airshots.filter((k) =>
                   filterAirshots(k),
                 )}
@@ -1734,6 +1738,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
             {displayLives}
             {displayAssists}
             {getTeam}
+            {getPlayerName}
           />
         {/if}
       {:else}
