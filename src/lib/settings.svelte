@@ -727,6 +727,23 @@ Useful in STVs when the player could be dead."
       color="sec"
     />
   </div>
+  <h3>Sort Footage</h3>
+  <div class="setting">
+    <Switch
+      title="Skip Buffer"
+      tooltip="Skips recording buffer at the start of a clip based on your before bookmark settings."
+      bind:value={settings.sort_footage.skip_buffer}
+      color="sec"
+    />
+    {#if settings.sort_footage.skip_buffer}
+      <Input
+        title="Skip To"
+        bind:value={settings.sort_footage.skip_to}
+        tooltip="How many seconds to skip before the start of the clip."
+        color="sec"
+      />
+    {/if}
+  </div>
   <h3>Deprecated Features</h3>
   <p>Note: These features are no longer supported or updated.</p>
   <div class="setting">

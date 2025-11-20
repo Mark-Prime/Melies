@@ -55,6 +55,10 @@ pub(crate) fn default_settings() -> Value {
       "absolute_file_paths": true,
       "pov_as_stv": false,
       "addons": {},
+      "sort_footage" : {
+        "skip_buffer": false,
+        "skip_to": 13
+      },
       "output": {
         "folder": "",
         "method": "tga",

@@ -246,6 +246,7 @@
           demo_name: demo_name,
           event: `[demo_${event.label}] clip_start ${event.steamid64 !== undefined ? spectate : ""} (\"${demo_name}\" at ${event.time})`,
           isKillstreak: false,
+          notes: event.name
         });
 
         continue;
@@ -260,6 +261,7 @@
           demo_name: demo_name,
           event: `[demo_${event.label}] ${event.steamid64 !== undefined ? spectate : "General"} (\"${demo_name}\" at ${event.time})`,
           isKillstreak: false,
+          notes: event.name
         });
 
         continue;
@@ -274,6 +276,7 @@
           demo_name: demo_name,
           event: `[demo_${event.label}] Killstreak ${event.kills} (\"${demo_name}\" at ${event.time})`,
           isKillstreak: true,
+          notes: event.name
         });
 
         continue;
@@ -286,7 +289,7 @@
         tick: event.time,
         demo_name: demo_name,
         event: `[demo_${event.label}] clip_end (\"${demo_name}\" at ${event.time})`,
-        isKillstreak: false,
+        isKillstreak: false
       });
     }
 
@@ -477,6 +480,7 @@
               time: life.start + 20,
               label: `${life.kills.length}k-${life.assists.length}a_start`,
               steamid64: parsedDemo.data.users[i].steamId64,
+              name: getPlayerName(parsedDemo.data.users[i]),
               kills: life.kills.length,
               start: true,
             });
@@ -495,6 +499,7 @@
                 steamid64:
                   parsedDemo.data.users[kill.victimPov ? kill.victim : i]
                     .steamId64,
+                name: getPlayerName(parsedDemo.data.users[i]),
                 bookmark: true,
               });
             }
@@ -507,6 +512,7 @@
                   .tick,
                 label: `${ksPointer.kills.length}ks`,
                 steamid64: parsedDemo.data.users[i].steamId64,
+                name: getPlayerName(parsedDemo.data.users[i]),
                 kills: ksPointer.kills.length,
                 killstreak: true,
               });
@@ -534,6 +540,7 @@
                 time: start_time,
                 label: `${ksPointer.kills.length}ks_start`,
                 steamid64: parsedDemo.data.users[i].steamId64,
+                name: getPlayerName(parsedDemo.data.users[i]),
                 kills: ksPointer.kills.length,
                 start: true,
               });
@@ -551,11 +558,12 @@
         let message = parsedDemo.data.chat[i];
 
         if (message.selected) {
-          let steamid64 = parsedDemo.data.users[message.from]?.steamId64;
+          let steamid64 = parsedDemo.data.users[entityIdToUserId[message.entity_id]]?.steamId64;
 
           events.push({
             time: message.tick,
             label: `message-sent`,
+            name: getPlayerName(parsedDemo.data.users[entityIdToUserId[message.entity_id]]),
             bookmark: true,
             steamid64,
           });
@@ -582,6 +590,8 @@
       parsedDemo = { loaded: false, loading: true };
       currentDemo = selected.shift();
       parsedDemo = await invoke("parse_demo", { path: currentDemo });
+
+      console.log($state.snapshot(parsedDemo))
       selectedPlayer = "";
       playerList = [];
       playerClasses = {};
