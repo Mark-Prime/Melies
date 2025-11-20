@@ -1,4 +1,4 @@
-use std::{fs::{self, OpenOptions}, io::Write};
+use std::fs;
 
 use chrono::{DateTime, Local};
 use regex::Regex;
@@ -162,39 +162,4 @@ fn build_event_from_json(event_json: &Value) -> Event {
       };
     }
   }
-}
-
-
-pub fn directly_save_events(events: Vec<Event>) -> Value {
-  let settings = load_settings();
-
-  let dir;
-
-  match find_dir(&settings) {
-    Ok(directory) => {
-      dir = directory;
-    }
-    Err(err) => {
-      return json!({
-          "code": 404,
-          "err_text": err
-        });
-    }
-  }
-
-  let mut new_events_text = String::new();
-
-  extend!(new_events_text, "{}\r\n", ">");
-
-  for event in &events {
-    extend!(new_events_text, "{}\r\n", event.event);
-  } 
-
-  let mut file = OpenOptions::new().append(true).open(dir).unwrap();
-  file.write_all(new_events_text.as_bytes()).unwrap();
-
-  return json!({
-      "code": 200,
-      "events": events
-    });
 }
