@@ -26,7 +26,6 @@ mod settings;
 mod vdms;
 mod tf2;
 mod rgl;
-mod cli;
 mod weapons;
 mod batch_automation;
 mod ryukbot;
@@ -554,12 +553,6 @@ fn get_rgl_users(steam_ids: Vec<String>) -> Value {
 }
 
 fn main() {
-  let open_ui = cli::run_cli();
-
-  if !open_ui {
-    return;
-  }
-
   tauri::Builder
     ::default()
     .plugin(tauri_plugin_clipboard_manager::init())
