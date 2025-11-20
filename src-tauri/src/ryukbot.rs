@@ -28,7 +28,7 @@ pub fn run_ryukbot() -> Value {
     Err(_) => {
       return json!({
         "code": 404,
-        "err_text": "Failed to read _events.txt or KillStreaks.txt\r\nPlease check your settings to ensure the tf folder is correctly linked.".to_string()
+        "err_text": "Failed to read _events.txt or KillStreaks.txt\nPlease check your settings to ensure the tf folder is correctly linked.".to_string()
       });
     }
   };
@@ -41,18 +41,18 @@ pub fn run_ryukbot() -> Value {
 
   if event_len == 0 {
     return json!({
-            "code": 410,
-            "err_text": format!("_events.txt or KillStreaks.txt was found but had no valid events. Please add events before running again.\r\n\r\nFile Location: {}", dir)
-        });
+      "code": 410,
+      "err_text": format!("_events.txt or KillStreaks.txt was found but had no valid events. Please add events before running again.\n\nFile Location: {}", dir)
+    });
   }
 
   match write_cfg(&settings) {
     Ok(_) => {}
     Err(err) => {
       return json!({
-                "code": 500,
-                "err_text": err
-            });
+        "code": 500,
+        "err_text": err
+      });
     }
   }
 

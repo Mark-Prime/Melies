@@ -12,7 +12,7 @@ pub fn check_dir(files: Result<fs::ReadDir, std::io::Error>) -> Result<String, S
     }
     Err(_) => {
       return Err(
-        "Could not find the _events.txt or KillStreaks.txt files.\r\nPlease check your settings to ensure the tf folder is correctly linked.\r\nIf you do not have either file, please make one in the \\tf or \\tf\\demos folder.".to_string()
+        "Could not find the _events.txt or KillStreaks.txt files.\nPlease check your settings to ensure the tf folder is correctly linked.\nIf you do not have either file, please make one in the \\tf or \\tf\\demos folder.".to_string()
       );
     }
   }
@@ -74,7 +74,7 @@ pub fn find_dir(settings: &Value) -> Result<String, String> {
   match settings["tf_folder"].as_str() {
     Some(tf_folder) =>
       Err(
-        format!("Could not find the _events.txt or KillStreaks.txt files.\r\nPlease check your settings to ensure the tf folder is correctly linked.\r\nIf you do not have either file, please make one in the \\tf or \\tf\\demos folder. \r\n\r\ntf_folder setting: ({})", tf_folder)
+        format!("Could not find the _events.txt or KillStreaks.txt files.\nPlease check your settings to ensure the tf folder is correctly linked.\nIf you do not have either file, please make one in the \\tf or \\tf\\demos folder. \n\ntf_folder setting: ({})", tf_folder)
       ),
     None => Err("tf_folder setting not set".to_string()),
   }

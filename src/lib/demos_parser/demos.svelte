@@ -54,6 +54,8 @@
     loadSettings();
   };
 
+  let entityIdToUserId = $state({})
+
   getCurrentWebview().onDragDropEvent((e) => {
     switch (e.event) {
       case "tauri://drag-over":
@@ -339,15 +341,15 @@
   }
 
   function getMessageName(chat) {
-    if (chat.from === 1 || chat.from === 0) {
+    if (chat.entity_id === 1 || chat.entity_id === 0) {
       return "Spectator";
     }
 
-    if (chat.name) {
+    if (chat.name.length > 0) {
       return chat.name;
     }
 
-    return parsedDemo.data?.users[chat.from]?.name;
+    return parsedDemo.data?.users[entityIdToUserId[chat.entity_id]]?.name;
   }
 
   function toggleSelected(demo, isKillstreak = null, i = null) {
@@ -573,8 +575,10 @@
         );
       }
     }
-
+    
     if (selected.length !== 0) {
+      let entityIdToUserIdBuffer = {};
+
       parsedDemo = { loaded: false, loading: true };
       currentDemo = selected.shift();
       parsedDemo = await invoke("parse_demo", { path: currentDemo });
@@ -584,6 +588,8 @@
 
       for (let playerId in parsedDemo.data.users) {
         let player = parsedDemo.data.users[playerId];
+
+        entityIdToUserIdBuffer[player.entityId] = playerId;
 
         if (Object.keys(player.classes).length !== 0) {
           if (!playerList[player.name]) {
@@ -634,6 +640,8 @@
       redTeam.sort(sortByClass);
 
       console.log($state.snapshot(parsedDemo));
+      entityIdToUserId = entityIdToUserIdBuffer;
+      console.log($state.snapshot(entityIdToUserId))
       loadPlayerNames();
     } else {
       closeModal();

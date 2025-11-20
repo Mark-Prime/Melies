@@ -1,6 +1,10 @@
 <script>
   import Collapse from "$lib/components/Collapse.svelte";
-  import { invoke } from "@tauri-apps/api/core";
+
+  async function openThemes() {
+    let { invoke } = await import("@tauri-apps/api/core")
+    invoke("open_themes_folder");
+  }
 </script>
 
 <div>
@@ -145,7 +149,7 @@
     To install a new theme, click the button below and drag a theme.json file
     into this folder.
   </p>
-  <button onclick={() => invoke("open_themes_folder")}>Install Theme</button>
+  <button onclick={openThemes}>Install Theme</button>
 </div>
 
 <style>

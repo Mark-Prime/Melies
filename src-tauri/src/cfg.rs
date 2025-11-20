@@ -9,33 +9,33 @@ pub fn write_cfg(settings: &Value) -> Result<(), String> {
 
   extend!(
     cfg,
-    "echo \"Execing Melies Config\";\r\ncl_drawhud {};\r\n",
+    "echo \"Execing Melies Config\";\ncl_drawhud {};\n",
     setting_as_bin(&settings["output"]["hud"])
   );
-  extend!(cfg, "sv_cheats {};\r\n", "1");
-  extend!(cfg, "voice_enable {};\r\n", setting_as_bin(&settings["output"]["voice_chat"]));
-  extend!(cfg, "hud_saytext_time {};\r\n", setting_as_bin(&settings["output"]["text_chat"]) * 12);
-  extend!(cfg, "crosshair {};\r\n", setting_as_bin(&settings["output"]["crosshair"]));
-  extend!(cfg, "r_drawviewmodel {};\r\n", setting_as_bin(&settings["output"]["viewmodel"]));
-  extend!(cfg, "tf_use_min_viewmodels {};\r\n", setting_as_bin(&settings["output"]["minmode"]));
+  extend!(cfg, "sv_cheats {};\n", "1");
+  extend!(cfg, "voice_enable {};\n", setting_as_bin(&settings["output"]["voice_chat"]));
+  extend!(cfg, "hud_saytext_time {};\n", setting_as_bin(&settings["output"]["text_chat"]) * 12);
+  extend!(cfg, "crosshair {};\n", setting_as_bin(&settings["output"]["crosshair"]));
+  extend!(cfg, "r_drawviewmodel {};\n", setting_as_bin(&settings["output"]["viewmodel"]));
+  extend!(cfg, "tf_use_min_viewmodels {};\n", setting_as_bin(&settings["output"]["minmode"]));
   extend!(
     cfg,
-    "viewmodel_fov_demo {};\r\n",
+    "viewmodel_fov_demo {};\n",
     setting_as_bin(&settings["recording"]["viewmodel_fov"])
   );
-  extend!(cfg, "fov_desired {};\r\n", setting_as_bin(&settings["recording"]["fov"]));
+  extend!(cfg, "fov_desired {};\n", setting_as_bin(&settings["recording"]["fov"]));
 
   if setting_as_bin(&settings["recording"]["third_person"]) == 1 {
-    extend!(cfg, "thirdperson{};\r\n", "");
+    extend!(cfg, "thirdperson{};\n", "");
   } else {
-    extend!(cfg, "firstperson{};\r\n", "");
+    extend!(cfg, "firstperson{};\n", "");
   }
 
   if let Some(commands) = settings["recording"]["commands"].as_str() {
-    extend!(cfg, "{}\r\n", commands);
+    extend!(cfg, "{}\n", commands);
   }
 
-  extend!(cfg, "{};\r\n", "alias \"snd_fix\" \"snd_restart; snd_soundmixer Default_mix;\"");
+  extend!(cfg, "{};\n", "alias \"snd_fix\" \"snd_restart; snd_soundmixer Default_mix;\"");
 
   extend!(cfg, "{}", compile_addons(settings));
 

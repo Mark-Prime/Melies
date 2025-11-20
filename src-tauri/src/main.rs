@@ -61,9 +61,9 @@ fn load_events() -> Value {
     }
     Err(err) => {
       return json!({
-                "code": 404,
-                "err_text": err
-            });
+        "code": 404,
+        "err_text": err
+      });
     }
   }
 
@@ -71,28 +71,33 @@ fn load_events() -> Value {
     Ok(text) => text,
     Err(err) => {
       return json!({
-                "code": 400,
-                "err_text": err.to_string()
-            });
+        "code": 400,
+        "err_text": err.to_string()
+      });
     }
   };
 
-  let re = Regex::new("\\[(.*)\\] (.*) \\(\"(.*)\" at (\\d*)\\)").unwrap();
+  let re = Regex::new("\\[(.*)\\] (.*) \\(\"(.*)\" at (\\d*)\\)(.*)").unwrap();
 
   let events_regex = re.captures_iter(&file_text);
 
   let mut events = vec![];
 
   for event_capture in events_regex {
-    let event = event::Event::new(event_capture).unwrap();
+    let event = event::Event::new(event_capture);
 
-    events.push(event);
+    if event.is_err() { 
+      println!("{:#?}", event);
+      continue;
+    }
+
+    events.push(event.unwrap());
   }
 
   json!({
-        "code": 200,
-        "events": events
-    })
+    "code": 200,
+    "events": events
+  })
 }
 
 #[command]

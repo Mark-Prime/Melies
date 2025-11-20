@@ -39,6 +39,7 @@
       demo_name: demos[demoIndex][0].demo_name,
       event: `[_] Bookmark _ (\"_\" at 0)`,
       isKillstreak: false,
+      notes: ""
     });
 
     demos = demos;
@@ -129,6 +130,12 @@
         data-tooltip="Edit tick"
         bind:value={event.tick}
         type="number"
+      />
+      <input
+        class="demo__event-input"
+        data-tooltip="Edit Notes"
+        bind:value={event.notes}
+        placeholder="Notes"
       />
       <a
         class="demo__event-delete tooltip tooltip--left"
@@ -224,7 +231,7 @@
       display: grid;
       gap: 1rem;
 
-      grid-template-columns: min-content 1fr 0.4fr 26px;
+      grid-template-columns: min-content 1fr 0.4fr 1fr 26px;
 
       transition: all 0.2s;
       z-index: 1;
@@ -273,6 +280,10 @@
         text-align: left;
         width: 100%;
         color: var(--tert-con-text);
+
+        &::placeholder {
+          color: var(--tert-con-text);
+        }
 
         &::before {
           content: attr(data-tooltip);

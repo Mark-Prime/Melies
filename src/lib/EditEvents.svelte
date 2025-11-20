@@ -22,7 +22,7 @@
       demo.sort((a, b) => a.tick - b.tick);
     }
 
-    console.log({ newEvents: demos });
+    console.log({ newEvents: $state.snapshot(demos) });
 
     await invoke("save_events", { newEvents: demos });
     dispatch("reload");
@@ -33,12 +33,12 @@
     demos = demos;
   }
 
-  function setEvents(eventList = []) {
+  function setEvents(eventList = {}) {
     demos = [];
 
     if (eventList.code === 200) {
       eventList.events.forEach(
-        (/** @type {{ demo_name: any; }} */ event, /** @type {number} */ i) => {
+        (event, i) => {
           event.isKillstreak = false;
 
           if (event.value.Killstreak) {
@@ -56,6 +56,8 @@
 
       demos = demos;
     }
+
+    console.log($state.snapshot(demos))
   }
 
   async function loadEvents() {
@@ -74,6 +76,7 @@
         demo_name: "new_demo",
         event: `[_] Bookmark _ (\"_\" at 0)`,
         isKillstreak: false,
+        notes: ""
       },
     ]);
 
@@ -86,10 +89,10 @@
   Edit Events
 </button>
 
-<Modal color="pri" {toggle} {enabled} on:open={loadEvents} min_width="600px">
+<Modal color="pri" {toggle} {enabled} on:open={loadEvents} wide min_width="800px">
   {#each demos as demo, demoIndex}
     {#each demo as event, i (`${demoIndex}__${i}`)}
-      <DemoEdit {demoIndex} {i} {demo} {demos} {event} {refresh} />
+      <DemoEdit {demoIndex} {i} {demo} {demos} bind:event={demos[demoIndex][i]} {refresh} />
     {/each}
   {/each}
   {#snippet footer()}

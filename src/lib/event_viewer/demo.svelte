@@ -25,6 +25,7 @@
       this.isKillstreak = event.isKillstreak;
       this.tick = event.tick;
       this.event = event.event;
+      this.notes = event.notes?.trim() || "";
 
       if (!settings.recording) {
         loadSettings().then(() => {
@@ -185,6 +186,11 @@
                 {event.end}
               </span>
             </button>
+            {#if event.notes?.trim()}
+              <span style={"color: var(--pri-con-text)"}>
+                -- {event.notes?.trim()}
+              </span>
+            {/if}
           {:else}
             Record Entire Demo
           {/if}

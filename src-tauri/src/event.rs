@@ -28,6 +28,7 @@ pub struct Event {
   pub demo_name: String,
   pub tick: i64,
   pub value: EventStyle,
+  pub notes: String
 }
 
 impl Event {
@@ -54,19 +55,36 @@ impl Event {
         demo_name: input[3].to_string(),
         tick,
         value: EventStyle::Bookmark("General".to_owned()),
+        notes: input[5].to_string()
       });
     }
 
     let name = event_name[0].to_lowercase();
 
     match name.as_str() {
-      "kill" => {
+      "kill" => 'kill: {
         let streak = event_name[1].to_string();
         let streak_split: Vec<&str> = streak.split(":").collect();
-        value = EventStyle::Killstreak(streak_split[1].to_string().parse::<i64>().unwrap());
+        let parse = streak_split[1].to_string().parse::<i64>();
+
+        if parse.is_err() {
+          println!("Killstreak failed to parse: {:#?}", event_name);
+          value = EventStyle::Bookmark(event_name.join(" "));
+          break 'kill;
+        }
+
+        value = EventStyle::Killstreak(parse.unwrap());
       }
-      "killstreak" => {
-        value = EventStyle::Killstreak(event_name[1].to_string().parse::<i64>().unwrap());
+      "killstreak" => 'killstreak: {
+        let parse = event_name[1].to_string().parse::<i64>();
+
+        if parse.is_err() {
+          println!("Killstreak failed to parse: {:#?}", event_name);
+          value = EventStyle::Bookmark(event_name.join(" "));
+          break 'killstreak;
+        }
+
+        value = EventStyle::Killstreak(parse.unwrap());
       }
       "bookmark" => {
         event_name.remove(0);
@@ -85,6 +103,7 @@ impl Event {
       demo_name: input[3].to_string(),
       tick,
       value,
+      notes: input[5].to_string()
     })
   }
 
