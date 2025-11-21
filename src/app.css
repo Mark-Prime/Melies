@@ -543,7 +543,7 @@ input:checked + .slider--tert:before {
   z-index: 99999;
   content: attr(data-tooltip);
   position: absolute;
-  top: calc(-2.4rem - (1.72rem * var(--kills)));
+  bottom: 1.9rem;
   left: 0rem;
   display: none;
   background-color: var(--bg);
@@ -552,9 +552,9 @@ input:checked + .slider--tert:before {
   padding: 0.2rem 0.5rem;
   border-radius: 0.5rem;
   width: max-content;
-  max-width: 500px;
+  max-width: 300px;
   overflow: hidden;
-  white-space: pre;
+  white-space: pre-wrap;
   font-size: 12px;
   pointer-events: none;
   text-align: left;

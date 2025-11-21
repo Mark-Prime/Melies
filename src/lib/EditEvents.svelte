@@ -2,15 +2,29 @@
   import { invoke } from "@tauri-apps/api/core";
   import { createEventDispatcher } from "svelte";
   import { faFilePen } from "@fortawesome/free-solid-svg-icons";
-  import DemoEdit from "$lib/home/demoEdit.svelte";
+  import DemoEdit from "$lib/editEvents/demoEdit.svelte";
   import Modal from "$lib/components/Modal.svelte";
   import Fa from "svelte-fa";
+
+  let settings = $state({});
+  let recordingSettings = $state({});
 
   const dispatch = createEventDispatcher();
 
   let enabled = $state(false);
   let demos = $state([]);
-  let toggle = () => (enabled = !enabled);
+  let toggle = () => {
+    enabled = !enabled
+  
+    if (enabled) {
+      loadSettings();
+    }
+  };
+
+  async function loadSettings() {
+    settings = await invoke("load_settings");
+    recordingSettings = settings.recording;
+  }
 
   function cancel() {
     enabled = false;
@@ -22,7 +36,7 @@
       demo.sort((a, b) => a.tick - b.tick);
     }
 
-    console.log({ newEvents: demos });
+    console.log({ newEvents: $state.snapshot(demos) });
 
     await invoke("save_events", { newEvents: demos });
     dispatch("reload");
@@ -33,16 +47,26 @@
     demos = demos;
   }
 
-  function setEvents(eventList = []) {
+  function setEvents(eventList = {}) {
     demos = [];
 
     if (eventList.code === 200) {
       eventList.events.forEach(
-        (/** @type {{ demo_name: any; }} */ event, /** @type {number} */ i) => {
+        (event, i) => {
           event.isKillstreak = false;
 
           if (event.value.Killstreak) {
             event.isKillstreak = true;
+            event.isClip = false;
+          }
+
+          if (event.value.Bookmark) {
+            if (
+              event.value.Bookmark.includes("clip_end") ||
+              event.value.Bookmark.includes("clip_start")
+            ) {
+              event.isClip = true;
+            }
           }
 
           if (i === 0 || eventList.events[i - 1].demo_name != event.demo_name) {
@@ -56,6 +80,8 @@
 
       demos = demos;
     }
+
+    console.log($state.snapshot(demos))
   }
 
   async function loadEvents() {
@@ -74,6 +100,7 @@
         demo_name: "new_demo",
         event: `[_] Bookmark _ (\"_\" at 0)`,
         isKillstreak: false,
+        notes: ""
       },
     ]);
 
@@ -86,10 +113,10 @@
   Edit Events
 </button>
 
-<Modal color="pri" {toggle} {enabled} on:open={loadEvents} min_width="600px">
+<Modal color="pri" {toggle} {enabled} on:open={loadEvents} wide min_width="900px">
   {#each demos as demo, demoIndex}
     {#each demo as event, i (`${demoIndex}__${i}`)}
-      <DemoEdit {demoIndex} {i} {demo} {demos} {event} {refresh} />
+      <DemoEdit {demoIndex} {i} {demo} {demos} bind:event={demos[demoIndex][i]} {refresh} {recordingSettings} />
     {/each}
   {/each}
   {#snippet footer()}

@@ -3,6 +3,8 @@
   import Toggle from "$lib/components/ToggleSelected.svelte";
   import { writeText } from "@tauri-apps/plugin-clipboard-manager";
   import { classConverter } from "$lib/composables/classConverter";
+  import { invoke } from "@tauri-apps/api/core";
+  import { onMount } from "svelte";
 
   /** @type {{label: any, kills: any, toggleSelected: any, parsedDemo: any, tickToTime: any, toggleKillsSelected: any}} */
   let {
@@ -12,7 +14,14 @@
     parsedDemo,
     tickToTime,
     toggleKillsSelected,
+    getPlayerName,
   } = $props();
+
+  let weapons = $state({});
+
+  onMount(async () => {
+    weapons = await invoke("get_weapons");
+  });
 
   function getKill(pointer) {
     if (parsedDemo.data.player_lives[pointer.owner_id][pointer.life_index]) {
@@ -46,28 +55,27 @@
                 href={`#player-${parsedDemo.data.users[getKill(pointer).killer].name}`}
                 class={parsedDemo.data.users[getKill(pointer).killer]["team"] +
                   " tooltip"}
-                style="--kills: 0;"
                 data-tooltip="Jump To Player"
               >
                 <ClassLogo
                   player_class={classConverter(getKill(pointer).killer_class)}
                 />
-                {parsedDemo.data.users[getKill(pointer).killer].name}
+                {getPlayerName(parsedDemo.data.users[getKill(pointer).killer])}
               </a>
               killed
               <a
                 href={`#player-${parsedDemo.data.users[getKill(pointer).victim].name}`}
                 class={parsedDemo.data.users[getKill(pointer).victim]["team"] +
                   " tooltip"}
-                style="--kills: 0;"
                 data-tooltip="Jump To Player"
               >
                 <ClassLogo
                   player_class={classConverter(getKill(pointer).victim_class)}
                 />
-                {parsedDemo.data.users[getKill(pointer).victim].name}
+                {getPlayerName(parsedDemo.data.users[getKill(pointer).victim])}
               </a>
-              with {getKill(pointer).weapon}
+              with {weapons[getKill(pointer).weapon]?.name ||
+                getKill(pointer).weapon}
               {#if getKill(pointer).crit_type}
                 <span
                   class={["", "killstreak", "killstreak--large"][
@@ -82,7 +90,6 @@
               at
               <span
                 class="tooltip"
-                style={`--kills: 0;`}
                 data-tooltip={`Timecode: ${tickToTime(getKill(pointer).tick)}`}
               >
                 <button

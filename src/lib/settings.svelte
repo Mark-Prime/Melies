@@ -262,42 +262,36 @@ on all players in POV demos."
         <span
           class="tooltip"
           data-tooltip={`The player's nickname\nExample: JoseGonzales2007`}
-          style="--kills: 1;"
         >
           {`{nickname}`},
         </span>
         <span
           class="tooltip"
           data-tooltip={`The number of ticks in the demo\nExample: 12345`}
-          style="--kills: 1;"
         >
           {`{ticks}`},
         </span>
         <span
           class="tooltip"
           data-tooltip={`The server the demo was played on\nExample: skial.harvest.247`}
-          style="--kills: 1;"
         >
           {`{server}`},
         </span>
         <span
           class="tooltip"
           data-tooltip={`The map the demo was played on\nExample: koth_harvest_final`}
-          style="--kills: 1;"
         >
           {`{map}`},
         </span>
         <span
           class="tooltip"
           data-tooltip={`The date the demo was created\nExample: 2022-01-01`}
-          style="--kills: 1;"
         >
           {`{date}`},
         </span>
         <span
           class="tooltip"
           data-tooltip={`The time the demo was created\nExample: 03-10-35`}
-          style="--kills: 1;"
         >
           {`{time}`}
         </span>
@@ -726,6 +720,24 @@ Useful in STVs when the player could be dead."
       bind:value={featureSettings.demo_scanner.logstf}
       color="sec"
     />
+  </div>
+  <h3>Sort Footage</h3>
+  <div class="setting">
+    <Switch
+      title="Skip Buffer"
+      tooltip="Skips recording buffer at the start of a clip based on your before bookmark settings."
+      bind:value={settings.sort_footage.skip_buffer}
+      color="sec"
+    />
+    {#if settings.sort_footage.skip_buffer}
+      <Input
+        title="Skip To:"
+        bind:value={settings.sort_footage.skip_to}
+        tooltip="How many seconds to skip before the start of the clip."
+        color="sec"
+        inline
+      />
+    {/if}
   </div>
   <h3>Deprecated Features</h3>
   <p>Note: These features are no longer supported or updated.</p>

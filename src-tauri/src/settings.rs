@@ -55,6 +55,10 @@ pub(crate) fn default_settings() -> Value {
       "absolute_file_paths": true,
       "pov_as_stv": false,
       "addons": {},
+      "sort_footage" : {
+        "skip_buffer": false,
+        "skip_to": 13
+      },
       "output": {
         "folder": "",
         "method": "tga",
@@ -322,5 +326,40 @@ fn merge(a: &mut Value, b: Value) {
     (a, b) => {
       *a = b;
     }
+  }
+}
+
+pub fn setting_as_bin(setting: &Value) -> i64 {
+  if !setting.is_boolean() {
+    if let Some(setting_i64) = setting.as_i64() {
+      return setting_i64;
+    }
+  }
+
+  match setting.as_bool() {
+    Some(val) =>
+      match val {
+        true => 1,
+        false => 0,
+      }
+    _ => 0,
+  }
+}
+
+pub fn setting_as_bool(setting: &Value) -> bool {
+  if setting.is_boolean() {
+    return match setting.as_bool() {
+      Some(val) => val,
+      None => false,
+    };
+  }
+
+  match setting.as_i64() {
+    Some(val) =>
+      match val {
+        1 => true,
+        _ => false,
+      }
+    _ => false,
   }
 }

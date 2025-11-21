@@ -54,6 +54,8 @@
     loadSettings();
   };
 
+  let entityIdToUserId = $state({});
+
   getCurrentWebview().onDragDropEvent((e) => {
     switch (e.event) {
       case "tauri://drag-over":
@@ -101,10 +103,7 @@
       steamIds.push(player.steamId64);
     }
 
-    console.log(steamIds);
-
     playerNames = await invoke("get_rgl_users", { steamIds: steamIds });
-    console.log(playerNames);
   }
 
   let resp = $state({ loaded: false, loading: false });
@@ -247,6 +246,7 @@
           demo_name: demo_name,
           event: `[demo_${event.label}] clip_start ${event.steamid64 !== undefined ? spectate : ""} (\"${demo_name}\" at ${event.time})`,
           isKillstreak: false,
+          notes: event.name,
         });
 
         continue;
@@ -261,6 +261,7 @@
           demo_name: demo_name,
           event: `[demo_${event.label}] ${event.steamid64 !== undefined ? spectate : "General"} (\"${demo_name}\" at ${event.time})`,
           isKillstreak: false,
+          notes: event.name,
         });
 
         continue;
@@ -275,6 +276,7 @@
           demo_name: demo_name,
           event: `[demo_${event.label}] Killstreak ${event.kills} (\"${demo_name}\" at ${event.time})`,
           isKillstreak: true,
+          notes: event.name,
         });
 
         continue;
@@ -342,15 +344,15 @@
   }
 
   function getMessageName(chat) {
-    if (chat.from === 1 || chat.from === 0) {
+    if (chat.entity_id === 1 || chat.entity_id === 0) {
       return "Spectator";
     }
 
-    if (chat.name) {
+    if (chat.name.length > 0) {
       return chat.name;
     }
 
-    return parsedDemo.data?.users[chat.from]?.name;
+    return parsedDemo.data?.users[entityIdToUserId[chat.entity_id]]?.name;
   }
 
   function toggleSelected(demo, isKillstreak = null, i = null) {
@@ -478,6 +480,7 @@
               time: life.start + 20,
               label: `${life.kills.length}k-${life.assists.length}a_start`,
               steamid64: parsedDemo.data.users[i].steamId64,
+              name: getPlayerName(parsedDemo.data.users[i]),
               kills: life.kills.length,
               start: true,
             });
@@ -496,6 +499,7 @@
                 steamid64:
                   parsedDemo.data.users[kill.victimPov ? kill.victim : i]
                     .steamId64,
+                name: getPlayerName(parsedDemo.data.users[i]),
                 bookmark: true,
               });
             }
@@ -508,6 +512,7 @@
                   .tick,
                 label: `${ksPointer.kills.length}ks`,
                 steamid64: parsedDemo.data.users[i].steamId64,
+                name: getPlayerName(parsedDemo.data.users[i]),
                 kills: ksPointer.kills.length,
                 killstreak: true,
               });
@@ -535,6 +540,7 @@
                 time: start_time,
                 label: `${ksPointer.kills.length}ks_start`,
                 steamid64: parsedDemo.data.users[i].steamId64,
+                name: getPlayerName(parsedDemo.data.users[i]),
                 kills: ksPointer.kills.length,
                 start: true,
               });
@@ -552,11 +558,16 @@
         let message = parsedDemo.data.chat[i];
 
         if (message.selected) {
-          let steamid64 = parsedDemo.data.users[message.from]?.steamId64;
+          let steamid64 =
+            parsedDemo.data.users[entityIdToUserId[message.entity_id]]
+              ?.steamId64;
 
           events.push({
             time: message.tick,
             label: `message-sent`,
+            name: getPlayerName(
+              parsedDemo.data.users[entityIdToUserId[message.entity_id]],
+            ),
             bookmark: true,
             steamid64,
           });
@@ -578,15 +589,21 @@
     }
 
     if (selected.length !== 0) {
+      let entityIdToUserIdBuffer = {};
+
       parsedDemo = { loaded: false, loading: true };
       currentDemo = selected.shift();
       parsedDemo = await invoke("parse_demo", { path: currentDemo });
+
+      console.log($state.snapshot(parsedDemo));
       selectedPlayer = "";
       playerList = [];
       playerClasses = {};
 
       for (let playerId in parsedDemo.data.users) {
         let player = parsedDemo.data.users[playerId];
+
+        entityIdToUserIdBuffer[player.entityId] = playerId;
 
         if (Object.keys(player.classes).length !== 0) {
           if (!playerList[player.name]) {
@@ -637,6 +654,8 @@
       redTeam.sort(sortByClass);
 
       console.log($state.snapshot(parsedDemo));
+      entityIdToUserId = entityIdToUserIdBuffer;
+      console.log($state.snapshot(entityIdToUserId));
       loadPlayerNames();
     } else {
       closeModal();
@@ -1356,7 +1375,6 @@
             <th
               class="tooltip tooltip--left"
               data-tooltip={`Does the demo have a vdm?`}
-              style="--kills: 0;"
             >
               VDM
             </th>
@@ -1379,7 +1397,6 @@
                 class="tooltip"
                 data-tooltip={`nickname: ${demo.header.nick}
 created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YYYY")}`}
-                style="--kills: 1;"
               >
                 {demo.name}
               </td>
@@ -1390,7 +1407,6 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                   <span
                     class="tooltip tooltip--left"
                     data-tooltip={`This demo has a VDM.`}
-                    style="--kills: 0;"
                   >
                     <Fa icon={faCheck} color={`var(--sec)`} />
                   </span>
@@ -1398,7 +1414,6 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                   <span
                     class="tooltip tooltip--left"
                     data-tooltip={`This demo does not have a VDM.`}
-                    style="--kills: 0;"
                   >
                     <Fa icon={faXmark} color={`var(--tert)`} />
                   </span>
@@ -1490,7 +1505,6 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                   : "Show " +
                     playerClass.charAt(0).toUpperCase() +
                     playerClass.slice(1)}
-                style="--kills: 0;"
               >
                 <div class:btn--deselected={!playerClasses[playerClass]}>
                   <ClassLogo player_class={playerClass} />
@@ -1578,6 +1592,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                               {tickToTime}
                               {toggleKillsSelected}
                               {allKillsSelected}
+                              {getPlayerName}
                             />
                           {/if}
                         {/if}
@@ -1609,6 +1624,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                         {tickToTime}
                         {toggleSelected}
                         {toggleKillsSelected}
+                        {getPlayerName}
                         lives={parsedDemo.data.player_lives[player].filter(
                           (life) => life.med_picks.length > 0,
                         )}
@@ -1623,6 +1639,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                         {tickToTime}
                         {toggleKillsSelected}
                         {toggleSelected}
+                        {getPlayerName}
                         lives={() => filterLife(player, "airshots")}
                       />
                     {/if}
@@ -1638,6 +1655,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                             {ksPointer}
                             {toggleBookmarkSelected}
                             {isPovDemo}
+                            {getPlayerName}
                           />
                         {/each}
                       {/each}
@@ -1657,6 +1675,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                 {tickToTime}
                 {toggleKillsSelected}
                 {toggleSelected}
+                {getPlayerName}
                 kills={parsedDemo.data.med_picks}
               />
             {/if}
@@ -1668,6 +1687,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                 {toggleBookmarkSelected}
                 {tickToTime}
                 {toggleSelected}
+                {getPlayerName}
               />
             {/if}
             {#if featureSettings.demo_scanner.airshots}
@@ -1677,6 +1697,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                 {tickToTime}
                 {toggleKillsSelected}
                 {toggleSelected}
+                {getPlayerName}
                 kills={parsedDemo.data.airshots.filter((k) =>
                   filterAirshots(k),
                 )}
@@ -1734,6 +1755,7 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
             {displayLives}
             {displayAssists}
             {getTeam}
+            {getPlayerName}
           />
         {/if}
       {:else}

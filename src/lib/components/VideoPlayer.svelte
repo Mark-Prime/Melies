@@ -3,10 +3,14 @@
   import { onMount } from "svelte";
 
   /** @type {{video: any}} */
-  let { video } = $props();
+  let { video, skipBuffer, skipTo } = $props();
   let videoElement = $state();
 
   onMount(() => {
+    if (skipBuffer) {
+      videoElement.currentTime = skipTo;
+    }
+
     videoElement?.play();
   });
 </script>

@@ -1,6 +1,8 @@
 use std::process::Command;
 use serde_json::{ self, json, Value };
 
+use crate::tf2::is_tf2_running;
+
 pub fn before_batch(settings: &Value) -> Value {
   match settings["hlae"]["before_batch"].as_str().unwrap() {
     "nothing" => {
@@ -25,6 +27,10 @@ pub fn before_batch(settings: &Value) -> Value {
 }
 
 pub fn after_batch(settings: &Value) -> Value {
+  if is_tf2_running() {
+    return json!({});
+  }
+
   match settings["hlae"]["after_batch"].as_str().unwrap() {
     "nothing" => {
       return json!({});

@@ -6,6 +6,7 @@
   import Fa from "svelte-fa";
   import Input from "./components/Input.svelte";
   import VideoPlayer from "./components/VideoPlayer.svelte";
+  import Switch from "$lib/components/Switch.svelte";
   import { filter, to } from "mathjs";
 
   let settings = {};
@@ -14,6 +15,8 @@
   let saved = [];
   let index = $state(0);
   let folder = $state("");
+  let skipBuffer = $state(false);
+  let skipTo = $state(0);
 
   let defaultVideo = $state("video");
 
@@ -41,6 +44,9 @@
   async function loadSettings() {
     settings = await invoke("load_settings");
     folder = settings.output.folder;
+
+    skipBuffer = settings.sort_footage.skip_buffer;
+    skipTo = settings.sort_footage.skip_to;
   }
 
   async function open_file(path) {
@@ -51,6 +57,7 @@
 
   function toggle() {
     enabled = !enabled;
+    loadSettings();
   }
 
   function close() {
@@ -61,10 +68,6 @@
     saved = [];
     deleted = [];
   }
-
-  onMount(() => {
-    loadSettings();
-  });
 
   function playVideo(layerName) {
     defaultVideo = layerName;
@@ -141,7 +144,7 @@
       {#if videos.length > 0}
         <h3>{videos[index]?.name}</h3>
         <div class="video-player">
-          <VideoPlayer video={videos[index]?.layers[defaultVideo]} />
+          <VideoPlayer video={videos[index]?.layers[defaultVideo]} {skipBuffer} {skipTo} />
           <div class="side-buttons">
             <div class="layers">
               Open Layer
@@ -164,21 +167,36 @@
               {/each}
 
               <div class="buttons">
-                <button class="btn btn--tert" onclick={() => increment(-1)}
-                  >Prev</button
-                >
-                <button class="btn btn--tert" onclick={() => increment(1)}
-                  >Next</button
-                >
+                <button class="btn btn--tert" onclick={() => increment(-1)}>
+                  Prev
+                </button>
+                <button class="btn btn--tert" onclick={() => increment(1)}>
+                  Next
+                </button>
               </div>
+
+              <Switch
+                title="Skip Buffer"
+                bind:value={skipBuffer}
+                tooltip="Skips recording buffer at the start of a clip."
+                color="tert"
+              />
+              {#if skipBuffer}
+                <Input
+                  title="Skip To"
+                  bind:value={skipTo}
+                  tooltip="How many seconds to skip before the start of the clip."
+                  color="tert"
+                />
+              {/if}
 
               <div>{index + 1}/{videos.length}</div>
             </div>
 
             <div class="layers">
-              <button class="btn" onclick={() => save_files(videos[index])}
-                >Save</button
-              >
+              <button class="btn" onclick={() => save_files(videos[index])}>
+                Save
+              </button>
               <button
                 class="cancel-btn"
                 onclick={() => delete_files(videos[index])}>Delete</button

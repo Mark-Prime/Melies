@@ -1,6 +1,6 @@
 use std::{ env, fs, process::Command };
 
-use crate::{ macros::*, setting_as_bin };
+use crate::{ macros::*, settings::setting_as_bin };
 use serde_json::Value;
 
 fn compile_addon_settings(v: &Value, depth: usize) -> String {
@@ -34,19 +34,19 @@ fn compile_addon_settings(v: &Value, depth: usize) -> String {
               continue;
             }
 
-            extend!(cfg, "\r\n{}\t", tab_depth);
-            extend!(cfg, "\\\\ {}\r\n", ki.as_str());
+            extend!(cfg, "\n{}\t", tab_depth);
+            extend!(cfg, "\\\\ {}\n", ki.as_str());
             extend!(cfg, "{}", compile_addon_settings(&vi["settings"], depth + 1));
           }
           "toggle" => {
             if vi["value"] == true {
-              extend!(cfg, "{};\r\n", tab_depth.clone() + vi["command"].as_str().unwrap());
+              extend!(cfg, "{};\n", tab_depth.clone() + vi["command"].as_str().unwrap());
             }
           }
           "bool" => {
             extend!(
               cfg,
-              "{};\r\n",
+              "{};\n",
               format!(
                 "{}{} {}",
                 tab_depth.clone(),
@@ -62,7 +62,7 @@ fn compile_addon_settings(v: &Value, depth: usize) -> String {
 
             extend!(
               cfg,
-              "{};\r\n",
+              "{};\n",
               format!("{}{} {}", tab_depth.clone(), vi["command"].as_str().unwrap(), vi["value"])
             );
           }
@@ -103,9 +103,9 @@ pub fn compile_addons(settings: &Value) -> String {
       continue;
     }
 
-    extend!(cfg, "\r\necho \"Running {} addon\";\r\n", k);
+    extend!(cfg, "\necho \"Running {} addon\";\n", k);
 
-    extend!(cfg, "{}\r\n", addon_text);
+    extend!(cfg, "{}\n", addon_text);
   }
 
   return cfg;

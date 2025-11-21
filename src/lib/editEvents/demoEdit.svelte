@@ -1,4 +1,7 @@
 <script>
+  import { faScissors } from "@fortawesome/free-solid-svg-icons";
+  import Fa from "svelte-fa";
+
   // @ts-nocheck
   /** @type {{event: any, demos: any, demo: any, demoIndex: any, i: any, refresh: any}} */
   let {
@@ -8,7 +11,58 @@
     demoIndex,
     i,
     refresh,
+    recordingSettings
   } = $props();
+
+  function splitEvent(demoIndex, i) {
+    let event = demos[demoIndex][i];
+    let tick = event.tick;
+
+    let clip_start = 0;
+    let clip_end = 0;
+    let value = "";
+
+    if (event.isKillstreak) {
+      clip_start = tick - (recordingSettings.before_killstreak_per_kill * event.value.Killstreak);
+      clip_end = tick + recordingSettings.after_killstreak;
+      value = event.value.Killstreak + "ks";
+    } else {
+      clip_start = tick - recordingSettings.before_bookmark;
+      clip_end = tick - recordingSettings.after_bookmark;
+      value = event.value.Bookmark;
+    }
+
+    demos[demoIndex].splice(i, 1);
+
+    demos[demoIndex].push({
+      value: {
+        Bookmark: `clip_start ${value}`,
+      },
+      tick: clip_start,
+      demo_name: event.demo_name,
+      event: `[_] Bookmark clip_start ${value} (\"${event.demo_name}\" at ${clip_start})${event.notes}`,
+      isKillstreak: false,
+      notes: event.notes,
+      isClip: true
+    });
+
+    demos[demoIndex].push({
+      value: {
+        Bookmark: `clip_end`,
+      },
+      tick: clip_end,
+      demo_name: event.demo_name,
+      event: `[_] Bookmark clip_end (\"${event.demo_name}\" at ${clip_end})`,
+      isKillstreak: false,
+      notes: "",
+      isClip: true
+    });
+
+    demos[demoIndex].sort((a, b) => a.tick - b.tick);
+
+    demos = demos;
+    refresh();
+  }
 
   function deleteEvent(demoIndex, i) {
     demos[demoIndex].splice(i, 1);
@@ -39,6 +93,7 @@
       demo_name: demos[demoIndex][0].demo_name,
       event: `[_] Bookmark _ (\"_\" at 0)`,
       isKillstreak: false,
+      notes: ""
     });
 
     demos = demos;
@@ -130,15 +185,40 @@
         bind:value={event.tick}
         type="number"
       />
-      <a
-        class="demo__event-delete tooltip tooltip--left"
-        data-tooltip="Delete Event"
-        style={"--kills: 0"}
-        href="/"
-        onclick={() => deleteEvent(demoIndex, i)}
-      >
-        -
-      </a>
+      <input
+        class="demo__event-input"
+        data-tooltip="Edit Notes"
+        bind:value={event.notes}
+        placeholder="Notes"
+      />
+      <div class="options">
+        {#if !event.isClip}
+          <a
+            class="demo__event-split tooltip tooltip--left"
+            data-tooltip="Split into clip"
+            href="/"
+            onclick={() => splitEvent(demoIndex, i)}
+          >
+            <Fa icon={faScissors} />
+          </a>
+
+        {:else}
+          <div
+            class="demo__event-split"
+            data-tooltip="Split into clip"
+          >
+            <Fa icon={faScissors} />
+          </div>
+        {/if}
+        <a
+          class="demo__event-delete tooltip tooltip--left"
+          data-tooltip="Delete Event"
+          href="/"
+          onclick={() => deleteEvent(demoIndex, i)}
+        >
+          -
+        </a>
+      </div>
     </div>
   </div>
   {#if i === demo.length - 1}
@@ -154,6 +234,20 @@
 </div>
 
 <style lang="scss">
+  div.demo__event-split {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .options {
+    display: flex;
+    gap: 0.3rem;
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding: 0;
+    margin: 0;
+  }
+
   .demo {
     width: 100%;
     text-align: center;
@@ -219,12 +313,12 @@
       background-color: var(--bg2);
       border-radius: 3px;
       margin: 1px 0;
-      padding: 1px 0.5rem;
+      padding: 1px 0 1px 0.5rem;
       font-size: 1rem;
       display: grid;
       gap: 1rem;
 
-      grid-template-columns: min-content 1fr 0.4fr 26px;
+      grid-template-columns: min-content 1fr 0.4fr 1fr 50px;
 
       transition: all 0.2s;
       z-index: 1;
@@ -274,6 +368,10 @@
         width: 100%;
         color: var(--tert-con-text);
 
+        &::placeholder {
+          color: var(--tert-con-text);
+        }
+
         &::before {
           content: attr(data-tooltip);
           position: absolute;
@@ -320,8 +418,6 @@
         color: var(--sec-con-text);
         border: var(--sec-con) 1px solid;
         border-radius: 3px;
-        margin: 1px 0;
-        padding: 1px 0.5rem;
 
         .demo__event-link,
         .demo__event-input {

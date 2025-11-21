@@ -12,7 +12,7 @@ use tf_demo_parser::demo::message::{ Message, MessageType };
 use tf_demo_parser::demo::packet::stringtable::StringTableEntry;
 use tf_demo_parser::demo::parser::gamestateanalyser::UserId;
 use tf_demo_parser::demo::parser::handler::{ BorrowMessageHandler, MessageHandler };
-use tf_demo_parser::demo::vector::Vector;
+// use tf_demo_parser::demo::vector::Vector;
 use tf_demo_parser::{ ParserState, ReadResult, Stream };
 // use bitbuffer::{BitWrite, BitWriteStream, Endianness};
 use num_enum::TryFromPrimitive;
@@ -28,7 +28,7 @@ use steamid_ng::SteamID;
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ChatMessage {
   pub kind: ChatMessageKind,
-  pub from: EntityId,
+  pub entity_id: EntityId,
   pub name: String,
   pub text: String,
   pub tick: DemoTick,
@@ -43,7 +43,7 @@ impl ChatMessage {
         .as_ref()
         .map(|s| s.to_string())
         .unwrap_or_default(),
-      from: message.client,
+      entity_id: message.client,
       text: message.plain_text(),
       tick,
       // message: message.clone()
@@ -151,14 +151,12 @@ pub struct ClassList([u8; 10]);
 impl Index<Class> for ClassList {
   type Output = u8;
 
-  #[cfg_attr(feature = "no-panic", no_panic::no_panic)]
   fn index(&self, class: Class) -> &Self::Output {
     &self.0[class as u8 as usize]
   }
 }
 
 impl IndexMut<Class> for ClassList {
-  #[cfg_attr(feature = "no-panic", no_panic::no_panic)]
   fn index_mut(&mut self, class: Class) -> &mut Self::Output {
     &mut self.0[class as u8 as usize]
   }
@@ -213,14 +211,22 @@ impl Spawn {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Alias {
+  pub name: String,
+  pub tick: DemoTick,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UserInfo {
   pub classes: ClassList,
   pub name: String,
+  pub aliases: Vec<Alias>,
+  #[serde(skip)]
   pub user_id: UserId,
   pub steam_id: String,
   pub steam_id64: String,
-  #[serde(skip)]
+  // #[serde(skip)]
   pub entity_id: EntityId,
   pub team: Team,
 }
@@ -235,7 +241,8 @@ impl From<tf_demo_parser::demo::data::UserInfo> for UserInfo {
 
     UserInfo {
       classes: ClassList::default(),
-      name: info.player_info.name,
+      name: info.player_info.name.clone(),
+      aliases: vec![Alias { name: info.player_info.name.clone(), tick: DemoTick::default() }],
       user_id: info.player_info.user_id,
       steam_id64: steam_id64.to_string(),
       steam_id: info.player_info.steam_id,
@@ -439,7 +446,7 @@ impl Analyser {
     if let UserMessage::SayText2(text_message) = message {
       if text_message.kind == ChatMessageKind::NameChange {
         if let Some(from) = text_message.from.clone() {
-          self.change_name(from.into(), text_message.plain_text());
+          self.change_name(from.into(), text_message.plain_text(), tick);
         }
       } else {
         self.state.chat.push(ChatMessage::from_message(text_message, tick));
@@ -447,9 +454,10 @@ impl Analyser {
     }
   }
 
-  fn change_name(&mut self, from: String, to: String) {
+  fn change_name(&mut self, from: String, to: String, tick: DemoTick) {
     if let Some(user) = self.state.users.values_mut().find(|user| user.name == from) {
-      user.name = to;
+      user.name = to.clone();
+      user.aliases.push(Alias { name: to, tick });
     }
   }
 

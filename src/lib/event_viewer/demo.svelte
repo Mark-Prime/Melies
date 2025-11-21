@@ -25,6 +25,7 @@
       this.isKillstreak = event.isKillstreak;
       this.tick = event.tick;
       this.event = event.event;
+      this.notes = event.notes?.trim() || "";
 
       if (!settings.recording) {
         loadSettings().then(() => {
@@ -99,7 +100,8 @@
 
         event.end = demo[index + 1].tick;
 
-        event.value = event.value.replace("clip_start ", "");
+        event.isClip = true;
+
         index++;
       }
 
@@ -111,12 +113,31 @@
         event.err("No clip start found");
       }
 
-      event.value = event.value.replace("spec", "Spectate player");
+      // event.value = event.value.replace("spec", "Spectate player");
 
       events.push(event);
     }
 
     return events;
+  }
+
+  function findOverlaps(events) {
+    let bufferEvents = [];
+
+    for (let index = 0; index < events.length; index++) {
+      const element = events[index];
+
+      if (index + 1 < events.length) {
+        const next = events[index + 1];
+
+        if (element.end + settings.recording.minimum_ticks_between_clips > next.start) {
+          element.overlappingNext = true;
+          next.overlappingPrev = true;
+        }
+      }
+    }
+
+    return events
   }
 
   function tickToTime(ticks) {
@@ -125,8 +146,22 @@
     }s`;
   }
 
+  function displayOverlap(event) {
+    if (event.overlappingNext && event.overlappingPrev) {
+      return "║";
+    }
+
+    if (event.overlappingNext) {
+      return "╔";
+    }
+
+    if (event.overlappingPrev) {
+      return "╚";
+    }
+  }
+
   onMount(() => {
-    demoEvents = organizeEvents();
+    demoEvents = findOverlaps(organizeEvents());
   });
 </script>
 
@@ -145,46 +180,47 @@
       {#each demoEvents as event}
         <div class={`event event--${event.color}`}>
           {#if event.color === "err"}
-            <span
-              class="tooltip"
-              data-tooltip={event.err}
-              style={`--kills: 0;`}
-            >
+            <span class="tooltip" data-tooltip={event.err}>
               <Fa icon={faCircleExclamation} color={`var(--err)`} />
               {event.event}
             </span>
           {:else if typeof event.value !== "string" || !event.value?.includes("mls_rec_demo")}
-            {event.isKillstreak
-              ? `${event.value}ks`
-              : `Bookmark "${event.value}"`}
+            <span class="overlap-display">
+              {displayOverlap(event)}
+            </span>
+            {#if event.isKillstreak}
+              {event.value}ks
+            {:else if event.isClip}
+              Clip "{`${event.value.replace("clip_start", "").trim()}`}"
+            {:else}
+              Bookmark "{event.value}"
+            {/if}
             from
             <button
-              class="tick"
-              data-tooltip={`${tickToTime(event.start)}`}
-              style={`--kills: 0;`}
-              onclick={() => writeText(`demo_gototick ${event.start}`)}
+              class="tick tooltip"
+              data-tooltip={`${tickToTime(event.start > settings.recording.start_delay ? event.start : settings.recording.start_delay)}`}
+              onclick={() =>
+                writeText(
+                  `demo_gototick ${event.start > settings.recording.start_delay ? event.start : settings.recording.start_delay}`,
+                )}
             >
-              <span
-                class="tooltip"
-                data-tooltip={`${tickToTime(event.start)}`}
-                style={`--kills: 0;`}
-              >
-                {event.start}
-              </span>
+              {event.start > settings.recording.start_delay
+                ? event.start
+                : settings.recording.start_delay}
             </button>
             to
             <button
-              class="tick"
+              class="tick tooltip"
               onclick={() => writeText(`demo_gototick ${event.end}`)}
+              data-tooltip={`${tickToTime(event.end)}`}
             >
-              <span
-                class="tooltip"
-                data-tooltip={`${tickToTime(event.end)}`}
-                style={`--kills: 0;`}
-              >
-                {event.end}
-              </span>
+              {event.end}
             </button>
+            {#if event.notes?.trim()}
+              <span style={"color: var(--pri-con-text)"}>
+                -- {event.notes?.trim()}
+              </span>
+            {/if}
           {:else}
             Record Entire Demo
           {/if}
@@ -198,6 +234,12 @@
   .tick {
     all: unset;
     position: relative;
+    cursor: pointer;
+  }
+
+  .overlap-display {
+    position: absolute;
+    left: -1rem;
   }
 
   .demo-display {
@@ -236,6 +278,7 @@
   }
 
   .event {
+    position: relative;
     &--pri {
       color: var(--pri-con-text);
 

@@ -15,6 +15,7 @@
     tickToTime,
     toggleKillsSelected,
     allKillsSelected,
+    getPlayerName,
   } = $props();
 
   let weapons = $state({});
@@ -53,14 +54,12 @@
         <div class="demo__kill-text">
           <ClassLogo player_class={classConverter(kill.killer_class)} /> killed
           <a
-            href={`https://rgl.gg/Public/PlayerProfile?p=${parsedDemo.data.users[kill.victim]["steamId64"]}`}
-            target="_blank"
+            href={`#player-${parsedDemo.data.users[kill.victim].name}`}
             class={parsedDemo.data.users[kill.victim]["team"] + " tooltip"}
-            style="--kills: 0;"
             data-tooltip="Jump To Player"
           >
             <ClassLogo player_class={classConverter(kill.victim_class)} />
-            {parsedDemo.data.users[kill.victim].name}
+            {getPlayerName(parsedDemo.data.users[kill.victim])}
           </a>
           with {weapons[kill.weapon]?.name || kill.weapon}
           {#if kill.crit_type}
@@ -73,7 +72,6 @@
           at
           <span
             class="tooltip"
-            style={`--kills: 0;`}
             data-tooltip={`Timecode: ${tickToTime(kill.tick)}`}
           >
             <button
@@ -110,11 +108,7 @@
   >
     Assists: {life.assists.length}
   </div>
-  <div
-    class="tooltip"
-    style={`--kills: 0;`}
-    data-tooltip={`Timecode: ${tickToTime(life.start)}`}
-  >
+  <div class="tooltip" data-tooltip={`Timecode: ${tickToTime(life.start)}`}>
     <button
       class="tick"
       onclick={() =>
@@ -127,7 +121,6 @@
   </div>
   <div
     class="tooltip"
-    style={`--kills: 0;`}
     data-tooltip={`Length: ${tickToTime(life.end - life.start)}`}
   >
     <button
@@ -152,7 +145,6 @@
         <div
           class="add_demo add_demo--disabled tooltip tooltip--left"
           data-tooltip="Toggle Kills as Bookmarks"
-          style={`--kills: 0;`}
         >
           <button disabled>+</button>
         </div>
@@ -160,7 +152,6 @@
         <div
           class="add_demo tooltip tooltip--left"
           data-tooltip="Toggle Kills as Bookmarks"
-          style={`--kills: 0;`}
         >
           <button
             class="auto-height cancel-btn"
@@ -173,7 +164,6 @@
         <div
           class="add_demo tooltip tooltip--left"
           data-tooltip="Toggle Kills as Bookmarks"
-          style={`--kills: 0;`}
         >
           <button onclick={() => toggleKillsSelected(life.kills)}>+</button>
         </div>

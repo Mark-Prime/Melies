@@ -18,7 +18,7 @@
 
     if (eventList.code === 200) {
       eventList.events.forEach(
-        (/** @type {{ demo_name: any; }} */ event, /** @type {number} */ i) => {
+        (event, i) => {
           event.isKillstreak = false;
 
           if (event.value.Killstreak) {
@@ -36,6 +36,8 @@
 
       demos = demos;
     }
+
+    console.log("SET EVENTS", $state.snapshot(demos))
 
     loading = false;
   }

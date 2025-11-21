@@ -18,6 +18,7 @@
     displayLives,
     displayAssists,
     getTeam,
+    getPlayerName
   } = $props();
 
   let maxScale = $state(1.0);
@@ -287,7 +288,7 @@
             style={`--kills: 0`}
             data-tooltip="Jump To Player"
           >
-            {parsedDemo.data?.users[player]?.name}
+            {getPlayerName(parsedDemo.data?.users[player])}
           </a>
         {/if}
       {/each}
@@ -349,7 +350,7 @@
                       .map((kill) => {
                         let crit_types = ["", " Mini-Crit", " CRITICAL HIT!"];
                         return `${
-                          parsedDemo.data?.users[kill.victim].name
+                          getPlayerName(parsedDemo.data?.users[kill.victim])
                         } (tick: ${calcTick(kill.tick)})${
                           crit_types[kill.crit_type]
                         }`;
@@ -452,7 +453,7 @@
                             ${x > divWidth * 0.7 && "timeline__marker--left"}
                         `}
                         data-tooltip={`Killed: ${
-                          parsedDemo.data?.users[kill.victim].name
+                          getPlayerName(parsedDemo.data?.users[kill.victim])
                         }\r\nTick: ${calcTick(
                           kill.tick,
                         )}\r\nTimecode: ${tickToTime(calcTick(kill.tick))}`}
@@ -473,7 +474,7 @@
                                 kill.victim_class
                               ]}
                             />
-                            {parsedDemo.data?.users[kill.victim].name} ({kill.victim_class})
+                            {getPlayerName(parsedDemo.data?.users[kill.victim])} ({kill.victim_class})
                           </div>
                           Weapon: {kill.weapon} <br />
                           Tick: {calcTick(kill.tick)} <br />
@@ -499,7 +500,7 @@
                         .map((kill) => {
                           let crit_types = ["", " Mini-Crit", " CRITICAL HIT!"];
                           return `${
-                            parsedDemo.data?.users[kill.victim].name
+                            getPlayerName(parsedDemo.data?.users[kill.victim])
                           } (tick: ${calcTick(kill.tick)})${
                             crit_types[kill.crit_type]
                           }`;
