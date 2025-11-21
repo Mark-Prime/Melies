@@ -737,10 +737,11 @@ Useful in STVs when the player could be dead."
     />
     {#if settings.sort_footage.skip_buffer}
       <Input
-        title="Skip To"
+        title="Skip To:"
         bind:value={settings.sort_footage.skip_to}
         tooltip="How many seconds to skip before the start of the clip."
         color="sec"
+        inline
       />
     {/if}
   </div>

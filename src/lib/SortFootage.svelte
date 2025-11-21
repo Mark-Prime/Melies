@@ -179,13 +179,14 @@
                 title="Skip Buffer"
                 bind:value={skipBuffer}
                 tooltip="Skips recording buffer at the start of a clip."
-                color="sec"
+                color="tert"
               />
               {#if skipBuffer}
                 <Input
                   title="Skip To"
                   bind:value={skipTo}
                   tooltip="How many seconds to skip before the start of the clip."
+                  color="tert"
                 />
               {/if}
 

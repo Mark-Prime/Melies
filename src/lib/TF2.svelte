@@ -359,23 +359,21 @@
                 <option value="run">Run Program</option>
               </Select>
 
-              {#if hlaeSettings.before_batch === "run"}
-                <Input
-                  title="Program to run before batch recording"
-                  bind:value={hlaeSettings.before_batch_path}
-                  color="tert"
-                  filepath={true}
-                />
-              {/if}
+              <Input
+                title="Program to run before batch recording"
+                bind:value={hlaeSettings.before_batch_path}
+                color="tert"
+                filepath={true}
+                disabled={hlaeSettings.before_batch !== "run"}
+              />
 
-              {#if hlaeSettings.after_batch === "run"}
-                <Input
-                  title="Program to run after batch recording"
-                  bind:value={hlaeSettings.after_batch_path}
-                  color="tert"
-                  filepath={true}
-                />
-              {/if}
+              <Input
+                title="Program to run after batch recording"
+                bind:value={hlaeSettings.after_batch_path}
+                color="tert"
+                filepath={true}
+                disabled={hlaeSettings.after_batch !== "run"}
+              />
               <!-- <Switch
                 title="Automatically playdemo"
                 bind:value={hlaeSettings.playdemo}

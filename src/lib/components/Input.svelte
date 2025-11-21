@@ -17,6 +17,7 @@
     filepath = false,
     filetype = null,
     directory = false,
+    inline = false,
   } = $props();
 
   const dispatch = createEventDispatcher();
@@ -45,7 +46,7 @@
 </script>
 
 {#if display}
-  <div class="input-group">
+  <div class={["input-group", inline && "inline"]}>
     {#if title}
       <label
         for={key}
@@ -80,10 +81,11 @@
     {/if}
     {#if filepath}
       <div
-        class="file-picker tooltip"
+        class={["file-picker", disabled ? "disabled" : "tooltip"].join(" ")}
         data-tooltip={`Select ${filetype ? filetype + " " : ""}${directory ? "Folder" : "File"}`}
+
       >
-        <button onclick={openFilePicker}>
+        <button onclick={openFilePicker} disabled={disabled}>
           <Fa icon={faFileImport} color={`var(--${color})`} />
         </button>
       </div>
@@ -94,6 +96,18 @@
 <style lang="scss">
   .input-group {
     position: relative;
+    
+    &.inline {
+      display: flex;
+      align-items: center;
+      flex-direction: row;
+      gap: 0.5rem;
+
+      & label {
+        width: fit-content;
+        white-space: pre;
+      }
+    }
   }
 
   .file-picker {
@@ -102,6 +116,10 @@
     right: 0;
     cursor: pointer;
     z-index: 9;
+
+    &.disabled {
+      pointer-events: none;
+    }
 
     button {
       background: transparent;
