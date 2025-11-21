@@ -15,9 +15,9 @@
     ksPointer,
     toggleBookmarkSelected,
     isPovDemo,
-    getPlayerName
+    getPlayerName,
   } = $props();
-  
+
   let weapons = $state({});
 
   onMount(async () => {
@@ -85,7 +85,6 @@
         <a
           href={`#player-${parsedDemo.data.users[kill.victim].name}`}
           class={parsedDemo.data.users[kill.victim]["team"] + " tooltip"}
-          style="--kills: 0;"
           data-tooltip="Jump To Player"
         >
           <ClassLogo player_class={classConverter(kill.victim_class)} />
@@ -100,7 +99,6 @@
         at
         <span
           class="tooltip"
-          style={`--kills: 0;`}
           data-tooltip={`Timecode: ${tickToTime(kill.tick)}`}
         >
           <button
@@ -118,7 +116,6 @@
   </div>
   <div
     class="tooltip"
-    style={`--kills: 0;`}
     data-tooltip={`Timecode: ${Math.floor(
       Math.round(getKills()[0].tick / 66) / 60,
     )}m ${Math.round(getKills()[0].tick / 66) % 60}s`}
@@ -135,7 +132,6 @@
   </div>
   <div
     class="tooltip"
-    style={`--kills: 0;`}
     data-tooltip={`Length: ${tickToTime(
       getKills()[getKills().length - 1].tick - getKills()[0].tick,
     )}`}

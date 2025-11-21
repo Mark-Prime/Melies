@@ -120,7 +120,6 @@
                     href={`#player-${parsedDemo.data.users[kill.victim].name}`}
                     class={parsedDemo.data.users[kill.victim]["team"] +
                       " tooltip"}
-                    style="--kills: 0;"
                     data-tooltip="Jump To Player"
                   >
                     <ClassLogo

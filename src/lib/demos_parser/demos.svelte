@@ -54,7 +54,7 @@
     loadSettings();
   };
 
-  let entityIdToUserId = $state({})
+  let entityIdToUserId = $state({});
 
   getCurrentWebview().onDragDropEvent((e) => {
     switch (e.event) {
@@ -246,7 +246,7 @@
           demo_name: demo_name,
           event: `[demo_${event.label}] clip_start ${event.steamid64 !== undefined ? spectate : ""} (\"${demo_name}\" at ${event.time})`,
           isKillstreak: false,
-          notes: event.name
+          notes: event.name,
         });
 
         continue;
@@ -261,7 +261,7 @@
           demo_name: demo_name,
           event: `[demo_${event.label}] ${event.steamid64 !== undefined ? spectate : "General"} (\"${demo_name}\" at ${event.time})`,
           isKillstreak: false,
-          notes: event.name
+          notes: event.name,
         });
 
         continue;
@@ -276,7 +276,7 @@
           demo_name: demo_name,
           event: `[demo_${event.label}] Killstreak ${event.kills} (\"${demo_name}\" at ${event.time})`,
           isKillstreak: true,
-          notes: event.name
+          notes: event.name,
         });
 
         continue;
@@ -289,7 +289,7 @@
         tick: event.time,
         demo_name: demo_name,
         event: `[demo_${event.label}] clip_end (\"${demo_name}\" at ${event.time})`,
-        isKillstreak: false
+        isKillstreak: false,
       });
     }
 
@@ -558,12 +558,16 @@
         let message = parsedDemo.data.chat[i];
 
         if (message.selected) {
-          let steamid64 = parsedDemo.data.users[entityIdToUserId[message.entity_id]]?.steamId64;
+          let steamid64 =
+            parsedDemo.data.users[entityIdToUserId[message.entity_id]]
+              ?.steamId64;
 
           events.push({
             time: message.tick,
             label: `message-sent`,
-            name: getPlayerName(parsedDemo.data.users[entityIdToUserId[message.entity_id]]),
+            name: getPlayerName(
+              parsedDemo.data.users[entityIdToUserId[message.entity_id]],
+            ),
             bookmark: true,
             steamid64,
           });
@@ -583,7 +587,7 @@
         );
       }
     }
-    
+
     if (selected.length !== 0) {
       let entityIdToUserIdBuffer = {};
 
@@ -591,7 +595,7 @@
       currentDemo = selected.shift();
       parsedDemo = await invoke("parse_demo", { path: currentDemo });
 
-      console.log($state.snapshot(parsedDemo))
+      console.log($state.snapshot(parsedDemo));
       selectedPlayer = "";
       playerList = [];
       playerClasses = {};
@@ -651,7 +655,7 @@
 
       console.log($state.snapshot(parsedDemo));
       entityIdToUserId = entityIdToUserIdBuffer;
-      console.log($state.snapshot(entityIdToUserId))
+      console.log($state.snapshot(entityIdToUserId));
       loadPlayerNames();
     } else {
       closeModal();
@@ -1371,7 +1375,6 @@
             <th
               class="tooltip tooltip--left"
               data-tooltip={`Does the demo have a vdm?`}
-              style="--kills: 0;"
             >
               VDM
             </th>
@@ -1394,7 +1397,6 @@
                 class="tooltip"
                 data-tooltip={`nickname: ${demo.header.nick}
 created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YYYY")}`}
-                style="--kills: 1;"
               >
                 {demo.name}
               </td>
@@ -1405,7 +1407,6 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                   <span
                     class="tooltip tooltip--left"
                     data-tooltip={`This demo has a VDM.`}
-                    style="--kills: 0;"
                   >
                     <Fa icon={faCheck} color={`var(--sec)`} />
                   </span>
@@ -1413,7 +1414,6 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                   <span
                     class="tooltip tooltip--left"
                     data-tooltip={`This demo does not have a VDM.`}
-                    style="--kills: 0;"
                   >
                     <Fa icon={faXmark} color={`var(--tert)`} />
                   </span>
@@ -1505,7 +1505,6 @@ created: ${dayjs.unix(demo.metadata.created.secs_since_epoch).format("MMM DD, YY
                   : "Show " +
                     playerClass.charAt(0).toUpperCase() +
                     playerClass.slice(1)}
-                style="--kills: 0;"
               >
                 <div class:btn--deselected={!playerClasses[playerClass]}>
                   <ClassLogo player_class={playerClass} />

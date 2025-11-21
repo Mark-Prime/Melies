@@ -377,7 +377,6 @@
               <th
                 class="tooltip tooltip--left tooltip__lower"
                 data-tooltip={`Does the demo have a vdm?`}
-                style="--kills: 0;"
               >
                 VDM
               </th>
@@ -395,11 +394,7 @@
               {item.name}
             </td>
             <td>{item.header.nick}</td>
-            <td
-              class="tooltip"
-              data-tooltip={`${item.header.ticks} ticks`}
-              style="--kills: 0;"
-            >
+            <td class="tooltip" data-tooltip={`${item.header.ticks} ticks`}>
               {tickToTime(item.header.ticks)}
             </td>
             <td>{item.header.server}</td>
@@ -415,7 +410,6 @@
                   <span
                     class="tooltip tooltip--left"
                     data-tooltip={`This demo has a VDM.`}
-                    style="--kills: 0;"
                   >
                     <Fa icon={faCheck} color={`var(--sec)`} />
                   </span>
@@ -423,7 +417,6 @@
                   <span
                     class="tooltip tooltip--left"
                     data-tooltip={`This demo does not have a VDM.`}
-                    style="--kills: 0;"
                   >
                     <Fa icon={faXmark} color={`var(--tert)`} />
                   </span>
@@ -497,7 +490,6 @@
                   name="#{item.name}-delete"
                   class="icon checkbox tooltip tooltip--left"
                   data-tooltip={`Delete this demo.`}
-                  style="--kills: 0;"
                   onclick={async () =>
                     await delete_demo(item.name, item.hasVdm)}
                   onkeydown={async () =>
@@ -535,42 +527,36 @@
             <span
               class="tooltip"
               data-tooltip={`The player's nickname\nExample: ${renameDemo?.header?.nick || "JoseGonzales2007"}`}
-              style="--kills: 1;"
             >
               {`{nickname}`},
             </span>
             <span
               class="tooltip"
               data-tooltip={`The number of ticks in the demo\nExample: ${renameDemo?.header?.ticks || 12345}`}
-              style="--kills: 1;"
             >
               {`{ticks}`},
             </span>
             <span
               class="tooltip"
               data-tooltip={`The server the demo was played on\nExample: ${renameDemo?.header?.server || "skial.harvest.247"}`}
-              style="--kills: 1;"
             >
               {`{server}`},
             </span>
             <span
               class="tooltip"
               data-tooltip={`The map the demo was played on\nExample: ${renameDemo?.header?.map || "koth_harvest_final"}`}
-              style="--kills: 1;"
             >
               {`{map}`},
             </span>
             <span
               class="tooltip"
               data-tooltip={`The date the demo was created\nExample: ${dayjs.unix(renameDemo?.metadata?.created?.secs_since_epoch).format("YYYY-MM-DD") || "2022-01-01"}`}
-              style="--kills: 1;"
             >
               {`{date}`},
             </span>
             <span
               class="tooltip"
               data-tooltip={`The time the demo was created\nExample: ${dayjs.unix(renameDemo?.metadata?.created?.secs_since_epoch).format("HH-mm-ss") || "03-10-35"}`}
-              style="--kills: 1;"
             >
               {`{time}`}
             </span>

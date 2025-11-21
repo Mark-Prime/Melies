@@ -16,9 +16,9 @@
     tickToTime,
     toggleKillsSelected,
     toggleSelected,
-    getPlayerName
+    getPlayerName,
   } = $props();
-  
+
   let weapons = $state({});
 
   onMount(async () => {
@@ -49,7 +49,6 @@
               href={`#player-${parsedDemo.data.users[getKill(pointer).victim].name}`}
               class={parsedDemo.data.users[getKill(pointer).victim]["team"] +
                 " tooltip"}
-              style="--kills: 0;"
               data-tooltip="Jump To Player"
             >
               <ClassLogo
@@ -57,7 +56,8 @@
               />
               {getPlayerName(parsedDemo.data.users[getKill(pointer).victim])}
             </a>
-            with {weapons[getKill(pointer).weapon]?.name || getKill(pointer).weapon}
+            with {weapons[getKill(pointer).weapon]?.name ||
+              getKill(pointer).weapon}
             {#if getKill(pointer).crit_type}
               <span
                 class={["", "killstreak", "killstreak--large"][
@@ -72,7 +72,6 @@
             at
             <span
               class="tooltip"
-              style={`--kills: 0;`}
               data-tooltip={`Timecode: ${tickToTime(getKill(pointer).tick)}`}
             >
               <button
@@ -91,7 +90,6 @@
             <div
               class="add_demo tooltip tooltip--left"
               data-tooltip="Entire Life"
-              style={`--kills: 0;`}
             >
               <Toggle
                 value={getLife(pointer).selected}
@@ -102,7 +100,6 @@
             <div
               class="add_demo tooltip tooltip--left"
               data-tooltip="As Bookmark"
-              style={`--kills: 0;`}
             >
               <Toggle
                 value={getKill(pointer).selected}

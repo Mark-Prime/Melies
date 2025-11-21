@@ -262,42 +262,36 @@ on all players in POV demos."
         <span
           class="tooltip"
           data-tooltip={`The player's nickname\nExample: JoseGonzales2007`}
-          style="--kills: 1;"
         >
           {`{nickname}`},
         </span>
         <span
           class="tooltip"
           data-tooltip={`The number of ticks in the demo\nExample: 12345`}
-          style="--kills: 1;"
         >
           {`{ticks}`},
         </span>
         <span
           class="tooltip"
           data-tooltip={`The server the demo was played on\nExample: skial.harvest.247`}
-          style="--kills: 1;"
         >
           {`{server}`},
         </span>
         <span
           class="tooltip"
           data-tooltip={`The map the demo was played on\nExample: koth_harvest_final`}
-          style="--kills: 1;"
         >
           {`{map}`},
         </span>
         <span
           class="tooltip"
           data-tooltip={`The date the demo was created\nExample: 2022-01-01`}
-          style="--kills: 1;"
         >
           {`{date}`},
         </span>
         <span
           class="tooltip"
           data-tooltip={`The time the demo was created\nExample: 03-10-35`}
-          style="--kills: 1;"
         >
           {`{time}`}
         </span>
