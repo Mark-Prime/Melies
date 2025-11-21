@@ -394,8 +394,10 @@
               {item.name}
             </td>
             <td>{item.header.nick}</td>
-            <td class="tooltip" data-tooltip={`${item.header.ticks} ticks`}>
-              {tickToTime(item.header.ticks)}
+            <td>
+              <p class="tooltip" data-tooltip={`${item.header.ticks} ticks`}>
+                {tickToTime(item.header.ticks)}
+              </p>
             </td>
             <td>{item.header.server}</td>
             <td>{item.header.map}</td>
@@ -407,19 +409,19 @@
             <td class="table__has-vdm">
               <div style="max-width: 35px;">
                 {#if item.hasVdm}
-                  <span
+                  <p
                     class="tooltip tooltip--left"
                     data-tooltip={`This demo has a VDM.`}
                   >
                     <Fa icon={faCheck} color={`var(--sec)`} />
-                  </span>
+                  </p>
                 {:else}
-                  <span
+                  <p
                     class="tooltip tooltip--left"
                     data-tooltip={`This demo does not have a VDM.`}
                   >
                     <Fa icon={faXmark} color={`var(--tert)`} />
-                  </span>
+                  </p>
                 {/if}
               </div>
             </td>
@@ -522,45 +524,45 @@
             color="tert"
             bind:value={renameNameInput}
           />
-          <p>
+          <div class="metadata">
             Metadata elements:
-            <span
-              class="tooltip"
+            <p
+              class="tooltip tooltip--left"
               data-tooltip={`The player's nickname\nExample: ${renameDemo?.header?.nick || "JoseGonzales2007"}`}
             >
               {`{nickname}`},
-            </span>
-            <span
-              class="tooltip"
+            </p>
+            <p
+              class="tooltip tooltip--left"
               data-tooltip={`The number of ticks in the demo\nExample: ${renameDemo?.header?.ticks || 12345}`}
             >
               {`{ticks}`},
-            </span>
-            <span
-              class="tooltip"
+            </p>
+            <p
+              class="tooltip tooltip--left"
               data-tooltip={`The server the demo was played on\nExample: ${renameDemo?.header?.server || "skial.harvest.247"}`}
             >
               {`{server}`},
-            </span>
-            <span
-              class="tooltip"
+            </p>
+            <p
+              class="tooltip tooltip--left"
               data-tooltip={`The map the demo was played on\nExample: ${renameDemo?.header?.map || "koth_harvest_final"}`}
             >
               {`{map}`},
-            </span>
-            <span
-              class="tooltip"
+            </p>
+            <p
+              class="tooltip tooltip--left"
               data-tooltip={`The date the demo was created\nExample: ${dayjs.unix(renameDemo?.metadata?.created?.secs_since_epoch).format("YYYY-MM-DD") || "2022-01-01"}`}
             >
               {`{date}`},
-            </span>
-            <span
-              class="tooltip"
+            </p>
+            <p
+              class="tooltip tooltip--left"
               data-tooltip={`The time the demo was created\nExample: ${dayjs.unix(renameDemo?.metadata?.created?.secs_since_epoch).format("HH-mm-ss") || "03-10-35"}`}
             >
               {`{time}`}
-            </span>
-          </p>
+            </p>
+          </div>
           <div class="buttons">
             <button
               class="cancel-btn"
@@ -588,6 +590,12 @@
     & > * {
       width: 100%;
     }
+  }
+
+  .metadata {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   .demo-manager {
@@ -626,6 +634,11 @@
   th {
     text-align: left;
     white-space: nowrap;
+  }
+
+  td p {
+    padding: 0;
+    margin: 0;
   }
 
   .table_row {
