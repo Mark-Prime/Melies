@@ -140,7 +140,6 @@
       <a
         class="demo__event-delete tooltip tooltip--left"
         data-tooltip="Delete Event"
-        style={"--kills: 0"}
         href="/"
         onclick={() => deleteEvent(demoIndex, i)}
       >
