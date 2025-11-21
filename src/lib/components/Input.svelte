@@ -101,7 +101,7 @@
     bottom: 1px;
     right: 0;
     cursor: pointer;
-    z-index: 9999;
+    z-index: 9;
 
     button {
       background: transparent;
