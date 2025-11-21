@@ -573,6 +573,7 @@ input:checked + .slider--tert:before {
   pointer-events: none;
 }
 .tooltip__lower::before {
+  height: fit-content;
   top: 1.9rem;
   background-color: var(--bg);
   z-index: 99999;
