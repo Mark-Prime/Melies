@@ -91,7 +91,8 @@ pub(crate) fn default_settings() -> Value {
         "auto_close": true,
         "auto_suffix": true,
         "third_person": false,
-        "use_ce_spec": false
+        "use_ce_spec": false,
+        "allow_alt_tab": true
       },
       "automation": {
         "enabled": true,

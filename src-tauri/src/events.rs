@@ -16,7 +16,7 @@ pub fn save_events(new_events: Value) -> Value {
   let mut events: Vec<Event> = vec![];
   let mut new_events_text = String::new();
 
-  println!("New Events: {:#?}", new_events);
+  // println!("New Events: {:#?}", new_events);
 
   for demo in new_events {
     // println!("demo: {:#?}", demo);
@@ -29,7 +29,7 @@ pub fn save_events(new_events: Value) -> Value {
         continue;
       }
 
-      println!("event: {:#?}", event);
+      // println!("event: {:#?}", event);
 
       let events_regex = match re.captures(event["event"].as_str().unwrap()) {
         Some(val) => val,
@@ -49,7 +49,7 @@ pub fn save_events(new_events: Value) -> Value {
       if
         event["demo_name"].as_str().unwrap() != original_event.demo_name ||
         event["tick"].as_i64().unwrap() != original_event.tick ||
-        event["notes"].as_str().unwrap() != original_event.notes ||
+        event["notes"].as_str().unwrap_or("") != original_event.notes ||
         event["isKillstreak"].as_bool().unwrap() != is_killstreak
       {
         let built_event = build_event_from_json(event);
@@ -86,7 +86,7 @@ pub fn save_events(new_events: Value) -> Value {
     }
   }
 
-  println!("{:#?}", new_events_text);
+  // println!("{:#?}", new_events_text);
 
   let settings = load_settings();
 
@@ -124,12 +124,12 @@ fn build_event_from_json(event_json: &Value) -> Event {
           event_json["value"]["Killstreak"],
           event_json["demo_name"].as_str().unwrap(),
           event_json["tick"].as_i64().unwrap(),
-          event_json["notes"].as_str().unwrap().to_string()
+          event_json["notes"].as_str().unwrap_or("").to_string()
         ),
         demo_name: event_json["demo_name"].as_str().unwrap().to_string(),
         tick: event_json["tick"].as_i64().unwrap(),
         value: Killstreak(event_json["value"]["Killstreak"].as_i64().unwrap()),
-        notes: event_json["notes"].as_str().unwrap().to_string(),
+        notes: event_json["notes"].as_str().unwrap_or("").to_string(),
       };
     }
     false => {
@@ -141,12 +141,12 @@ fn build_event_from_json(event_json: &Value) -> Event {
             event_json["value"]["Bookmark"].as_str().unwrap(),
             event_json["demo_name"].as_str().unwrap(),
             event_json["tick"].as_i64().unwrap(),
-            event_json["notes"].as_str().unwrap().to_string()
+            event_json["notes"].as_str().unwrap_or("").to_string()
           ),
           demo_name: event_json["demo_name"].as_str().unwrap().to_string(),
           tick: event_json["tick"].as_i64().unwrap(),
           value: Bookmark(event_json["value"]["Bookmark"].as_str().unwrap().to_string()),
-          notes: event_json["notes"].as_str().unwrap().to_string(),
+          notes: event_json["notes"].as_str().unwrap_or("").to_string(),
         };
       }
 
@@ -157,12 +157,12 @@ fn build_event_from_json(event_json: &Value) -> Event {
           event_json["value"]["Bookmark"].as_str().unwrap(),
           event_json["demo_name"].as_str().unwrap(),
           event_json["tick"].as_i64().unwrap(),
-          event_json["notes"].as_str().unwrap().to_string()
+          event_json["notes"].as_str().unwrap_or("").to_string()
         ),
         demo_name: event_json["demo_name"].as_str().unwrap().to_string(),
         tick: event_json["tick"].as_i64().unwrap(),
         value: Bookmark(event_json["value"]["Bookmark"].as_str().unwrap().to_string()),
-        notes: event_json["notes"].as_str().unwrap().to_string(),
+        notes: event_json["notes"].as_str().unwrap_or("").to_string(),
       };
     }
   }

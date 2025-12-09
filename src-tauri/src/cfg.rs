@@ -7,12 +7,15 @@ use crate::{addons::compile_addons, macros::extend, settings::setting_as_bin};
 pub fn write_cfg(settings: &Value) -> Result<(), String> {
   let mut cfg = String::new();
 
+  let allow_alt_tab = settings["recording"]["allow_alt_tab"].as_bool().unwrap_or(false);
+
   extend!(
     cfg,
     "echo \"Execing Melies Config\";\ncl_drawhud {};\n",
     setting_as_bin(&settings["output"]["hud"])
   );
   extend!(cfg, "sv_cheats {};\n", "1");
+  extend!(cfg, "snd_mute_losefocus {};\n", if allow_alt_tab { "0" } else { "1" });
   extend!(cfg, "voice_enable {};\n", setting_as_bin(&settings["output"]["voice_chat"]));
   extend!(cfg, "hud_saytext_time {};\n", setting_as_bin(&settings["output"]["text_chat"]) * 12);
   extend!(cfg, "crosshair {};\n", setting_as_bin(&settings["output"]["crosshair"]));

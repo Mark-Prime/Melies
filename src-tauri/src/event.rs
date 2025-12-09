@@ -49,13 +49,19 @@ impl Event {
     let mut event_name: Vec<&str> = split.split_whitespace().collect();
     let value: EventStyle;
 
+    let mut notes = String::new();
+
+    if input.len() >= 6 {
+      notes = input[5].to_string();
+    }
+
     if event_name.len() == 0 {
       return Ok(Event {
         event: input[0].to_string(),
         demo_name: input[3].to_string(),
         tick,
         value: EventStyle::Bookmark("General".to_owned()),
-        notes: input[5].to_string()
+        notes: notes
       });
     }
 
@@ -103,7 +109,7 @@ impl Event {
       demo_name: input[3].to_string(),
       tick,
       value,
-      notes: input[5].to_string()
+      notes: notes
     })
   }
 

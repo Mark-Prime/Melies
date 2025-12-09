@@ -525,6 +525,12 @@ If left blank, the output folder will default to your sparklyfx settings."
       color="tert"
     />
     <Switch
+      title="Allow Alt Tabbing while Recording"
+      bind:value={recordingSettings.allow_alt_tab}
+      tooltip={`Allows tf2 to play sound when it isnt the focused window.\nUseful for recording demos in the background.`}
+      color="tert"
+    />
+    <Switch
       title="Prefer Casting Essentials spec commands"
       bind:value={recordingSettings.use_ce_spec}
       tooltip="Using Casting Essentials commands instead of the default ones.
