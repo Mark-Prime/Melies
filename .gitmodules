@@ -1,3 +1,6 @@
+[submodule "origin"]
+	path = origin
+	url = https://github.com/Mark-Prime/Melies-rust.git
 [submodule "parser"]
 	path = parser
 	url = https://codeberg.org/demostf/parser

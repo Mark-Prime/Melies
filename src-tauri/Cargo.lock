@@ -2234,6 +2234,7 @@ dependencies = [
  "fnv",
  "fs_extra",
  "human-sort",
+ "melies_rust",
  "num_enum 0.5.11",
  "opener",
  "parse-display 0.8.2",
@@ -2250,6 +2251,30 @@ dependencies = [
  "tauri-plugin-dialog",
  "tauri-plugin-shell",
  "tauri-plugin-store",
+ "tf-demo-parser",
+ "trash",
+ "vdm",
+]
+
+[[package]]
+name = "melies_rust"
+version = "0.1.0"
+dependencies = [
+ "bitbuffer",
+ "chrono",
+ "fnv",
+ "fs_extra",
+ "human-sort",
+ "num_enum 0.5.11",
+ "opener",
+ "parse-display 0.8.2",
+ "regex",
+ "reqwest 0.11.22",
+ "sanitize-filename",
+ "serde",
+ "serde_json",
+ "steamid-ng",
+ "sysinfo",
  "tf-demo-parser",
  "trash",
  "vdm",
