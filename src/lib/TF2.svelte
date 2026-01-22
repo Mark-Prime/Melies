@@ -72,18 +72,25 @@
 
   function updateAltInstallSettings() {
     let newSettings = {};
+    let settingsToConfirm = [
+      "inject_hlae",
+      "launch_options",
+      "use_64bit",
+      "before_batch",
+      "before_batch_path",
+      "after_batch",
+      "after_batch_path",
+      "dxlevel",
+      "height",
+      "width",
+      "novid"
+    ];
 
-    if (hlaeSettings.launch_options !== defaultHlaeSettings.launch_options) {
-      newSettings.launch_options = hlaeSettings.launch_options;
+    for (let key of settingsToConfirm) {
+      if (hlaeSettings[key] !== defaultHlaeSettings[key]) {
+        newSettings[key] = hlaeSettings[key];
+      }
     }
-
-    if (hlaeSettings.use_64bit !== defaultHlaeSettings.use_64bit) {
-      newSettings.use_64bit = hlaeSettings.use_64bit;
-    }
-
-    // if (hlaeSettings.playdemo !== defaultHlaeSettings.playdemo) {
-    //   newSettings.playdemo = hlaeSettings.playdemo;
-    // }
 
     hlaeSettings = defaultHlaeSettings;
 
@@ -91,13 +98,15 @@
       ...settings.alt_installs[tabIndex - 1],
       ...newSettings,
     };
+
+    return settings;
   }
 
   async function launchOnce() {
     isRunning = true;
 
     if (tabIndex) {
-      updateAltInstallSettings();
+      settings = updateAltInstallSettings();
     }
 
     await invoke("save_settings", {
@@ -243,9 +252,46 @@
         bind:value={hlaeSettings.height}
         color={["pri", "sec", "tert"][tabIndex % 3]}
       />
-      <a href="https://docs.comfig.app/9.9.3/customization/launch_options"
-        >Learn More about Launch Options and DXLevel</a
+      <Select
+        title="Before Batch Recording"
+        bind:value={hlaeSettings.before_batch}
+        tooltip={`What do to when before starting batch recording.`}
+        color={["pri", "sec", "tert"][tabIndex % 3]}
+        disabled
       >
+        <option value="nothing">Nothing</option>
+        <option value="open">Open Output Folder</option>
+        <option value="run">Run Program</option>
+      </Select>
+      <Select
+        title="After Batch Recording"
+        bind:value={hlaeSettings.after_batch}
+        tooltip={`What do to when batch recording is complete.`}
+        color={["pri", "sec", "tert"][tabIndex % 3]}
+        disabled
+      >
+        <option value="nothing">Nothing</option>
+        <option value="open">Open Output Folder</option>
+        <option value="shutdown">Shutdown PC</option>
+        <option value="run">Run Program</option>
+      </Select>
+      <Input
+        title="Program to run before batch recording"
+        bind:value={hlaeSettings.before_batch_path}
+        color={["pri", "sec", "tert"][tabIndex % 3]}
+        filepath={true}
+        disabled={hlaeSettings.before_batch !== "run"}
+      />
+      <Input
+        title="Program to run after batch recording"
+        bind:value={hlaeSettings.after_batch_path}
+        color={["pri", "sec", "tert"][tabIndex % 3]}
+        filepath={true}
+        disabled={hlaeSettings.after_batch !== "run"}
+      />
+      <a href="https://docs.comfig.app/9.9.3/customization/launch_options">
+        Learn More about Launch Options and DXLevel
+      </a>
     </div>
     <Switch
       title="64Bit"
@@ -254,15 +300,28 @@
       color={["pri", "sec", "tert"][tabIndex % 3]}
     />
     <Switch
+      title="Skip Intro Video"
+      bind:value={hlaeSettings.novid}
+      tooltip="Uses -novid launch option."
+      color={["pri", "sec", "tert"][tabIndex % 3]}
+    />
+    <Switch
+      title="Inject AfxHookSource"
+      bind:value={hlaeSettings.inject_hlae}
+      tooltip="Launches with AfxHookSource.dll injected into TF2."
+      color={["pri", "sec", "tert"][tabIndex % 3]}
+    />
+    <Switch
       title="Borderless Window"
       bind:value={hlaeSettings.borderless}
       tooltip="Uses -windowed and -noborder launch options."
       color={["pri", "sec", "tert"][tabIndex % 3]}
     />
-    {#if outputSettings.method === "sparklyfx" && !hlaeSettings.use_64bit}
-      <div class="settings__span no_margin">
-        HLAE will be automatically injected into TF2.
-      </div>
+    
+    {#if hlaeSettings.use_64bit && hlaeSettings.inject_hlae}
+      <a class="settings__span no_margin" href="https://github.com/advancedfx/advancedfx/releases/tag/v2.189.0">
+        Must be on HLAE v2.189.0 or higher to inject AfxHookSource
+      </a>
     {/if}
   </div>
 {/snippet}
@@ -337,57 +396,6 @@
                 filepath={true}
                 filetype=".dll"
               />
-              <Select
-                title="Before Batch Recording"
-                bind:value={hlaeSettings.before_batch}
-                tooltip={`What do to when before starting batch recording.`}
-                color="tert"
-                disabled
-              >
-                <option value="nothing">Nothing</option>
-                <option value="open">Open Output Folder</option>
-                <option value="run">Run Program</option>
-              </Select>
-              <Select
-                title="After Batch Recording"
-                bind:value={hlaeSettings.after_batch}
-                tooltip={`What do to when batch recording is complete.`}
-                color="tert"
-                disabled
-              >
-                <option value="nothing">Nothing</option>
-                <option value="open">Open Output Folder</option>
-                <option value="shutdown">Shutdown PC</option>
-                <option value="run">Run Program</option>
-              </Select>
-
-              <Input
-                title="Program to run before batch recording"
-                bind:value={hlaeSettings.before_batch_path}
-                color="tert"
-                filepath={true}
-                disabled={hlaeSettings.before_batch !== "run"}
-              />
-
-              <Input
-                title="Program to run after batch recording"
-                bind:value={hlaeSettings.after_batch_path}
-                color="tert"
-                filepath={true}
-                disabled={hlaeSettings.after_batch !== "run"}
-              />
-              <!-- <Switch
-                title="Automatically playdemo"
-                bind:value={hlaeSettings.playdemo}
-                tooltip="Plays first demo on list as soon as it launches."
-                color="tert"
-              /> -->
-              <Switch
-                title="Skip Intro Video"
-                bind:value={hlaeSettings.novid}
-                tooltip="Uses -novid launch option."
-                color="tert"
-              />
             {/if}
           </div>
         {/if}
@@ -424,9 +432,46 @@
               bind:value={hlaeSettings.height}
               color="tert"
             />
-            <a href="https://docs.comfig.app/9.9.3/customization/launch_options"
-              >Learn More about Launch Options and DXLevel</a
+            <Select
+              title="Before Batch Recording"
+              bind:value={hlaeSettings.before_batch}
+              tooltip={`What do to when before starting batch recording.`}
+              color="tert"
+              disabled
             >
+              <option value="nothing">Nothing</option>
+              <option value="open">Open Output Folder</option>
+              <option value="run">Run Program</option>
+            </Select>
+            <Select
+              title="After Batch Recording"
+              bind:value={hlaeSettings.after_batch}
+              tooltip={`What do to when batch recording is complete.`}
+              color="tert"
+              disabled
+            >
+              <option value="nothing">Nothing</option>
+              <option value="open">Open Output Folder</option>
+              <option value="shutdown">Shutdown PC</option>
+              <option value="run">Run Program</option>
+            </Select>
+            <Input
+              title="Program to run before batch recording"
+              bind:value={hlaeSettings.before_batch_path}
+              color="tert"
+              filepath={true}
+              disabled={hlaeSettings.before_batch !== "run"}
+            />
+            <Input
+              title="Program to run after batch recording"
+              bind:value={hlaeSettings.after_batch_path}
+              color="tert"
+              filepath={true}
+              disabled={hlaeSettings.after_batch !== "run"}
+            />
+            <a href="https://docs.comfig.app/9.9.3/customization/launch_options">
+              Learn More about Launch Options and DXLevel
+            </a>
           </div>
           <Switch
             title="64Bit"
@@ -434,17 +479,16 @@
             tooltip="Launches with 64Bit TF2."
             color="tert"
           />
-          <!-- <Switch
-            title="Automatically playdemo"
-            bind:value={hlaeSettings.playdemo}
-            tooltip="Plays first demo on list as soon as it launches."
-            color="tert"
-            left={true}
-          /> -->
           <Switch
             title="Skip Intro Video"
             bind:value={hlaeSettings.novid}
             tooltip="Uses -novid launch option."
+            color="tert"
+          />
+          <Switch
+            title="Inject AfxHookSource"
+            bind:value={hlaeSettings.inject_hlae}
+            tooltip="Launches with AfxHookSource.dll injected into TF2."
             color="tert"
           />
           <Switch
@@ -454,10 +498,10 @@
             color="tert"
             left={true}
           />
-          {#if outputSettings.method === "sparklyfx" && !hlaeSettings.use_64bit}
-            <div class="settings__span no_margin">
-              HLAE will be automatically injected into TF2.
-            </div>
+          {#if hlaeSettings.use_64bit && hlaeSettings.inject_hlae}
+            <a href="https://github.com/advancedfx/advancedfx/releases/tag/v2.189.0">
+              Must be on HLAE v2.189.0 or higher to inject AfxHookSource
+            </a>
           {/if}
         </div>
       {:else}
