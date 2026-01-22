@@ -143,7 +143,9 @@
         continue;
       }
 
-      let resp = await invoke("get_next_demo");
+      let resp = await invoke("get_next_demo", {
+        demoName: startingDemo.replace(".dem", ""),
+      });
 
       console.log(resp);
 

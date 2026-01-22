@@ -7,14 +7,29 @@ use std::{
 };
 use fs_extra::{ copy_items, dir };
 use serde_json::{ json, Value };
+use vdm::VDM;
 
-fn get_tf2_path(settings: &Value) -> PathBuf {
+fn use_64bit(settings: &Value, tab: i64) -> bool {
+  let mut use_64bit = settings["hlae"]["use_64bit"].as_bool().unwrap();
+
+  if tab > 0 {
+    let alt_install = settings["alt_installs"][(tab - 1) as usize].clone();
+
+    if alt_install["use_64bit"].as_bool().is_some() {
+      use_64bit = alt_install["use_64bit"].as_bool().unwrap();
+    }
+  }
+
+  return use_64bit;
+}
+
+fn get_tf2_path(settings: &Value, tab: i64) -> PathBuf {
   let mut tf2_path = PathBuf::from(settings["tf_folder"].as_str().unwrap())
     .parent()
     .unwrap()
     .to_path_buf();
 
-  if settings["hlae"]["use_64bit"] == true {
+  if use_64bit(settings, tab) == true {
     tf2_path.push("tf_win64.exe");
   } else {
     tf2_path.push("tf.exe");
@@ -30,10 +45,13 @@ fn build_launch_options(
 ) -> String {
   let mut launch_options = settings["hlae"]["launch_options"].to_string();
   let tab = tab.parse::<i64>().unwrap();
+  let use_64bit = use_64bit(settings, tab);
 
   if tab > 0 {
+    let alt_install = settings["alt_installs"][(tab - 1) as usize].clone();
+
     let alt_launch_options =
-      &settings["alt_installs"][(tab - 1) as usize]["launch_options"].as_str();
+      &alt_install["launch_options"].as_str();
 
     match alt_launch_options {
       Some(options) => {
@@ -72,11 +90,11 @@ fn build_launch_options(
 
     let game = install.replace(&tf2_str, "");
     launch_options = format!("{} -game {}", launch_options, game);
-  } else if settings["hlae"]["use_64bit"] == true {
+  } else if use_64bit == true {
     launch_options = format!("{} -game tf", launch_options);
   }
 
-  if settings["hlae"]["use_64bit"] != true && !launch_options.contains("-force32bit") {
+  if use_64bit != true && !launch_options.contains("-force32bit") {
     launch_options = format!("{} -force32bit", launch_options);
   }
 
@@ -114,18 +132,19 @@ pub(crate) fn run_tf2(
 
   println!("Launch options: {}", launch_options);
 
-  let tf2_path = get_tf2_path(settings);
+  let tab = tab.parse::<i64>().unwrap();
+  
+  let tf2_path = get_tf2_path(settings, tab);
+  let use_64bit = use_64bit(settings, tab);
 
-  let sparkly_path = match settings["hlae"]["use_64bit"].as_bool().unwrap() {
+  let sparkly_path = settings["hlae"]["sparklyfx_path"].as_str().unwrap();
+
+  let sparkly_path = match use_64bit {
     true =>
-      settings["hlae"]["sparklyfx_path"]
-        .as_str()
-        .unwrap()
+      sparkly_path
         .replace("xsdk-base.dll", "xsdk-base64.dll"),
     false =>
-      settings["hlae"]["sparklyfx_path"]
-        .as_str()
-        .unwrap()
+      sparkly_path
         .replace("xsdk-base64.dll", "xsdk-base.dll"),
   };
 
@@ -146,7 +165,7 @@ pub(crate) fn run_tf2(
         launch_options.as_str()
       ];
 
-      if !settings["hlae"]["use_64bit"].as_bool().unwrap() && Path::new(&hlae_dll).exists() {
+      if !use_64bit && Path::new(&hlae_dll).exists() {
         args.push("-hookDllPath");
         args.push(&hlae_dll);
       }
@@ -166,19 +185,7 @@ pub(crate) fn run_tf2(
         }
       }
     }
-    "svr" => {
-      return json!({
-            "status": "error",
-            "message": format!("Can not run SVR")
-          });
-    }
-    "svr.mov" => {
-      return json!({
-            "status": "error",
-            "message": format!("Can not run SVR")
-          });
-    }
-    "svr.mp4" => {
+    "svr" | "svr.mov" | "svr.mp4" => {
       return json!({
             "status": "error",
             "message": format!("Can not run SVR")
@@ -207,17 +214,12 @@ pub(crate) fn run_tf2(
   return json!({"status": "success"});
 }
 
-/// Checks if TF2 is running.
-///
-/// Returns `true` if TF2 is running, `false` otherwise.
 pub fn is_tf2_running() -> bool {
   let system = sysinfo::System::new_all();
 
   let old_bits = system.processes_by_name("tf.exe".as_ref()).next().is_some();
 
   let new_bits = system.processes_by_name("tf_win64.exe".as_ref()).next().is_some();
-
-  // println!("32bit: {}, 64bit: {}", old_bits, new_bits);
 
   old_bits || new_bits
 }
@@ -248,7 +250,7 @@ fn has_audio(path: &PathBuf) -> bool {
   false
 }
 
-fn get_demo_name(path: &PathBuf) -> String {
+fn get_demo_name(path: &PathBuf, demo_name: &str) -> String {
   use regex::Regex;
 
   let name = path.file_name().unwrap().to_str().unwrap();
@@ -257,7 +259,7 @@ fn get_demo_name(path: &PathBuf) -> String {
 
   let Some(caps) = re.captures(name) else {
     println!("no match!");
-    return String::new();
+    return String::from(demo_name);
   };
 
   return caps["name"].to_string();
@@ -322,16 +324,83 @@ fn delete_folder(path: &PathBuf, try_count: i32) {
   }
 }
 
-pub(crate) fn get_next_demo(settings: &Value) -> Value {
+fn load_vdm(tf_folder: &str, demo_name: &str) -> Option<VDM> {
+  let vdm_path = format!("{}\\{}.vdm", tf_folder, demo_name);
+
+  let vdm_result = VDM::open(&vdm_path);
+
+  println!("VDM path: {}", vdm_path);
+
+  let vdm = match vdm_result {
+    Ok(vdm) => vdm,
+    Err(e) => {
+      println!("Failed to open {}.vdm: {}", demo_name, e);
+      return None;
+    }
+  };
+
+  return Some(vdm);
+}
+
+pub(crate) fn get_next_demo(settings: &Value, demo_name: &str) -> Value {
   use vdm::VDM;
 
   let output_folder = settings["output"]["folder"].as_str().unwrap();
   let tf_folder = settings["tf_folder"].as_str().unwrap();
 
-  let mut last_modified = last_modified_folder(output_folder).unwrap().path();
+  println!("Output folder: {}", output_folder);
+
+  let mut last_modified;
+
+  match last_modified_folder(output_folder) {
+    Some(entry) => last_modified = entry.path(),
+    None => {
+      let vdm = load_vdm(tf_folder, &demo_name);
+
+      if vdm.is_none() {
+        println!("Failed to load vdm");
+        return json!({
+          "complete": false,
+          "next_demo": demo_name
+        });
+      }
+
+      let vdm = vdm.unwrap();
+
+      let props = vdm.first().props();
+
+      if props.commands.contains("quit;") {
+        if props.name.contains("mls_load_vdm") {
+          let new_vdm = props.name.replace("mls_load_vdm ", "");
+
+          let new_vdm_path = format!("{}\\{}.vdm", tf_folder, new_vdm);
+
+          let new_vdm = VDM::open(&new_vdm_path).unwrap();
+
+          new_vdm.export(&format!("{}\\{}.vdm", tf_folder, demo_name));
+
+          return json!({
+            "complete": false,
+            "next_demo": demo_name
+          });
+        }
+
+        return json!({
+          "complete": true
+        });
+      }
+
+      return json!({
+        "complete": false,
+        "next_demo": demo_name
+      })
+    },
+  };
+
+  println!("Last modified: {}", last_modified.display());
 
   let mut clip_name = format!("{}", last_modified.file_name().unwrap().to_str().unwrap());
-  let mut demo_name = get_demo_name(&last_modified);
+  let mut demo_name = get_demo_name(&last_modified, demo_name);
 
   if !has_audio(&last_modified) {
     println!("Audio not in recording, deleting");
@@ -344,28 +413,31 @@ pub(crate) fn get_next_demo(settings: &Value) -> Value {
       last_modified = last_folder.unwrap().path();
       clip_name = format!("{}", last_modified.file_name().unwrap().to_str().unwrap());
       println!("New clip name: {}", clip_name);
-      demo_name = get_demo_name(&last_modified);
+      demo_name = get_demo_name(&last_modified, &demo_name);
     }
   }
 
+  if demo_name.contains("~") {
+    let mut demo_split = demo_name.split("~");
+    demo_name = demo_split.next().unwrap().to_string();
+  }
+
   let vdm_path = format!("{}\\{}.vdm", tf_folder, demo_name);
+  let vdm = load_vdm(tf_folder, &demo_name);
 
-  let vdm_result = VDM::open(&vdm_path);
+  if vdm.is_none() {
+    println!("Failed to load vdm");
+    return json!({
+      "complete": false,
+      "next_demo": demo_name
+    });
+  }
 
-  let mut vdm = match vdm_result {
-    Ok(vdm) => vdm,
-    Err(e) => {
-      println!("Failed to open vdm: {}", e);
-      return json!({
-        "complete": false,
-        "next_demo": demo_name
-      });
-    }
-  };
+  let mut vdm = vdm.unwrap();
 
   let actions = &vdm.actions;
 
-  let mut i = 0;
+  let mut i: usize = 0;
   for (index, action) in actions.iter().enumerate() {
     match action {
       vdm::action::Action::PlayCommands(props) => {
@@ -374,6 +446,27 @@ pub(crate) fn get_next_demo(settings: &Value) -> Value {
           println!("index of: {}", index);
           i = index + 1;
           break;
+        }
+
+        if props.commands.contains("quit;") {
+          if props.name.contains("mls_load_vdm") {
+            let new_vdm = props.name.replace("mls_load_vdm ", "");
+
+            let new_vdm_path = format!("{}\\{}.vdm", tf_folder, new_vdm);
+
+            let new_vdm = VDM::open(&new_vdm_path).unwrap();
+
+            new_vdm.export(&vdm_path);
+
+            return json!({
+              "complete": false,
+              "next_demo": demo_name
+            });
+          }
+
+          return json!({
+            "complete": true
+          });
         }
       }
       _ => {}
@@ -409,6 +502,27 @@ pub(crate) fn get_next_demo(settings: &Value) -> Value {
         return json!({
           "complete": false,
           "next_demo": &playdemo.replace(";", "")
+        });
+      }
+
+      if props.commands.contains("quit;") {
+        if props.name.contains("mls_load_vdm") {
+          let new_vdm = props.name.replace("mls_load_vdm ", "");
+
+          let new_vdm_path = format!("{}\\{}.vdm", tf_folder, new_vdm);
+
+          let new_vdm = VDM::open(&new_vdm_path).unwrap();
+
+          new_vdm.export(&vdm_path);
+
+          return json!({
+            "complete": false,
+            "next_demo": demo_name
+          });
+        }
+
+        return json!({
+          "complete": true
         });
       }
 

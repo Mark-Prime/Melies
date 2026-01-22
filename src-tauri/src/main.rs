@@ -32,6 +32,7 @@ mod ryukbot;
 mod util;
 mod cfg;
 mod events;
+mod command;
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[command]
@@ -455,8 +456,8 @@ fn launch_tf2(demo_name: &str, tab: &str) -> Value {
 }
 
 #[command]
-fn get_next_demo() -> Value {
-  tf2::get_next_demo(&load_settings())
+fn get_next_demo(demo_name: &str) -> Value {
+  tf2::get_next_demo(&load_settings(), demo_name)
 }
 
 #[command]

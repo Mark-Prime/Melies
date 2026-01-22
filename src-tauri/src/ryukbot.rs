@@ -1,10 +1,24 @@
-use std::{env, fs::{self, File}, path::Path};
-use chrono::{DateTime, Local};
+use std::{ env, fs::{ self, File }, path::Path };
+use chrono::{ DateTime, Local };
 use regex::Regex;
 use serde_json::{ self, json, Value };
-use vdm::{VDM, action::ActionType};
+use vdm::{ VDM, action::ActionType };
 
-use crate::{cfg::write_cfg, clip::Clip, demos::load_demo, event::{Event, EventStyle::{ Bookmark }}, macros::ifelse, settings::{load_settings, setting_as_bool}, util::find_dir};
+use crate::{
+  cfg::write_cfg,
+  clip::Clip,
+  command::{Command, CommandType},
+  demos::load_demo,
+  event::{ Event, EventStyle::Bookmark },
+  macros::ifelse,
+  settings::{ load_settings, setting_as_bool },
+  util::find_dir,
+};
+
+enum Action {
+  Clip(Clip),
+  Command(Command),
+}
 
 pub fn run_ryukbot() -> Value {
   let settings = crate::settings::load_settings();
@@ -56,7 +70,7 @@ pub fn run_ryukbot() -> Value {
     }
   }
 
-  let mut clips: Vec<Clip> = vec![];
+  let mut clips: Vec<Action> = vec![];
 
   let mut event_count = 0;
 
@@ -68,6 +82,47 @@ pub fn run_ryukbot() -> Value {
     let event = Event::new(event_capture).unwrap();
 
     if event.contains(&"mls_skip") {
+      continue;
+    }
+
+    if event.contains(&"mls_load_vdm") | event.contains(&"mls_exec") {
+      let commands = event.commands();
+
+      let mut demo_found = false;
+      let mut exec_found = false;
+
+      for command in commands {
+        if exec_found {
+          clips.push(Action::Command(Command {
+            demo_name: event.demo_name.clone(),
+            command_type: CommandType::Console(format!("exec {}", command)),
+            tick: event.tick,
+            // event: event.clone(),
+          }));
+          continue;
+        }
+        
+        if demo_found {
+          clips.push(Action::Command(Command {
+            demo_name: event.demo_name.clone(),
+            command_type: CommandType::LoadVdm(format!("{}", command)),
+            tick: event.tick,
+            // event: event.clone(),
+          }));
+          continue;
+        }
+
+        if command.contains(&"mls_load_vdm") {
+          demo_found = true;
+          continue;
+        }
+
+        if command.contains(&"mls_exec") {
+          exec_found = true;
+          continue;
+        }
+      }
+
       continue;
     }
 
@@ -97,7 +152,7 @@ pub fn run_ryukbot() -> Value {
           clip.include(end_event, &settings);
         }
 
-        clips.push(clip);
+        clips.push(Action::Clip(clip));
         continue;
       }
     }
@@ -105,16 +160,21 @@ pub fn run_ryukbot() -> Value {
     let clip_len = clips.len();
 
     if clip_len == 0 {
-      clips.push(Clip::new(event, &settings));
+      clips.push(Action::Clip(Clip::new(event, &settings)));
       continue;
     }
 
-    if clips[clip_len - 1].can_include(&event, &settings) {
-      clips.last_mut().unwrap().include(event, &settings);
-      continue;
+    match &mut clips[clip_len - 1] {
+      Action::Clip(clip) => {
+        if clip.can_include(&event, &settings) {
+          clip.include(event, &settings);
+          continue;
+        }
+      }
+      _ => {}
     }
 
-    clips.push(Clip::new(event, &settings));
+    clips.push(Action::Clip(Clip::new(event, &settings)));
   }
 
   let mut current_demo: String = "".to_string();
@@ -122,19 +182,38 @@ pub fn run_ryukbot() -> Value {
   let mut vdms = vec![];
 
   for clip in &clips {
-    if current_demo == clip.demo_name {
-      add_clip_to_vdm(&mut vdm, clip, &settings);
-      continue;
-    }
+    match clip {
+      Action::Clip(clip) => {
+        if current_demo == clip.demo_name {
+          add_clip_to_vdm(&mut vdm, clip, &settings);
+          continue;
+        }
 
-    if vdm.len() > 0 {
-      vdms.push(vdm);
-    }
+        if vdm.len() > 0 {
+          vdms.push(vdm);
+        }
 
-    current_demo = clip.demo_name.clone();
-    vdm = VDM::new();
-    vdm.name = clip.demo_name.clone();
-    start_vdm(&mut vdm, clip, &settings);
+        current_demo = clip.demo_name.clone();
+        vdm = VDM::new();
+        vdm.name = clip.demo_name.clone();
+        start_vdm(&mut vdm, clip, &settings);
+      }
+      Action::Command(command) => {
+        if current_demo == command.demo_name {
+          add_command_to_vdm(&mut vdm, command);
+          continue;
+        }
+
+        if vdm.len() > 0 {
+          vdms.push(vdm);
+        }
+
+        current_demo = command.demo_name.clone();
+        vdm = VDM::new();
+        vdm.name = command.demo_name.clone();
+        add_command_to_vdm(&mut vdm, command);
+      }
+    }
   }
 
   vdms.push(vdm);
@@ -167,6 +246,10 @@ pub fn run_ryukbot() -> Value {
       }
     }
 
+    if vdm.len() == 0 {
+      continue;
+    }
+
     let vdm = end_vdm(
       &mut vdm.clone(),
       &settings,
@@ -189,13 +272,13 @@ pub fn run_ryukbot() -> Value {
   }
 
   json!({
-        "clips": clips.len(),
-        "events": event_count,
-        "vdms": vdm_count,
-        "code": 200,
-        "backup_location": backup_location,
-        "first_demo": first_demo
-    })
+    "clips": clips.len(),
+    "events": event_count,
+    "vdms": vdm_count,
+    "code": 200,
+    "backup_location": backup_location,
+    "first_demo": first_demo
+  })
 }
 
 fn start_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
@@ -218,7 +301,13 @@ fn start_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
 }
 
 fn end_vdm(vdm: &mut VDM, settings: &Value, next_demoname: String) -> VDM {
-  let last_tick = match vdm.last().props().start_tick {
+  let last_action = vdm.last();
+
+  if last_action.props().commands == "quit;" {
+    return vdm.to_owned();
+  }
+
+  let last_tick = match last_action.props().start_tick {
     Some(tick) => tick,
     None => {
       return vdm.to_owned();
@@ -243,7 +332,28 @@ fn end_vdm(vdm: &mut VDM, settings: &Value, next_demoname: String) -> VDM {
   vdm.to_owned()
 }
 
+fn add_command_to_vdm(vdm: &mut VDM, command: &Command) {
+  match &command.command_type {
+    CommandType::Console(command_str) => {
+      let exec_commands = vdm.create_action(ActionType::PlayCommands).props_mut();
+
+      exec_commands.start_tick = Some(command.tick);
+      exec_commands.name = "Exec Config Commands".to_string();
+      exec_commands.commands = command_str.to_string();
+    }
+    CommandType::LoadVdm(name) => {
+      let exec_commands = vdm.create_action(ActionType::PlayCommands).props_mut();
+
+      exec_commands.start_tick = Some(command.tick);
+      exec_commands.name = format!("mls_load_vdm {}", name);
+      exec_commands.commands = "quit;".to_string();
+    }
+  }
+}
+
 fn add_clip_to_vdm(vdm: &mut VDM, clip: &Clip, settings: &Value) {
+  println!("add_clip_to_vdm: {:?}", vdm);
+
   let last_tick = match vdm.last().props().start_tick {
     Some(action) => action,
     None => {

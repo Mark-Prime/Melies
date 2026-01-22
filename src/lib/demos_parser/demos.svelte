@@ -843,14 +843,16 @@
     demo_name,
     label,
     tick,
-    demo_count,
+    index,
     isPovDemo,
   ) {
     let name = demo_name;
 
     if (!isPovDemo) {
-      name = name + "_" + demo_count;
+      name = name + "~" + index;
     }
+
+    let playerName = getPlayerName(parsedDemo.data.users[userId])
 
     return {
       value: {
@@ -858,8 +860,9 @@
       },
       tick: tick,
       demo_name: name,
-      event: `[demo_${parsedDemo.data?.users[userId].steamId64}] ${label} ${isPovDemo ? "" : spectate + " "}(\"${name}\" at ${tick})`,
+      event: `[demo_${parsedDemo.data?.users[userId].steamId64}] ${label} ${isPovDemo ? "" : spectate + " "}(\"${name}\" at ${tick}) ${playerName}`,
       isKillstreak: false,
+      notes: playerName,
     };
   }
 
@@ -868,15 +871,17 @@
     demo_name,
     userId,
     life,
-    demo_count,
+    index,
     isPovDemo,
   ) {
     let newDemo = [];
 
     let name = demo_name;
 
+    let playerName = getPlayerName(parsedDemo.data.users[userId])
+
     if (!isPovDemo) {
-      name = name + "_" + demo_count;
+      name = name + "~" + index;
     }
 
     newDemo.push({
@@ -885,8 +890,9 @@
       },
       tick: life.start + 20,
       demo_name: name,
-      event: `[demo_${parsedDemo.data?.users[userId].steamId64}] clip_start ${isPovDemo ? "" : spectate + " "}(\"${name}\" at ${life.start + 20})`,
+      event: `[demo_${parsedDemo.data?.users[userId].steamId64}] clip_start ${isPovDemo ? "" : spectate + " "}(\"${name}\" at ${life.start + 20}) ${playerName}`,
       isKillstreak: false,
+      notes: playerName,
     });
 
     newDemo.push({
@@ -927,9 +933,23 @@
 
     let specMode = recordingSettings["third_person"] ? "spec_third" : "spec";
 
-    let demo_count = 1;
+    let userIds = Object.keys(parsedDemo.data.users);
 
-    for (let userId in parsedDemo.data.users) {
+    let name_split = currentDemo.replace(".dem", "").split("\\");
+
+    let demo_name = name_split[name_split.length - 1];
+
+    demos.push([{
+      value: {
+        Bookmark: `mls_load_vdm ${demo_name + "~1"}`,
+      },
+      tick: 66,
+      demo_name: demo_name,
+      event: `[demo_batch_start] mls_load_vdm ${demo_name + "~1"} (\"${demo_name}\" at 66)`,
+      isKillstreak: false,
+    }]);
+
+    for (let [index, userId] of userIds.entries()) {
       if (isPovDemo) {
         if (povId != userId) {
           continue;
@@ -937,10 +957,6 @@
       }
 
       let newDemo = [];
-
-      let name_split = currentDemo.replace(".dem", "").split("\\");
-
-      let demo_name = name_split[name_split.length - 1];
 
       let spectate = `${specMode} ${parsedDemo.data?.users[userId].steamId64}`;
 
@@ -980,7 +996,7 @@
                   demo_name,
                   userId,
                   life,
-                  demo_count,
+                  demos.length,
                   isPovDemo,
                 ),
               ];
@@ -1012,7 +1028,7 @@
                   demo_name,
                   label,
                   kill.tick,
-                  demo_count,
+                  demos.length,
                   isPovDemo,
                 ),
               );
@@ -1040,7 +1056,7 @@
                   demo_name,
                   userId,
                   life,
-                  demo_count,
+                  demos.length,
                   isPovDemo,
                 ),
               ];
@@ -1073,7 +1089,7 @@
                 demo_name,
                 "MP",
                 kill.tick,
-                demo_count,
+                demos.length,
                 isPovDemo,
               ),
             );
@@ -1098,7 +1114,7 @@
                   demo_name,
                   userId,
                   life,
-                  demo_count,
+                  demos.length,
                   isPovDemo,
                 ),
               ];
@@ -1129,7 +1145,7 @@
                 demo_name,
                 "AS",
                 kill.tick,
-                demo_count,
+                demos.length,
                 isPovDemo,
               ),
             );
@@ -1140,10 +1156,32 @@
       if (newDemo.length == 0) {
         continue;
       }
+      
+      if (index + 1 < userIds.length) {
+        newDemo.sort((a, b) => a.tick - b.tick);
 
-      demo_count += 1;
+        let last_bookmark = newDemo[newDemo.length - 1];
+
+        let tick = last_bookmark.tick + settings.recording.after_bookmark + 66
+
+        let new_name = demo_name + "~" + demos.length
+
+        newDemo.push({
+          value: {
+            Bookmark: `mls_load_vdm ${demo_name + "~" + (demos.length + 1)}`,
+          },
+          tick: tick,
+          demo_name: new_name,
+          event: `[demo_${parsedDemo.data?.users[userId].steamId64}] mls_load_vdm ${demo_name + "~" + (demos.length + 1)} (\"${new_name}\" at ${tick})`,
+          isKillstreak: false,
+        });
+      }
 
       demos.push(newDemo);
+    }
+
+    if (demos[demos.length - 1][demos[demos.length - 1].length - 1].value.Bookmark == "mls_load_vdm") {
+      demos[demos.length - 1].pop();
     }
 
     await invoke("save_events", { newEvents: demos });
@@ -1163,16 +1201,26 @@
 
     let specMode = recordingSettings["third_person"] ? "spec_third" : "spec";
 
-    for (let userId in parsedDemo.data.users) {
+    let userIds = Object.keys(parsedDemo.data.users);
+
+    let name_split = currentDemo.replace(".dem", "").split("\\");
+
+    let demo_name = name_split[name_split.length - 1];
+
+    demos.push([{
+      value: {
+        Bookmark: `mls_load_vdm ${demo_name + "~1"}`,
+      },
+      tick: 66,
+      demo_name: demo_name,
+      event: `[demo_batch_start] mls_load_vdm ${demo_name + "~1"} (\"${demo_name}\" at 66)`,
+      isKillstreak: false,
+    }]);
+
+    for (let [index, userId] of userIds.entries()) {
       let newDemo = [];
 
-      let name_split = currentDemo.replace(".dem", "").split("\\");
-
-      let demo_name = name_split[name_split.length - 1];
-
       let spectate = `${specMode} ${parsedDemo.data?.users[userId].steamId64}`;
-
-      console.log("spec", spectate);
 
       if (
         !parsedDemo.data.player_lives[userId] ||
@@ -1186,8 +1234,8 @@
           Bookmark: `clip_start ${spectate}`,
         },
         tick: parsedDemo.data.player_lives[userId][0].start + 20,
-        demo_name: demo_name + "_" + userId,
-        event: `[demo_${parsedDemo.data?.users[userId].steamId64}] clip_start  ${spectate} (\"${demo_name}\" at ${settings.recording.start_delay})`,
+        demo_name: demo_name + "~" + demos.length,
+        event: `[demo_${parsedDemo.data?.users[userId].steamId64}] clip_start  ${spectate} (\"${demo_name + "~" + demos.length}\" at ${settings.recording.start_delay})`,
         isKillstreak: false,
       });
 
@@ -1199,19 +1247,43 @@
           parsedDemo.header?.ticks - 99,
           settings.recording.start_delay + 66,
         ),
-        demo_name: demo_name + "_" + userId,
-        event: `[demo_${parsedDemo.data?.users[userId].steamId64}] clip_end (\"${demo_name}\" at ${Math.max(
+        demo_name: demo_name + "~" + demos.length,
+        event: `[demo_${parsedDemo.data?.users[userId].steamId64}] clip_end (\"${demo_name + "~" + demos.length}\" at ${Math.max(
           parsedDemo.header?.ticks - 99,
           settings.recording.start_delay + 66,
         )})`,
         isKillstreak: false,
       });
 
+      if (index + 1 < userIds.length) {
+        newDemo.push({
+          value: {
+            Bookmark: `mls_load_vdm ${demo_name + "~" + (demos.length + 1)}`,
+          },
+          tick: Math.max(
+            parsedDemo.header?.ticks - 66,
+            settings.recording.start_delay + 66,
+          ),
+          demo_name: demo_name + "~" + demos.length,
+          event: `[demo_${parsedDemo.data?.users[userId].steamId64}] mls_load_vdm ${demo_name + "~" + (demos.length + 1)} (\"${demo_name + "~" + demos.length}\" at ${Math.max(
+            parsedDemo.header?.ticks - 66,
+            settings.recording.start_delay + 66,
+          )})`,
+          isKillstreak: false,
+        });
+      }
+
       demos.push(newDemo);
+    }
+
+    if (demos[demos.length - 1][demos[demos.length - 1].length - 1].value.Bookmark == "mls_load_vdm") {
+      demos[demos.length - 1].pop();
     }
 
     await invoke("save_events", { newEvents: demos });
     dispatch("reload");
+
+    demos = await loadEvents();
 
     console.log(demos);
 
