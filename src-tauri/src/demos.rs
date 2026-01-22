@@ -116,8 +116,8 @@ impl KillPointer {
 
 #[derive(Debug, Serialize, Clone)]
 struct Life {
-  pub start: u32,
-  pub end: u32,
+  pub start: Option<u32>,
+  pub end: Option<u32>,
   pub last_kill_tick: DemoTick,
   pub killstreak_pointers: Vec<KillstreakPointer>,
   pub med_picks: Vec<KillPointer>,
@@ -129,10 +129,10 @@ struct Life {
 }
 
 impl Life {
-  fn new(start: u32, classes: Vec<String>) -> Life {
+  fn new(start: Option<u32>, classes: Vec<String>) -> Life {
     Life {
       start,
-      end: 0,
+      end: None,
       last_kill_tick: DemoTick::from(0),
       killstreak_pointers: vec![],
       med_picks: vec![],
@@ -450,14 +450,17 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
 
       events.sort_by(|a, b| a.cmp(b));
 
-      let mut current_life: Life = Life::new(0, vec!["".to_string()]);
+      let mut current_life: Life = Life::new(None, vec!["".to_string()]);
 
       for event in &events {
         match event {
           Event::Spawn(spawn) => {
-            if current_life.start == 0 {
-              current_life = Life::new(spawn.tick.into(), vec![spawn.class.to_string()]);
-            } else if !current_life.classes.contains(&spawn.class.to_string()) {
+            if current_life.start == None || current_life.classes.len() == 0 {
+              current_life = Life::new(Some(spawn.tick.into()), vec![spawn.class.to_string()]);
+              continue;
+            }
+            
+            if !current_life.classes.contains(&spawn.class.to_string()) {
               current_life.classes.push(spawn.class.to_string());
             }
           }
@@ -466,15 +469,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
               continue;
             }
 
-            if current_life.start == 0 {
-              if current_player.last().is_some() {
-                let previous_life: &Life = current_player.last().unwrap();
-
-                if previous_life.finalized {
-                  continue;
-                }
-              }
-
+            if current_life.start == None || current_life.classes.len() == 0 {
               current_life = match current_player.pop() {
                 Some(val) => val,
                 None => {
@@ -501,15 +496,7 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
             current_life.kills.push(kill.to_owned());
           }
           Event::Assist(assist) => {
-            if current_life.start == 0 {
-              if current_player.last().is_some() {
-                let previous_life: &Life = current_player.last().unwrap();
-
-                if previous_life.finalized {
-                  continue;
-                }
-              }
-
+            if current_life.start == None || current_life.classes.len() == 0 {
               current_life = match current_player.pop() {
                 Some(val) => val,
                 None => {
@@ -521,11 +508,11 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
             current_life.assists.push(assist.to_owned());
           }
           Event::Death(death) => {
-            if death.killer == 0 {
-              continue;
-            }
+            // if death.killer == 0 {
+            //   continue;
+            // }
 
-            if current_life.start == 0 {
+            if current_life.start == None || current_life.classes.len() == 0 {
               current_life = match current_player.pop() {
                 Some(val) => val,
                 None => {
@@ -534,22 +521,31 @@ pub(crate) fn scan_demo(settings: Value, path: String) -> Value {
               };
             }
 
-            current_life.end = death.tick.into();
+            current_life.end = Some(death.tick.into());
 
-            if !current_life.classes.contains(&"spy".to_string()) {
+            if !current_life.classes.contains(&"spy".to_string()) && current_life.classes.len() > 0 {
               current_life.finalized = true;
             }
 
             current_player.push(current_life);
 
-            current_life = Life::new(0, vec!["".to_string()]);
+            current_life = Life::new(None, vec!["".to_string()]);
           }
           Event::RoundEnd(tick) => {
-            current_life.end = tick.to_owned();
+            if current_life.start == None || current_life.classes.len() == 0 {
+              current_life = match current_player.pop() {
+                Some(val) => val,
+                None => {
+                  continue;
+                }
+              };
+            }
+
+            current_life.end = Some(tick.to_owned());
             current_life.finalized = true;
             current_player.push(current_life);
 
-            current_life = Life::new(0, vec!["".to_string()]);
+            current_life = Life::new(None, vec!["".to_string()]);
           }
         }
       }
