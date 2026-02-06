@@ -83,7 +83,7 @@
       "dxlevel",
       "height",
       "width",
-      "novid"
+      "novid",
     ];
 
     for (let key of settingsToConfirm) {
@@ -317,9 +317,12 @@
       tooltip="Uses -windowed and -noborder launch options."
       color={["pri", "sec", "tert"][tabIndex % 3]}
     />
-    
+
     {#if hlaeSettings.use_64bit && hlaeSettings.inject_hlae}
-      <a class="settings__span no_margin" href="https://github.com/advancedfx/advancedfx/releases/tag/v2.189.0">
+      <a
+        class="settings__span no_margin"
+        href="https://github.com/advancedfx/advancedfx/releases"
+      >
         Must be on HLAE v2.189.0 or higher to inject AfxHookSource
       </a>
     {/if}
@@ -469,7 +472,9 @@
               filepath={true}
               disabled={hlaeSettings.after_batch !== "run"}
             />
-            <a href="https://docs.comfig.app/9.9.3/customization/launch_options">
+            <a
+              href="https://docs.comfig.app/9.9.3/customization/launch_options"
+            >
               Learn More about Launch Options and DXLevel
             </a>
           </div>
@@ -499,7 +504,7 @@
             left={true}
           />
           {#if hlaeSettings.use_64bit && hlaeSettings.inject_hlae}
-            <a href="https://github.com/advancedfx/advancedfx/releases/tag/v2.189.0">
+            <a href="https://github.com/advancedfx/advancedfx/releases">
               Must be on HLAE v2.189.0 or higher to inject AfxHookSource
             </a>
           {/if}
