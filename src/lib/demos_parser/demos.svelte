@@ -104,6 +104,7 @@
     }
 
     playerNames = await invoke("get_rgl_users", { steamIds: steamIds });
+    console.log(playerNames);
   }
 
   let resp = $state({ loaded: false, loading: false });
@@ -581,6 +582,8 @@
       }
 
       if (events.length !== 0) {
+        invoke("save_rgl_users", { playerNames });
+        
         parseDemoEvents(
           demo_name,
           events.sort((a, b) => a.time - b.time),

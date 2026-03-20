@@ -177,6 +177,11 @@ fn get_rgl_users(steam_ids: Vec<String>) -> Value {
   melies_rust::rgl::get_users(steam_ids)
 }
 
+#[command]
+fn save_rgl_users(player_names: Value) {
+  melies_rust::rgl::save_users_to_cfg(player_names)
+}
+
 fn main() {
   tauri::Builder
     ::default()
@@ -218,7 +223,8 @@ fn main() {
         delete_file,
         build_install,
         get_weapons,
-        get_rgl_users
+        get_rgl_users,
+        save_rgl_users
       ]
     )
     .run(tauri::generate_context!())

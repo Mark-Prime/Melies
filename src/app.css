@@ -91,6 +91,20 @@
   justify-content: center;
 }
 
+.dll_list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.dll {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 a {
   font-weight: 500;
   color: var(--pri);
@@ -538,7 +552,6 @@ input:checked + .slider--tert:before {
   position: relative;
   cursor: pointer;
 }
-
 .tooltip::before {
   z-index: 99999;
   content: attr(data-tooltip);
@@ -559,6 +572,7 @@ input:checked + .slider--tert:before {
   pointer-events: none;
   text-align: left;
 }
+
 .tooltip::after {
   z-index: 99999;
   content: "";
@@ -616,6 +630,15 @@ input:checked + .slider--tert:before {
 .tooltip:hover::after,
 .tooltip:active::after {
   display: block;
+}
+
+.tooltip--timeline::before {
+  bottom: 2.7rem;
+  left: 2rem;
+}
+.tooltip--timeline::after {
+  bottom: 2.7rem;
+  left: 2.5rem;
 }
 
 /* Tooltip text */

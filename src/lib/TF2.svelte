@@ -4,7 +4,7 @@
   import { invoke } from "@tauri-apps/api/core";
   import { createEventDispatcher } from "svelte";
   import Modal from "$lib/components/Modal.svelte";
-  import { faPlay, faSpinner } from "@fortawesome/free-solid-svg-icons";
+  import { faPlay, faSpinner, faX } from "@fortawesome/free-solid-svg-icons";
   import { onMount } from "svelte";
   import Select from "$lib/components/Select.svelte";
   import Datalist from "$lib/components/Datalist.svelte";
@@ -220,6 +220,12 @@
     delete hlaeSettings.tf_folder;
     delete hlaeSettings.name;
   }
+
+  function removeDll(dll) {
+    hlaeSettings.additional_dlls.splice(dll, 1);
+
+    hlaeSettings = hlaeSettings;
+  }
 </script>
 
 {#snippet altInstall(customInstall)}
@@ -292,6 +298,35 @@
       <a href="https://docs.comfig.app/9.9.3/customization/launch_options">
         Learn More about Launch Options and DXLevel
       </a>
+    </div>
+    <div class="settings__input-group settings__span">
+      Additional DLLs
+      <div class="dll_list">
+        {#each hlaeSettings.additional_dlls as dll, i}
+          <div class="dll">
+            <Input
+              bind:value={hlaeSettings.additional_dlls[i]}
+              color={["pri", "sec", "tert"][tabIndex % 3]}
+              filepath={true}
+              filetype=".dll"
+            />
+            <button class="btn--cancel" onclick={() => removeDll(i)}>
+              <Fa icon={faX} color={`var(--err)`} />
+            </button>
+          </div>
+        {/each}
+      </div>
+      <button
+        class={`btn--${["pri", "sec", "tert"][tabIndex % 3]}`}
+        onclick={() => {
+          hlaeSettings.additional_dlls = [
+            ...hlaeSettings.additional_dlls,
+            "",
+          ];
+        }}
+      >
+        Add DLL
+      </button>
     </div>
     <Switch
       title="64Bit"
@@ -477,6 +512,35 @@
             >
               Learn More about Launch Options and DXLevel
             </a>
+          </div>
+          <div class="settings__input-group settings__span">
+            Additional DLLs
+            <div class="dll_list">
+              {#each hlaeSettings.additional_dlls as dll, i}
+                <div class="dll">
+                  <Input
+                    bind:value={hlaeSettings.additional_dlls[i]}
+                    color="sec"
+                    filepath={true}
+                    filetype=".dll"
+                  />
+                  <button class="btn--cancel" onclick={() => removeDll(i)}>
+                    <Fa icon={faX} color={`var(--err)`} />
+                  </button>
+                </div>
+              {/each}
+            </div>
+            <button
+              class="btn--sec"
+              onclick={() => {
+                hlaeSettings.additional_dlls = [
+                  ...hlaeSettings.additional_dlls,
+                  "",
+                ];
+              }}
+            >
+              Add DLL
+            </button>
           </div>
           <Switch
             title="64Bit"

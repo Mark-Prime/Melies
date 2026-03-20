@@ -9,6 +9,7 @@
     faPlus,
     faMinus,
     faFolderOpen,
+    faX
   } from "@fortawesome/free-solid-svg-icons";
   import Fa from "svelte-fa";
   import { createEventDispatcher } from "svelte";
@@ -93,6 +94,12 @@
     settings.alt_installs.splice(install, 1);
 
     settings.alt_installs = settings.alt_installs;
+  }
+
+  function removeDll(dll) {
+    hlaeSettings.additional_dlls.splice(dll, 1);
+
+    hlaeSettings = hlaeSettings;
   }
 </script>
 
@@ -627,12 +634,67 @@ Useful in STVs when the player could be dead."
           : ""}
         color="sec"
       />
+
+      <div class="settings__input-group settings__span">
+        Additional DLLs
+        <div class="dll_list">
+          {#each hlaeSettings.additional_dlls as dll, i}
+            <div class="dll">
+              <Input
+                bind:value={hlaeSettings.additional_dlls[i]}
+                color="sec"
+                filepath={true}
+                filetype=".dll"
+              />
+              <button class="btn--cancel" onclick={() => removeDll(i)}>
+                <Fa icon={faX} color={`var(--err)`} />
+              </button>
+            </div>
+          {/each}
+        </div>
+        <button
+          class="btn--sec"
+          onclick={() => {
+            hlaeSettings.additional_dlls = [
+              ...hlaeSettings.additional_dlls,
+              "",
+            ];
+          }}
+        >
+          Add DLL
+        </button>
+      </div>
+
+      <Switch
+        title="64Bit"
+        bind:value={hlaeSettings.use_64bit}
+        tooltip="Launches with 64Bit TF2."
+        color="sec"
+      />
       <Switch
         title="Skip Intro Video"
         bind:value={hlaeSettings.novid}
         tooltip="Uses -novid launch option."
         color="sec"
       />
+      <Switch
+        title="Inject AfxHookSource"
+        bind:value={hlaeSettings.inject_hlae}
+        tooltip="Launches with AfxHookSource.dll injected into TF2."
+        color="sec"
+      />
+      <Switch
+        title="Borderless Window"
+        bind:value={hlaeSettings.borderless}
+        tooltip="Uses -windowed and -noborder launch options."
+        color="sec"
+        left={true}
+      />
+      {#if hlaeSettings.use_64bit && hlaeSettings.inject_hlae}
+        <a href="https://github.com/advancedfx/advancedfx/releases">
+          Must be on HLAE v2.189.0 or higher to inject AfxHookSource
+        </a>
+      {/if}
     </div>
   {:else}
     <h1>SVR must be launched through the SVR client</h1>
@@ -726,6 +788,14 @@ Useful in STVs when the player could be dead."
       bind:value={featureSettings.demo_scanner.logstf}
       color="sec"
     />
+    {#if featureSettings.demo_scanner.rgl}
+      <Switch
+        title="Use CE to force RGL.gg player names"
+        tooltip="Replaces player name with RGL.gg profile name within the demo if available."
+        bind:value={featureSettings.demo_scanner.rgl_force_rename}
+        color="sec"
+      />
+    {/if}
   </div>
   <h3>Sort Footage</h3>
   <div class="setting">
