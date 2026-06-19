@@ -137,7 +137,7 @@
       newSettings: JSON.stringify(settings),
     });
 
-    await invoke("before_batch");
+    await invoke("before_batch", { tab: String(tabIndex) });
 
     await invoke("launch_tf2", {
       demoName: startingDemo,
@@ -156,8 +156,6 @@
         demoName: startingDemo.replace(".dem", ""),
       });
 
-      console.log(resp);
-
       if (resp === null || resp.complete) {
         break;
       }
@@ -173,7 +171,7 @@
     isRunning = false;
     batchRecording = false;
 
-    await invoke("after_batch");
+    await invoke("after_batch", { tab: String(tabIndex) });
   }
 
   onMount(() => {

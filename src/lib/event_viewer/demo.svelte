@@ -105,6 +105,10 @@
         index++;
       }
 
+      if (event.value?.includes("mls_load_vdm")) {
+        event.loadVdm = true;
+      }
+
       if (!event.value) {
         continue;
       }
@@ -129,6 +133,10 @@
 
       if (index + 1 < events.length) {
         const next = events[index + 1];
+
+        if (next.loadVdm) {
+          continue;
+        }
 
         if (element.end + settings.recording.minimum_ticks_between_clips > next.start) {
           element.overlappingNext = true;
@@ -192,6 +200,8 @@
               {event.value}ks
             {:else if event.isClip}
               Clip "{`${event.value.replace("clip_start", "").trim()}`}"
+            {:else if event.loadVdm}
+              Load VDM "{`${event.value.replace("mls_load_vdm ", "").trim()}`}"
             {:else}
               Bookmark "{event.value}"
             {/if}

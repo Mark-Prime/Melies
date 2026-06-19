@@ -163,13 +163,15 @@ fn get_weapons() -> Value {
 }
 
 #[command]
-fn before_batch() -> Value {
-  melies_rust::batch_automation::before_batch(&load_settings())
+fn before_batch(tab: &str) -> Value {
+  let tab = tab.parse::<i64>().unwrap();
+  melies_rust::batch_automation::before_batch(&load_settings(), tab)
 }
 
 #[command]
-fn after_batch() -> Value {
-  melies_rust::batch_automation::after_batch(&load_settings())
+fn after_batch(tab: &str) -> Value {
+  let tab = tab.parse::<i64>().unwrap();
+  melies_rust::batch_automation::after_batch(&load_settings(), tab)
 }
 
 #[command]

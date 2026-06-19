@@ -848,6 +848,7 @@
     tick,
     index,
     isPovDemo,
+    killer_class
   ) {
     let name = demo_name;
 
@@ -857,6 +858,10 @@
 
     let playerName = getPlayerName(parsedDemo.data.users[userId])
 
+    if (playerName !== parsedDemo.data?.users[userId].name) {
+      playerName = `${playerName} (aka ${parsedDemo.data?.users[userId].name})`;
+    }
+
     return {
       value: {
         Bookmark: `${label}${isPovDemo ? "" : " " + spectate}`,
@@ -865,7 +870,7 @@
       demo_name: name,
       event: `[demo_${parsedDemo.data?.users[userId].steamId64}] ${label} ${isPovDemo ? "" : spectate + " "}(\"${name}\" at ${tick}) ${playerName}`,
       isKillstreak: false,
-      notes: playerName,
+      notes: `${playerName} - ${killer_class}`,
     };
   }
 
@@ -944,11 +949,11 @@
 
     demos.push([{
       value: {
-        Bookmark: `mls_load_vdm ${demo_name + "~1"}`,
+        Bookmark: `mls_load_vdm ${demo_name}~${demos.length + 1}`,
       },
       tick: 66,
       demo_name: demo_name,
-      event: `[demo_batch_start] mls_load_vdm ${demo_name + "~1"} (\"${demo_name}\" at 66)`,
+      event: `[demo_batch_start] mls_load_vdm ${demo_name}~${demos.length + 1} (\"${demo_name}\" at 66)`,
       isKillstreak: false,
     }]);
 
@@ -1033,6 +1038,7 @@
                   kill.tick,
                   demos.length,
                   isPovDemo,
+                  kill.killer_class
                 ),
               );
 
@@ -1094,6 +1100,7 @@
                 kill.tick,
                 demos.length,
                 isPovDemo,
+                kill.killer_class
               ),
             );
           }
@@ -1150,6 +1157,7 @@
                 kill.tick,
                 demos.length,
                 isPovDemo,
+                kill.killer_class
               ),
             );
           }
